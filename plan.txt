@@ -1,0 +1,22 @@
+1st step) Adjust LIB and Include path as per shown in Turbo.exe UI. 
+            which is C:\TURBOC3\LIB
+                     C:\TURBOC3\INCLUDE 
+        and create a empty SOURCE folder in C:\TURBOC3 so final path is C:\TURBOC3\SOURCE  and in the SOURCE folder will be a sample test.cpp
+
+2nd Step) Include other files like BGI and BIN aswell
+3rd step) ZIP the TURBOC3 folder and name it tc.zip 
+
+in index.html
+1st) Extract tc.zip file
+2nd) run commands in shell i.e 
+        cd TURBOC3\\BIN
+
+        // Ensure graphics driver is in working directory
+        COPY ..\\BGI\\EGAVGA.BGI . 
+
+        // Compile test.cpp (explicit include + lib + graphics.lib)
+         "-c", "TCC.EXE -I..\\INCLUDE -L..\\LIB ..\\SOURCE\\TEST.CPP ..\\LIB\\GRAPHICS.LIB"
+
+        // Clear screen and run
+        "-c", "CLS",
+        "-c", "TEST.EXE"

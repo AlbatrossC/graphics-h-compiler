@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Online Graphics.h C++ Compiler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+
+<body>
+
+<header>
+    <div class="header-left">
+        <button id="back-btn" class="btn btn-secondary" onclick="window.location.href='/'">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            Home
+        </button>
+        
+        <div class="demo-selector">
+            <label for="demo-select">Demo:</label>
+            <select id="demo-select" class="demo-dropdown">
+                <option value="./Demo/shooter-game.cpp">Demo 1 - shooter-game.cpp</option>
+            </select>
+        </div>
+    </div>
+    <div class="header-center">
+        <div class="logo">
+            Online <span class="logo-highlight">graphics.h</span> C++ Compiler
+        </div>
+        <div class="header-status" id="header-status">● Ready</div>
+    </div>
+    <div class="header-right">
+        <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+            Compile & Run
+        </button>
+    </div>
+</header>
+
+<div id="workspace">
+    <div id="editor-wrapper">
+        <div id="editor"></div>
+    </div>
+
+    <div id="terminal-wrapper">
+        <div class="keyboard-blocker" id="keyboard-blocker"></div>
+        <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loading-text">Initializing...</div>
+        </div>
+        <canvas id="dos-canvas" tabindex="-1"></canvas>
+    </div>
+</div>
+
+<script>
+    // ==================== LOGGER ====================
+    const Logger = {
+        prefix: '[Graphics.h Compiler]',
+        
+        info(msg) {
+            console.log(`${this.prefix} ${msg}`);
+        },
+        
+        success(msg) {
+            console.log(`${this.prefix} ✓ ${msg}`);
+        },
+        
+        error(msg, err) {
+            console.error(`${this.prefix} ✗ ${msg}`, err || '');
+        },
+        
+        warn(msg) {
+            console.warn(`${this.prefix} ⚠ ${msg}`);
+        }
+    };
+
+    // ==================== GLOBAL STATE ====================
+    let dosInstance = null;
+    let terminalFocused = false;
+    let editor = null;
+    let currentDemoFile = './Demo/shooter-game.cpp';
+    let lastSelectedDemo = '';
+    let scriptsLoaded = {
+        jsdos: false,
+        ace: false,
+        aceMode: false,
+        aceTheme: false
+    };
+
+    const canvas = document.getElementById("dos-canvas");
+    const headerStatus = document.getElementById("header-status");
+    const loading = document.getElementById("loading");
+    const loadingText = document.getElementById("loading-text");
+    const runBtn = document.getElementById("run-btn");
+    const terminalWrapper = document.getElementById("terminal-wrapper");
+    const keyboardBlocker = document.getElementById("keyboard-blocker");
+    const editorWrapper = document.getElementById("editor-wrapper");
+    const demoSelect = document.getElementById("demo-select");
+
+    // ==================== SCRIPT LOADING WITH FALLBACK ====================
+    
+    function loadScript(url, fallbackUrl) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = url;
+            
+            script.onload = () => {
+                resolve(true);
+            };
+            
+            script.onerror = () => {
+                Logger.warn(`Primary source unavailable, using fallback for ${fallbackUrl}`);
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = fallbackUrl;
+                
+                fallbackScript.onload = () => {
+                    resolve(true);
+                };
+                
+                fallbackScript.onerror = () => {
+                    reject(new Error(`Failed to load: ${fallbackUrl}`));
+                };
+                
+                document.head.appendChild(fallbackScript);
+            };
+            
+            document.head.appendChild(script);
+        });
+    }
+
+    async function loadAllScripts() {
+        try {
+            Logger.info('Loading dependencies...');
+            
+            // Load JS-DOS
+            await loadScript(
+                'https://js-dos.com/6.22/current/js-dos.js',
+                './libs/js-dos.js'
+            );
+            scriptsLoaded.jsdos = true;
+
+            // Load Ace Editor
+            await loadScript(
+                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js',
+                './libs/ace.js'
+            );
+            scriptsLoaded.ace = true;
+
+            await waitForAce();
+
+            // Load Ace C++ Mode
+            await loadScript(
+                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-c_cpp.js',
+                './libs/mode-c_cpp.js'
+            );
+            scriptsLoaded.aceMode = true;
+
+            // Load Ace Monokai Theme
+            await loadScript(
+                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-monokai.js',
+                './libs/theme-monokai.js'
+            );
+            scriptsLoaded.aceTheme = true;
+
+            Logger.success('All dependencies loaded');
+            return true;
+        } catch (error) {
+            Logger.error('Failed to load dependencies', error);
+            alert('Failed to load required libraries. Please ensure all files are available.');
+            return false;
+        }
+    }
+
+    function waitForAce() {
+        return new Promise((resolve) => {
+            const checkAce = setInterval(() => {
+                if (typeof ace !== 'undefined') {
+                    clearInterval(checkAce);
+                    resolve();
+                }
+            }, 50);
+        });
+    }
+
+    // ==================== DEMO FILE MANAGEMENT ====================
+
+    async function loadDemoFileList() {
+        try {
+            const response = await fetch('./Demo/');
+            
+            if (response.ok) {
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                const cppFiles = [];
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href && href.endsWith('.cpp')) {
+                        cppFiles.push(href);
+                    }
+                });
+                
+                if (cppFiles.length > 0) {
+                    Logger.success(`Found ${cppFiles.length} demo files`);
+                    populateDemoDropdown(cppFiles);
+                    return;
+                }
+            }
+        } catch(e) {
+            Logger.warn('Using default demo list');
+        }
+        
+        // Fallback: Manually defined list
+        const fallbackDemoFiles = [
+            'shooter-game.cpp',
+            'bouncing-ball.cpp',
+            'simple-animation.cpp',
+            'circle-pattern.cpp'
+        ];
+        
+        populateDemoDropdown(fallbackDemoFiles);
+    }
+
+    function populateDemoDropdown(files) {
+        demoSelect.innerHTML = '';
+        
+        files.forEach((file, index) => {
+            const option = document.createElement('option');
+            const fileName = file.replace('./Demo/', '').replace('.cpp', '');
+            option.value = `./Demo/${file.replace('./Demo/', '')}`;
+            option.textContent = `Demo ${index + 1} - ${file.replace('./Demo/', '')}`;
+            demoSelect.appendChild(option);
+        });
+        
+        if (files.length > 0) {
+            currentDemoFile = demoSelect.value;
+            lastSelectedDemo = currentDemoFile;
+        }
+    }
+
+    demoSelect.addEventListener('change', async (e) => {
+        currentDemoFile = e.target.value;
+        lastSelectedDemo = currentDemoFile;
+        localStorage.removeItem("tc_code");
+        await loadDemoFile(currentDemoFile, true);
+    });
+    
+    demoSelect.addEventListener('click', async (e) => {
+        if (demoSelect.value === lastSelectedDemo && demoSelect.value === currentDemoFile) {
+            localStorage.removeItem("tc_code");
+            await loadDemoFile(currentDemoFile, true);
+        }
+    });
+
+    async function loadDemoFile(filePath, forceReload = false) {
+        if (!editor) return;
+        
+        try {
+            const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
+            const response = await fetch(filePath + cacheBuster);
+            
+            if (response.ok) {
+                const code = await response.text();
+                editor.setValue('', -1);
+                await new Promise(resolve => setTimeout(resolve, 50));
+                editor.setValue(code, -1);
+                editor.clearSelection();
+                editor.moveCursorTo(0, 0);
+                localStorage.setItem("tc_code", code);
+                
+                const fileName = filePath.split('/').pop();
+                Logger.success(`Loaded ${fileName}`);
+            } else {
+                Logger.error(`Could not load: ${filePath}`);
+                alert(`Could not load demo file: ${filePath}`);
+            }
+        } catch(e) {
+            Logger.error('Error loading demo file', e);
+            alert(`Error loading demo file: ${filePath}`);
+        }
+    }
+
+    // ==================== EDITOR INITIALIZATION ====================
+
+    async function initializeEditor() {
+        if (!scriptsLoaded.ace || typeof ace === 'undefined') {
+            setTimeout(initializeEditor, 100);
+            return;
+        }
+
+        editor = ace.edit("editor");
+        
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/c_cpp");
+        
+        editor.setShowPrintMargin(false);
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            fontSize: "16px",
+            fontFamily: "'Consolas', 'Monaco', 'Courier New', monospace",
+            highlightActiveLine: true,
+            showGutter: true
+        });
+
+        await loadDemoFileList();
+        await loadDefaultCode();
+
+        editor.on('change', () => {
+            localStorage.setItem("tc_code", editor.getValue());
+        });
+
+        setTimeout(() => {
+            editor.focus();
+            editorWrapper.classList.add('active');
+        }, 100);
+
+        Logger.success('Editor ready');
+    }
+
+    async function loadDefaultCode() {
+        const savedCode = localStorage.getItem("tc_code");
+        if (savedCode) {
+            editor.setValue(savedCode, -1);
+            Logger.info('Restored saved code');
+            return;
+        }
+        await loadDemoFile(currentDemoFile, false);
+    }
+
+    // ==================== KEYBOARD INPUT ISOLATION ====================
+    
+    let keyboardEventBlocker = null;
+
+    function setupKeyboardBlocker() {
+        keyboardEventBlocker = function(e) {
+            if (!terminalFocused) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+            }
+        };
+
+        window.addEventListener('keydown', keyboardEventBlocker, true);
+        window.addEventListener('keyup', keyboardEventBlocker, true);
+        window.addEventListener('keypress', keyboardEventBlocker, true);
+    }
+
+    // ==================== FOCUS MANAGEMENT ====================
+    
+    function focusTerminal() {
+        if (!dosInstance) return;
+        
+        terminalFocused = true;
+        canvas.focus();
+        canvas.tabIndex = 1;
+        terminalWrapper.classList.add('terminal-active');
+        editorWrapper.classList.remove('active');
+        keyboardBlocker.classList.remove('active');
+    }
+
+    function focusEditor() {
+        if (!editor) return;
+        
+        terminalFocused = false;
+        canvas.tabIndex = -1;
+        canvas.blur();
+        editor.focus();
+        terminalWrapper.classList.remove('terminal-active');
+        editorWrapper.classList.add('active');
+        keyboardBlocker.classList.add('active');
+    }
+
+    keyboardBlocker.addEventListener('click', () => {
+        focusTerminal();
+    });
+
+    terminalWrapper.addEventListener('click', (e) => {
+        if (e.target === terminalWrapper || e.target === canvas) {
+            if (dosInstance && !terminalFocused) {
+                focusTerminal();
+            }
+        }
+    });
+
+    editorWrapper.addEventListener('click', () => {
+        focusEditor();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            focusEditor();
+            return false;
+        }
+    }, true);
+
+    // ==================== RUN PROGRAM ====================
+    
+    async function runProgram() {
+        if (!editor) {
+            alert('Editor is still loading. Please wait...');
+            return;
+        }
+
+        const code = editor.getValue();
+        
+        if (!code.trim()) {
+            alert('Please write some code first!');
+            return;
+        }
+
+        Logger.info('Starting compilation...');
+        loading.classList.add('active');
+        loadingText.textContent = 'Initializing DOS environment...';
+        runBtn.disabled = true;
+
+        if (dosInstance) {
+            try {
+                dosInstance.exit();
+            } catch(e) {}
+            dosInstance = null;
+        }
+
+        try {
+            // Wait for Dos to be available
+            if (!scriptsLoaded.jsdos || typeof Dos === 'undefined') {
+                loadingText.textContent = 'Waiting for JS-DOS...';
+                await new Promise((resolve) => {
+                    const checkDos = setInterval(() => {
+                        if (typeof Dos !== 'undefined') {
+                            clearInterval(checkDos);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            }
+
+            // Determine wdosbox URL with proper fallback
+            let wdosboxUrl = './libs/wdosbox.js';
+            let usingOnline = false;
+            
+            try {
+                const response = await fetch("https://js-dos.com/6.22/current/wdosbox.js", { 
+                    method: 'HEAD',
+                    cache: 'no-cache',
+                    signal: AbortSignal.timeout(3000)
+                });
+                if (response.ok) {
+                    wdosboxUrl = "https://js-dos.com/6.22/current/wdosbox.js";
+                    usingOnline = true;
+                }
+            } catch(e) {
+                // Silently fall back to local
+            }
+
+            Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX`);
+
+            Dos(canvas, {
+                wdosboxUrl: wdosboxUrl,
+                cycles: "max",
+                autolock: false,
+            }).ready(async (fs, main) => {
+                
+                loadingText.textContent = 'Loading Turbo C++ compiler...';
+                await fs.extract("./tc.zip");
+
+                loadingText.textContent = 'Writing source code...';
+                fs.createFile("TURBOC3/BIN/USER.CPP", code);
+
+                const batchScript = `@ECHO OFF
+CD TURBOC3\\BIN
+IF EXIST USER.EXE DEL USER.EXE
+TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
+IF EXIST USER.EXE GOTO SUCCESS
+CLS
+ECHO ========================================
+ECHO COMPILATION ERRORS:
+ECHO ========================================
+TYPE ERR.TXT
+ECHO.
+PAUSE
+EXIT
+:SUCCESS
+CLS
+USER.EXE
+PAUSE
+`;
+
+                fs.createFile("AUTOEXEC.BAT", batchScript);
+
+                loadingText.textContent = 'Starting program...';
+                
+                dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
+                
+                setupKeyboardBlocker();
+                
+                loading.classList.remove('active');
+                runBtn.disabled = false;
+                headerStatus.textContent = '● Running';
+                headerStatus.classList.add('active');
+                
+                Logger.success('Program started successfully');
+                
+                setTimeout(() => {
+                    focusTerminal();
+                }, 500);
+            });
+            
+        } catch (error) {
+            Logger.error('Failed to start DOS environment', error);
+            alert('Failed to start DOS environment. Error: ' + error.message);
+            loading.classList.remove('active');
+            runBtn.disabled = false;
+        }
+    }
+
+    // ==================== KEYBOARD SHORTCUTS ====================
+    
+    window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !terminalFocused) {
+            e.preventDefault();
+            runProgram();
+        }
+    });
+
+    // ==================== INITIALIZATION ====================
+    
+    (async function init() {
+        Logger.info('Initializing compiler...');
+        const loaded = await loadAllScripts();
+        if (loaded) {
+            await initializeEditor();
+            Logger.success('Compiler ready');
+        }
+    })();
+
+</script>
+
+</body>
+</html>
