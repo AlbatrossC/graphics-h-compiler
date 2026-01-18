@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import { PathManager, OperatingSystem } from './paths';
 import { WindowsDownloader } from './windowsDownloader';
+import { UbuntuDownloader } from './ubuntuDownloader';
 import { GraphicsCompiler } from './compiler';
 
 let pathManager: PathManager;
 let windowsDownloader: WindowsDownloader | null = null;
+let ubuntuDownloader: UbuntuDownloader | null = null;
 let compiler: GraphicsCompiler;
 let statusBarItem: vscode.StatusBarItem;
 
@@ -15,9 +17,11 @@ export function activate(context: vscode.ExtensionContext) {
     pathManager = new PathManager(context);
     const currentOS = pathManager.getOS();
     
-    // Initialize Windows downloader
+    // Initialize OS-specific downloader
     if (currentOS === OperatingSystem.Windows) {
         windowsDownloader = new WindowsDownloader();
+    } else if (currentOS === OperatingSystem.Linux) {
+        ubuntuDownloader = new UbuntuDownloader();
     }
     
     compiler = new GraphicsCompiler(pathManager);
@@ -27,9 +31,9 @@ export function activate(context: vscode.ExtensionContext) {
     console.log(`Detected OS: ${osName}`);
 
     // Check for unsupported OS
-    if (currentOS !== OperatingSystem.Windows) {
+    if (currentOS !== OperatingSystem.Windows && currentOS !== OperatingSystem.Linux) {
         vscode.window.showErrorMessage(
-            'Graphics.h Compiler: This extension only works on Windows.',
+            'Graphics.h Compiler: This extension only works on Windows and Ubuntu/Linux.',
             'OK'
         );
         return;
@@ -107,7 +111,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 // Show welcome message
 function showWelcomeMessage(context: vscode.ExtensionContext): void {
-    const message = 'Graphics.h Compiler activated! Ready to compile and run graphics programs.';
+    const osName = pathManager.getOSDisplayName();
+    const message = `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`;
 
     vscode.window.showInformationMessage(
         message,
@@ -188,8 +193,8 @@ async function handleCheckDependencies(): Promise<void> {
     }
 }
 
-// Wait for toolchain and ask permission if needed
-async function waitForToolchain(): Promise<boolean> {
+// Wait for toolchain and ask permission if needed (Windows)
+async function waitForToolchainWindows(): Promise<boolean> {
     const missing = pathManager.getMissingDependencies();
     
     if (missing.length === 0) {
@@ -222,6 +227,28 @@ async function waitForToolchain(): Promise<boolean> {
     // User gave permission - start installation
     const targetPath = pathManager.getToolchainPath();
     return await windowsDownloader!.download(targetPath, pathManager.getExtensionPath());
+}
+
+// Wait for toolchain and ask permission if needed (Ubuntu)
+async function waitForToolchainUbuntu(): Promise<boolean> {
+    const missing = pathManager.getMissingDependencies();
+    
+    if (missing.length === 0) {
+        return true;
+    }
+
+    // Toolchain not installed - show installation instructions
+    return await ubuntuDownloader!.promptForInstallation();
+}
+
+// Wait for toolchain (OS-agnostic)
+async function waitForToolchain(): Promise<boolean> {
+    if (pathManager.isWindows()) {
+        return await waitForToolchainWindows();
+    } else if (pathManager.isLinux()) {
+        return await waitForToolchainUbuntu();
+    }
+    return false;
 }
 
 // Handle compile and run
@@ -301,8 +328,8 @@ async function handleCompileOnly(): Promise<void> {
     }
 }
 
-// Handle manual setup
-async function handleSetupToolchain(): Promise<boolean> {
+// Handle manual setup (Windows)
+async function handleSetupToolchainWindows(): Promise<boolean> {
     try {
         const missing = pathManager.getMissingDependencies();
         const osName = pathManager.getOSDisplayName();
@@ -336,6 +363,37 @@ async function handleSetupToolchain(): Promise<boolean> {
         console.error('Setup error:', error);
         return false;
     }
+}
+
+// Handle manual setup (Ubuntu)
+async function handleSetupToolchainUbuntu(): Promise<boolean> {
+    try {
+        const missing = pathManager.getMissingDependencies();
+
+        if (missing.length === 0) {
+            await ubuntuDownloader!.showDetailedStatus();
+            return true;
+        }
+
+        // Show installation instructions
+        return await ubuntuDownloader!.promptForInstallation();
+
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Setup failed: ${errorMsg}`);
+        console.error('Setup error:', error);
+        return false;
+    }
+}
+
+// Handle manual setup (OS-agnostic)
+async function handleSetupToolchain(): Promise<boolean> {
+    if (pathManager.isWindows()) {
+        return await handleSetupToolchainWindows();
+    } else if (pathManager.isLinux()) {
+        return await handleSetupToolchainUbuntu();
+    }
+    return false;
 }
 
 // Handle stop program
