@@ -1,0 +1,167 @@
+{
+  "name": "graphics-h-compiler",
+  "displayName": "Graphics.h Compiler",
+  "description": "C++ graphics.h compiler for Windows",
+  "version": "1.0.0",
+  "publisher": "your-publisher-name",
+  "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/YOUR_REPO"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/YOUR_REPO/issues"
+  },
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers"
+  ],
+  "keywords": [
+    "cpp",
+    "graphics.h",
+    "winbgim",
+    "compiler",
+    "mingw",
+    "windows"
+  ],
+  "activationEvents": [
+    "onLanguage:cpp"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "graphics-h-compiler.compileAndRun",
+        "title": "Run Graphics Program",
+        "category": "Graphics.h",
+        "icon": "$(play)"
+      },
+      {
+        "command": "graphics-h-compiler.compileOnly",
+        "title": "Compile Graphics Program",
+        "category": "Graphics.h",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "graphics-h-compiler.setupToolchain",
+        "title": "Setup Graphics.h Toolchain",
+        "category": "Graphics.h"
+      },
+      {
+        "command": "graphics-h-compiler.stopProgram",
+        "title": "Stop Running Graphics Program",
+        "category": "Graphics.h",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "graphics-h-compiler.checkDependencies",
+        "title": "Check Dependencies",
+        "category": "Graphics.h",
+        "icon": "$(checklist)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "graphics-h-compiler.compileAndRun",
+        "key": "ctrl+alt+n",
+        "when": "editorLangId == cpp"
+      },
+      {
+        "command": "graphics-h-compiler.compileOnly",
+        "key": "ctrl+alt+b",
+        "when": "editorLangId == cpp"
+      },
+      {
+        "command": "graphics-h-compiler.stopProgram",
+        "key": "ctrl+alt+k",
+        "when": "editorLangId == cpp"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "when": "resourceExtname == .cpp",
+          "command": "graphics-h-compiler.compileAndRun",
+          "group": "navigation@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "resourceExtname == .cpp",
+          "command": "graphics-h-compiler.compileAndRun",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "graphics-h-compiler.compileAndRun",
+          "when": "editorLangId == cpp"
+        },
+        {
+          "command": "graphics-h-compiler.compileOnly",
+          "when": "editorLangId == cpp"
+        },
+        {
+          "command": "graphics-h-compiler.stopProgram",
+          "when": "editorLangId == cpp"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Graphics.h Compiler",
+      "properties": {
+        "graphics-h-compiler.autoRun": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run program after successful compilation"
+        },
+        "graphics-h-compiler.showOutputPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show output panel during compilation"
+        },
+        "graphics-h-compiler.clearOutputBeforeCompile": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clear output panel before each compilation"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.96.0",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.17.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@types/node-fetch": "^2.6.11",
+    "adm-zip": "^0.5.10",
+    "node-fetch": "^2.7.0"
+  }
+}
