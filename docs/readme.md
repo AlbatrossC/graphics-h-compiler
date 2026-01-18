@@ -46,7 +46,7 @@ The compiler can be used:
 ## Run Locally
 
 ```bash
-git clone https://github.com/AlbatrossC/graphics.h-online-compiler.git
+git clone https://github.com/AlbatrossC/graphics-h-compiler.git
 cd graphics.h-online-compiler
 python -m http.server 8000
 ```

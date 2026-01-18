@@ -1,32 +1,51 @@
 {
   "name": "graphics-h-compiler",
   "displayName": "Graphics.h Compiler",
-  "description": "C++ graphics.h compiler for Windows",
+  "description": "Compile and run C++ graphics.h programs with one click. Includes automatic MinGW setup and WinBGIM library for Windows.",
   "version": "1.0.0",
-  "publisher": "your-publisher-name",
-  "icon": "resources/icon.png",
+  "publisher": "AlbatrossC",
+  "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/YOUR_REPO"
+    "url": "https://github.com/AlbatrossC/graphics-h-compiler"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/YOUR_REPO/issues"
+    "url": "https://github.com/AlbatrossC/graphics-h-compiler/issues"
   },
+  "homepage": "https://github.com/AlbatrossC/graphics-h-compiler#readme",
   "engines": {
     "vscode": "^1.96.0"
   },
   "categories": [
     "Programming Languages",
-    "Debuggers"
+    "Education",
+    "Other"
   ],
   "keywords": [
-    "cpp",
     "graphics.h",
+    "graphics",
     "winbgim",
+    "bgi",
+    "cpp",
+    "c++",
     "compiler",
     "mingw",
-    "windows"
+    "compile",
+    "run",
+    "graphics programming",
+    "computer graphics",
+    "turbo c++",
+    "borland",
+    "legacy",
+    "windows",
+    "student",
+    "education",
+    "teaching"
   ],
+  "galleryBanner": {
+    "color": "#2196F3",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onLanguage:cpp"
   ],

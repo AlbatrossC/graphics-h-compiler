@@ -16,7 +16,7 @@ export class WindowsDownloader {
 
     // Configuration for MinGW download
     private readonly MINGW_CONFIG: DownloadConfig = {
-        url: 'https://github.com/AlbatrossC/graphics.h-online-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
+        url: 'https://github.com/AlbatrossC/graphics-h-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
         sha256: '72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd'
     };
 
@@ -306,7 +306,7 @@ export class WindowsDownloader {
                             this.download(targetPath, extensionPath);
                         } else if (choice === 'Report Issue') {
                             vscode.env.openExternal(
-                                vscode.Uri.parse('https://github.com/AlbatrossC/graphics.h-online-compiler/issues')
+                                vscode.Uri.parse('https://github.com/AlbatrossC/graphics-h-compiler/issues')
                             );
                         }
                     });
