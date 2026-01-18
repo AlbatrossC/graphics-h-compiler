@@ -8,7 +8,6 @@ import AdmZip from 'adm-zip';
 interface DownloadConfig {
     url: string;
     sha256?: string;
-    fallbackUrls?: string[];
 }
 
 export class WindowsDownloader {
@@ -17,9 +16,8 @@ export class WindowsDownloader {
 
     // Configuration for MinGW download
     private readonly MINGW_CONFIG: DownloadConfig = {
-        url: 'https://www.dropbox.com/scl/fi/82j3vrao5my1w8amee44v/mingw32.zip?rlkey=0issjauibhxolr3iiypc5qpjc&e=2&st=x6obvlyq&dl=1',
-        sha256: '',
-        fallbackUrls: []
+        url: 'https://github.com/AlbatrossC/graphics.h-online-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
+        sha256: '72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd'
     };
 
     isInProgress(): boolean {
@@ -53,7 +51,7 @@ export class WindowsDownloader {
         }
     }
 
-    // Download from URL with fallback support
+    // Download from URL
     private async downloadFromUrl(
         url: string,
         tempZip: string,
@@ -243,42 +241,7 @@ export class WindowsDownloader {
                     }
 
                     // Download MinGW32
-                    const urlsToTry = [
-                        this.MINGW_CONFIG.url,
-                        ...(this.MINGW_CONFIG.fallbackUrls || [])
-                    ];
-
-                    let downloadSuccess = false;
-                    let lastError: Error | null = null;
-
-                    for (const url of urlsToTry) {
-                        if (!url) continue;
-
-                        try {
-                            await this.downloadFromUrl(url, tempZip, progress);
-                            downloadSuccess = true;
-                            break;
-                        } catch (error) {
-                            lastError = error instanceof Error ? error : new Error(String(error));
-                            
-                            if (fs.existsSync(tempZip)) {
-                                try {
-                                    fs.unlinkSync(tempZip);
-                                } catch (cleanupError) {
-                                    console.error('Failed to delete partial zip:', cleanupError);
-                                }
-                            }
-
-                            if (url !== urlsToTry[urlsToTry.length - 1]) {
-                                console.log(`Trying fallback URL...`);
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (!downloadSuccess) {
-                        throw lastError || new Error('All download URLs failed');
-                    }
+                    await this.downloadFromUrl(this.MINGW_CONFIG.url, tempZip, progress);
 
                     // Extract MinGW32
                     progress.report({ 
@@ -343,7 +306,7 @@ export class WindowsDownloader {
                             this.download(targetPath, extensionPath);
                         } else if (choice === 'Report Issue') {
                             vscode.env.openExternal(
-                                vscode.Uri.parse('https://github.com/YOUR_USERNAME/YOUR_REPO/issues')
+                                vscode.Uri.parse('https://github.com/AlbatrossC/graphics.h-online-compiler/issues')
                             );
                         }
                     });
