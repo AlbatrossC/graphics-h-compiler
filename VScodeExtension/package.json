@@ -2,7 +2,7 @@
   "name": "graphics-h-compiler",
   "displayName": "Graphics.h Compiler",
   "description": "Compile and run C++ graphics.h programs with one click. Includes automatic MinGW setup and WinBGIM library for Windows.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "AlbatrossC",
   "icon": "assets/icon.png",
   "repository": {
