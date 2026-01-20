@@ -12,8 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Preload videos for faster loading -->
-    <link rel="preload" href="/static/videos/vscode-demo.v2.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="/static/videos/oc-demo.v2.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="static/videos/vscode-demo.v2.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="static/videos/oc-demo.v2.mp4" as="video" type="video/mp4">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -366,9 +366,8 @@
                                         loop 
                                         muted 
                                         playsinline
-                                        preload="auto"
-                                        poster="/static/videos/vscode-poster.jpg">
-                                        <source src="/static/videos/vscode-demo.v2.mp4" type="video/mp4">
+                                        preload="auto">
+                                        <source src="static/videos/vscode-demo.v2.mp4" type="video/mp4">
                                         Your browser does not support the video tag.
                                     </video>
                                 </div>
@@ -381,9 +380,8 @@
                                         loop 
                                         muted 
                                         playsinline
-                                        preload="auto"
-                                        poster="/static/videos/oc-poster.jpg">
-                                        <source src="/static/videos/oc-demo.v2.mp4" type="video/mp4">
+                                        preload="auto">
+                                        <source src="static/videos/oc-demo.v2.mp4" type="video/mp4">
                                         Your browser does not support the video tag.
                                     </video>
                                 </div>
@@ -491,8 +489,21 @@
             });
         }
 
+        // Add error handling for video loading
+        vscodeVideo.addEventListener('error', (e) => {
+            console.error('VS Code video failed to load:', e);
+            console.log('Video src:', vscodeVideo.querySelector('source').src);
+        });
+
+        onlineVideo.addEventListener('error', (e) => {
+            console.error('Online video failed to load:', e);
+            console.log('Video src:', onlineVideo.querySelector('source').src);
+        });
+
         // Initialize videos on page load
         window.addEventListener('load', () => {
+            console.log('Page loaded, initializing videos...');
+            
             // Start playing the VS Code video (default visible)
             ensureVideoReady(vscodeVideo).then(() => {
                 vscodeVideo.play().catch(err => {
@@ -599,7 +610,7 @@
             // Lazy load contact.js only when needed
             if (!window.ContactModal) {
                 const script = document.createElement('script');
-                script.src = '/static/contact.js';
+                script.src = 'static/contact.js';
                 script.onload = () => {
                     window.ContactModal.open();
                 };
