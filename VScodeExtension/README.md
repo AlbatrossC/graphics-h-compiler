@@ -8,7 +8,7 @@
 
 ![Demo](assets/demo.gif)
 
-> **Try it online:** [graphics.h Online Compiler](https://albatrossc.github.io/graphics.h-online-compiler/) - No installation required!
+> **Try it online:** [graphics.h Online Compiler](https://graphics-h-compiler.vercel.app//) - No installation required!
 
 ---
 
@@ -88,7 +88,7 @@ Access settings via `Ctrl+,` and search for **"graphics-h-compiler"**:
 
 ## Links
 
-- **[Try Online Compiler](https://albatrossc.github.io/graphics.h-online-compiler/)** - No installation required
+- **[Try Online Compiler](https://graphics-h-compiler.vercel.app//)** - No installation required
 - **[GitHub Repository](https://github.com/AlbatrossC/graphics-h-compiler)** - Source code and documentation
 - **[Report Issues](https://github.com/AlbatrossC/graphics-h-compiler/issues)** - Bug reports and feature requests
 - **[Ubuntu Install Script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/Installers/ubuntu_install.sh)** - View what gets installed
