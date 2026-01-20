@@ -1,14 +1,31 @@
+# Dev / editor
 .vscode/**
 .vscode-test/**
-src/**
-.gitignore
 .yarnrc
 vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
-**/*.map
+
+# Source
+src/**
 **/*.ts
-!dist/**
-out/**
+**/*.map
+**/tsconfig.json
+
+# Tooling
 node_modules/**
+out/**
 .eslintrc.json
+eslint.config.mjs
+esbuild.js
+
+resources/mingw32.zip
+resources/**/*.zip
+
+
+!dist/**
+!resources/graphics/**
+
+# Docs
+!.gitignore
+!README.md
+!CHANGELOG.md
+!LICENSE
