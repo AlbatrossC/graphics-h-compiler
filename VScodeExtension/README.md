@@ -6,7 +6,7 @@
 [![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-007ACC?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-![Demo](assets/demo.gif)
+![Demo](https://media.githubusercontent.com/media/AlbatrossC/graphics-h-compiler/refs/heads/test/VScodeExtension/assets/demo.gif)
 
 > **Try it online:** [graphics.h Online Compiler](https://graphics-h-compiler.vercel.app//) - No installation required!
 
