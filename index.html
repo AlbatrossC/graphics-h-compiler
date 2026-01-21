@@ -14,29 +14,30 @@
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://graphicsh.com/">
+    <meta property="og:url" content="https://graphics-h-compiler.vercel.app/">
     <meta property="og:title" content="graphics.h Compiler - Run Graphics Programs Anywhere">
     <meta property="og:description" content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution. Say goodbye to Turbo C and DOSBox.">
-    <meta property="og:image" content="https://graphicsh.com/og-image.png">
+    <meta property="og:image" content="https://graphics-h-compiler.vercel.app/og-image.png">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://graphicsh.com/">
+    <meta property="twitter:url" content="https://graphics-h-compiler.vercel.app/">
     <meta property="twitter:title" content="graphics.h Compiler - Run Graphics Programs Anywhere">
     <meta property="twitter:description" content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution.">
-    <meta property="twitter:image" content="https://graphicsh.com/og-image.png">
+    <meta property="twitter:image" content="https://graphics-h-compiler.vercel.app/og-image.png">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://graphicsh.com/">
+    <link rel="canonical" href="https://graphics-h-compiler.vercel.app/">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Preload videos for faster loading -->
     <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo.mp4" as="video" type="video/mp4">
@@ -47,196 +48,1146 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-light: #fafafa;
+            --text-dark: #0a0a0a;
+            --text-light: #fafafa;
+            --accent: #00ff88;
+            --accent-dark: #00cc6a;
+            --border-light: #e5e5e5;
+            --border-dark: #1a1a1a;
+            --code-bg-light: #f5f5f5;
+            --code-bg-dark: #151515;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        body.light {
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        /* Typography */
+        .mono {
+            font-family: 'Space Mono', 'JetBrains Mono', monospace;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: var(--bg-dark);
+            border-bottom: 2px solid var(--border-dark);
+            transition: var(--transition);
+        }
+
+        body.light header {
+            background: var(--bg-light);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo .bracket {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid transparent;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-dark);
+            border-color: var(--accent-dark);
+        }
+
+        .btn-outline {
+            border-color: currentColor;
+        }
+
+        body.light .btn-outline:hover {
+            background: var(--text-dark);
+            color: var(--text-light);
+        }
+
+        body:not(.light) .btn-outline:hover {
+            background: var(--text-light);
+            color: var(--text-dark);
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: 2px solid transparent;
+        }
+
+        body.light .btn-icon {
+            border-color: var(--border-light);
+        }
+
+        body:not(.light) .btn-icon {
+            border-color: var(--border-dark);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-container {
+            max-width: 1500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        @media (min-width: 1024px) {
+            .hero {
+                padding: 0 3rem;
+            }
+            
+            .hero-grid {
+                grid-template-columns: 1fr 1.15fr;
+                gap: 4rem;
+            }
+        }
+        
+        @media (max-width: 1023px) {
+            .hero {
+                height: auto;
+                min-height: 100vh;
+                padding: 8rem 2rem 4rem;
+            }
+        }
+
+        /* Headline */
+        .headline {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            line-height: 0.95;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.2rem;
+        }
+
+        .headline .highlight {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent);
+            display: inline-block;
+            position: relative;
+        }
+
+        .headline .highlight::after {
+            content: '_';
+            animation: blink 1s infinite;
+            color: var(--accent);
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .subheadline {
+            font-size: clamp(0.85rem, 1.6vw, 0.95rem);
+            line-height: 1.6;
+            margin-bottom: 1.8rem;
+            opacity: 0.85;
+            max-width: 520px;
+        }
+
+        /* Status Badge - Improved */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.7rem 1.2rem;
+            border: 2px solid var(--accent);
+            margin-bottom: 1.2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: rgba(0, 255, 136, 0.12);
+            letter-spacing: 0.02em;
+        }
+
+        body.light .status-badge {
+            background: rgba(0, 255, 136, 0.18);
+            border-color: var(--accent);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        /* CTA Buttons */
+        .cta-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.9rem;
+            margin-bottom: 1.3rem;
+        }
+
+        .cta-btn {
+            padding: 0.8rem 1.6rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cta-btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border-color: var(--accent);
+        }
+
+        .cta-btn-primary:hover {
+            background: transparent;
+            color: var(--accent);
+            transform: translateY(-3px);
+        }
+
+        .cta-btn-secondary {
+            background: transparent;
+            border-color: currentColor;
+        }
+
+        body.light .cta-btn-secondary:hover {
+            background: var(--text-dark);
+            color: var(--text-light);
+            transform: translateY(-3px);
+        }
+
+        body:not(.light) .cta-btn-secondary:hover {
+            background: var(--text-light);
+            color: var(--text-dark);
+            transform: translateY(-3px);
+        }
+
+        /* VS Code Button - Blue */
+        .cta-btn-vscode {
+            background: #007ACC;
+            border-color: #007ACC;
+            color: white;
+        }
+
+        .cta-btn-vscode:hover {
+            background: #005a9e;
+            border-color: #005a9e;
+            transform: translateY(-3px);
+        }
+
+        /* VS Code icon color fix */
+        .vscode-icon {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) invert(1);
+        }
+
+        /* Features List */
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .feature-item {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            opacity: 0.9;
+        }
+
+        .feature-item::before {
+            content: '→';
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            position: relative;
+        }
+
+        .demo-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .demo-tabs {
+            display: flex;
+            gap: 0;
+            border: 2px solid;
+            margin-top: 1rem;
+        }
+
+        body.light .demo-tabs {
+            border-color: var(--border-light);
+        }
+
+        body:not(.light) .demo-tabs {
+            border-color: var(--border-dark);
+        }
+
+        .demo-tab {
+            flex: 1;
+            padding: 0.7rem 1.3rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.5;
+        }
+
+        .demo-tab.active {
+            background: var(--accent);
+            color: var(--bg-dark);
+            opacity: 1;
+        }
+
+        .demo-tab:not(.active):hover {
+            opacity: 0.8;
+        }
+
+        /* Video Container */
+        .video-container {
+            position: relative;
+            border: 4px solid;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        body.light .video-container {
+            border-color: var(--text-dark);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        body:not(.light) .video-container {
+            border-color: var(--accent);
+            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.3);
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 60%;
+            height: 0;
+        }
+
+        @media (min-width: 1024px) {
+            .video-wrapper {
+                padding-bottom: 56.25%;
+            }
+        }
+
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .demo-video {
+            display: none;
+        }
+
+        .demo-video.active {
+            display: block;
+        }
+
+        /* Video Description */
+        .video-description {
+            margin-top: 1rem;
+            padding: 0.9rem 1rem;
+            border: 2px solid;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .video-description.active {
+            display: block;
+        }
+
+        body.light .video-description {
+            border-color: var(--border-light);
+            background: var(--code-bg-light);
+        }
+
+        body:not(.light) .video-description {
+            border-color: var(--border-dark);
+            background: var(--code-bg-dark);
+        }
+
+        .video-description-title {
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            font-size: 0.85rem;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 700px;
+            width: 100%;
+            background: var(--bg-dark);
+            border: 3px solid var(--text-light);
+            padding: 3rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        body.light .modal-content {
+            background: var(--bg-light);
+            border-color: var(--text-dark);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            border: 2px solid currentColor;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: currentColor;
+            color: var(--bg-dark);
+            transform: rotate(90deg);
+        }
+
+        body.light .modal-close:hover {
+            color: var(--bg-light);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            font-family: 'Space Mono', monospace;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-text strong {
+            color: var(--accent);
+        }
+
+        .modal-list {
+            margin: 1.5rem 0;
+            padding-left: 2rem;
+        }
+
+        .modal-list li {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        .modal-highlight {
+            border: 2px solid var(--accent);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        /* Background Pattern */
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.04;
+            z-index: -1;
+        }
+
+        body.light .bg-pattern {
+            opacity: 0.025;
+        }
+
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, currentColor 2px, currentColor 3px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, currentColor 2px, currentColor 3px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* Noise Texture */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        body.light .noise-overlay {
+            opacity: 0.02;
+        }
+
+        /* Accent Corner */
+        .accent-corner {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            opacity: 0.15;
+            z-index: -1;
+            filter: blur(120px);
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        body.light .accent-corner {
+            opacity: 0.08;
+        }
+
+        .accent-corner.top-right {
+            top: -100px;
+            right: -100px;
+        }
+
+        .accent-corner.bottom-left {
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        /* Animated Lines */
+        .animated-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .line {
+            position: absolute;
+            background: var(--accent);
+            opacity: 0.1;
+        }
+
+        body.light .line {
+            opacity: 0.06;
+        }
+
+        .line.horizontal {
+            width: 0;
+            height: 2px;
+            left: 0;
+            animation: lineExpandHorizontal 4s ease-in-out infinite;
+        }
+
+        .line.vertical {
+            height: 0;
+            width: 2px;
+            top: 0;
+            animation: lineExpandVertical 4s ease-in-out infinite;
+        }
+
+        .line-1 { top: 20%; animation-delay: 0s; }
+        .line-2 { top: 50%; animation-delay: 1s; }
+        .line-3 { top: 80%; animation-delay: 2s; }
+        .line-4 { left: 25%; animation-delay: 0.5s; }
+        .line-5 { left: 75%; animation-delay: 1.5s; }
+
+        @keyframes lineExpandHorizontal {
+            0%, 100% { width: 0; opacity: 0; }
+            10%, 90% { opacity: 0.1; }
+            50% { width: 100%; }
+        }
+
+        @keyframes lineExpandVertical {
+            0%, 100% { height: 0; opacity: 0; }
+            10%, 90% { opacity: 0.1; }
+            50% { height: 100%; }
+        }
+
+        /* Scan Line Effect */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .scanline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to bottom, 
+                transparent, 
+                var(--accent), 
+                transparent);
+            opacity: 0.15;
+            animation: scan 8s linear infinite;
+        }
+
+        body.light .scanline::before {
+            opacity: 0.08;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 1rem;
+            }
+
+            .hero {
+                padding: 6rem 1rem 2rem;
+            }
+
+            .headline {
+                font-size: 2.5rem;
+            }
+
+            .cta-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .demo-tabs {
+                flex-direction: row;
+            }
+
+            .demo-tab {
+                flex: 1;
+            }
+
+            .btn {
+                font-size: 0.85rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .btn-text {
+                display: none;
+            }
+
+            .modal-content {
+                padding: 2rem;
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+            }
+
+            /* Hide complex background effects on mobile */
+            .animated-lines,
+            .scanline {
+                display: none;
+            }
+            
+            .accent-corner {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        /* Initial state */
+        .animate-in {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-pattern"></div>
+    <div class="noise-overlay"></div>
+    <div class="accent-corner top-right"></div>
+    <div class="accent-corner bottom-left"></div>
+    
+    <!-- Animated Lines -->
+    <div class="animated-lines">
+        <div class="line horizontal line-1"></div>
+        <div class="line horizontal line-2"></div>
+        <div class="line horizontal line-3"></div>
+        <div class="line vertical line-4"></div>
+        <div class="line vertical line-5"></div>
+    </div>
+    
+    <!-- Scanline Effect -->
+    <div class="scanline"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <span class="bracket">&lt;</span>
+                <span>graphics.h</span>
+                <span class="bracket">/&gt;</span>
+            </div>
+
+            <nav>
+                <button class="btn btn-icon" onclick="toggleTheme()" title="Toggle theme">
+                    <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
+                    <i data-lucide="moon" class="theme-icon-dark"></i>
+                </button>
+                <button class="btn btn-outline" onclick="openContactModal()">
+                    <i data-lucide="mail"></i>
+                    <span class="btn-text">Contact</span>
+                </button>
+                <button class="btn btn-outline" onclick="openModal()">
+                    <i data-lucide="info"></i>
+                    <span class="btn-text">About</span>
+                </button>
+                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+                    <i data-lucide="github"></i>
+                    <span class="btn-text">Source</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="hero">
+        <div class="hero-container">
+            <div class="hero-grid">
+                <!-- Left: Content -->
+                <div>
+                    <div class="status-badge animate-in delay-1">
+                        <span class="status-dot"></span>
+                        <span>Works on Windows, Ubuntu and Browser</span>
+                    </div>
+
+                    <h1 class="headline animate-in delay-2">
+                        Run<br>
+                        <span class="highlight">graphics.h</span><br>
+                        Anywhere
+                    </h1>
+
+                    <p class="subheadline animate-in delay-3">
+                        Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with broken legacy setups. This modern compiler brings graphics.h into the 21st century—run your programs instantly in any browser or directly within VS Code, with zero configuration required.
+                    </p>
+
+                    <div class="cta-group animate-in delay-4">
+                        <a href="/compiler.html" class="cta-btn cta-btn-primary">
+                            <i data-lucide="terminal"></i>
+                            <span>Open Online Compiler</span>
+                        </a>
+                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler" 
+                           target="_blank" 
+                           rel="noopener noreferrer" 
+                           class="cta-btn cta-btn-vscode">
+                            <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
+                            <span>Get VS Code Extension</span>
+                        </a>
+                    </div>
+
+                    <div class="features-list animate-in delay-4">
+                        <div class="feature-item">Zero Setup</div>
+                        <div class="feature-item">Browser & VS Code</div>
+                        <div class="feature-item">IntelliSense Support</div>
+                    </div>
+                </div>
+
+                <!-- Right: Demo -->
+                <div class="demo-section animate-in delay-3">
+                    <div class="demo-title">SEE IT IN ACTION</div>
+
+                    <div class="video-container">
+                        <div class="video-wrapper">
+                            <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline preload="auto">
+                                <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo.mp4" type="video/mp4">
+                            </video>
+                            <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
+                                <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+
+                    <!-- Video Descriptions -->
+                    <div id="vscode-description" class="video-description active">
+                        <div class="video-description-title">VS Code Extension Demo</div>
+                        <div>IntelliSense, auto-complete, and error detection for graphics.h</div>
+                    </div>
+
+                    <div id="online-description" class="video-description">
+                        <div class="video-description-title">Online Compiler Demo</div>
+                        <div>Instant compile and live graphics output in your browser</div>
+                    </div>
+
+                    <!-- Tabs below video -->
+                    <div class="demo-tabs">
+                        <button class="demo-tab active" data-demo="vscode" onclick="switchDemo('vscode')">
+                            VS Code
+                        </button>
+                        <button class="demo-tab" data-demo="online" onclick="switchDemo('online')">
+                            Online
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">
+                <i data-lucide="x"></i>
+            </button>
+
+            <h2 class="modal-title">Why This Exists</h2>
+
+            <p class="modal-text">
+                <strong>graphics.h</strong> is a legacy graphics library still taught in Computer Graphics courses—especially in SPPU curriculum. But running it today requires jumping through hoops: installing Turbo C, configuring DOSBox, dealing with broken environments.
+            </p>
+
+            <p class="modal-text">
+                Students waste hours fighting setup instead of learning graphics programming.
+            </p>
+
+            <p class="modal-text">
+                <strong>This project eliminates that friction.</strong>
+            </p>
+
+            <p class="modal-text">
+                It provides two ways to run graphics.h programs instantly:
+            </p>
+
+            <ul class="modal-list">
+                <li><strong>Online compiler</strong> – Works directly in your browser</li>
+                <li><strong>VS Code extension</strong> – Integrates with your local development environment</li>
+            </ul>
+
+            <p class="modal-text">
+                No legacy tools. No manual configuration. Just write code and run it.
+            </p>
+
+            <div class="modal-highlight">
+                <p class="modal-text">
+                    Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students focus on learning graphics, not wrestling with 1990s software.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/analytics.js" async></script>
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        primary: "hsl(217 91% 60%)",
-                        accent: "hsl(199 89% 48%)",
-                        github: "#24292e",
-                        vscode: "#007ACC",
-                    }
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const isLight = body.classList.toggle('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            
+            // Update icons
+            const lightIcons = document.querySelectorAll('.theme-icon-light');
+            const darkIcons = document.querySelectorAll('.theme-icon-dark');
+            
+            lightIcons.forEach(icon => icon.style.display = isLight ? 'block' : 'none');
+            darkIcons.forEach(icon => icon.style.display = isLight ? 'none' : 'block');
+            
+            lucide.createIcons();
+        }
+
+        // Initialize theme from localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+            document.querySelectorAll('.theme-icon-light').forEach(icon => icon.style.display = 'block');
+            document.querySelectorAll('.theme-icon-dark').forEach(icon => icon.style.display = 'none');
+        }
+
+        // Video Management
+        const vscodeVideo = document.getElementById('vscode-video');
+        const onlineVideo = document.getElementById('online-video');
+        const vscodeDescription = document.getElementById('vscode-description');
+        const onlineDescription = document.getElementById('online-description');
+
+        function switchDemo(type) {
+            const tabs = document.querySelectorAll('.demo-tab');
+            const videos = document.querySelectorAll('.demo-video');
+
+            tabs.forEach(tab => {
+                if (tab.dataset.demo === type) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
                 }
+            });
+
+            if (type === 'vscode') {
+                vscodeVideo.classList.add('active');
+                onlineVideo.classList.remove('active');
+                vscodeDescription.classList.add('active');
+                onlineDescription.classList.remove('active');
+                vscodeVideo.play().catch(() => {});
+                onlineVideo.pause();
+            } else {
+                onlineVideo.classList.add('active');
+                vscodeVideo.classList.remove('active');
+                onlineDescription.classList.add('active');
+                vscodeDescription.classList.remove('active');
+                onlineVideo.play().catch(() => {});
+                vscodeVideo.pause();
+            }
+
+            lucide.createIcons();
+        }
+
+        // Ensure video plays on load
+        window.addEventListener('load', () => {
+            vscodeVideo.play().catch(() => {});
+            lucide.createIcons();
+        });
+
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                if (vscodeVideo.classList.contains('active')) {
+                    vscodeVideo.play().catch(() => {});
+                } else {
+                    onlineVideo.play().catch(() => {});
+                }
+            }
+        });
+
+        // Modal Management
+        function openModal() {
+            const modal = document.getElementById('about-modal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => lucide.createIcons(), 50);
+        }
+
+        function closeModal(event) {
+            if (!event || event.target.id === 'about-modal' || event.target.closest('.modal-close')) {
+                const modal = document.getElementById('about-modal');
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                // Also close contact modal if it's loaded
+                if (window.ContactModal) {
+                    window.ContactModal.close();
+                }
+            }
+        });
+
+        // Contact Modal - Lazy loaded for performance
+        function openContactModal() {
+            if (!window.ContactModal) {
+                const script = document.createElement('script');
+                script.src = 'static/contact.js';
+                script.onload = () => {
+                    window.ContactModal.open();
+                };
+                document.head.appendChild(script);
+            } else {
+                window.ContactModal.open();
             }
         }
     </script>
-
-    <style type="text/tailwindcss">
-        @layer components {
-            .btn-primary {
-                @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-white transition-all duration-300 text-sm;
-                background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
-                box-shadow: 0 4px 14px -2px rgba(59, 130, 246, 0.4);
-            }
-            .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px -2px rgba(59, 130, 246, 0.5); }
-            
-            .btn-secondary {
-                @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold border-2 border-slate-300 bg-white text-slate-800 transition-all duration-300 text-sm;
-            }
-            .btn-secondary:hover { @apply border-blue-400 bg-slate-50; transform: translateY(-1px); }
-
-            .btn-github {
-                @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold border-2 transition-all duration-300 text-sm;
-                background: #24292e;
-                border-color: #24292e;
-                color: white;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            }
-            .btn-github:hover { 
-                transform: translateY(-1px); 
-                background: #1a1e22;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            }
-
-            .btn-about {
-                @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold border-2 transition-all duration-300 text-sm;
-                background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-                border-color: #cbd5e1;
-                color: #1e293b;
-                box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.1);
-            }
-            .btn-about:hover { 
-                transform: translateY(-1px); 
-                background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-                border-color: #94a3b8;
-                box-shadow: 0 4px 12px -1px rgba(0, 0, 0, 0.15);
-            }
-
-            .btn-contact {
-                @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold border-2 transition-all duration-300 text-sm;
-                background: #3b82f6;
-                border-color: #2563eb;
-                color: white;
-                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-            }
-            .btn-contact:hover { 
-                transform: translateY(-1px); 
-                background: #2563eb;
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            }
-
-            .btn-vscode {
-                @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold border-2 transition-all duration-300 text-sm;
-                background: #007ACC;
-                border-color: #005a9e;
-                color: white;
-                box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
-            }
-            .btn-vscode:hover { 
-                transform: translateY(-1px); 
-                background: #005a9e;
-                box-shadow: 0 4px 12px rgba(0, 122, 204, 0.4);
-            }
-
-            /* Modal Styles */
-            .modal {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.6);
-                backdrop-filter: blur(8px);
-                z-index: 1000;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-            }
-            .modal.active {
-                display: flex;
-                opacity: 1;
-            }
-            .modal-content {
-                background: white;
-                border-radius: 1.5rem;
-                max-width: 600px;
-                width: 90%;
-                max-height: 80vh;
-                overflow-y: auto;
-                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-                transform: scale(0.9);
-                transition: transform 0.3s ease;
-            }
-            .modal.active .modal-content {
-                transform: scale(1);
-            }
-            .modal-close {
-                @apply w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer;
-            }
-
-            .gradient-text {
-                background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-
-            .tab-active { @apply bg-blue-600 text-white shadow-md; }
-            .tab-inactive { @apply text-slate-500 hover:text-slate-900; }
-
-            /* Video container styles */
-            .demo-video {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                display: block;
-            }
-
-            /* Animated Grid Background */
-            @keyframes gridPulse {
-                0%, 100% { opacity: 0.06; }
-                50% { opacity: 0.12; }
-            }
-            
-            @keyframes gradientShift {
-                0%, 100% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-            }
-
-            @keyframes float {
-                0%, 100% { transform: translateY(0px) rotate(0deg); }
-                33% { transform: translateY(-25px) rotate(5deg); }
-                66% { transform: translateY(-15px) rotate(-3deg); }
-            }
-
-            @keyframes drawPath {
-                0% { stroke-dashoffset: 1000; }
-                100% { stroke-dashoffset: 0; }
-            }
-
-            .animate-grid-pulse { animation: gridPulse 3s ease-in-out infinite; }
-            .animate-gradient-shift { animation: gradientShift 8s ease infinite; }
-            .animate-float-slow { animation: float 8s ease-in-out infinite; }
-            .animate-draw { 
-                stroke-dasharray: 1000;
-                animation: drawPath 20s linear infinite;
-            }
-
-            /* Enhanced Mouse spotlight effect */
-            .mouse-spotlight {
-                position: absolute;
-                width: 800px;
-                height: 800px;
-                border-radius: 50%;
-                pointer-events: none;
-                background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(14, 165, 233, 0.20) 30%, rgba(99, 102, 241, 0.10) 50%, transparent 70%);
-                transform: translate(-50%, -50%);
-                transition: opacity 0.3s ease;
-                z-index: 1;
-                filter: blur(60px);
-            }
-
-            /* Mobile Responsive Adjustments */
-            @media (max-width: 1024px) {
-                .animate-float-slow { animation: float 10s ease-in-out infinite; }
-            }
-
-            @media (max-width: 768px) {
-                .mouse-spotlight { display: none; }
-            }
-        }
-    </style>
 
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -251,433 +1202,8 @@
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "USD"
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "ratingCount": "150"
         }
     }
-    </script>
-</head>
-<body class="bg-white font-sans antialiased text-slate-900 min-h-screen overflow-x-hidden">
-
-    <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 h-16 flex items-center bg-white/70 backdrop-blur-xl border-b border-slate-200/50">
-        <div class="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            <div class="flex items-center gap-2 sm:gap-3">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center overflow-hidden shadow-lg">
-                    <img src="logo.png" alt="graphics.h logo" class="w-full h-full object-cover">
-                </div>
-                <span class="font-extrabold text-sm sm:text-base tracking-tight">graphics<span class="text-sky-500">.h</span> compiler</span>
-            </div>
-
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button class="btn-contact hidden sm:inline-flex" onclick="openContactModal()">
-                    <i data-lucide="mail" class="w-4 h-4"></i>
-                    Contact
-                </button>
-                <button class="btn-about hidden sm:inline-flex" onclick="openModal()">
-                    <i data-lucide="info" class="w-4 h-4"></i>
-                    About
-                </button>
-                <button class="btn-about inline-flex sm:hidden" onclick="openModal()">
-                    <i data-lucide="info" class="w-4 h-4"></i>
-                </button>
-                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer" class="btn-github">
-                    <i data-lucide="github" class="w-4 h-4"></i>
-                    <span class="font-bold hidden sm:inline">Source Code</span>
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <main class="relative min-h-screen flex items-center justify-center pt-20 sm:pt-24 pb-8 sm:pb-12">
-        <!-- Enhanced Cool Background -->
-        <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none bg-gradient-to-br from-slate-50 via-white to-blue-50">
-            
-            <!-- Enhanced Mouse Spotlight Effect (Desktop only) -->
-            <div id="mouse-spotlight" class="mouse-spotlight" style="opacity: 0;"></div>
-            
-            <!-- Animated Gradient Mesh -->
-            <div class="absolute inset-0 opacity-50">
-                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-200/40 via-transparent to-sky-200/40 animate-gradient-shift" style="background-size: 200% 200%;"></div>
-            </div>
-
-            <!-- Dynamic Grid Pattern -->
-            <div class="absolute inset-0 animate-grid-pulse" style="background-image: linear-gradient(rgba(59, 130, 246, 0.08) 2px, transparent 2px), linear-gradient(90deg, rgba(59, 130, 246, 0.08) 2px, transparent 2px); background-size: 50px 50px;"></div>
-            
-            <!-- SVG Drawing Elements (Hidden on mobile) -->
-            <svg class="absolute inset-0 w-full h-full opacity-60 hidden md:block" xmlns="http://www.w3.org/2000/svg">
-                <path class="animate-draw" d="M 50 300 Q 200 100, 400 300 T 750 300" stroke="rgba(59, 130, 246, 0.4)" stroke-width="3" fill="none"/>
-                <path class="animate-draw" d="M 100 500 Q 300 350, 500 500 T 900 500" stroke="rgba(14, 165, 233, 0.35)" stroke-width="2.5" fill="none" style="animation-delay: -5s;"/>
-                <path class="animate-draw" d="M 200 150 Q 400 50, 600 150 T 1000 150" stroke="rgba(99, 102, 241, 0.3)" stroke-width="2" fill="none" style="animation-delay: -10s;"/>
-                
-                <circle cx="200" cy="200" r="4" fill="rgba(59, 130, 246, 0.5)" class="animate-float-slow"/>
-                <circle cx="600" cy="150" r="3" fill="rgba(14, 165, 233, 0.45)" class="animate-float-slow" style="animation-delay: -2s;"/>
-                <circle cx="800" cy="400" r="5" fill="rgba(99, 102, 241, 0.4)" class="animate-float-slow" style="animation-delay: -4s;"/>
-                <circle cx="300" cy="500" r="3.5" fill="rgba(59, 130, 246, 0.45)" class="animate-float-slow" style="animation-delay: -6s;"/>
-            </svg>
-            
-            <!-- Floating Geometric Shapes (Reduced on mobile) -->
-            <div class="absolute top-20 left-[10%] w-24 sm:w-40 h-24 sm:h-40 border-2 sm:border-3 border-blue-400/50 rounded-2xl rotate-12 animate-float-slow"></div>
-            <div class="absolute bottom-32 right-[15%] w-20 sm:w-32 h-20 sm:h-32 border-2 sm:border-3 border-sky-400/45 rounded-full animate-float-slow" style="animation-delay: -2s;"></div>
-            <div class="absolute top-[40%] right-[8%] w-16 sm:w-28 h-16 sm:h-28 border-2 sm:border-3 border-indigo-400/50 rotate-45 animate-float-slow hidden md:block" style="animation-delay: -4s;"></div>
-            <div class="absolute bottom-[25%] left-[12%] w-20 sm:w-36 h-20 sm:h-36 border-2 sm:border-3 border-cyan-400/45 rounded-lg rotate-[20deg] animate-float-slow hidden md:block" style="animation-delay: -3s;"></div>
-
-            <!-- Code Brackets (Smaller on mobile) -->
-            <div class="absolute top-[15%] left-[20%] text-4xl sm:text-7xl font-mono font-bold text-blue-500/40 animate-float-slow hidden sm:block" style="text-shadow: 0 0 50px rgba(59, 130, 246, 0.6), 0 0 100px rgba(59, 130, 246, 0.3);">&lt;/&gt;</div>
-            <div class="absolute bottom-[20%] right-[18%] text-3xl sm:text-6xl font-mono font-bold text-sky-500/40 animate-float-slow hidden sm:block" style="animation-delay: -2.5s; text-shadow: 0 0 50px rgba(14, 165, 233, 0.6), 0 0 100px rgba(14, 165, 233, 0.3);">{}</div>
-
-            <!-- Enhanced Gradient Orbs -->
-            <div class="absolute top-10 right-20 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-br from-blue-300/50 to-transparent rounded-full blur-3xl"></div>
-            <div class="absolute bottom-10 left-20 w-[250px] sm:w-[450px] h-[250px] sm:h-[450px] bg-gradient-to-tr from-sky-300/40 to-transparent rounded-full blur-3xl"></div>
-        </div>
-
-        <div class="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
-                
-                <!-- Left Content -->
-                <div class="space-y-5 sm:space-y-7">
-                    <div>
-                        <div class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 mb-3 sm:mb-4 shadow-md">
-                            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.7)] animate-pulse"></div>
-                            <span class="text-[10px] sm:text-xs font-extrabold text-green-700 tracking-wide uppercase">Works on Windows, Ubuntu & Browser</span>
-                        </div>
-
-                        <h1 class="text-3xl sm:text-4xl md:text-5xl xl:text-[4rem] font-black leading-[1.1] text-slate-900 mb-4 sm:mb-5 tracking-tight">
-                            Run <span class="gradient-text">graphics.h</span> Anywhere.
-                        </h1>
-
-                        <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-xl font-medium">
-                            Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with broken legacy setups. This modern compiler brings graphics.h into the 21st century—run your programs instantly in any browser or directly within VS Code, with zero configuration required.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row flex-wrap gap-3">
-                        <a href="/compiler.html" class="inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg font-bold text-white transition-all duration-300 text-sm sm:text-base group shadow-lg" style="background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%); box-shadow: 0 4px 14px -2px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px -2px rgba(59, 130, 246, 0.5)';" onmouseout="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px 14px -2px rgba(59, 130, 246, 0.4)';">
-                            <i data-lucide="play" class="w-4 sm:w-5 h-4 sm:h-5 fill-current"></i>
-                            Open Online Compiler
-                            <i data-lucide="arrow-right" class="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 transition-transform"></i>
-                        </a>
-                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center justify-center gap-2.5 px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg font-bold border-2 transition-all duration-300 text-sm sm:text-base group shadow-lg"
-                        style="background: #007ACC; border-color: #005a9e; color: white; box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);"
-                        onmouseover="this.style.transform='translateY(-1px)'; this.style.background='#005a9e'; this.style.boxShadow='0 4px 12px rgba(0, 122, 204, 0.4)';"
-                        onmouseout="this.style.transform='translateY(0px)'; this.style.background='#007ACC'; this.style.boxShadow='0 2px 8px rgba(0, 122, 204, 0.3)';">
-
-                            <img src="static/vscode.svg"
-                                alt="VS Code"
-                                class="w-4 sm:w-5 h-4 sm:h-5 object-contain">
-
-                            <span class="hidden sm:inline">Get VS Code Extension</span>
-                            <span class="sm:hidden">VS Code Extension</span>
-                        </a>
-
-                    </div>
-
-                    <!-- Features -->
-                    <div class="flex flex-wrap gap-2.5 pt-1">
-                        <div class="group flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-50 via-purple-50 to-green-50 rounded-xl border-2 border-blue-200/80 shadow-md hover:shadow-lg transition-all duration-300">
-                            <span class="text-xs sm:text-sm font-extrabold text-slate-700">Zero Setup • Browser & VS Code • IntelliSense Support</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Content -->
-                <div class="space-y-4 sm:space-y-5">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-3">
-                        <div class="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-50 to-sky-50 border-2 border-blue-200/60 shadow-sm">
-                            <i data-lucide="play-circle" class="w-4 sm:w-5 h-4 sm:h-5 text-blue-600"></i>
-                            <span class="text-xs sm:text-sm font-extrabold text-blue-700 tracking-wide">SEE IT IN ACTION</span>
-                        </div>
-                        
-                        <div class="flex items-center bg-white p-1 rounded-xl border-2 border-slate-200 shadow-md w-full sm:w-auto">
-                            <button onclick="switchDemo('vscode')" id="tab-vscode" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-active">
-                                <i data-lucide="monitor" class="w-3 sm:w-4 h-3 sm:h-4"></i> VS Code
-                            </button>
-                            <button onclick="switchDemo('online')" id="tab-online" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all tab-inactive">
-                                <i data-lucide="globe" class="w-3 sm:w-4 h-3 sm:h-4"></i> Online
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Demo Card -->
-                    <div class="relative group">
-                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-500 to-sky-400 rounded-2xl sm:rounded-[2rem] blur-lg opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                        <div class="relative rounded-2xl sm:rounded-[1.75rem] overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 border-2 sm:border-4 border-white shadow-2xl">
-                            <div class="aspect-video relative">
-                                <!-- VS Code Demo -->
-                                <div id="vscode-demo" class="absolute inset-0 transition-opacity duration-500">
-                                    <video 
-                                        id="vscode-video"
-                                        class="demo-video"
-                                        autoplay 
-                                        loop 
-                                        muted 
-                                        playsinline
-                                        preload="auto">
-                                        <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo.mp4" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                </div>
-                                
-                                <!-- Online Compiler Demo -->
-                                <div id="online-demo" class="absolute inset-0 opacity-0 transition-opacity duration-500">
-                                    <video 
-                                        id="online-video"
-                                        class="demo-video"
-                                        loop 
-                                        muted 
-                                        playsinline
-                                        preload="auto">
-                                        <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4" type="video/mp4">
-                                        Your browser does not support the video tag.
-                                    </video>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Video Captions Below -->
-                    <div id="vscode-caption" class="flex flex-col gap-1.5 transition-opacity duration-500">
-                        <div class="flex items-center justify-center gap-2">
-                            <div class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span class="text-xs sm:text-sm font-bold text-slate-800">VS Code Extension Demo</span>
-                        </div>
-                        <p class="text-center text-slate-600 font-medium text-xs sm:text-sm">
-                            IntelliSense, auto-complete, and error detection for graphics.h
-                        </p>
-                    </div>
-
-                    <div id="online-caption" class="flex flex-col gap-1.5 opacity-0 transition-opacity duration-500">
-                        <div class="flex items-center justify-center gap-2">
-                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></div>
-                            <span class="text-xs sm:text-sm font-bold text-slate-800">Online Compiler Demo</span>
-                        </div>
-                        <p class="text-center text-slate-600 font-medium text-xs sm:text-sm">
-                            Instant compile and live graphics output in your browser
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- About Modal -->
-    <div id="about-modal" class="modal items-center justify-center" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="p-6 sm:p-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl sm:text-2xl font-black text-slate-900">About This Project</h2>
-                    <div class="modal-close" onclick="closeModal()">
-                        <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
-                    </div>
-                </div>
-                
-                <div class="space-y-4 text-slate-700 leading-relaxed text-sm sm:text-base">
-                    <p class="font-medium">
-                        <span class="gradient-text font-bold">graphics.h</span> is a decades-old graphics library that still survives in modern Computer Graphics courses — especially under the SPPU curriculum.
-                    </p>
-                    
-                    <p class="font-medium">
-                        But running it today is <span class="font-bold text-slate-900">painful</span>.
-                    </p>
-                    
-                    <p class="font-medium">
-                        Turbo C, DOSBox, broken installs, outdated environments — students are forced to fight the setup before they ever write code.
-                    </p>
-                    
-                    <p class="font-bold text-slate-900">
-                        This project exists to remove that friction completely.
-                    </p>
-                    
-                    <p class="font-medium">
-                        It lets you run graphics.h programs instantly:
-                    </p>
-                    
-                    <ul class="space-y-2 ml-6">
-                        <li class="flex items-start gap-3">
-                            <span class="text-blue-500 font-bold">•</span>
-                            <span class="font-medium">Online, directly in your browser</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="text-blue-500 font-bold">•</span>
-                            <span class="font-medium">Locally, using a modern VS Code extension</span>
-                        </li>
-                    </ul>
-                    
-                    <p class="font-bold text-slate-900">
-                        No legacy tools. No manual configuration.
-                    </p>
-                    
-                    <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-sky-50 rounded-xl border-2 border-blue-200">
-                        <p class="font-medium text-slate-800">
-                            Built by an SPPU student who faced the same frustration, this compiler is designed to help students focus on learning graphics programming — not wrestling with obsolete software.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Analytics Script -->
-    <script src="static/analytics.js" async></script>
-
-    <script>
-        lucide.createIcons();
-
-        // Video elements
-        const vscodeVideo = document.getElementById('vscode-video');
-        const onlineVideo = document.getElementById('online-video');
-
-        // Ensure videos are ready to play
-        function ensureVideoReady(video) {
-            if (video.readyState >= 2) {
-                return Promise.resolve();
-            }
-            return new Promise((resolve) => {
-                video.addEventListener('loadeddata', resolve, { once: true });
-            });
-        }
-
-        // Add error handling for video loading
-        vscodeVideo.addEventListener('error', (e) => {
-            console.error('VS Code video failed to load:', e);
-        });
-
-        onlineVideo.addEventListener('error', (e) => {
-            console.error('Online video failed to load:', e);
-        });
-
-        // Initialize videos on page load
-        window.addEventListener('load', () => {
-            ensureVideoReady(vscodeVideo).then(() => {
-                vscodeVideo.play().catch(err => {
-                    console.log('Autoplay prevented for vscode video:', err);
-                });
-            });
-
-            ensureVideoReady(onlineVideo);
-        });
-
-        function switchDemo(type) {
-            const vscode = document.getElementById('tab-vscode');
-            const online = document.getElementById('tab-online');
-            const vscodeCaption = document.getElementById('vscode-caption');
-            const onlineCaption = document.getElementById('online-caption');
-            const vscodeDemo = document.getElementById('vscode-demo');
-            const onlineDemo = document.getElementById('online-demo');
-
-            if (type === 'vscode') {
-                vscode.className = vscode.className.replace('tab-inactive', 'tab-active');
-                online.className = online.className.replace('tab-active', 'tab-inactive');
-                
-                vscodeDemo.style.opacity = '1';
-                onlineDemo.style.opacity = '0';
-                vscodeCaption.style.opacity = '1';
-                onlineCaption.style.opacity = '0';
-                
-                vscodeVideo.play().catch(err => console.log('Play prevented:', err));
-                onlineVideo.pause();
-            } else {
-                online.className = online.className.replace('tab-inactive', 'tab-active');
-                vscode.className = vscode.className.replace('tab-active', 'tab-inactive');
-                
-                vscodeDemo.style.opacity = '0';
-                onlineDemo.style.opacity = '1';
-                vscodeCaption.style.opacity = '0';
-                onlineCaption.style.opacity = '1';
-                
-                onlineVideo.play().catch(err => console.log('Play prevented:', err));
-                vscodeVideo.pause();
-            }
-
-            // Re-initialize icons after DOM changes
-            lucide.createIcons();
-        }
-
-        // Modal functions
-        function openModal() {
-            const modal = document.getElementById('about-modal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => lucide.createIcons(), 100);
-        }
-
-        function closeModal(event) {
-            if (!event || event.target.id === 'about-modal') {
-                const modal = document.getElementById('about-modal');
-                modal.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        });
-
-        // Enhanced Mouse spotlight effect (Desktop only)
-        const spotlight = document.getElementById('mouse-spotlight');
-        let mouseX = 0, mouseY = 0;
-        let currentX = 0, currentY = 0;
-
-        if (window.innerWidth >= 768) {
-            document.addEventListener('mousemove', (e) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-                spotlight.style.opacity = '1';
-            });
-
-            document.addEventListener('mouseleave', () => {
-                spotlight.style.opacity = '0';
-            });
-
-            function animateSpotlight() {
-                currentX += (mouseX - currentX) * 0.15;
-                currentY += (mouseY - currentY) * 0.15;
-                
-                spotlight.style.left = currentX + 'px';
-                spotlight.style.top = currentY + 'px';
-                
-                requestAnimationFrame(animateSpotlight);
-            }
-            animateSpotlight();
-        }
-
-        // Contact Modal - Lazy loaded
-        function openContactModal() {
-            if (!window.ContactModal) {
-                const script = document.createElement('script');
-                script.src = 'static/contact.js';
-                script.onload = () => {
-                    window.ContactModal.open();
-                };
-                document.head.appendChild(script);
-            } else {
-                window.ContactModal.open();
-            }
-        }
-
-        // Handle visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                vscodeVideo.pause();
-                onlineVideo.pause();
-            } else {
-                const vscodeDemo = document.getElementById('vscode-demo');
-                if (vscodeDemo.style.opacity === '1' || vscodeDemo.style.opacity === '') {
-                    vscodeVideo.play().catch(err => console.log('Play prevented:', err));
-                } else {
-                    onlineVideo.play().catch(err => console.log('Play prevented:', err));
-                }
-            }
-        });
     </script>
 </body>
 </html>
