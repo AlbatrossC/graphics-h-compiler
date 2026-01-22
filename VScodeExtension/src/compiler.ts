@@ -25,7 +25,6 @@ export class GraphicsCompiler {
         this.diagnosticCollection = vscode.languages.createDiagnosticCollection('graphics-h');
     }
 
-    // Get user configuration settings
     private getConfig() {
         const config = vscode.workspace.getConfiguration('graphics-h-compiler');
         return {
@@ -35,7 +34,6 @@ export class GraphicsCompiler {
         };
     }
 
-    // Validate source file path for security
     private validateSourceFile(sourceFile: string): boolean {
         const normalizedPath = path.normalize(sourceFile);
         
@@ -63,7 +61,6 @@ export class GraphicsCompiler {
         return true;
     }
 
-    // Parse GCC/G++ error messages
     private parseCompilerErrors(stderr: string, sourceFile: string): CompilationError[] {
         const errors: CompilationError[] = [];
         const errorRegex = /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm;
@@ -84,7 +81,6 @@ export class GraphicsCompiler {
         return errors;
     }
 
-    // Update VS Code diagnostics panel
     private updateDiagnostics(errors: CompilationError[], sourceFile: string): void {
         const diagnostics: vscode.Diagnostic[] = [];
         const uri = vscode.Uri.file(sourceFile);
@@ -113,13 +109,11 @@ export class GraphicsCompiler {
         this.diagnosticCollection.set(uri, diagnostics);
     }
 
-    // Clear diagnostics
     private clearDiagnostics(sourceFile: string): void {
         const uri = vscode.Uri.file(sourceFile);
         this.diagnosticCollection.delete(uri);
     }
 
-    // Compile C++ source file (Windows)
     private async compileWindows(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
         const config = this.getConfig();
         const gppPath = this.pathManager.getGppPath();
@@ -145,13 +139,15 @@ export class GraphicsCompiler {
         return new Promise((resolve) => {
             const startTime = Date.now();
 
-            // Prepare compiler arguments
             const command = gppPath;
             const args = [
                 sourceFile,
                 '-I', graphicsPath,
                 '-L', libraryPath,
                 '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
+                '-static-libgcc',
+                '-static-libstdc++',
+                '-static',
                 '-o', outputPath
             ];
 
@@ -194,7 +190,7 @@ export class GraphicsCompiler {
                     }
                     
                     this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine(`[graphics-h] ✗ Build failed (${duration}s)`);
+                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
                     
                     const errors = this.parseCompilerErrors(stderr, sourceFile);
                     this.updateDiagnostics(errors, sourceFile);
@@ -221,7 +217,7 @@ export class GraphicsCompiler {
                     
                     resolve(null);
                 } else {
-                    this.outputChannel.appendLine(`[graphics-h] ✓ Build succeeded (${duration}s)`);
+                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
                     this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
                     
                     resolve(outputPath);
@@ -248,7 +244,6 @@ export class GraphicsCompiler {
         });
     }
 
-    // Compile C++ source file (Linux/Ubuntu)
     private async compileLinux(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
         const config = this.getConfig();
         const outputPath = this.pathManager.getOutputPath(sourceFile);
@@ -271,8 +266,7 @@ export class GraphicsCompiler {
         return new Promise((resolve) => {
             const startTime = Date.now();
 
-            // Use the exact compile command from the bash script
-            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -o "${outputPath}"`;
+            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -static -o "${outputPath}"`;
 
             const compilerProcess = spawn('bash', ['-c', compileCmd], {
                 cwd: path.dirname(sourceFile)
@@ -315,7 +309,7 @@ export class GraphicsCompiler {
                     }
                     
                     this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine(`[graphics-h] ✗ Build failed (${duration}s)`);
+                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
                     
                     const errors = this.parseCompilerErrors(stderr, sourceFile);
                     this.updateDiagnostics(errors, sourceFile);
@@ -342,7 +336,7 @@ export class GraphicsCompiler {
                     
                     resolve(null);
                 } else {
-                    this.outputChannel.appendLine(`[graphics-h] ✓ Build succeeded (${duration}s)`);
+                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
                     this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
                     
                     resolve(outputPath);
@@ -369,7 +363,6 @@ export class GraphicsCompiler {
         });
     }
 
-    // Compile C++ source file
     async compile(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
         if (!this.validateSourceFile(sourceFile)) {
             return null;
@@ -385,7 +378,6 @@ export class GraphicsCompiler {
         }
     }
 
-    // Run compiled executable (Windows)
     private async runWindows(exePath: string): Promise<void> {
         if (!fs.existsSync(exePath)) {
             vscode.window.showErrorMessage('Executable not found: ' + exePath);
@@ -415,9 +407,9 @@ export class GraphicsCompiler {
             this.runningProgram = null;
             this.outputChannel.appendLine('');
             if (code === 0) {
-                this.outputChannel.appendLine(`[graphics-h] ✓ Program finished successfully`);
+                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
             } else if (code !== null) {
-                this.outputChannel.appendLine(`[graphics-h] ✗ Program exited with code ${code}`);
+                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
             } else {
                 this.outputChannel.appendLine(`[graphics-h] Program stopped`);
             }
@@ -439,7 +431,6 @@ export class GraphicsCompiler {
         });
     }
 
-    // Run compiled executable (Linux/Ubuntu using Wine)
     private async runLinux(exePath: string): Promise<void> {
         if (!fs.existsSync(exePath)) {
             vscode.window.showErrorMessage('Executable not found: ' + exePath);
@@ -463,7 +454,6 @@ export class GraphicsCompiler {
 
         programProcess.stderr.on('data', (data) => {
             const output = data.toString();
-            // Filter out Wine debug messages
             if (!output.includes('fixme:') && !output.includes('wine:')) {
                 this.outputChannel.append(`[Program Error] ${output}`);
             }
@@ -473,9 +463,9 @@ export class GraphicsCompiler {
             this.runningProgram = null;
             this.outputChannel.appendLine('');
             if (code === 0) {
-                this.outputChannel.appendLine(`[graphics-h] ✓ Program finished successfully`);
+                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
             } else if (code !== null) {
-                this.outputChannel.appendLine(`[graphics-h] ✗ Program exited with code ${code}`);
+                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
             } else {
                 this.outputChannel.appendLine(`[graphics-h] Program stopped`);
             }
@@ -497,7 +487,6 @@ export class GraphicsCompiler {
         });
     }
 
-    // Run compiled executable
     async run(exePath: string): Promise<void> {
         if (this.pathManager.isWindows()) {
             return this.runWindows(exePath);
@@ -508,7 +497,6 @@ export class GraphicsCompiler {
         }
     }
 
-    // Stop currently running program
     stopRunningProgram(): boolean {
         if (this.runningProgram && !this.runningProgram.killed) {
             this.outputChannel.appendLine('[graphics-h] Stopping program...');
@@ -519,12 +507,10 @@ export class GraphicsCompiler {
         return false;
     }
 
-    // Check if program is running
     isProgramRunning(): boolean {
         return this.runningProgram !== null && !this.runningProgram.killed;
     }
 
-    // Compile and run in sequence
     async compileAndRun(sourceFile: string): Promise<void> {
         const config = this.getConfig();
         
@@ -547,7 +533,6 @@ export class GraphicsCompiler {
         }
     }
 
-    // Dispose of resources
     dispose(): void {
         this.diagnosticCollection.clear();
         this.diagnosticCollection.dispose();
