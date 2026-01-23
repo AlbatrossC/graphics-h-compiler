@@ -1,22 +1,31 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <title>Graphics.h Online Compiler | Turbo C++ DOS Emulation</title>
+    <!-- Google Fonts - JetBrains Mono for better code readability -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser.">
+    <meta name="description"
+        content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser.">
     <link rel="canonical" href="https://graphics-h-compiler.vercel.app/compiler.html">
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation">
-    <meta property="og:description" content="Run graphics.h code online with Turbo C++ and DOS emulation. No installation, free and browser-based.">
+    <meta property="og:description"
+        content="Run graphics.h code online with Turbo C++ and DOS emulation. No installation, free and browser-based.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://graphics-h-compiler.vercel.app/compiler.html">
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation">
-    <meta name="twitter:description" content="Free Turbo C++ graphics.h online compiler with DOS emulation. Instantly run graphics.h code in your browser.">
+    <meta name="twitter:description"
+        content="Free Turbo C++ graphics.h online compiler with DOS emulation. Instantly run graphics.h code in your browser.">
     <meta name="twitter:url" content="https://graphics-h-compiler.vercel.app/compiler.html">
 
     <!-- Structured Data: SoftwareApplication Schema -->
@@ -63,7 +72,7 @@
             --vscode-editor: #0a0a0a;
             --vscode-line-bg: #1a1a1a;
             --vscode-border: #262626;
-            
+
             /* Green Color Palette - Matching Landing Page */
             --primary: #00ff88;
             --primary-hover: #00cc6a;
@@ -73,11 +82,11 @@
             --warning: #ffaa00;
             --accent: #00ff88;
             --accent-dark: #00cc6a;
-            
+
             --text-primary: #fafafa;
             --text-secondary: #a0a0a0;
             --text-muted: #707070;
-            
+
             --border-color: #262626;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
@@ -89,7 +98,7 @@
             --vscode-editor: #ffffff;
             --vscode-line-bg: #f0f0f0;
             --vscode-border: #e0e0e0;
-            
+
             /* Green Color Palette for Light Theme */
             --primary: #00cc6a;
             --primary-hover: #00b35c;
@@ -99,11 +108,11 @@
             --warning: #ca8a04;
             --accent: #00cc6a;
             --accent-dark: #00b35c;
-            
+
             --text-primary: #0a0a0a;
             --text-secondary: #606060;
             --text-muted: #808080;
-            
+
             --border-color: #e0e0e0;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
@@ -135,7 +144,8 @@
             gap: 1rem;
         }
 
-        .header-left, .header-right {
+        .header-left,
+        .header-right {
             display: flex;
             align-items: center;
             gap: 0.625rem;
@@ -153,7 +163,7 @@
             letter-spacing: -0.02em;
             transition: color 0.3s ease;
         }
-        
+
         .logo-mobile {
             display: none;
         }
@@ -194,7 +204,10 @@
         }
 
         /* Consistent Button Sizes - Slightly Smaller with Smooth Curves */
-        .btn, .icon-btn, .demo-dropdown, .save-indicator {
+        .btn,
+        .icon-btn,
+        .demo-dropdown,
+        .save-indicator {
             height: 34px;
             display: inline-flex;
             align-items: center;
@@ -247,17 +260,17 @@
             border-color: var(--primary);
         }
 
-        /* Home Button - Uses Primary Green */
+        /* Home Button - Same as Run Button (Primary Style) */
         .btn-home {
-            background: transparent;
-            color: var(--text-primary);
-            border-color: var(--border-color);
+            background: var(--primary);
+            color: #0a0a0a;
+            border-color: var(--primary);
+            font-weight: 700;
         }
 
         .btn-home:hover {
-            background: var(--vscode-line-bg);
-            border-color: var(--primary);
-            color: var(--primary);
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
             transform: translateY(-1px);
         }
 
@@ -386,8 +399,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* Workspace */
@@ -398,7 +418,8 @@
             overflow: hidden;
         }
 
-        #editor-wrapper, #terminal-wrapper {
+        #editor-wrapper,
+        #terminal-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -589,8 +610,15 @@
         }
 
         @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
         }
 
         /* Loading Overlay */
@@ -628,7 +656,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
@@ -675,10 +705,12 @@
         }
 
         @media (max-width: 768px) {
+
             /* Stack workspace vertically on mobile */
             #workspace {
                 flex-direction: column;
-                height: calc(100vh - 110px); /* Account for multi-row header */
+                height: calc(100vh - 110px);
+                /* Account for multi-row header */
             }
 
             /* Multi-row header for mobile */
@@ -732,23 +764,27 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
-            
+
             /* Show shorter mobile title */
             .logo-full {
                 display: none;
             }
-            
+
             .logo-mobile {
                 display: inline;
             }
 
             /* Smaller buttons on mobile */
-            .btn, .icon-btn, .theme-toggle, .save-indicator {
+            .btn,
+            .icon-btn,
+            .theme-toggle,
+            .save-indicator {
                 height: 32px;
                 font-size: 0.8125rem;
             }
 
-            .icon-btn, .theme-toggle {
+            .icon-btn,
+            .theme-toggle {
                 width: 32px;
             }
 
@@ -793,13 +829,23 @@
                 font-size: 0.6875rem;
             }
 
+            /* Hide C++ badge on mobile */
             .editor-mode {
-                font-size: 0.6875rem;
-                padding: 2px 8px;
+                display: none;
+            }
+
+            /* Save button next to Run button */
+            #save-btn {
+                order: 5;
+            }
+
+            #run-btn {
+                order: 6;
             }
 
             /* Better touch targets */
-            .icon-btn, .btn {
+            .icon-btn,
+            .btn {
                 min-height: 44px;
             }
 
@@ -841,11 +887,14 @@
                 font-size: 0.75rem;
             }
 
-            .btn, .icon-btn, .theme-toggle {
+            .btn,
+            .icon-btn,
+            .theme-toggle {
                 height: 30px;
             }
 
-            .icon-btn, .theme-toggle {
+            .icon-btn,
+            .theme-toggle {
                 width: 30px;
             }
 
@@ -865,6 +914,187 @@
                 border-right: 1px solid var(--border-color);
             }
         }
+
+        /* Output Panel Styles */
+        #output-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: var(--vscode-editor);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        #output-panel.visible {
+            transform: translateY(0);
+        }
+
+        #output-panel.expanded {
+            height: 100%;
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: var(--vscode-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .output-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .output-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-error-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 14px;
+            height: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--primary);
+            color: #0a0a0a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+        }
+
+        .copy-error-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        }
+
+        .copy-error-btn.copied {
+            background: var(--success);
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.5);
+        }
+
+        .copy-error-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        [data-theme="light"] .copy-error-btn {
+            background: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 204, 106, 0.3);
+        }
+
+        [data-theme="light"] .copy-error-btn:hover {
+            box-shadow: 0 4px 12px rgba(0, 204, 106, 0.4);
+        }
+
+        [data-theme="light"] .copy-error-btn.copied {
+            box-shadow: 0 2px 8px rgba(0, 204, 106, 0.5);
+        }
+
+        /* Expand Button */
+        .expand-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .expand-btn:hover {
+            background: var(--vscode-line-bg);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .expand-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .expand-btn.expanded svg {
+            transform: rotate(180deg);
+        }
+
+        [data-theme="light"] .expand-btn {
+            border: 2px solid var(--border-color);
+        }
+
+        .output-content {
+            flex: 1;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 1rem;
+            line-height: 1.7;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--text-primary);
+            background: var(--vscode-editor);
+            letter-spacing: 0.02em;
+        }
+
+        .output-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-content::-webkit-scrollbar-track {
+            background: var(--vscode-sidebar);
+        }
+
+        .output-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .output-content::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        .output-error {
+            color: var(--danger);
+            font-weight: 500;
+        }
+
+        .output-success {
+            color: var(--success);
+        }
+
+        /* Adjust canvas height when panel is open */
+        #terminal-wrapper.has-panel #dos-canvas {
+            height: 70%;
+        }
     </style>
 
     <script src="static/analytics.js" defer></script>
@@ -872,764 +1102,961 @@
 
 <body>
 
-<header>
-    <div class="header-content">
-        <div class="header-left">
-            <button id="back-btn" class="btn btn-home" onclick="window.location.href='index.html'">
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <button id="back-btn" class="btn btn-home" onclick="window.location.href='index.html'">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                    <span class="btn-text">Home</span>
+                </button>
+            </div>
+
+            <div class="header-center">
+                <div class="logo">
+                    <span class="logo-full">Online <span class="logo-highlight">graphics.h</span> C++ Compiler</span>
+                    <span class="logo-mobile"><span class="logo-highlight">graphics.h</span> Compiler</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
+                    <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="currentColor" style="display: block;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                    <svg id="theme-icon-light" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                        <path
+                            d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="demo-selector">
+                <label for="demo-select">Demo:</label>
+                <select id="demo-select" class="demo-dropdown">
+                    <option value="circle-pattern">Circle Pattern</option>
+                    <option value="bouncing-ball">Bouncing Ball</option>
+                    <option value="shooter-game">Shooter Game</option>
+                </select>
+            </div>
+
+            <div class="save-indicator" id="save-indicator">
                 <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    <path
+                        d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
                 </svg>
-                <span class="btn-text">Home</span>
+                <span id="save-text">Not Saved</span>
+            </div>
+
+            <button id="save-btn" class="btn btn-success" onclick="saveCode()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                </svg>
+                <span class="btn-text">Save</span>
+            </button>
+
+            <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                </svg>
+                <span class="btn-text">Run</span>
             </button>
         </div>
-        
-        <div class="header-center">
-            <div class="logo">
-                <span class="logo-full">Online <span class="logo-highlight">graphics.h</span> C++ Compiler</span>
-                <span class="logo-mobile"><span class="logo-highlight">graphics.h</span> Compiler</span>
-            </div>
-        </div>
-        
-        <div class="header-right">
-            <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
-                <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="currentColor" style="display: block;">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                </svg>
-                <svg id="theme-icon-light" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                    <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/>
-                </svg>
-            </button>
-        </div>
-        
-        <div class="demo-selector">
-            <label for="demo-select">Demo:</label>
-            <select id="demo-select" class="demo-dropdown">
-                <option value="circle-pattern">Circle Pattern</option>
-                <option value="bouncing-ball">Bouncing Ball</option>
-                <option value="shooter-game">Shooter Game</option>
-            </select>
-        </div>
-        
-        <div class="save-indicator" id="save-indicator">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
-            </svg>
-            <span id="save-text">Not Saved</span>
-        </div>
+    </header>
 
-        <button id="save-btn" class="btn btn-success" onclick="saveCode()">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
-            </svg>
-            <span class="btn-text">Save</span>
-        </button>
-        
-        <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z"/>
-            </svg>
-            <span class="btn-text">Run</span>
-        </button>
-    </div>
-</header>
-
-<div id="workspace">
-    <div id="editor-wrapper">
-        <div class="panel-header">
-            <div class="panel-title">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="panel-icon">
-                    <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
-                </svg>
-                Source Code Editor
-            </div>
-            <div class="panel-actions">
-                <button id="clear-btn" class="icon-btn" title="Clear Editor">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <div id="workspace">
+        <div id="editor-wrapper">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="panel-icon">
+                        <path
+                            d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
                     </svg>
-                </button>
-                <button id="fullscreen-editor-btn" class="icon-btn" title="Toggle Fullscreen">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                    </svg>
-                </button>
+                    Source Code Editor
+                </div>
+                <div class="panel-actions">
+                    <button id="clear-btn" class="icon-btn" title="Clear Editor">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                        </svg>
+                    </button>
+                    <button id="fullscreen-editor-btn" class="icon-btn" title="Toggle Fullscreen">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="editor"></div>
+            <div class="editor-footer">
+                <span class="editor-info" id="editor-info">Lines: 0 | Chars: 0</span>
+                <span class="editor-mode">C++</span>
             </div>
         </div>
-        <div id="editor"></div>
-        <div class="editor-footer">
-            <span class="editor-info" id="editor-info">Lines: 0 | Chars: 0</span>
-            <span class="editor-mode">C++</span>
+
+        <div id="terminal-wrapper">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="currentColor" class="panel-icon">
+                        <path
+                            d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V8h16v10z" />
+                    </svg>
+                    DOS Output
+                </div>
+                <div class="panel-actions">
+                    <button id="fullscreen-terminal-btn" class="icon-btn" title="Toggle Fullscreen">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="keyboard-blocker" id="keyboard-blocker">
+                <div class="blocker-message">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                    Click to interact with terminal
+                </div>
+            </div>
+
+            <div class="loading-overlay" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loading-text">Initializing...</div>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar" id="loading-progress-bar"></div>
+                </div>
+            </div>
+
+            <canvas id="dos-canvas" tabindex="-1"></canvas>
+
+            <div id="output-panel">
+                <div class="output-header">
+                    <div class="output-title">
+                        <svg viewBox="0 0 24 24" fill="currentColor"
+                            style="width: 16px; height: 16px; color: var(--danger);">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                        </svg>
+                        Compilation Errors
+                    </div>
+                    <div class="output-actions">
+                        <button id="copy-error-btn" class="copy-error-btn" title="Copy errors to clipboard">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                            </svg>
+                            <span id="copy-btn-text">Copy</span>
+                        </button>
+                        <button id="expand-output-btn" class="expand-btn" title="Expand/Collapse panel">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+                            </svg>
+                        </button>
+                        <button id="close-output-btn" class="icon-btn"
+                            style="height: 28px; width: 28px; min-height: unset; border: 1px solid var(--border-color); background: transparent; border-radius: 6px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="output-content" class="output-content"></div>
+            </div>
         </div>
     </div>
 
-    <div id="terminal-wrapper">
-        <div class="panel-header">
-            <div class="panel-title">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="panel-icon">
-                    <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V8h16v10z"/>
-                </svg>
-                DOS Output
-            </div>
-            <div class="panel-actions">
-                <button id="fullscreen-terminal-btn" class="icon-btn" title="Toggle Fullscreen">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <div class="keyboard-blocker" id="keyboard-blocker">
-            <div class="blocker-message">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                Click to interact with terminal
-            </div>
-        </div>
-        
-        <div class="loading-overlay" id="loading">
-            <div class="spinner"></div>
-            <div class="loading-text" id="loading-text">Initializing...</div>
-            <div class="loading-progress">
-                <div class="loading-progress-bar" id="loading-progress-bar"></div>
-            </div>
-        </div>
-        
-        <canvas id="dos-canvas" tabindex="-1"></canvas>
-    </div>
-</div>
+    <script>
+        // ==================== THEME TOGGLE ====================
 
-<script>
-    // ==================== THEME TOGGLE ====================
-    
-    function initializeTheme() {
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
-        
-        // Update Ace editor theme
-        if (editor) {
-            const aceTheme = newTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
-            editor.setTheme(aceTheme);
-        }
-        
-        Logger.info(`Theme switched to ${newTheme}`);
-    }
-
-    function updateThemeIcon(theme) {
-        const darkIcon = document.getElementById('theme-icon-dark');
-        const lightIcon = document.getElementById('theme-icon-light');
-        
-        if (theme === 'dark') {
-            darkIcon.style.display = 'block';
-            lightIcon.style.display = 'none';
-        } else {
-            darkIcon.style.display = 'none';
-            lightIcon.style.display = 'block';
-        }
-    }
-
-    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
-    // Initialize theme on page load
-    initializeTheme();
-
-    // ==================== LOGGER ====================
-    const Logger = {
-        prefix: '[Graphics.h Compiler]',
-        
-        info(msg) {
-            console.log(`${this.prefix} ${msg}`);
-        },
-        
-        success(msg) {
-            console.log(`${this.prefix} ✓ ${msg}`);
-        },
-        
-        error(msg, err) {
-            console.error(`${this.prefix} ✗ ${msg}`, err || '');
-        },
-        
-        warn(msg) {
-            console.warn(`${this.prefix} ⚠ ${msg}`);
-        }
-    };
-
-    // ==================== GLOBAL STATE ====================
-    let dosInstance = null;
-    let terminalFocused = false;
-    let editor = null;
-    let currentDemo = 'circle-pattern';
-    let lastLoadedDemo = ''; // Track last loaded demo
-    let scriptsLoaded = {
-        jsdos: false,
-        ace: false,
-        aceMode: false,
-        aceTheme: false
-    };
-
-    // Demo files configuration - FETCHING FROM BLOB STORAGE
-    const DEMO_FILES = {
-        'circle-pattern': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/circle-pattern.cpp',
-        'bouncing-ball': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/bouncing-ball.cpp',
-        'shooter-game': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/shooter-game.cpp'
-    };
-
-    // TC.ZIP URL - FETCHING FROM BLOB STORAGE
-    const TC_ZIP_URL = 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip';
-
-    const canvas = document.getElementById("dos-canvas");
-    const loading = document.getElementById("loading");
-    const loadingText = document.getElementById("loading-text");
-    const loadingProgressBar = document.getElementById("loading-progress-bar");
-    const runBtn = document.getElementById("run-btn");
-    const terminalWrapper = document.getElementById("terminal-wrapper");
-    const keyboardBlocker = document.getElementById("keyboard-blocker");
-    const editorWrapper = document.getElementById("editor-wrapper");
-    const demoSelect = document.getElementById("demo-select");
-    const clearBtn = document.getElementById("clear-btn");
-    const editorInfo = document.getElementById("editor-info");
-    const saveBtn = document.getElementById("save-btn");
-    const saveIndicator = document.getElementById("save-indicator");
-    const saveText = document.getElementById("save-text");
-
-    // ==================== SAVE FUNCTIONALITY ====================
-    
-    function saveCode() {
-        if (!editor) return;
-        
-        const code = editor.getValue();
-        localStorage.setItem("tc_code", code);
-        
-        // Update save indicator
-        saveIndicator.classList.add('saved');
-        saveText.textContent = 'Saved';
-        
-        Logger.success('Code saved to browser storage');
-        
-        // Reset indicator after 2 seconds
-        setTimeout(() => {
-            saveIndicator.classList.remove('saved');
-            saveText.textContent = 'Not Saved';
-        }, 2000);
-    }
-
-    function updateSaveIndicator() {
-        const savedCode = localStorage.getItem("tc_code");
-        const currentCode = editor ? editor.getValue() : '';
-        
-        if (savedCode === currentCode && savedCode !== '') {
-            saveIndicator.classList.add('saved');
-            saveText.textContent = 'Saved';
-        } else {
-            saveIndicator.classList.remove('saved');
-            saveText.textContent = 'Not Saved';
-        }
-    }
-
-    // ==================== SCRIPT LOADING WITH FALLBACK ====================
-    
-    function loadScript(url, fallbackUrl, timeout = 5000) {
-        return new Promise((resolve, reject) => {
-            const tryLoad = (src, isFallback = false) => {
-                return new Promise((res, rej) => {
-                    const script = document.createElement('script');
-                    script.src = src;
-                    
-                    const timer = setTimeout(() => {
-                        script.onerror = null;
-                        script.onload = null;
-                        rej(new Error('Timeout'));
-                    }, timeout);
-                    
-                    script.onload = () => {
-                        clearTimeout(timer);
-                        if (isFallback) {
-                            Logger.info(`Using fallback: ${src}`);
-                        }
-                        res(true);
-                    };
-                    
-                    script.onerror = () => {
-                        clearTimeout(timer);
-                        rej(new Error(`Failed to load: ${src}`));
-                    };
-                    
-                    document.head.appendChild(script);
-                });
-            };
-
-            tryLoad(url)
-                .then(resolve)
-                .catch(() => {
-                    Logger.warn(`Primary source failed, trying fallback`);
-                    tryLoad(fallbackUrl, true)
-                        .then(resolve)
-                        .catch(reject);
-                });
-        });
-    }
-
-    async function loadAllScripts() {
-        try {
-            Logger.info('Loading dependencies...');
-            updateLoadingProgress(10);
-            
-            // Load JS-DOS
-            await loadScript(
-                'https://js-dos.com/6.22/current/js-dos.js',
-                './libs/js-dos.js'
-            );
-            scriptsLoaded.jsdos = true;
-            updateLoadingProgress(30);
-
-            // Load Ace Editor
-            await loadScript(
-                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js',
-                './libs/ace.js'
-            );
-            scriptsLoaded.ace = true;
-            updateLoadingProgress(50);
-
-            await waitForAce();
-
-            // Load Ace C++ Mode
-            await loadScript(
-                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-c_cpp.js',
-                './libs/mode-c_cpp.js'
-            );
-            scriptsLoaded.aceMode = true;
-            updateLoadingProgress(70);
-
-            // Load Ace Monokai Theme
-            await loadScript(
-                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-monokai.js',
-                './libs/theme-monokai.js'
-            );
-            
-            // Load Ace Textmate Theme for light mode
-            await loadScript(
-                'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-textmate.js',
-                './libs/theme-textmate.js'
-            );
-            
-            scriptsLoaded.aceTheme = true;
-            updateLoadingProgress(100);
-
-            Logger.success('All dependencies loaded');
-            return true;
-        } catch (error) {
-            Logger.error('Failed to load dependencies', error);
-            alert('Failed to load required libraries. Please check your connection and try again.');
-            return false;
-        }
-    }
-
-    function updateLoadingProgress(percent) {
-        if (loadingProgressBar) {
-            loadingProgressBar.style.width = `${percent}%`;
-        }
-    }
-
-    function waitForAce() {
-        return new Promise((resolve) => {
-            const checkAce = setInterval(() => {
-                if (typeof ace !== 'undefined') {
-                    clearInterval(checkAce);
-                    resolve();
-                }
-            }, 50);
-        });
-    }
-
-    // ==================== DEMO FILE MANAGEMENT - FIXED ====================
-
-    demoSelect.addEventListener('change', async (e) => {
-        const selectedDemo = e.target.value;
-        
-        // Check if clicking the same demo that's already loaded
-        if (selectedDemo === lastLoadedDemo) {
-            Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
-            await loadDemoFile(selectedDemo, true); // Force reload
-        } else {
-            currentDemo = selectedDemo;
-            await loadDemoFile(selectedDemo, false);
-        }
-    });
-
-    async function loadDemoFile(demoKey, forceReload = false) {
-        if (!editor) return;
-        
-        const demoUrl = DEMO_FILES[demoKey];
-        if (!demoUrl) {
-            Logger.error(`Demo file not found: ${demoKey}`);
-            return;
-        }
-        
-        try {
-            Logger.info(`Loading ${demoKey} demo from Blob storage...${forceReload ? ' (force reload)' : ''}`);
-            
-            // Add cache buster for force reload
-            const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
-            const response = await fetch(demoUrl + cacheBuster);
-            
-            if (response.ok) {
-                const code = await response.text();
-                editor.setValue('', -1);
-                await new Promise(resolve => setTimeout(resolve, 50));
-                editor.setValue(code, -1);
-                editor.clearSelection();
-                editor.moveCursorTo(0, 0);
-                
-                // Update last loaded demo
-                lastLoadedDemo = demoKey;
-                currentDemo = demoKey;
-                
-                // Clear saved code when loading a demo
-                localStorage.removeItem("tc_code");
-                
-                updateEditorInfo();
-                updateSaveIndicator();
-                
-                Logger.success(`Loaded ${demoKey} demo from Blob storage`);
-            } else {
-                Logger.error(`Failed to load demo: ${response.status}`);
-                alert('Failed to load demo file. Please try again.');
-            }
-        } catch(e) {
-            Logger.error('Error loading demo file', e);
-            alert('Error loading demo file. Please check your connection.');
-        }
-    }
-
-    // ==================== EDITOR INITIALIZATION ====================
-
-    async function initializeEditor() {
-        if (!scriptsLoaded.ace || typeof ace === 'undefined') {
-            setTimeout(initializeEditor, 100);
-            return;
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
         }
 
-        editor = ace.edit("editor");
-        
-        // Set theme based on current theme setting
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const aceTheme = currentTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
-        editor.setTheme(aceTheme);
-        
-        editor.session.setMode("ace/mode/c_cpp");
-        
-        editor.setShowPrintMargin(false);
-        editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-            fontSize: "16px",
-            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-            highlightActiveLine: true,
-            showGutter: true,
-            tabSize: 4,
-            useSoftTabs: true,
-            wrap: true
-        });
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-        await loadDefaultCode();
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
 
-        editor.on('change', () => {
-            updateEditorInfo();
-            updateSaveIndicator();
-        });
-
-        setTimeout(() => {
-            editor.focus();
-            editorWrapper.classList.add('active');
-        }, 100);
-
-        Logger.success('Editor ready');
-    }
-
-    function updateEditorInfo() {
-        if (!editor || !editorInfo) return;
-        
-        const code = editor.getValue();
-        const lines = code.split('\n').length;
-        const chars = code.length;
-        
-        editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
-    }
-
-    async function loadDefaultCode() {
-        const savedCode = localStorage.getItem("tc_code");
-        if (savedCode) {
-            editor.setValue(savedCode, -1);
-            updateEditorInfo();
-            updateSaveIndicator();
-            Logger.info('Restored saved code');
-            return;
-        }
-        
-        // Load default demo (circle-pattern)
-        await loadDemoFile('circle-pattern', false);
-    }
-
-    // Clear button functionality
-    clearBtn.addEventListener('click', () => {
-        if (confirm('Are you sure you want to clear the editor?')) {
-            editor.setValue('', -1);
-            localStorage.removeItem("tc_code");
-            lastLoadedDemo = ''; // Reset last loaded demo
-            updateEditorInfo();
-            updateSaveIndicator();
-            Logger.info('Editor cleared');
-        }
-    });
-
-    // ==================== FULLSCREEN FUNCTIONALITY - FIXED ====================
-    
-    let isEditorFullscreen = false;
-    let isTerminalFullscreen = false;
-
-    document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
-        isEditorFullscreen = !isEditorFullscreen;
-        
-        if (isEditorFullscreen) {
-            editorWrapper.classList.add('fullscreen');
-            terminalWrapper.classList.add('hidden');
-        } else {
-            editorWrapper.classList.remove('fullscreen');
-            terminalWrapper.classList.remove('hidden');
-        }
-        
-        // Force editor resize after fullscreen toggle
-        setTimeout(() => {
+            // Update Ace editor theme
             if (editor) {
-                editor.resize();
-                editor.renderer.updateFull();
+                const aceTheme = newTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
+                editor.setTheme(aceTheme);
             }
-        }, 100);
-    });
 
-    document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
-        isTerminalFullscreen = !isTerminalFullscreen;
-        
-        if (isTerminalFullscreen) {
-            terminalWrapper.classList.add('fullscreen');
-            editorWrapper.classList.add('hidden');
-        } else {
-            terminalWrapper.classList.remove('fullscreen');
-            editorWrapper.classList.remove('hidden');
+            Logger.info(`Theme switched to ${newTheme}`);
         }
-        
-        // Force canvas resize after fullscreen toggle
-        setTimeout(() => {
-            if (dosInstance) {
-                // Trigger canvas resize
-                window.dispatchEvent(new Event('resize'));
+
+        function updateThemeIcon(theme) {
+            const darkIcon = document.getElementById('theme-icon-dark');
+            const lightIcon = document.getElementById('theme-icon-light');
+
+            if (theme === 'dark') {
+                darkIcon.style.display = 'block';
+                lightIcon.style.display = 'none';
+            } else {
+                darkIcon.style.display = 'none';
+                lightIcon.style.display = 'block';
             }
-        }, 100);
-    });
+        }
 
-    // ==================== KEYBOARD INPUT ISOLATION ====================
-    
-    let keyboardEventBlocker = null;
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
-    function setupKeyboardBlocker() {
-        keyboardEventBlocker = function(e) {
-            if (!terminalFocused) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                return false;
+        // Initialize theme on page load
+        initializeTheme();
+
+        // ==================== LOGGER ====================
+        const Logger = {
+            prefix: '[Graphics.h Compiler]',
+
+            info(msg) {
+                console.log(`${this.prefix} ${msg}`);
+            },
+
+            success(msg) {
+                console.log(`${this.prefix} ✓ ${msg}`);
+            },
+
+            error(msg, err) {
+                console.error(`${this.prefix} ✗ ${msg}`, err || '');
+            },
+
+            warn(msg) {
+                console.warn(`${this.prefix} ⚠ ${msg}`);
             }
         };
 
-        window.addEventListener('keydown', keyboardEventBlocker, true);
-        window.addEventListener('keyup', keyboardEventBlocker, true);
-        window.addEventListener('keypress', keyboardEventBlocker, true);
-    }
+        // ==================== GLOBAL STATE ====================
+        let dosInstance = null;
+        let terminalFocused = false;
+        let editor = null;
+        let currentDemo = 'circle-pattern';
+        let lastLoadedDemo = ''; // Track last loaded demo
+        let scriptsLoaded = {
+            jsdos: false,
+            ace: false,
+            aceMode: false,
+            aceTheme: false
+        };
 
-    // ==================== FOCUS MANAGEMENT ====================
-    
-    function focusTerminal() {
-        if (!dosInstance) return;
-        
-        terminalFocused = true;
-        canvas.focus();
-        canvas.tabIndex = 1;
-        terminalWrapper.classList.add('terminal-active');
-        editorWrapper.classList.remove('active');
-        keyboardBlocker.classList.remove('active');
-    }
+        // Demo files configuration - FETCHING FROM BLOB STORAGE
+        const DEMO_FILES = {
+            'circle-pattern': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/circle-pattern.cpp',
+            'bouncing-ball': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/bouncing-ball.cpp',
+            'shooter-game': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/shooter-game.cpp'
+        };
 
-    function focusEditor() {
-        if (!editor) return;
-        
-        terminalFocused = false;
-        canvas.tabIndex = -1;
-        canvas.blur();
-        editor.focus();
-        terminalWrapper.classList.remove('terminal-active');
-        editorWrapper.classList.add('active');
-        keyboardBlocker.classList.add('active');
-    }
+        // TC.ZIP URL - FETCHING FROM BLOB STORAGE
+        const TC_ZIP_URL = 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip';
 
-    keyboardBlocker.addEventListener('click', () => {
-        focusTerminal();
-    });
+        const canvas = document.getElementById("dos-canvas");
+        const loading = document.getElementById("loading");
+        const loadingText = document.getElementById("loading-text");
+        const loadingProgressBar = document.getElementById("loading-progress-bar");
+        const runBtn = document.getElementById("run-btn");
+        const terminalWrapper = document.getElementById("terminal-wrapper");
+        const keyboardBlocker = document.getElementById("keyboard-blocker");
+        const editorWrapper = document.getElementById("editor-wrapper");
+        const demoSelect = document.getElementById("demo-select");
+        const clearBtn = document.getElementById("clear-btn");
+        const editorInfo = document.getElementById("editor-info");
+        const saveBtn = document.getElementById("save-btn");
+        const saveIndicator = document.getElementById("save-indicator");
+        const saveText = document.getElementById("save-text");
 
-    terminalWrapper.addEventListener('click', (e) => {
-        if (e.target === terminalWrapper || e.target === canvas) {
-            if (dosInstance && !terminalFocused) {
-                focusTerminal();
+        // ==================== OUTPUT PANEL HANDLERS ====================
+
+        // Output Panel Elements
+        const outputPanel = document.getElementById("output-panel");
+        const outputContent = document.getElementById("output-content");
+        const closeOutputBtn = document.getElementById("close-output-btn");
+        let errorUpdateInterval = null;
+        let lastErrorContent = '';
+
+        closeOutputBtn.addEventListener('click', () => {
+            outputPanel.classList.remove('visible');
+            terminalWrapper.classList.remove('has-panel');
+            // Trigger resize to fix canvas layout
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        // Copy Error Button Functionality
+        const copyErrorBtn = document.getElementById("copy-error-btn");
+        const copyBtnText = document.getElementById("copy-btn-text");
+
+        copyErrorBtn.addEventListener('click', async () => {
+            const errorText = outputContent.textContent;
+
+            if (!errorText || errorText.trim() === '') {
+                return;
             }
-        }
-    });
 
-    editorWrapper.addEventListener('click', () => {
-        focusEditor();
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            focusEditor();
-            return false;
-        }
-    }, true);
-
-    // ==================== RUN PROGRAM ====================
-    
-    async function runProgram() {
-        if (!editor) {
-            alert('Editor is still loading. Please wait...');
-            return;
-        }
-
-        const code = editor.getValue();
-        
-        if (!code.trim()) {
-            alert('Please write some code first!');
-            return;
-        }
-
-        Logger.info('Starting compilation...');
-        loading.classList.add('active');
-        loadingText.textContent = 'Initializing DOS environment...';
-        updateLoadingProgress(0);
-        runBtn.disabled = true;
-        runBtn.classList.add('loading');
-
-        if (dosInstance) {
             try {
-                dosInstance.exit();
-            } catch(e) {
-                Logger.warn('Error closing previous DOS instance');
+                await navigator.clipboard.writeText(errorText);
+
+                // Visual feedback
+                copyErrorBtn.classList.add('copied');
+                copyBtnText.textContent = 'Copied!';
+
+                Logger.success('Errors copied to clipboard');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyErrorBtn.classList.remove('copied');
+                    copyBtnText.textContent = 'Copy';
+                }, 2000);
+            } catch (err) {
+                Logger.error('Failed to copy errors', err);
+
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = errorText;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+
+                try {
+                    document.execCommand('copy');
+                    copyErrorBtn.classList.add('copied');
+                    copyBtnText.textContent = 'Copied!';
+
+                    setTimeout(() => {
+                        copyErrorBtn.classList.remove('copied');
+                        copyBtnText.textContent = 'Copy';
+                    }, 2000);
+                } catch (fallbackErr) {
+                    Logger.error('Fallback copy failed', fallbackErr);
+                }
+
+                document.body.removeChild(textArea);
             }
-            dosInstance = null;
+        });
+
+        // Expand Button Functionality
+        const expandOutputBtn = document.getElementById("expand-output-btn");
+        let isOutputExpanded = false;
+
+        expandOutputBtn.addEventListener('click', () => {
+            isOutputExpanded = !isOutputExpanded;
+
+            if (isOutputExpanded) {
+                outputPanel.classList.add('expanded');
+                expandOutputBtn.classList.add('expanded');
+                expandOutputBtn.title = 'Collapse panel';
+            } else {
+                outputPanel.classList.remove('expanded');
+                expandOutputBtn.classList.remove('expanded');
+                expandOutputBtn.title = 'Expand panel';
+            }
+
+            // Trigger resize to fix canvas layout
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+
+            Logger.info(`Output panel ${isOutputExpanded ? 'expanded' : 'collapsed'}`);
+        });
+
+        async function checkCompilationErrors() {
+            try {
+                // Access Emscripten FS through dosInstance.em (js-dos 6.22)
+                if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) {
+                    return;
+                }
+
+                const FS = dosInstance.em.FS;
+                const filePath = "/TURBOC3/BIN/ERR.TXT";
+
+                // Check if file exists
+                try {
+                    FS.stat(filePath);
+                } catch (statErr) {
+                    return; // File doesn't exist yet
+                }
+
+                // Read the file content
+                let content;
+                try {
+                    content = FS.readFile(filePath, { encoding: 'utf8' });
+                } catch (readErr) {
+                    const data = FS.readFile(filePath);
+                    content = new TextDecoder().decode(data);
+                }
+
+                // Only update if content changed and is not empty
+                if (content && content.trim() !== "" && content !== lastErrorContent) {
+                    lastErrorContent = content;
+
+                    // Check if it contains errors
+                    if (content.includes("Error") || content.includes("Fatal")) {
+                        outputContent.textContent = content;
+                        outputContent.classList.remove('output-success');
+                        outputContent.classList.add('output-error');
+
+                        // Show panel only for errors
+                        if (!outputPanel.classList.contains('visible')) {
+                            outputPanel.classList.add('visible');
+                            terminalWrapper.classList.add('has-panel');
+                            setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+                        }
+                    }
+                    // For successful compilation, don't show the panel
+                }
+            } catch (e) {
+                // Silently ignore errors during polling
+            }
         }
 
-        try {
-            // Wait for Dos to be available
-            if (!scriptsLoaded.jsdos || typeof Dos === 'undefined') {
-                loadingText.textContent = 'Waiting for JS-DOS...';
-                updateLoadingProgress(20);
-                await new Promise((resolve) => {
-                    const checkDos = setInterval(() => {
-                        if (typeof Dos !== 'undefined') {
-                            clearInterval(checkDos);
-                            resolve();
-                        }
-                    }, 100);
-                });
+        // ==================== SAVE FUNCTIONALITY ====================
+
+        function saveCode() {
+            if (!editor) return;
+
+            const code = editor.getValue();
+            localStorage.setItem("tc_code", code);
+
+            // Update save indicator
+            saveIndicator.classList.add('saved');
+            saveText.textContent = 'Saved';
+
+            Logger.success('Code saved to browser storage');
+
+            // Reset indicator after 2 seconds
+            setTimeout(() => {
+                saveIndicator.classList.remove('saved');
+                saveText.textContent = 'Not Saved';
+            }, 2000);
+        }
+
+        function updateSaveIndicator() {
+            const savedCode = localStorage.getItem("tc_code");
+            const currentCode = editor ? editor.getValue() : '';
+
+            if (savedCode === currentCode && savedCode !== '') {
+                saveIndicator.classList.add('saved');
+                saveText.textContent = 'Saved';
+            } else {
+                saveIndicator.classList.remove('saved');
+                saveText.textContent = 'Not Saved';
             }
+        }
 
-            updateLoadingProgress(40);
+        // ==================== SCRIPT LOADING WITH FALLBACK ====================
 
-            // Determine wdosbox URL with proper fallback
-            let wdosboxUrl = './libs/wdosbox.js';
-            let usingOnline = false;
-            
-            if (navigator.onLine) {
-                try {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 3000);
-                    
-                    const response = await fetch("https://js-dos.com/6.22/current/wdosbox.js", { 
-                        method: 'HEAD',
-                        cache: 'no-cache',
-                        signal: controller.signal
+        function loadScript(url, fallbackUrl, timeout = 5000) {
+            return new Promise((resolve, reject) => {
+                const tryLoad = (src, isFallback = false) => {
+                    return new Promise((res, rej) => {
+                        const script = document.createElement('script');
+                        script.src = src;
+
+                        const timer = setTimeout(() => {
+                            script.onerror = null;
+                            script.onload = null;
+                            rej(new Error('Timeout'));
+                        }, timeout);
+
+                        script.onload = () => {
+                            clearTimeout(timer);
+                            if (isFallback) {
+                                Logger.info(`Using fallback: ${src}`);
+                            }
+                            res(true);
+                        };
+
+                        script.onerror = () => {
+                            clearTimeout(timer);
+                            rej(new Error(`Failed to load: ${src}`));
+                        };
+
+                        document.head.appendChild(script);
                     });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    if (response.ok) {
-                        wdosboxUrl = "https://js-dos.com/6.22/current/wdosbox.js";
-                        usingOnline = true;
+                };
+
+                tryLoad(url)
+                    .then(resolve)
+                    .catch(() => {
+                        Logger.warn(`Primary source failed, trying fallback`);
+                        tryLoad(fallbackUrl, true)
+                            .then(resolve)
+                            .catch(reject);
+                    });
+            });
+        }
+
+        async function loadAllScripts() {
+            try {
+                Logger.info('Loading dependencies...');
+                updateLoadingProgress(10);
+
+                // Load JS-DOS
+                await loadScript(
+                    'https://js-dos.com/6.22/current/js-dos.js',
+                    './libs/js-dos.js'
+                );
+                scriptsLoaded.jsdos = true;
+                updateLoadingProgress(30);
+
+                // Load Ace Editor
+                await loadScript(
+                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js',
+                    './libs/ace.js'
+                );
+                scriptsLoaded.ace = true;
+                updateLoadingProgress(50);
+
+                await waitForAce();
+
+                // Load Ace C++ Mode
+                await loadScript(
+                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-c_cpp.js',
+                    './libs/mode-c_cpp.js'
+                );
+                scriptsLoaded.aceMode = true;
+                updateLoadingProgress(70);
+
+                // Load Ace Monokai Theme
+                await loadScript(
+                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-monokai.js',
+                    './libs/theme-monokai.js'
+                );
+
+                // Load Ace Textmate Theme for light mode
+                await loadScript(
+                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-textmate.js',
+                    './libs/theme-textmate.js'
+                );
+
+                scriptsLoaded.aceTheme = true;
+                updateLoadingProgress(100);
+
+                Logger.success('All dependencies loaded');
+                return true;
+            } catch (error) {
+                Logger.error('Failed to load dependencies', error);
+                alert('Failed to load required libraries. Please check your connection and try again.');
+                return false;
+            }
+        }
+
+        function updateLoadingProgress(percent) {
+            if (loadingProgressBar) {
+                loadingProgressBar.style.width = `${percent}%`;
+            }
+        }
+
+        function waitForAce() {
+            return new Promise((resolve) => {
+                const checkAce = setInterval(() => {
+                    if (typeof ace !== 'undefined') {
+                        clearInterval(checkAce);
+                        resolve();
                     }
-                } catch(e) {
-                    Logger.info('Using local WDOSBOX due to network timeout');
-                }
+                }, 50);
+            });
+        }
+
+        // ==================== DEMO FILE MANAGEMENT - FIXED ====================
+
+        demoSelect.addEventListener('change', async (e) => {
+            const selectedDemo = e.target.value;
+
+            // Check if clicking the same demo that's already loaded
+            if (selectedDemo === lastLoadedDemo) {
+                Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
+                await loadDemoFile(selectedDemo, true); // Force reload
+            } else {
+                currentDemo = selectedDemo;
+                await loadDemoFile(selectedDemo, false);
+            }
+        });
+
+        async function loadDemoFile(demoKey, forceReload = false) {
+            if (!editor) return;
+
+            const demoUrl = DEMO_FILES[demoKey];
+            if (!demoUrl) {
+                Logger.error(`Demo file not found: ${demoKey}`);
+                return;
             }
 
-            Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX`);
-            updateLoadingProgress(60);
+            try {
+                Logger.info(`Loading ${demoKey} demo from Blob storage...${forceReload ? ' (force reload)' : ''}`);
 
-            Dos(canvas, {
-                wdosboxUrl: wdosboxUrl,
-                cycles: "max",
-                autolock: false,
-            }).ready(async (fs, main) => {
-                
-                loadingText.textContent = 'Downloading Turbo C++ from Blob storage...';
-                updateLoadingProgress(70);
-                
+                // Add cache buster for force reload
+                const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
+                const response = await fetch(demoUrl + cacheBuster);
+
+                if (response.ok) {
+                    const code = await response.text();
+                    editor.setValue('', -1);
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    editor.setValue(code, -1);
+                    editor.clearSelection();
+                    editor.moveCursorTo(0, 0);
+
+                    // Update last loaded demo
+                    lastLoadedDemo = demoKey;
+                    currentDemo = demoKey;
+
+                    // Clear saved code when loading a demo
+                    localStorage.removeItem("tc_code");
+
+                    updateEditorInfo();
+                    updateSaveIndicator();
+
+                    Logger.success(`Loaded ${demoKey} demo from Blob storage`);
+                } else {
+                    Logger.error(`Failed to load demo: ${response.status}`);
+                    alert('Failed to load demo file. Please try again.');
+                }
+            } catch (e) {
+                Logger.error('Error loading demo file', e);
+                alert('Error loading demo file. Please check your connection.');
+            }
+        }
+
+        // ==================== EDITOR INITIALIZATION ====================
+
+        async function initializeEditor() {
+            if (!scriptsLoaded.ace || typeof ace === 'undefined') {
+                setTimeout(initializeEditor, 100);
+                return;
+            }
+
+            editor = ace.edit("editor");
+
+            // Set theme based on current theme setting
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const aceTheme = currentTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
+            editor.setTheme(aceTheme);
+
+            editor.session.setMode("ace/mode/c_cpp");
+
+            editor.setShowPrintMargin(false);
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                fontSize: "16px",
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                highlightActiveLine: true,
+                showGutter: true,
+                tabSize: 4,
+                useSoftTabs: true,
+                wrap: true
+            });
+
+            await loadDefaultCode();
+
+            editor.on('change', () => {
+                updateEditorInfo();
+                updateSaveIndicator();
+            });
+
+            setTimeout(() => {
+                editor.focus();
+                editorWrapper.classList.add('active');
+            }, 100);
+
+            Logger.success('Editor ready');
+        }
+
+        function updateEditorInfo() {
+            if (!editor || !editorInfo) return;
+
+            const code = editor.getValue();
+            const lines = code.split('\n').length;
+            const chars = code.length;
+
+            editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
+        }
+
+        async function loadDefaultCode() {
+            const savedCode = localStorage.getItem("tc_code");
+            if (savedCode) {
+                editor.setValue(savedCode, -1);
+                updateEditorInfo();
+                updateSaveIndicator();
+                Logger.info('Restored saved code');
+                return;
+            }
+
+            // Load default demo (circle-pattern)
+            await loadDemoFile('circle-pattern', false);
+        }
+
+        // Clear button functionality
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the editor?')) {
+                editor.setValue('', -1);
+                localStorage.removeItem("tc_code");
+                lastLoadedDemo = ''; // Reset last loaded demo
+                updateEditorInfo();
+                updateSaveIndicator();
+                Logger.info('Editor cleared');
+            }
+        });
+
+        // ==================== FULLSCREEN FUNCTIONALITY - FIXED ====================
+
+        let isEditorFullscreen = false;
+        let isTerminalFullscreen = false;
+
+        document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
+            isEditorFullscreen = !isEditorFullscreen;
+
+            if (isEditorFullscreen) {
+                editorWrapper.classList.add('fullscreen');
+                terminalWrapper.classList.add('hidden');
+            } else {
+                editorWrapper.classList.remove('fullscreen');
+                terminalWrapper.classList.remove('hidden');
+            }
+
+            // Force editor resize after fullscreen toggle
+            setTimeout(() => {
+                if (editor) {
+                    editor.resize();
+                    editor.renderer.updateFull();
+                }
+            }, 100);
+        });
+
+        document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
+            isTerminalFullscreen = !isTerminalFullscreen;
+
+            if (isTerminalFullscreen) {
+                terminalWrapper.classList.add('fullscreen');
+                editorWrapper.classList.add('hidden');
+            } else {
+                terminalWrapper.classList.remove('fullscreen');
+                editorWrapper.classList.remove('hidden');
+            }
+
+            // Force canvas resize after fullscreen toggle
+            setTimeout(() => {
+                if (dosInstance) {
+                    // Trigger canvas resize
+                    window.dispatchEvent(new Event('resize'));
+                }
+            }, 100);
+        });
+
+        // ==================== KEYBOARD INPUT ISOLATION ====================
+
+        let keyboardEventBlocker = null;
+
+        function setupKeyboardBlocker() {
+            keyboardEventBlocker = function (e) {
+                if (!terminalFocused) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            };
+
+            window.addEventListener('keydown', keyboardEventBlocker, true);
+            window.addEventListener('keyup', keyboardEventBlocker, true);
+            window.addEventListener('keypress', keyboardEventBlocker, true);
+        }
+
+        // ==================== FOCUS MANAGEMENT ====================
+
+        function focusTerminal() {
+            if (!dosInstance) return;
+
+            terminalFocused = true;
+            canvas.focus();
+            canvas.tabIndex = 1;
+            terminalWrapper.classList.add('terminal-active');
+            editorWrapper.classList.remove('active');
+            keyboardBlocker.classList.remove('active');
+        }
+
+        function focusEditor() {
+            if (!editor) return;
+
+            terminalFocused = false;
+            canvas.tabIndex = -1;
+            canvas.blur();
+            editor.focus();
+            terminalWrapper.classList.remove('terminal-active');
+            editorWrapper.classList.add('active');
+            keyboardBlocker.classList.add('active');
+        }
+
+        keyboardBlocker.addEventListener('click', () => {
+            focusTerminal();
+        });
+
+        terminalWrapper.addEventListener('click', (e) => {
+            if (e.target === terminalWrapper || e.target === canvas) {
+                if (dosInstance && !terminalFocused) {
+                    focusTerminal();
+                }
+            }
+        });
+
+        editorWrapper.addEventListener('click', () => {
+            focusEditor();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                focusEditor();
+                return false;
+            }
+        }, true);
+
+        // ==================== RUN PROGRAM ====================
+
+        async function runProgram() {
+            if (!editor) {
+                alert('Editor is still loading. Please wait...');
+                return;
+            }
+
+            const code = editor.getValue();
+
+            if (!code.trim()) {
+                alert('Please write some code first!');
+                return;
+            }
+
+            Logger.info('Starting compilation...');
+            loading.classList.add('active');
+            loadingText.textContent = 'Initializing DOS environment...';
+            updateLoadingProgress(0);
+            runBtn.disabled = true;
+            runBtn.classList.add('loading');
+
+            if (dosInstance) {
                 try {
-                    Logger.info('Fetching TC compiler from Vercel Blob Storage...');
-                    
-                    // Fetch the ZIP from Vercel Blob Storage
-                    const tcResponse = await fetch(TC_ZIP_URL);
-                    if (!tcResponse.ok) {
-                        throw new Error(`Failed to download compiler (HTTP ${tcResponse.status})`);
-                    }
-                    
-                    // Get as Blob
-                    const tcBlob = await tcResponse.blob();
-                    
-                    // Create a temporary URL for the blob
-                    const blobUrl = URL.createObjectURL(tcBlob);
-                    
-                    Logger.info('Extracting compiler files...');
-                    loadingText.textContent = 'Extracting compiler files...';
-                    
-                    // Now extract from the blob URL - js-dos can handle blob: URLs
-                    await fs.extract(blobUrl);
-                    
-                    // Clean up the blob URL
-                    URL.revokeObjectURL(blobUrl);
-                    
-                    Logger.success('Turbo C compiler loaded from Blob storage');
-                } catch(e) {
-                    Logger.error('Compiler extraction failed', e);
-                    throw new Error('Failed to load compiler: ' + e.message);
+                    dosInstance.exit();
+                } catch (e) {
+                    Logger.warn('Error closing previous DOS instance');
+                }
+                dosInstance = null;
+            }
+
+            // Clear existing error interval
+            if (errorUpdateInterval) {
+                clearInterval(errorUpdateInterval);
+                errorUpdateInterval = null;
+            }
+
+            // Hide panel initially
+            outputPanel.classList.remove('visible');
+            terminalWrapper.classList.remove('has-panel');
+            lastErrorContent = '';
+            outputContent.textContent = '';
+
+            try {
+                // Wait for Dos to be available
+                if (!scriptsLoaded.jsdos || typeof Dos === 'undefined') {
+                    loadingText.textContent = 'Waiting for JS-DOS...';
+                    updateLoadingProgress(20);
+                    await new Promise((resolve) => {
+                        const checkDos = setInterval(() => {
+                            if (typeof Dos !== 'undefined') {
+                                clearInterval(checkDos);
+                                resolve();
+                            }
+                        }, 100);
+                    });
                 }
 
-                loadingText.textContent = 'Writing source code...';
-                updateLoadingProgress(80);
-                fs.createFile("TURBOC3/BIN/USER.CPP", code);
+                updateLoadingProgress(40);
 
-                const batchScript = `@ECHO OFF
+                // Determine wdosbox URL with proper fallback
+                let wdosboxUrl = './libs/wdosbox.js';
+                let usingOnline = false;
+
+                if (navigator.onLine) {
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                        const response = await fetch("https://js-dos.com/6.22/current/wdosbox.js", {
+                            method: 'HEAD',
+                            cache: 'no-cache',
+                            signal: controller.signal
+                        });
+
+                        clearTimeout(timeoutId);
+
+                        if (response.ok) {
+                            wdosboxUrl = "https://js-dos.com/6.22/current/wdosbox.js";
+                            usingOnline = true;
+                        }
+                    } catch (e) {
+                        Logger.info('Using local WDOSBOX due to network timeout');
+                    }
+                }
+
+                Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX`);
+                updateLoadingProgress(60);
+
+                Dos(canvas, {
+                    wdosboxUrl: wdosboxUrl,
+                    cycles: "max",
+                    autolock: false,
+                }).ready(async (fs, main) => {
+
+                    loadingText.textContent = 'Downloading Turbo C++ from Blob storage...';
+                    updateLoadingProgress(70);
+
+                    try {
+                        Logger.info('Fetching TC compiler from Vercel Blob Storage...');
+
+                        // Fetch the ZIP from Vercel Blob Storage
+                        const tcResponse = await fetch(TC_ZIP_URL);
+                        if (!tcResponse.ok) {
+                            throw new Error(`Failed to download compiler (HTTP ${tcResponse.status})`);
+                        }
+
+                        // Get as Blob
+                        const tcBlob = await tcResponse.blob();
+
+                        // Create a temporary URL for the blob
+                        const blobUrl = URL.createObjectURL(tcBlob);
+
+                        Logger.info('Extracting compiler files...');
+                        loadingText.textContent = 'Extracting compiler files...';
+
+                        // Now extract from the blob URL - js-dos can handle blob: URLs
+                        await fs.extract(blobUrl);
+
+                        // Clean up the blob URL
+                        URL.revokeObjectURL(blobUrl);
+
+                        Logger.success('Turbo C compiler loaded from Blob storage');
+                    } catch (e) {
+                        Logger.error('Compiler extraction failed', e);
+                        throw new Error('Failed to load compiler: ' + e.message);
+                    }
+
+                    loadingText.textContent = 'Writing source code...';
+                    updateLoadingProgress(80);
+                    fs.createFile("TURBOC3/BIN/USER.CPP", code);
+
+                    const batchScript = `@ECHO OFF
 CD TURBOC3\\BIN
 IF EXIST USER.EXE DEL USER.EXE
+IF EXIST ERR.TXT DEL ERR.TXT
 TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
 IF EXIST USER.EXE GOTO SUCCESS
 CLS
@@ -1646,81 +2073,85 @@ USER.EXE
 PAUSE
 `;
 
-                fs.createFile("AUTOEXEC.BAT", batchScript);
+                    fs.createFile("AUTOEXEC.BAT", batchScript);
 
-                loadingText.textContent = 'Starting program...';
-                updateLoadingProgress(90);
-                
-                dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
-                
-                setupKeyboardBlocker();
-                
-                updateLoadingProgress(100);
+                    loadingText.textContent = 'Starting program...';
+                    updateLoadingProgress(90);
+
+                    dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
+
+                    setupKeyboardBlocker();
+
+                    updateLoadingProgress(100);
+                    loading.classList.remove('active');
+                    runBtn.disabled = false;
+                    runBtn.classList.remove('loading');
+
+                    Logger.success('Program started successfully');
+
+                    setTimeout(() => {
+                        focusTerminal();
+                    }, 500);
+
+                    // Start checking for compilation errors
+                    errorUpdateInterval = setInterval(() => checkCompilationErrors(), 1000);
+                });
+
+            } catch (error) {
+                Logger.error('Failed to start DOS environment', error);
+                alert('Failed to start DOS environment. Error: ' + error.message);
                 loading.classList.remove('active');
                 runBtn.disabled = false;
                 runBtn.classList.remove('loading');
-                
-                Logger.success('Program started successfully');
-                
-                setTimeout(() => {
-                    focusTerminal();
-                }, 500);
-            });
-            
-        } catch (error) {
-            Logger.error('Failed to start DOS environment', error);
-            alert('Failed to start DOS environment. Error: ' + error.message);
-            loading.classList.remove('active');
-            runBtn.disabled = false;
-            runBtn.classList.remove('loading');
-            updateLoadingProgress(0);
+                updateLoadingProgress(0);
+            }
         }
-    }
 
-    // ==================== KEYBOARD SHORTCUTS ====================
-    
-    window.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + Enter to run
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !terminalFocused) {
-            e.preventDefault();
-            runProgram();
+        // ==================== KEYBOARD SHORTCUTS ====================
+
+        window.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter to run
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !terminalFocused) {
+                e.preventDefault();
+                runProgram();
+            }
+
+            // Ctrl/Cmd + S to save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's' && !terminalFocused) {
+                e.preventDefault();
+                saveCode();
+            }
+        });
+
+        // ==================== RESPONSIVE HANDLING ====================
+
+        function handleResize() {
+            if (editor) {
+                editor.resize();
+                editor.renderer.updateFull();
+            }
         }
-        
-        // Ctrl/Cmd + S to save
-        if ((e.ctrlKey || e.metaKey) && e.key === 's' && !terminalFocused) {
-            e.preventDefault();
-            saveCode();
-        }
-    });
 
-    // ==================== RESPONSIVE HANDLING ====================
-    
-    function handleResize() {
-        if (editor) {
-            editor.resize();
-            editor.renderer.updateFull();
-        }
-    }
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(handleResize, 300);
+        });
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', () => {
-        setTimeout(handleResize, 300);
-    });
+        // ==================== INITIALIZATION ====================
 
-    // ==================== INITIALIZATION ====================
-    
-    (async function init() {
-        Logger.info('Initializing compiler...');
-        updateSaveIndicator();
-        
-        const loaded = await loadAllScripts();
-        if (loaded) {
-            await initializeEditor();
-            Logger.success('Compiler ready');
-        }
-    })();
+        (async function init() {
+            Logger.info('Initializing compiler...');
+            updateSaveIndicator();
 
-</script>
+            const loaded = await loadAllScripts();
+            if (loaded) {
+                await initializeEditor();
+                Logger.success('Compiler ready');
+            }
+        })();
+
+    </script>
 
 </body>
+
 </html>
