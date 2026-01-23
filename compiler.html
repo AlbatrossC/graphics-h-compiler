@@ -4,6 +4,11 @@
 <head>
     <meta charset="utf-8">
     <title>Graphics.h Online Compiler | Turbo C++ DOS Emulation</title>
+    <!-- Google Fonts - JetBrains Mono for better code readability -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description"
         content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser.">
@@ -930,14 +935,18 @@
             transform: translateY(0);
         }
 
+        #output-panel.expanded {
+            height: 100%;
+        }
+
         .output-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 14px;
+            padding: 10px 16px;
             background: var(--vscode-sidebar);
             border-bottom: 1px solid var(--border-color);
-            font-size: 0.8125rem;
+            font-size: 0.875rem;
             font-weight: 600;
             color: var(--text-secondary);
             flex-shrink: 0;
@@ -946,21 +955,136 @@
         .output-title {
             display: flex;
             align-items: center;
+            gap: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .output-actions {
+            display: flex;
+            align-items: center;
             gap: 8px;
+        }
+
+        .copy-error-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 14px;
+            height: 30px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--primary);
+            color: #0a0a0a;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+        }
+
+        .copy-error-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        }
+
+        .copy-error-btn.copied {
+            background: var(--success);
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.5);
+        }
+
+        .copy-error-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        [data-theme="light"] .copy-error-btn {
+            background: var(--primary);
+            box-shadow: 0 2px 8px rgba(0, 204, 106, 0.3);
+        }
+
+        [data-theme="light"] .copy-error-btn:hover {
+            box-shadow: 0 4px 12px rgba(0, 204, 106, 0.4);
+        }
+
+        [data-theme="light"] .copy-error-btn.copied {
+            box-shadow: 0 2px 8px rgba(0, 204, 106, 0.5);
+        }
+
+        /* Expand Button */
+        .expand-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .expand-btn:hover {
+            background: var(--vscode-line-bg);
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .expand-btn svg {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s ease;
+        }
+
+        .expand-btn.expanded svg {
+            transform: rotate(180deg);
+        }
+
+        [data-theme="light"] .expand-btn {
+            border: 2px solid var(--border-color);
         }
 
         .output-content {
             flex: 1;
-            padding: 10px;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 0.875rem;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 1rem;
+            line-height: 1.7;
             overflow-y: auto;
             white-space: pre-wrap;
+            word-break: break-word;
             color: var(--text-primary);
+            background: var(--vscode-editor);
+            letter-spacing: 0.02em;
+        }
+
+        .output-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-content::-webkit-scrollbar-track {
+            background: var(--vscode-sidebar);
+        }
+
+        .output-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        .output-content::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
         }
 
         .output-error {
             color: var(--danger);
+            font-weight: 500;
         }
 
         .output-success {
@@ -1114,19 +1238,34 @@
             <div id="output-panel">
                 <div class="output-header">
                     <div class="output-title">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;">
+                        <svg viewBox="0 0 24 24" fill="currentColor"
+                            style="width: 16px; height: 16px; color: var(--danger);">
                             <path
-                                d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                         </svg>
-                        Compilation Output
+                        Compilation Errors
                     </div>
-                    <button id="close-output-btn" class="icon-btn"
-                        style="height: 24px; width: 24px; min-height: unset; border: none; background: transparent;">
-                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px;">
-                            <path
-                                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-                        </svg>
-                    </button>
+                    <div class="output-actions">
+                        <button id="copy-error-btn" class="copy-error-btn" title="Copy errors to clipboard">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                            </svg>
+                            <span id="copy-btn-text">Copy</span>
+                        </button>
+                        <button id="expand-output-btn" class="expand-btn" title="Expand/Collapse panel">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+                            </svg>
+                        </button>
+                        <button id="close-output-btn" class="icon-btn"
+                            style="height: 28px; width: 28px; min-height: unset; border: 1px solid var(--border-color); background: transparent; border-radius: 6px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;">
+                                <path
+                                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div id="output-content" class="output-content"></div>
             </div>
@@ -1250,6 +1389,82 @@
             terminalWrapper.classList.remove('has-panel');
             // Trigger resize to fix canvas layout
             window.dispatchEvent(new Event('resize'));
+        });
+
+        // Copy Error Button Functionality
+        const copyErrorBtn = document.getElementById("copy-error-btn");
+        const copyBtnText = document.getElementById("copy-btn-text");
+
+        copyErrorBtn.addEventListener('click', async () => {
+            const errorText = outputContent.textContent;
+
+            if (!errorText || errorText.trim() === '') {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(errorText);
+
+                // Visual feedback
+                copyErrorBtn.classList.add('copied');
+                copyBtnText.textContent = 'Copied!';
+
+                Logger.success('Errors copied to clipboard');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    copyErrorBtn.classList.remove('copied');
+                    copyBtnText.textContent = 'Copy';
+                }, 2000);
+            } catch (err) {
+                Logger.error('Failed to copy errors', err);
+
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = errorText;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+
+                try {
+                    document.execCommand('copy');
+                    copyErrorBtn.classList.add('copied');
+                    copyBtnText.textContent = 'Copied!';
+
+                    setTimeout(() => {
+                        copyErrorBtn.classList.remove('copied');
+                        copyBtnText.textContent = 'Copy';
+                    }, 2000);
+                } catch (fallbackErr) {
+                    Logger.error('Fallback copy failed', fallbackErr);
+                }
+
+                document.body.removeChild(textArea);
+            }
+        });
+
+        // Expand Button Functionality
+        const expandOutputBtn = document.getElementById("expand-output-btn");
+        let isOutputExpanded = false;
+
+        expandOutputBtn.addEventListener('click', () => {
+            isOutputExpanded = !isOutputExpanded;
+
+            if (isOutputExpanded) {
+                outputPanel.classList.add('expanded');
+                expandOutputBtn.classList.add('expanded');
+                expandOutputBtn.title = 'Collapse panel';
+            } else {
+                outputPanel.classList.remove('expanded');
+                expandOutputBtn.classList.remove('expanded');
+                expandOutputBtn.title = 'Expand panel';
+            }
+
+            // Trigger resize to fix canvas layout
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+
+            Logger.info(`Output panel ${isOutputExpanded ? 'expanded' : 'collapsed'}`);
         });
 
         async function checkCompilationErrors() {
