@@ -2,175 +2,80 @@
 
 # 🎨 Graphics.h Compiler
 
-### Run graphics.h programs in your browser or VS Code - no setup required
+**Run graphics.h programs in your browser or VS Code - no setup required**
 
 [![Online Compiler](https://img.shields.io/badge/Try%20Online-graphics--h--compiler.vercel.app-blue?style=for-the-badge)](https://graphics-h-compiler.vercel.app/)
 [![VS Code Extension](https://img.shields.io/badge/VS%20Code-Install%20Extension-green?style=for-the-badge&logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/AlbatrossC/graphics-h-compiler)
 
-**A modern Turbo C wrapper for graphics.h programming**  
-*No Turbo C • No DOSBox • No Legacy Tools*
-
-[🚀 Quick Start](#getting-started) • [📖 Documentation](#documentation) • [💡 Features](#features) • [🎯 Why This Exists](#why-this-project-exists)
+*A modern Turbo C wrapper • No Turbo C • No DOSBox • No Legacy Tools*
 
 </div>
 
 ---
-
----
-
-<div align="center">
 
 ## 📸 Screenshots
 
-### 🌐 Browser Interface
-
-<img src="online-demo.png" alt="Graphics.h Compiler - Browser Interface" width="900">
-
-### 💻 VS Code Extension
-
-<img src="vscode-demo.png" alt="Graphics.h Compiler - VS Code Extension" width="900">
-
-</div>
+<table>
+<tr>
+<td width="50%">
+<img src="online-demo.png" alt="Browser Interface" width="100%">
+<p align="center"><b>🌐 Browser Interface</b></p>
+</td>
+<td width="50%">
+<img src="vscode-demo.png" alt="VS Code Extension" width="100%">
+<p align="center"><b>💻 VS Code Extension</b></p>
+</td>
+</tr>
+</table>
 
 ---
-
-<div align="center">
 
 ## 🌟 Overview
 
 **Graphics.h Compiler** is a modern Turbo C wrapper that brings the classic `graphics.h` library to contemporary development environments. Write, compile, and run graphics programs directly in your browser or VS Code—no complex setup, no legacy tools, no headaches.
 
-> **Perfect for students, educators, and anyone learning computer graphics programming**
-
-</div>
+> Perfect for students, educators, and anyone learning computer graphics programming
 
 ---
-
-<div align="center">
 
 ## ✨ Features
 
-<table>
-<tr>
-<td width="50%">
-
-### 🌐 Multi-Platform Support
-- Browser-based compiler
-- VS Code extension
-- Cross-platform compatibility
-- Windows, Linux
-
-</td>
-<td width="50%">
-
-### ⚡ Zero Configuration
-- No Turbo C installation
-- No DOSBox required
-- Client-side execution
-- Instant setup
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-
-### 📴 Offline Ready
-- Works after initial load
-- No internet dependency
-- Local development support
-
-</td>
-<td width="50%">
-
-### 🎓 Student Friendly
-- SPPU syllabus compatible
-- Simple interface
-- Modern workflow
-- Focus on learning
-
-</td>
-</tr>
-</table>
-
-</div>
+- 🌐 **Multi-Platform Support** - Works in browser and VS Code on Windows & Linux
+- ⚡ **Zero Configuration** - No Turbo C, DOSBox, or complex dependencies required
+- 📴 **Offline Ready** - Continue working after initial load with no internet dependency
+- 🎓 **Student Friendly** - SPPU syllabus compatible with simple, modern interface
+- 🚀 **Client-Side Execution** - All compilation happens directly in your browser
+- 💡 **Modern Workflow** - Use contemporary development tools with legacy graphics.h
 
 ---
 
-<div align="center">
-
 ## 🎯 Why This Project Exists
 
-**`graphics.h` is still part of the SPPU Computer Graphics syllabus (2024 revised)**
-
-</div>
-
-Despite being widely taught, `graphics.h` programming creates significant barriers for students:
-
-<div align="center">
+`graphics.h` is still part of the **SPPU Computer Graphics syllabus (2024 revised)** and widely taught in programming courses. However, legacy tooling creates barriers:
 
 | ❌ Problem | ✅ Solution |
 |-----------|----------|
 | Complex Turbo C installation | Browser-based, instant access |
 | DOSBox configuration headaches | Zero configuration required |
 | OS compatibility issues | Cross-platform support |
-| Time wasted on setup | Focus on learning graphics concepts |
+| Time wasted on setup | Focus on learning concepts |
 
-**This project removes these obstacles** so students and educators can concentrate on what matters: understanding graphics programming fundamentals.
-
-</div>
+This project removes these obstacles so students can focus on graphics programming fundamentals.
 
 ---
 
-<div align="center">
+## 🚀 Getting Started
 
-## 🚀 Usage Options
+### Option 1: Online Compiler (Recommended)
 
-<table>
-<tr>
-<td align="center" width="33%">
-<h3>🌐</h3>
-<b>Online</b><br>
-<sub>No setup required</sub>
-</td>
-<td align="center" width="33%">
-<h3>💻</h3>
-<b>Local Browser</b><br>
-<sub>Run on localhost</sub>
-</td>
-<td align="center" width="33%">
-<h3>📝</h3>
-<b>VS Code</b><br>
-<sub>IDE integration</sub>
-</td>
-</tr>
-</table>
+Simply visit the online compiler and start coding immediately:
 
-</div>
+**🌐 [https://graphics-h-compiler.vercel.app/](https://graphics-h-compiler.vercel.app/)**
 
 ---
 
-<div align="center">
-
-## 🏁 Getting Started
-
-### Option 1: 🌐 Online Compiler (Recommended)
-
-The fastest way to get started—just click and code!
-
-[![Launch Online Compiler](https://img.shields.io/badge/Launch-Online%20Compiler-blue?style=for-the-badge&logo=google-chrome)](https://graphics-h-compiler.vercel.app/)
-
-</div>
-
----
-
-<div align="center">
-
-### Option 2: 💻 Run Locally
-
-Clone and run on your machine:
-
-</div>
+### Option 2: Run Locally
 
 ```bash
 # Clone the repository
@@ -183,142 +88,71 @@ cd graphics-h-compiler
 python -m http.server 8000
 ```
 
-<div align="center">
-
-**Then open:** [`http://localhost:8000`](http://localhost:8000)
-
-</div>
+Then open your browser at: **http://localhost:8000**
 
 ---
 
-<div align="center">
+### Option 3: VS Code Extension
 
-### Option 3: 📝 VS Code Extension
+**Install from VS Code Marketplace:**
 
-Install the extension for integrated development:
+🔗 [https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
 
-[![Install Extension](https://img.shields.io/badge/VS%20Code-Install%20Extension-007ACC?style=for-the-badge&logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
+**Installation Steps:**
 
-#### Installation Methods:
-
-**🖱️ Via VS Code:**
 1. Open VS Code
 2. Press `Ctrl+Shift+X` to open Extensions
 3. Search for **"graphics.h compiler"**
 4. Click **Install** on the extension by **AlbatrossC**
 
-**⌨️ Via Command Line:**
+**Or install via command line:**
 ```bash
 code --install-extension AlbatrossC.graphics-h-compiler
 ```
 
-> 📖 For detailed configuration, see [`vscode-compiler.md`](vscode-compiler.md)
-
-</div>
+📖 For detailed configuration, see [`vscode-compiler.md`](vscode-compiler.md)
 
 ---
-
-<div align="center">
 
 ## 📖 Documentation
 
-<table>
-<tr>
-<td align="center" width="50%">
-
-### 🌐 Online Compiler Guide
-[`online-compiler.md`](online-compiler.md)
-
-Browser-based compiler architecture, features, and usage instructions
-
-</td>
-<td align="center" width="50%">
-
-### 💻 VS Code Extension Guide
-[`vscode-compiler.md`](vscode-compiler.md)
-
-Extension setup, configuration, and advanced features
-
-</td>
-</tr>
-</table>
-
-</div>
+- **[online-compiler.md](online-compiler.md)** - Browser-based compiler architecture, features, and usage
+- **[vscode-compiler.md](vscode-compiler.md)** - VS Code extension setup, configuration, and advanced features
 
 ---
-
-<div align="center">
 
 ## 👥 Who Is This For?
 
-<table>
-<tr>
-<td align="center" width="33%">
-
-### 🎓
-**SPPU Students**
-
-Meet syllabus requirements without legacy tools
-
-</td>
-<td align="center" width="33%">
-
-### 👨‍💻
-**Beginners**
-
-Learn graphics.h without configuration hassles
-
-</td>
-<td align="center" width="33%">
-
-### 👨‍🏫
-**Educators**
-
-Provide students with modern, accessible tools
-
-</td>
-</tr>
-</table>
-
-</div>
+- 🎓 **SPPU Computer Graphics Students** - Fulfill syllabus requirements without legacy tools
+- 👨‍💻 **Beginners** - Learn graphics.h without configuration hassles
+- 👨‍🏫 **Educators** - Provide students with modern, accessible learning tools
 
 ---
 
-<div align="center">
-
 ## ⚙️ Technical Details
 
-This compiler leverages **WebAssembly** technology to emulate the Turbo C graphics library environment. It enables `graphics.h` programs to run seamlessly in modern browsers and development tools without requiring DOS emulation, virtualization, or any legacy dependencies.
+This compiler leverages **WebAssembly** technology to emulate the Turbo C graphics library environment, enabling `graphics.h` programs to run seamlessly in modern browsers and development tools without requiring DOS emulation or virtualization.
 
 **Key Technologies:**
 - WebAssembly for C/C++ compilation
 - Browser-based graphics rendering
 - Modern JavaScript framework integration
 
-</div>
-
 ---
 
-## 💬 Support & Community
+## 💬 Support
 
-<div align="center">
+Need help or have questions?
 
-| Need Help? | Action |
-|------------|--------|
-| 🐛 Found a bug | [Report an Issue](https://github.com/AlbatrossC/graphics-h-compiler/issues) |
-| 💡 Have a question | [Start a Discussion](https://github.com/AlbatrossC/graphics-h-compiler/discussions) |
-| ⭐ Like this project | [Star on GitHub](https://github.com/AlbatrossC/graphics-h-compiler) |
-
-</div>
+- 🐛 [Report a Bug](https://github.com/AlbatrossC/graphics-h-compiler/issues)
+- 💡 [Ask a Question](https://github.com/AlbatrossC/graphics-h-compiler/discussions)
+- ⭐ [Star this Repository](https://github.com/AlbatrossC/graphics-h-compiler)
 
 ---
 
 <div align="center">
 
-**Graphics.h Compiler** • Simplifying graphics programming for modern developers
-
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/AlbatrossC/graphics-h-compiler?style=social)](https://github.com/AlbatrossC/graphics-h-compiler)
+**Graphics.h Compiler** - Simplifying graphics programming for modern developers
 
 *Built for students • Made for learning • Designed for simplicity*
 
