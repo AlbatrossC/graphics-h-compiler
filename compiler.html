@@ -14,6 +14,12 @@
         content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser.">
     <link rel="canonical" href="https://graphics-h-compiler.vercel.app/compiler.html">
 
+    <!-- Preload Hints for Faster Loading -->
+    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip" as="fetch"
+        crossorigin="anonymous">
+    <link rel="preconnect" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com">
+    <link rel="preconnect" href="https://js-dos.com">
+
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation">
     <meta property="og:description"
@@ -1135,6 +1141,7 @@
             <div class="demo-selector">
                 <label for="demo-select">Demo:</label>
                 <select id="demo-select" class="demo-dropdown">
+                    <option value="graphics-demo" selected>Graphics Demo</option>
                     <option value="circle-pattern">Circle Pattern</option>
                     <option value="bouncing-ball">Bouncing Ball</option>
                     <option value="shooter-game">Shooter Game</option>
@@ -1341,7 +1348,7 @@
         let dosInstance = null;
         let terminalFocused = false;
         let editor = null;
-        let currentDemo = 'circle-pattern';
+        let currentDemo = 'graphics-demo';
         let lastLoadedDemo = ''; // Track last loaded demo
         let scriptsLoaded = {
             jsdos: false,
@@ -1352,6 +1359,7 @@
 
         // Demo files configuration - FETCHING FROM BLOB STORAGE
         const DEMO_FILES = {
+            'graphics-demo': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/graphics_demo.cpp',
             'circle-pattern': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/circle-pattern.cpp',
             'bouncing-ball': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/bouncing-ball.cpp',
             'shooter-game': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/shooter-game.cpp'
@@ -1359,6 +1367,191 @@
 
         // TC.ZIP URL - FETCHING FROM BLOB STORAGE
         const TC_ZIP_URL = 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip';
+
+        // ==================== CACHING SYSTEM ====================
+        const CACHE_CONFIG = {
+            TC_ZIP_CACHE_KEY: 'tc_zip_cache',
+            TC_ZIP_VERSION: 'tc-v1',
+            DEMO_CACHE_PREFIX: 'demo_cache_',
+            CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+            DB_NAME: 'GraphicsHCompilerCache',
+            DB_VERSION: 1,
+            STORE_NAME: 'files'
+        };
+
+        // IndexedDB for large file caching (TC ZIP)
+        let cacheAvailable = true; // Flag to prevent repeated IndexedDB retries
+
+        class CacheDB {
+            static db = null;
+
+            static async open() {
+                if (!cacheAvailable) return null; // Don't retry if previously failed
+                if (this.db) return this.db;
+
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(CACHE_CONFIG.DB_NAME, CACHE_CONFIG.DB_VERSION);
+
+                    request.onerror = () => {
+                        cacheAvailable = false; // Mark cache as unavailable
+                        Logger.warn('IndexedDB not available, caching disabled');
+                        resolve(null);
+                    };
+
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(CACHE_CONFIG.STORE_NAME)) {
+                            db.createObjectStore(CACHE_CONFIG.STORE_NAME, { keyPath: 'key' });
+                        }
+                    };
+                });
+            }
+
+            static async get(key) {
+                const db = await this.open();
+                if (!db) return null;
+
+                return new Promise((resolve) => {
+                    try {
+                        const transaction = db.transaction(CACHE_CONFIG.STORE_NAME, 'readonly');
+                        const store = transaction.objectStore(CACHE_CONFIG.STORE_NAME);
+                        const request = store.get(key);
+
+                        request.onsuccess = () => {
+                            const result = request.result;
+                            if (result && result.timestamp) {
+                                const age = Date.now() - result.timestamp;
+                                if (age < CACHE_CONFIG.CACHE_TTL) {
+                                    resolve(result.data);
+                                    return;
+                                }
+                            }
+                            resolve(null);
+                        };
+
+                        request.onerror = () => resolve(null);
+                    } catch (e) {
+                        resolve(null);
+                    }
+                });
+            }
+
+            static async set(key, data) {
+                const db = await this.open();
+                if (!db) return false;
+
+                return new Promise((resolve) => {
+                    try {
+                        const transaction = db.transaction(CACHE_CONFIG.STORE_NAME, 'readwrite');
+                        const store = transaction.objectStore(CACHE_CONFIG.STORE_NAME);
+                        const request = store.put({
+                            key: key,
+                            data: data,
+                            timestamp: Date.now()
+                        });
+
+                        request.onsuccess = () => resolve(true);
+                        request.onerror = () => resolve(false);
+                    } catch (e) {
+                        resolve(false);
+                    }
+                });
+            }
+        }
+
+        // Demo file cache using localStorage
+        const DemoCache = {
+            get(demoKey) {
+                try {
+                    const cacheKey = CACHE_CONFIG.DEMO_CACHE_PREFIX + demoKey;
+                    const cached = localStorage.getItem(cacheKey);
+                    if (!cached) return null;
+
+                    const { code, timestamp } = JSON.parse(cached);
+                    const age = Date.now() - timestamp;
+
+                    if (age < CACHE_CONFIG.CACHE_TTL) {
+                        return code;
+                    }
+
+                    // Expired, remove it
+                    localStorage.removeItem(cacheKey);
+                    return null;
+                } catch (e) {
+                    return null;
+                }
+            },
+
+            set(demoKey, code) {
+                try {
+                    const cacheKey = CACHE_CONFIG.DEMO_CACHE_PREFIX + demoKey;
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        code: code,
+                        timestamp: Date.now()
+                    }));
+                    return true;
+                } catch (e) {
+                    Logger.warn('Failed to cache demo file: ' + e.message);
+                    return false;
+                }
+            }
+        };
+
+        // ==================== JS-DOS WARMUP SYSTEM ====================
+        let warmupPromise = null;
+        let tcZipPromise = null; // Shared promise to prevent duplicate downloads
+
+        // Shared function to get TC ZIP - prevents race condition between warmup and run
+        async function getTCZip() {
+            if (tcZipPromise) return tcZipPromise;
+
+            tcZipPromise = (async () => {
+                // Try cache first
+                let blob = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
+                if (blob) {
+                    Logger.info('TC ZIP loaded from cache');
+                    return blob;
+                }
+
+                // Download and cache
+                Logger.info('Downloading TC ZIP...');
+                const response = await fetch(TC_ZIP_URL);
+                if (!response.ok) {
+                    throw new Error(`Failed to download compiler (HTTP ${response.status})`);
+                }
+                blob = await response.blob();
+
+                // Cache for next time (async, don't block)
+                CacheDB.set(CACHE_CONFIG.TC_ZIP_CACHE_KEY, blob)
+                    .then(cached => {
+                        if (cached) Logger.success('TC ZIP cached for future use');
+                    });
+
+                return blob;
+            })();
+
+            return tcZipPromise;
+        }
+
+        // Update cache status indicator on Run button
+        async function updateCacheStatus() {
+            try {
+                const cached = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
+                if (cached && runBtn) {
+                    runBtn.title = 'Run (cached - instant) [Ctrl+Enter]';
+                    Logger.info('Cache status: TC ZIP is cached');
+                } else if (runBtn) {
+                    runBtn.title = 'Run [Ctrl+Enter]';
+                }
+            } catch (e) {
+                // Silently ignore
+            }
+        }
 
         const canvas = document.getElementById("dos-canvas");
         const loading = document.getElementById("loading");
@@ -1691,6 +1884,29 @@
             }
 
             try {
+                // Check cache first (unless force reload)
+                if (!forceReload) {
+                    const cachedCode = DemoCache.get(demoKey);
+                    if (cachedCode) {
+                        Logger.info(`Loading ${demoKey} demo from cache`);
+                        editor.setValue('', -1);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        editor.setValue(cachedCode, -1);
+                        editor.clearSelection();
+                        editor.moveCursorTo(0, 0);
+
+                        lastLoadedDemo = demoKey;
+                        currentDemo = demoKey;
+                        localStorage.removeItem("tc_code");
+
+                        updateEditorInfo();
+                        updateSaveIndicator();
+
+                        Logger.success(`Loaded ${demoKey} demo from cache`);
+                        return;
+                    }
+                }
+
                 Logger.info(`Loading ${demoKey} demo from Blob storage...${forceReload ? ' (force reload)' : ''}`);
 
                 // Add cache buster for force reload
@@ -1699,6 +1915,10 @@
 
                 if (response.ok) {
                     const code = await response.text();
+
+                    // Cache the demo file
+                    DemoCache.set(demoKey, code);
+
                     editor.setValue('', -1);
                     await new Promise(resolve => setTimeout(resolve, 50));
                     editor.setValue(code, -1);
@@ -1791,8 +2011,8 @@
                 return;
             }
 
-            // Load default demo (circle-pattern)
-            await loadDemoFile('circle-pattern', false);
+            // Load default demo (graphics-demo)
+            await loadDemoFile('graphics-demo', false);
         }
 
         // Clear button functionality
@@ -2016,20 +2236,13 @@
                     autolock: false,
                 }).ready(async (fs, main) => {
 
-                    loadingText.textContent = 'Downloading Turbo C++ from Blob storage...';
+                    loadingText.textContent = 'Loading Turbo C++...';
                     updateLoadingProgress(70);
 
                     try {
-                        Logger.info('Fetching TC compiler from Vercel Blob Storage...');
-
-                        // Fetch the ZIP from Vercel Blob Storage
-                        const tcResponse = await fetch(TC_ZIP_URL);
-                        if (!tcResponse.ok) {
-                            throw new Error(`Failed to download compiler (HTTP ${tcResponse.status})`);
-                        }
-
-                        // Get as Blob
-                        const tcBlob = await tcResponse.blob();
+                        // Use shared getTCZip to prevent race condition with warmup
+                        loadingText.textContent = 'Loading compiler...';
+                        const tcBlob = await getTCZip();
 
                         // Create a temporary URL for the blob
                         const blobUrl = URL.createObjectURL(tcBlob);
@@ -2043,7 +2256,7 @@
                         // Clean up the blob URL
                         URL.revokeObjectURL(blobUrl);
 
-                        Logger.success('Turbo C compiler loaded from Blob storage');
+                        Logger.success('Turbo C compiler loaded');
                     } catch (e) {
                         Logger.error('Compiler extraction failed', e);
                         throw new Error('Failed to load compiler: ' + e.message);
@@ -2137,6 +2350,69 @@ PAUSE
             setTimeout(handleResize, 300);
         });
 
+        // ==================== JS-DOS BACKGROUND WARMUP ====================
+
+        async function warmupJSDOS() {
+            if (warmupPromise) return warmupPromise;
+
+            warmupPromise = new Promise(async (resolve) => {
+                try {
+                    // Wait for JS-DOS to be available
+                    if (typeof Dos === 'undefined') {
+                        let attempts = 0;
+                        while (typeof Dos === 'undefined' && attempts < 50) {
+                            await new Promise(r => setTimeout(r, 100));
+                            attempts++;
+                        }
+                        if (typeof Dos === 'undefined') {
+                            Logger.warn('JS-DOS not available for warmup');
+                            resolve(false);
+                            return;
+                        }
+                    }
+
+                    Logger.info('Starting JS-DOS background warmup...');
+
+                    // Pre-fetch and cache TC ZIP using shared function
+                    try {
+                        await getTCZip();
+                        Logger.success('TC ZIP ready for instant run');
+                    } catch (e) {
+                        Logger.warn('Failed to pre-cache TC ZIP: ' + e.message);
+                    }
+
+                    // Pre-cache all demo files in background
+                    prefetchDemoFiles();
+
+                    Logger.success('JS-DOS warmup complete - Run will be instant!');
+                    resolve(true);
+                } catch (e) {
+                    Logger.warn('Warmup failed: ' + e.message);
+                    resolve(false);
+                }
+            });
+
+            return warmupPromise;
+        }
+
+        async function prefetchDemoFiles() {
+            // Pre-fetch all demo files in background
+            for (const [key, url] of Object.entries(DEMO_FILES)) {
+                if (!DemoCache.get(key)) {
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            const code = await response.text();
+                            DemoCache.set(key, code);
+                            Logger.info(`Pre-cached demo: ${key}`);
+                        }
+                    } catch (e) {
+                        // Silently fail for background prefetch
+                    }
+                }
+            }
+        }
+
         // ==================== INITIALIZATION ====================
 
         (async function init() {
@@ -2146,6 +2422,14 @@ PAUSE
             const loaded = await loadAllScripts();
             if (loaded) {
                 await initializeEditor();
+
+                // Start background warmup after editor is ready
+                // This runs silently in background, making Run feel instant
+                setTimeout(() => {
+                    warmupJSDOS();
+                    updateCacheStatus();
+                }, 500);
+
                 Logger.success('Compiler ready');
             }
         })();
