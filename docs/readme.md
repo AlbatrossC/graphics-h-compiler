@@ -1,14 +1,12 @@
 <div align="center">
 
-# 🎨 Graphics.h Compiler
+# Graphics.h Compiler
 
-**Run graphics.h programs in your browser or VS Code - no setup required**
+**A modern web-based compiler for running graphics.h programs in the browser and VS Code, with no installation or configuration needed.**
 
-[![Online Compiler](https://img.shields.io/badge/Try%20Online-graphics--h--compiler.vercel.app-blue?style=for-the-badge)](https://graphics-h-compiler.vercel.app/)
-[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Install%20Extension-green?style=for-the-badge&logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/AlbatrossC/graphics-h-compiler)
-
-*A modern Turbo C wrapper • No Turbo C • No DOSBox • No Legacy Tools*
+[![Online Compiler](https://img.shields.io/badge/🌐_Try_Online-0066FF?style=for-the-badge)](https://graphics-h-compiler.vercel.app/)
+[![VS Code Extension](https://img.shields.io/badge/📦_VS_Code_Extension-22C55E?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
+[![GitHub](https://img.shields.io/badge/⭐_GitHub-181717?style=for-the-badge&logo=github)](https://github.com/AlbatrossC/graphics-h-compiler)
 
 </div>
 
@@ -16,52 +14,65 @@
 
 ## 📸 Screenshots
 
-<table>
-<tr>
-<td width="50%">
-<img src="online-demo.png" alt="Browser Interface" width="100%">
-<p align="center"><b>🌐 Browser Interface</b></p>
-</td>
-<td width="50%">
-<img src="vscode-demo.png" alt="VS Code Extension" width="100%">
-<p align="center"><b>💻 VS Code Extension</b></p>
-</td>
-</tr>
-</table>
+### Browser Interface
+![Browser Interface](online-demo.png)
+
+### VS Code Extension
+![VS Code Extension](vscode-demo.png)
 
 ---
 
-## 🌟 Overview
+## 🎯 Overview
 
-**Graphics.h Compiler** is a modern Turbo C wrapper that brings the classic `graphics.h` library to contemporary development environments. Write, compile, and run graphics programs directly in your browser or VS Code—no complex setup, no legacy tools, no headaches.
+Graphics.h Compiler is a modern Turbo C wrapper that enables you to compile and run `graphics.h` programs directly in your browser or VS Code. It eliminates the complexity of traditional setup methods and provides a ready-to-use graphics programming environment for learning and experimentation.
 
-> Perfect for students, educators, and anyone learning computer graphics programming
+**Key Benefits:**
+- ✅ No Turbo C installation required
+- ✅ No DOSBox configuration needed
+- ✅ Cross-platform support (Windows, Linux)
+- ✅ Works offline after initial load
+- ✅ SPPU Computer Graphics syllabus compatible
 
 ---
 
 ## ✨ Features
 
-- 🌐 **Multi-Platform Support** - Works in browser and VS Code on Windows & Linux
-- ⚡ **Zero Configuration** - No Turbo C, DOSBox, or complex dependencies required
-- 📴 **Offline Ready** - Continue working after initial load with no internet dependency
-- 🎓 **Student Friendly** - SPPU syllabus compatible with simple, modern interface
-- 🚀 **Client-Side Execution** - All compilation happens directly in your browser
-- 💡 **Modern Workflow** - Use contemporary development tools with legacy graphics.h
+**Browser-Based Compilation**  
+Run graphics programs directly in your web browser with zero installation.
+
+**VS Code Integration**  
+Develop with full IDE support through our dedicated extension.
+
+**Zero Configuration**  
+No complex setup or legacy dependencies required - just start coding.
+
+**Client-Side Execution**  
+All compilation happens locally in your browser for privacy and speed.
+
+**Offline Support**  
+Continue working without internet connectivity after the initial load.
+
+**Modern Workflow**  
+Use contemporary development tools with legacy graphics.h code seamlessly.
 
 ---
 
-## 🎯 Why This Project Exists
+## 💡 Why This Project Exists
 
-`graphics.h` is still part of the **SPPU Computer Graphics syllabus (2024 revised)** and widely taught in programming courses. However, legacy tooling creates barriers:
+The `graphics.h` library remains a core component of the **SPPU Computer Graphics syllabus (2024 revised)** and is widely taught in introductory programming courses. However, its reliance on legacy tooling creates significant barriers for students.
+
+<div align="center">
 
 | ❌ Problem | ✅ Solution |
-|-----------|----------|
+|:-----------|:------------|
 | Complex Turbo C installation | Browser-based, instant access |
-| DOSBox configuration headaches | Zero configuration required |
-| OS compatibility issues | Cross-platform support |
+| DOSBox configuration issues | Zero configuration required |
+| OS compatibility problems | Cross-platform support |
 | Time wasted on setup | Focus on learning concepts |
 
-This project removes these obstacles so students can focus on graphics programming fundamentals.
+</div>
+
+This project removes these obstacles, allowing students and educators to focus on graphics programming fundamentals rather than technical configuration.
 
 ---
 
@@ -69,13 +80,15 @@ This project removes these obstacles so students can focus on graphics programmi
 
 ### Option 1: Online Compiler (Recommended)
 
-Simply visit the online compiler and start coding immediately:
+The fastest way to get started. Simply visit the online compiler and begin coding immediately:
 
-**🌐 [https://graphics-h-compiler.vercel.app/](https://graphics-h-compiler.vercel.app/)**
+👉 **[https://graphics-h-compiler.vercel.app/](https://graphics-h-compiler.vercel.app/)**
 
 ---
 
-### Option 2: Run Locally
+### Option 2: Local Installation
+
+Clone the repository and run it locally on your machine:
 
 ```bash
 # Clone the repository
@@ -88,72 +101,107 @@ cd graphics-h-compiler
 python -m http.server 8000
 ```
 
-Then open your browser at: **http://localhost:8000**
+Then open your browser at **`http://localhost:8000`**
 
 ---
 
 ### Option 3: VS Code Extension
 
-**Install from VS Code Marketplace:**
+Install the extension directly from the Visual Studio Code Marketplace:
 
-🔗 [https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
+👉 **[Install Extension](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)**
 
-**Installation Steps:**
+#### Installation Methods:
 
+**Via VS Code:**
 1. Open VS Code
-2. Press `Ctrl+Shift+X` to open Extensions
+2. Press `Ctrl+Shift+X` to open Extensions panel
 3. Search for **"graphics.h compiler"**
 4. Click **Install** on the extension by **AlbatrossC**
 
-**Or install via command line:**
+**Via Command Line:**
 ```bash
 code --install-extension AlbatrossC.graphics-h-compiler
 ```
 
-📖 For detailed configuration, see [`vscode-compiler.md`](vscode-compiler.md)
+📖 For detailed configuration and usage, refer to [vscode-compiler.md](vscode-compiler.md)
 
 ---
 
-## 📖 Documentation
+## 📚 Documentation
 
-- **[online-compiler.md](online-compiler.md)** - Browser-based compiler architecture, features, and usage
-- **[vscode-compiler.md](vscode-compiler.md)** - VS Code extension setup, configuration, and advanced features
+- **[online-compiler.md](online-compiler.md)** - Comprehensive guide to the browser-based compiler
+- **[vscode-compiler.md](vscode-compiler.md)** - VS Code extension setup and configuration
+
+---
+
+## 💻 Usage Example
+
+The compiler provides an intuitive interface for writing and running graphics.h programs. Simply write your code and click compile to see results instantly.
+
+```c
+#include <graphics.h>
+#include <conio.h>
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+    
+    // Draw a circle
+    circle(250, 200, 50);
+    
+    // Draw a rectangle
+    rectangle(150, 100, 350, 300);
+    
+    // Draw a line
+    line(100, 50, 400, 350);
+    
+    getch();
+    closegraph();
+    return 0;
+}
+```
 
 ---
 
 ## 👥 Who Is This For?
 
-- 🎓 **SPPU Computer Graphics Students** - Fulfill syllabus requirements without legacy tools
-- 👨‍💻 **Beginners** - Learn graphics.h without configuration hassles
-- 👨‍🏫 **Educators** - Provide students with modern, accessible learning tools
+**Students**  
+SPPU Computer Graphics students who need to fulfill syllabus requirements without hassle.
+
+**Beginners**  
+Anyone learning graphics.h who wants to avoid complex configuration and focus on coding.
+
+**Educators**  
+Instructors who want to provide students with modern, accessible development tools.
 
 ---
 
-## ⚙️ Technical Details
+## 🔧 Technical Details
 
-This compiler leverages **WebAssembly** technology to emulate the Turbo C graphics library environment, enabling `graphics.h` programs to run seamlessly in modern browsers and development tools without requiring DOS emulation or virtualization.
+This compiler leverages **WebAssembly** technology to emulate the Turbo C graphics library environment. It enables `graphics.h` programs to run seamlessly in modern browsers and development tools without requiring DOS emulation or virtualization.
 
-**Key Technologies:**
+**Core Technologies:**
 - WebAssembly for C/C++ compilation
 - Browser-based graphics rendering
 - Modern JavaScript framework integration
 
 ---
 
-## 💬 Support
+## 🤝 Support
 
-Need help or have questions?
+Need help or want to contribute?
 
-- 🐛 [Report a Bug](https://github.com/AlbatrossC/graphics-h-compiler/issues)
-- 💡 [Ask a Question](https://github.com/AlbatrossC/graphics-h-compiler/discussions)
-- ⭐ [Star this Repository](https://github.com/AlbatrossC/graphics-h-compiler)
+- 🐛 **[Report a Bug](https://github.com/AlbatrossC/graphics-h-compiler/issues)**
+- 💬 **[Ask a Question](https://github.com/AlbatrossC/graphics-h-compiler/discussions)**
+- ⭐ **[Star this Repository](https://github.com/AlbatrossC/graphics-h-compiler)**
 
 ---
 
 <div align="center">
 
-**Graphics.h Compiler** - Simplifying graphics programming for modern developers
+### Built for students and educators
 
-*Built for students • Made for learning • Designed for simplicity*
+**Graphics.h Compiler** - Making graphics.h accessible for everyone
 
 </div>
