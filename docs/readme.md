@@ -19,33 +19,35 @@
 
 ---
 
+<div align="center">
+
 ## 📸 Screenshots
 
-<details open>
-<summary><b>🌐 Browser Interface</b></summary>
-<br>
-<p align="center">
-  <img src="docs/demo.png" alt="Graphics.h Compiler - Browser Interface" width="900">
-</p>
-</details>
+### 🌐 Browser Interface
 
-<details>
-<summary><b>💻 VS Code Extension</b></summary>
-<br>
-<p align="center">
-  <img src="docs/vscode-demo.png" alt="Graphics.h Compiler - VS Code Extension" width="900">
-</p>
-</details>
+<img src="online-demo.png" alt="Graphics.h Compiler - Browser Interface" width="900">
+
+### 💻 VS Code Extension
+
+<img src="vscode-demo.png" alt="Graphics.h Compiler - VS Code Extension" width="900">
+
+</div>
 
 ---
+
+<div align="center">
 
 ## 🌟 Overview
 
-**Graphics.h Compiler** is a modern Turbo C wrapper that brings the classic `graphics.h` library to contemporary development environments. Write, compile, and run graphics programs directly in your browser or VS Code. no complex setup, no legacy tools, no headaches.
+**Graphics.h Compiler** is a modern Turbo C wrapper that brings the classic `graphics.h` library to contemporary development environments. Write, compile, and run graphics programs directly in your browser or VS Code—no complex setup, no legacy tools, no headaches.
 
 > **Perfect for students, educators, and anyone learning computer graphics programming**
 
+</div>
+
 ---
+
+<div align="center">
 
 ## ✨ Features
 
@@ -91,17 +93,21 @@
 </tr>
 </table>
 
+</div>
+
 ---
 
-## 🎯 Why This Project Exists
-
 <div align="center">
+
+## 🎯 Why This Project Exists
 
 **`graphics.h` is still part of the SPPU Computer Graphics syllabus (2024 revised)**
 
 </div>
 
 Despite being widely taught, `graphics.h` programming creates significant barriers for students:
+
+<div align="center">
 
 | ❌ Problem | ✅ Solution |
 |-----------|----------|
@@ -112,7 +118,11 @@ Despite being widely taught, `graphics.h` programming creates significant barrie
 
 **This project removes these obstacles** so students and educators can concentrate on what matters: understanding graphics programming fundamentals.
 
+</div>
+
 ---
+
+<div align="center">
 
 ## 🚀 Usage Options
 
@@ -136,7 +146,11 @@ Despite being widely taught, `graphics.h` programming creates significant barrie
 </tr>
 </table>
 
+</div>
+
 ---
+
+<div align="center">
 
 ## 🏁 Getting Started
 
@@ -146,11 +160,17 @@ The fastest way to get started—just click and code!
 
 [![Launch Online Compiler](https://img.shields.io/badge/Launch-Online%20Compiler-blue?style=for-the-badge&logo=google-chrome)](https://graphics-h-compiler.vercel.app/)
 
+</div>
+
 ---
+
+<div align="center">
 
 ### Option 2: 💻 Run Locally
 
 Clone and run on your machine:
+
+</div>
 
 ```bash
 # Clone the repository
@@ -170,6 +190,8 @@ python -m http.server 8000
 </div>
 
 ---
+
+<div align="center">
 
 ### Option 3: 📝 VS Code Extension
 
@@ -192,7 +214,11 @@ code --install-extension AlbatrossC.graphics-h-compiler
 
 > 📖 For detailed configuration, see [`vscode-compiler.md`](vscode-compiler.md)
 
+</div>
+
 ---
+
+<div align="center">
 
 ## 📖 Documentation
 
@@ -217,7 +243,11 @@ Extension setup, configuration, and advanced features
 </tr>
 </table>
 
+</div>
+
 ---
+
+<div align="center">
 
 ## 👥 Who Is This For?
 
@@ -250,7 +280,11 @@ Provide students with modern, accessible tools
 </tr>
 </table>
 
+</div>
+
 ---
+
+<div align="center">
 
 ## ⚙️ Technical Details
 
@@ -260,6 +294,8 @@ This compiler leverages **WebAssembly** technology to emulate the Turbo C graphi
 - WebAssembly for C/C++ compilation
 - Browser-based graphics rendering
 - Modern JavaScript framework integration
+
+</div>
 
 ---
 
