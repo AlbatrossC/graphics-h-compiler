@@ -1,0 +1,1900 @@
+# Directory Structure Export
+# Root: C:\Users\jadha\Desktop\graphics.h-online-compiler\VScodeExtension\src
+# Total files: 5
+================================================================================
+
+
+================================================================================
+FILE: compiler.ts
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { spawn, ChildProcess } from 'child_process';
+import { PathManager } from './paths';
+import * as fs from 'fs';
+
+interface CompilationError {
+    file: string;
+    line: number;
+    column: number;
+    severity: 'error' | 'warning';
+    message: string;
+}
+
+export class GraphicsCompiler {
+    private pathManager: PathManager;
+    private outputChannel: vscode.OutputChannel;
+    private activeProcesses: Set<ChildProcess> = new Set();
+    private diagnosticCollection: vscode.DiagnosticCollection;
+    private runningProgram: ChildProcess | null = null;
+
+    constructor(pathManager: PathManager) {
+        this.pathManager = pathManager;
+        this.outputChannel = vscode.window.createOutputChannel('Graphics.h Compiler');
+        this.diagnosticCollection = vscode.languages.createDiagnosticCollection('graphics-h');
+    }
+
+    private getConfig() {
+        const config = vscode.workspace.getConfiguration('graphics-h-compiler');
+        return {
+            autoRun: config.get<boolean>('autoRun', true),
+            showOutput: config.get<boolean>('showOutputPanel', true),
+            clearOutputBeforeCompile: config.get<boolean>('clearOutputBeforeCompile', true)
+        };
+    }
+
+    private validateSourceFile(sourceFile: string): boolean {
+        const normalizedPath = path.normalize(sourceFile);
+        
+        if (normalizedPath.includes('..')) {
+            vscode.window.showErrorMessage('Invalid file path: Path traversal detected');
+            return false;
+        }
+
+        if (!fs.existsSync(normalizedPath)) {
+            vscode.window.showErrorMessage('Source file does not exist');
+            return false;
+        }
+
+        const stats = fs.statSync(normalizedPath);
+        if (!stats.isFile()) {
+            vscode.window.showErrorMessage('Path is not a file');
+            return false;
+        }
+
+        if (!normalizedPath.endsWith('.cpp') && !normalizedPath.endsWith('.c++')) {
+            vscode.window.showErrorMessage('File must be a C++ source file (.cpp or .c++)');
+            return false;
+        }
+
+        return true;
+    }
+
+    private parseCompilerErrors(stderr: string, sourceFile: string): CompilationError[] {
+        const errors: CompilationError[] = [];
+        const errorRegex = /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm;
+        
+        let match;
+        while ((match = errorRegex.exec(stderr)) !== null) {
+            const [_, file, line, column, severity, message] = match;
+            
+            errors.push({
+                file: file.trim(),
+                line: parseInt(line, 10),
+                column: parseInt(column, 10),
+                severity: severity as 'error' | 'warning',
+                message: message.trim()
+            });
+        }
+
+        return errors;
+    }
+
+    private updateDiagnostics(errors: CompilationError[], sourceFile: string): void {
+        const diagnostics: vscode.Diagnostic[] = [];
+        const uri = vscode.Uri.file(sourceFile);
+
+        for (const error of errors) {
+            const line = Math.max(0, error.line - 1);
+            const column = Math.max(0, error.column - 1);
+            
+            const range = new vscode.Range(
+                new vscode.Position(line, column),
+                new vscode.Position(line, column + 100)
+            );
+
+            const diagnostic = new vscode.Diagnostic(
+                range,
+                error.message,
+                error.severity === 'error' 
+                    ? vscode.DiagnosticSeverity.Error 
+                    : vscode.DiagnosticSeverity.Warning
+            );
+
+            diagnostic.source = 'graphics-h-compiler';
+            diagnostics.push(diagnostic);
+        }
+
+        this.diagnosticCollection.set(uri, diagnostics);
+    }
+
+    private clearDiagnostics(sourceFile: string): void {
+        const uri = vscode.Uri.file(sourceFile);
+        this.diagnosticCollection.delete(uri);
+    }
+
+    private async compileWindows(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
+        const config = this.getConfig();
+        const gppPath = this.pathManager.getGppPath();
+        const graphicsPath = this.pathManager.getGraphicsPath();
+        const libraryPath = this.pathManager.getLibraryPath();
+        const outputPath = this.pathManager.getOutputPath(sourceFile);
+
+        this.clearDiagnostics(sourceFile);
+
+        if (config.clearOutputBeforeCompile) {
+            this.outputChannel.clear();
+        }
+        
+        if (config.showOutput) {
+            this.outputChannel.show(true);
+        }
+
+        this.outputChannel.appendLine(`[graphics-h] OS: Windows`);
+        this.outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
+        this.outputChannel.appendLine(`[graphics-h] Output: ${path.basename(outputPath)}`);
+        this.outputChannel.appendLine('');
+
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+
+            const command = gppPath;
+            const args = [
+                sourceFile,
+                '-I', graphicsPath,
+                '-L', libraryPath,
+                '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
+                '-static-libgcc',
+                '-static-libstdc++',
+                '-static',
+                '-o', outputPath
+            ];
+
+            const compilerProcess = spawn(command, args, {
+                cwd: path.dirname(sourceFile)
+            });
+
+            this.activeProcesses.add(compilerProcess);
+
+            let stderr = '';
+            let stdout = '';
+
+            compilerProcess.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
+
+            compilerProcess.stderr.on('data', (data) => {
+                const output = data.toString();
+                stderr += output;
+                this.outputChannel.append(output);
+            });
+
+            token?.onCancellationRequested(() => {
+                if (!compilerProcess.killed) {
+                    compilerProcess.kill();
+                    this.outputChannel.appendLine('');
+                    this.outputChannel.appendLine('[graphics-h] Compilation cancelled by user');
+                    this.activeProcesses.delete(compilerProcess);
+                    resolve(null);
+                }
+            });
+
+            compilerProcess.on('close', (code) => {
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                this.activeProcesses.delete(compilerProcess);
+
+                if (code !== 0) {
+                    if (stderr.trim().length === 0) {
+                        this.outputChannel.appendLine('error: compilation failed with no error output');
+                    }
+                    
+                    this.outputChannel.appendLine('');
+                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
+                    
+                    const errors = this.parseCompilerErrors(stderr, sourceFile);
+                    this.updateDiagnostics(errors, sourceFile);
+
+                    const errorCount = errors.filter(e => e.severity === 'error').length;
+                    const warningCount = errors.filter(e => e.severity === 'warning').length;
+                    
+                    let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
+                    if (warningCount > 0) {
+                        message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
+                    }
+
+                    vscode.window.showErrorMessage(
+                        message,
+                        'Show Output',
+                        'Show Problems'
+                    ).then(choice => {
+                        if (choice === 'Show Output') {
+                            this.outputChannel.show();
+                        } else if (choice === 'Show Problems') {
+                            vscode.commands.executeCommand('workbench.actions.view.problems');
+                        }
+                    });
+                    
+                    resolve(null);
+                } else {
+                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
+                    this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
+                    
+                    resolve(outputPath);
+                }
+            });
+
+            compilerProcess.on('error', (error) => {
+                this.outputChannel.appendLine('');
+                this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
+                
+                this.activeProcesses.delete(compilerProcess);
+                
+                vscode.window.showErrorMessage(
+                    `Compiler error: ${error.message}`,
+                    'Show Output'
+                ).then(choice => {
+                    if (choice === 'Show Output') {
+                        this.outputChannel.show();
+                    }
+                });
+                
+                resolve(null);
+            });
+        });
+    }
+
+    private async compileLinux(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
+        const config = this.getConfig();
+        const outputPath = this.pathManager.getOutputPath(sourceFile);
+
+        this.clearDiagnostics(sourceFile);
+
+        if (config.clearOutputBeforeCompile) {
+            this.outputChannel.clear();
+        }
+        
+        if (config.showOutput) {
+            this.outputChannel.show(true);
+        }
+
+        this.outputChannel.appendLine(`[graphics-h] OS: Ubuntu/Linux`);
+        this.outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
+        this.outputChannel.appendLine(`[graphics-h] Output: ${path.basename(outputPath)}`);
+        this.outputChannel.appendLine('');
+
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+
+            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -static -o "${outputPath}"`;
+
+            const compilerProcess = spawn('bash', ['-c', compileCmd], {
+                cwd: path.dirname(sourceFile)
+            });
+
+            this.activeProcesses.add(compilerProcess);
+
+            let stderr = '';
+            let stdout = '';
+
+            compilerProcess.stdout.on('data', (data) => {
+                const output = data.toString();
+                stdout += output;
+                this.outputChannel.append(output);
+            });
+
+            compilerProcess.stderr.on('data', (data) => {
+                const output = data.toString();
+                stderr += output;
+                this.outputChannel.append(output);
+            });
+
+            token?.onCancellationRequested(() => {
+                if (!compilerProcess.killed) {
+                    compilerProcess.kill();
+                    this.outputChannel.appendLine('');
+                    this.outputChannel.appendLine('[graphics-h] Compilation cancelled by user');
+                    this.activeProcesses.delete(compilerProcess);
+                    resolve(null);
+                }
+            });
+
+            compilerProcess.on('close', (code) => {
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                this.activeProcesses.delete(compilerProcess);
+
+                if (code !== 0) {
+                    if (stderr.trim().length === 0) {
+                        this.outputChannel.appendLine('error: compilation failed with no error output');
+                    }
+                    
+                    this.outputChannel.appendLine('');
+                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
+                    
+                    const errors = this.parseCompilerErrors(stderr, sourceFile);
+                    this.updateDiagnostics(errors, sourceFile);
+
+                    const errorCount = errors.filter(e => e.severity === 'error').length;
+                    const warningCount = errors.filter(e => e.severity === 'warning').length;
+                    
+                    let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
+                    if (warningCount > 0) {
+                        message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
+                    }
+
+                    vscode.window.showErrorMessage(
+                        message,
+                        'Show Output',
+                        'Show Problems'
+                    ).then(choice => {
+                        if (choice === 'Show Output') {
+                            this.outputChannel.show();
+                        } else if (choice === 'Show Problems') {
+                            vscode.commands.executeCommand('workbench.actions.view.problems');
+                        }
+                    });
+                    
+                    resolve(null);
+                } else {
+                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
+                    this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
+                    
+                    resolve(outputPath);
+                }
+            });
+
+            compilerProcess.on('error', (error) => {
+                this.outputChannel.appendLine('');
+                this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
+                
+                this.activeProcesses.delete(compilerProcess);
+                
+                vscode.window.showErrorMessage(
+                    `Compiler error: ${error.message}`,
+                    'Show Output'
+                ).then(choice => {
+                    if (choice === 'Show Output') {
+                        this.outputChannel.show();
+                    }
+                });
+                
+                resolve(null);
+            });
+        });
+    }
+
+    async compile(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
+        if (!this.validateSourceFile(sourceFile)) {
+            return null;
+        }
+
+        if (this.pathManager.isWindows()) {
+            return this.compileWindows(sourceFile, token);
+        } else if (this.pathManager.isLinux()) {
+            return this.compileLinux(sourceFile, token);
+        } else {
+            vscode.window.showErrorMessage('Unsupported operating system');
+            return null;
+        }
+    }
+
+    private async runWindows(exePath: string): Promise<void> {
+        if (!fs.existsSync(exePath)) {
+            vscode.window.showErrorMessage('Executable not found: ' + exePath);
+            return;
+        }
+
+        this.outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exePath)}`);
+        this.outputChannel.appendLine('');
+
+        const programProcess = spawn(exePath, [], {
+            cwd: path.dirname(exePath),
+            detached: false,
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        this.runningProgram = programProcess;
+
+        programProcess.stdout.on('data', (data) => {
+            this.outputChannel.append(`[Program Output] ${data.toString()}`);
+        });
+
+        programProcess.stderr.on('data', (data) => {
+            this.outputChannel.append(`[Program Error] ${data.toString()}`);
+        });
+
+        programProcess.on('close', (code) => {
+            this.runningProgram = null;
+            this.outputChannel.appendLine('');
+            if (code === 0) {
+                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
+            } else if (code !== null) {
+                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
+            } else {
+                this.outputChannel.appendLine(`[graphics-h] Program stopped`);
+            }
+        });
+
+        programProcess.on('error', (error) => {
+            this.runningProgram = null;
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('[graphics-h] Program execution failed:');
+            this.outputChannel.appendLine(error.message);
+            
+            vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
+        });
+
+        programProcess.on('exit', (code, signal) => {
+            if (signal) {
+                this.outputChannel.appendLine(`[graphics-h] Program terminated by signal: ${signal}`);
+            }
+        });
+    }
+
+    private async runLinux(exePath: string): Promise<void> {
+        if (!fs.existsSync(exePath)) {
+            vscode.window.showErrorMessage('Executable not found: ' + exePath);
+            return;
+        }
+
+        this.outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exePath)}`);
+        this.outputChannel.appendLine('');
+
+        const runCmd = `wine "${exePath}"`;
+
+        const programProcess = spawn('bash', ['-c', runCmd], {
+            cwd: path.dirname(exePath)
+        });
+
+        this.runningProgram = programProcess;
+
+        programProcess.stdout.on('data', (data) => {
+            this.outputChannel.append(`[Program Output] ${data.toString()}`);
+        });
+
+        programProcess.stderr.on('data', (data) => {
+            const output = data.toString();
+            if (!output.includes('fixme:') && !output.includes('wine:')) {
+                this.outputChannel.append(`[Program Error] ${output}`);
+            }
+        });
+
+        programProcess.on('close', (code) => {
+            this.runningProgram = null;
+            this.outputChannel.appendLine('');
+            if (code === 0) {
+                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
+            } else if (code !== null) {
+                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
+            } else {
+                this.outputChannel.appendLine(`[graphics-h] Program stopped`);
+            }
+        });
+
+        programProcess.on('error', (error) => {
+            this.runningProgram = null;
+            this.outputChannel.appendLine('');
+            this.outputChannel.appendLine('[graphics-h] Program execution failed:');
+            this.outputChannel.appendLine(error.message);
+            
+            vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
+        });
+
+        programProcess.on('exit', (code, signal) => {
+            if (signal) {
+                this.outputChannel.appendLine(`[graphics-h] Program terminated by signal: ${signal}`);
+            }
+        });
+    }
+
+    async run(exePath: string): Promise<void> {
+        if (this.pathManager.isWindows()) {
+            return this.runWindows(exePath);
+        } else if (this.pathManager.isLinux()) {
+            return this.runLinux(exePath);
+        } else {
+            vscode.window.showErrorMessage('Unsupported operating system');
+        }
+    }
+
+    stopRunningProgram(): boolean {
+        if (this.runningProgram && !this.runningProgram.killed) {
+            this.outputChannel.appendLine('[graphics-h] Stopping program...');
+            this.runningProgram.kill();
+            this.runningProgram = null;
+            return true;
+        }
+        return false;
+    }
+
+    isProgramRunning(): boolean {
+        return this.runningProgram !== null && !this.runningProgram.killed;
+    }
+
+    async compileAndRun(sourceFile: string): Promise<void> {
+        const config = this.getConfig();
+        
+        if (this.isProgramRunning()) {
+            this.stopRunningProgram();
+        }
+
+        const exePath = await this.compile(sourceFile);
+        
+        if (exePath && config.autoRun) {
+            await this.run(exePath);
+        } else if (exePath && !config.autoRun) {
+            const choice = await vscode.window.showInformationMessage(
+                'Compilation successful',
+                'Run Program'
+            );
+            if (choice === 'Run Program') {
+                await this.run(exePath);
+            }
+        }
+    }
+
+    dispose(): void {
+        this.diagnosticCollection.clear();
+        this.diagnosticCollection.dispose();
+        this.outputChannel.dispose();
+
+        if (this.runningProgram && !this.runningProgram.killed) {
+            this.runningProgram.kill();
+        }
+
+        this.activeProcesses.forEach(proc => {
+            if (!proc.killed) {
+                proc.kill();
+            }
+        });
+        this.activeProcesses.clear();
+    }
+}
+
+================================================================================
+END OF FILE: compiler.ts
+================================================================================
+
+
+================================================================================
+FILE: extension.ts
+================================================================================
+
+import * as vscode from 'vscode';
+import { PathManager, OperatingSystem } from './paths';
+import { WindowsDownloader } from './windowsDownloader';
+import { UbuntuDownloader } from './ubuntuDownloader';
+import { GraphicsCompiler } from './compiler';
+
+let pathManager: PathManager;
+let windowsDownloader: WindowsDownloader | null = null;
+let ubuntuDownloader: UbuntuDownloader | null = null;
+let compiler: GraphicsCompiler;
+let statusBarItem: vscode.StatusBarItem;
+
+export function activate(context: vscode.ExtensionContext) {
+    console.log('Graphics.h Compiler extension activated');
+
+    // Initialize core managers
+    pathManager = new PathManager(context);
+    const currentOS = pathManager.getOS();
+    
+    // Initialize OS-specific downloader
+    if (currentOS === OperatingSystem.Windows) {
+        windowsDownloader = new WindowsDownloader();
+    } else if (currentOS === OperatingSystem.Linux) {
+        ubuntuDownloader = new UbuntuDownloader();
+    }
+    
+    compiler = new GraphicsCompiler(pathManager);
+
+    // Show OS detection info
+    const osName = pathManager.getOSDisplayName();
+    console.log(`Detected OS: ${osName}`);
+
+    // Check for unsupported OS
+    if (currentOS !== OperatingSystem.Windows && currentOS !== OperatingSystem.Linux) {
+        vscode.window.showErrorMessage(
+            'Graphics.h Compiler: This extension only works on Windows and Ubuntu/Linux.',
+            'OK'
+        );
+        return;
+    }
+
+    // Display welcome message on first activation
+    const hasShownWelcome = context.globalState.get<boolean>('graphics-h.welcomeShown', false);
+    if (!hasShownWelcome) {
+        showWelcomeMessage(context);
+        context.globalState.update('graphics-h.welcomeShown', true);
+    }
+
+    // Create status bar button
+    statusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right,
+        100
+    );
+    statusBarItem.command = 'graphics-h-compiler.compileAndRun';
+    context.subscriptions.push(statusBarItem);
+
+    // Update status bar
+    context.subscriptions.push(
+        vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
+    );
+    updateStatusBar(vscode.window.activeTextEditor);
+
+    // Register commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.compileAndRun',
+            handleCompileAndRun
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.compileOnly',
+            handleCompileOnly
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.setupToolchain',
+            handleSetupToolchain
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.stopProgram',
+            handleStopProgram
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.checkDependencies',
+            handleCheckDependencies
+        )
+    );
+
+    // Register cleanup
+    context.subscriptions.push({
+        dispose: () => {
+            if (compiler) {
+                compiler.dispose();
+            }
+        }
+    });
+
+    // Check dependencies quietly
+    checkDependenciesQuietly();
+}
+
+// Show welcome message
+function showWelcomeMessage(context: vscode.ExtensionContext): void {
+    const osName = pathManager.getOSDisplayName();
+    const message = `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`;
+
+    vscode.window.showInformationMessage(
+        message,
+        'Check Dependencies',
+        'Dismiss'
+    ).then(choice => {
+        if (choice === 'Check Dependencies') {
+            handleCheckDependencies();
+        }
+    });
+}
+
+// Update status bar
+function updateStatusBar(editor: vscode.TextEditor | undefined): void {
+    if (editor && editor.document.languageId === 'cpp') {
+        if (compiler && compiler.isProgramRunning()) {
+            statusBarItem.text = '$(debug-stop) Stop Graphics';
+            statusBarItem.tooltip = 'Stop Running Graphics Program';
+            statusBarItem.command = 'graphics-h-compiler.stopProgram';
+        } else {
+            statusBarItem.text = '$(play) Run Graphics';
+            statusBarItem.tooltip = 'Compile & Run Graphics Program (Ctrl+Alt+N)';
+            statusBarItem.command = 'graphics-h-compiler.compileAndRun';
+        }
+        statusBarItem.show();
+    } else {
+        statusBarItem.hide();
+    }
+}
+
+// Periodically update status bar
+setInterval(() => {
+    updateStatusBar(vscode.window.activeTextEditor);
+}, 1000);
+
+// Quiet dependency check - just verifies, doesn't install
+async function checkDependenciesQuietly(): Promise<void> {
+    const missing = pathManager.getMissingDependencies();
+    
+    if (missing.length > 0) {
+        console.log('Graphics.h dependencies not installed:', missing.join(', '));
+        console.log('User will be prompted when they try to compile.');
+    } else {
+        console.log('Graphics.h toolchain is ready');
+    }
+}
+
+// Check and display dependency status
+async function handleCheckDependencies(): Promise<void> {
+    const missing = pathManager.getMissingDependencies();
+    const required = pathManager.getRequiredDependencies();
+    const osName = pathManager.getOSDisplayName();
+
+    if (missing.length === 0) {
+        vscode.window.showInformationMessage(
+            `✓ All dependencies are installed!\n\n` +
+            `Platform: ${osName}\n` +
+            `Required: ${required.join(', ')}`
+        );
+        return;
+    }
+
+    const message = 
+        `⚠️ Missing dependencies on ${osName}:\n\n` +
+        `Missing: ${missing.join(', ')}\n\n` +
+        `Required: ${required.join(', ')}\n\n` +
+        `Would you like to install the missing dependencies now?`;
+
+    const choice = await vscode.window.showWarningMessage(
+        message,
+        { modal: true },
+        'Install Now',
+        'Cancel'
+    );
+
+    if (choice === 'Install Now') {
+        await handleSetupToolchain();
+    }
+}
+
+// Wait for toolchain and ask permission if needed (Windows)
+async function waitForToolchainWindows(): Promise<boolean> {
+    const missing = pathManager.getMissingDependencies();
+    
+    if (missing.length === 0) {
+        return true;
+    }
+
+    // Check if installation is in progress
+    const isInProgress = windowsDownloader?.isInProgress() ?? false;
+
+    if (isInProgress) {
+        vscode.window.showInformationMessage(
+            '⏳ Toolchain installation is already in progress. Please wait...'
+        );
+        return false;
+    }
+
+    // Toolchain not installed - ask user for permission
+    const hasPermission = await windowsDownloader!.promptForPermission();
+    
+    if (!hasPermission) {
+        vscode.window.showInformationMessage(
+            'ℹ️ Graphics.h toolchain is required to compile programs.\n\n' +
+            'You can install it anytime using:\n' +
+            'Command Palette (Ctrl+Shift+P) → "Graphics.h: Setup Graphics.h Toolchain"',
+            'OK'
+        );
+        return false;
+    }
+
+    // User gave permission - start installation
+    const targetPath = pathManager.getToolchainPath();
+    return await windowsDownloader!.download(targetPath, pathManager.getExtensionPath());
+}
+
+// Wait for toolchain and ask permission if needed (Ubuntu)
+async function waitForToolchainUbuntu(): Promise<boolean> {
+    const missing = pathManager.getMissingDependencies();
+    
+    if (missing.length === 0) {
+        return true;
+    }
+
+    // Toolchain not installed - show installation instructions
+    return await ubuntuDownloader!.promptForInstallation();
+}
+
+// Wait for toolchain (OS-agnostic)
+async function waitForToolchain(): Promise<boolean> {
+    if (pathManager.isWindows()) {
+        return await waitForToolchainWindows();
+    } else if (pathManager.isLinux()) {
+        return await waitForToolchainUbuntu();
+    }
+    return false;
+}
+
+// Handle compile and run
+async function handleCompileAndRun(): Promise<void> {
+    try {
+        const ready = await waitForToolchain();
+        if (!ready) {
+            return;
+        }
+
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No file is currently open');
+            return;
+        }
+
+        const filePath = editor.document.uri.fsPath;
+
+        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
+            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
+            return;
+        }
+
+        if (editor.document.isDirty) {
+            const saved = await editor.document.save();
+            if (!saved) {
+                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
+                return;
+            }
+        }
+
+        await compiler.compileAndRun(filePath);
+        updateStatusBar(editor);
+
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Compilation failed: ${errorMsg}`);
+        console.error('Compilation error:', error);
+    }
+}
+
+// Handle compile only
+async function handleCompileOnly(): Promise<void> {
+    try {
+        const ready = await waitForToolchain();
+        if (!ready) {
+            return;
+        }
+
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No file is currently open');
+            return;
+        }
+
+        const filePath = editor.document.uri.fsPath;
+
+        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
+            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
+            return;
+        }
+
+        if (editor.document.isDirty) {
+            const saved = await editor.document.save();
+            if (!saved) {
+                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
+                return;
+            }
+        }
+
+        await compiler.compile(filePath);
+
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Compilation failed: ${errorMsg}`);
+        console.error('Compilation error:', error);
+    }
+}
+
+// Handle manual setup (Windows)
+async function handleSetupToolchainWindows(): Promise<boolean> {
+    try {
+        const missing = pathManager.getMissingDependencies();
+        const osName = pathManager.getOSDisplayName();
+
+        if (missing.length === 0) {
+            const choice = await vscode.window.showWarningMessage(
+                `All dependencies are already installed on ${osName}. Do you want to reinstall?`,
+                { modal: true },
+                'Reinstall',
+                'Cancel'
+            );
+
+            if (choice !== 'Reinstall') {
+                return true;
+            }
+        }
+
+        // Ask for permission
+        const hasPermission = await windowsDownloader!.promptForPermission();
+            
+        if (!hasPermission) {
+            return false;
+        }
+
+        const targetPath = pathManager.getToolchainPath();
+        return await windowsDownloader!.download(targetPath, pathManager.getExtensionPath());
+
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Setup failed: ${errorMsg}`);
+        console.error('Setup error:', error);
+        return false;
+    }
+}
+
+// Handle manual setup (Ubuntu)
+async function handleSetupToolchainUbuntu(): Promise<boolean> {
+    try {
+        const missing = pathManager.getMissingDependencies();
+
+        if (missing.length === 0) {
+            await ubuntuDownloader!.showDetailedStatus();
+            return true;
+        }
+
+        // Show installation instructions
+        return await ubuntuDownloader!.promptForInstallation();
+
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Setup failed: ${errorMsg}`);
+        console.error('Setup error:', error);
+        return false;
+    }
+}
+
+// Handle manual setup (OS-agnostic)
+async function handleSetupToolchain(): Promise<boolean> {
+    if (pathManager.isWindows()) {
+        return await handleSetupToolchainWindows();
+    } else if (pathManager.isLinux()) {
+        return await handleSetupToolchainUbuntu();
+    }
+    return false;
+}
+
+// Handle stop program
+async function handleStopProgram(): Promise<void> {
+    if (compiler && compiler.isProgramRunning()) {
+        const stopped = compiler.stopRunningProgram();
+        if (stopped) {
+            vscode.window.showInformationMessage('Graphics program stopped');
+            updateStatusBar(vscode.window.activeTextEditor);
+        }
+    } else {
+        vscode.window.showInformationMessage('No graphics program is currently running');
+    }
+}
+
+export function deactivate() {
+    if (statusBarItem) {
+        statusBarItem.dispose();
+    }
+
+    if (compiler) {
+        compiler.dispose();
+    }
+
+    console.log('Graphics.h Compiler extension deactivated');
+}
+
+================================================================================
+END OF FILE: extension.ts
+================================================================================
+
+
+================================================================================
+FILE: paths.ts
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
+
+export enum OperatingSystem {
+    Windows = 'windows',
+    Linux = 'linux',
+    Unknown = 'unknown'
+}
+
+export class PathManager {
+    private context: vscode.ExtensionContext;
+    private currentOS: OperatingSystem;
+
+    constructor(context: vscode.ExtensionContext) {
+        this.context = context;
+        this.currentOS = this.detectOS();
+    }
+
+    // Detect the current operating system
+    private detectOS(): OperatingSystem {
+        const platform = os.platform();
+        
+        if (platform === 'win32') {
+            return OperatingSystem.Windows;
+        } else if (platform === 'linux') {
+            return OperatingSystem.Linux;
+        }
+        
+        return OperatingSystem.Unknown;
+    }
+
+    // Get current OS
+    getOS(): OperatingSystem {
+        return this.currentOS;
+    }
+
+    // Get extension installation path
+    getExtensionPath(): string {
+        return this.context.extensionPath;
+    }
+
+    // Check if running on Windows
+    isWindows(): boolean {
+        return this.currentOS === OperatingSystem.Windows;
+    }
+
+    // Check if running on Linux
+    isLinux(): boolean {
+        return this.currentOS === OperatingSystem.Linux;
+    }
+
+    // Get toolchain installation directory (Windows only - stored in VS Code global storage)
+    getToolchainPath(): string {
+        if (this.isWindows()) {
+            return path.join(this.context.globalStorageUri.fsPath, 'mingw32');
+        }
+        // For Linux, toolchain is system-wide
+        return '/usr/local';
+    }
+
+    // Get path to bundled graphics libraries (Windows only)
+    getGraphicsPath(): string {
+        if (this.isWindows()) {
+            const mingwPath = this.getToolchainPath();
+            return path.join(mingwPath, 'include');
+        }
+        // For Linux, graphics.h is installed system-wide
+        return '/usr/local/include/graphics_h';
+    }
+
+    // Get path to libbgi.a (Windows only)
+    getLibraryPath(): string {
+        if (this.isWindows()) {
+            const mingwPath = this.getToolchainPath();
+            return path.join(mingwPath, 'lib');
+        }
+        // For Linux, library is installed system-wide
+        return '/usr/local/lib/graphics_h';
+    }
+
+    // Get path to g++ compiler executable (Windows only)
+    getGppPath(): string {
+        if (this.isWindows()) {
+            const mingwPath = this.getToolchainPath();
+            return path.join(mingwPath, 'bin', 'g++.exe');
+        }
+        // For Linux, use system-wide MinGW compiler
+        return 'i686-w64-mingw32-g++';
+    }
+
+    // Check if toolchain is installed
+    isToolchainInstalled(): boolean {
+        if (this.isWindows()) {
+            // Check if MinGW g++.exe exists
+            return fs.existsSync(this.getGppPath());
+        } else if (this.isLinux()) {
+            // Check if required files exist
+            const requiredFiles = [
+                '/usr/local/include/graphics_h/graphics.h',
+                '/usr/local/include/graphics_h/winbgim.h',
+                '/usr/local/lib/graphics_h/libbgi.a'
+            ];
+            return requiredFiles.every(file => fs.existsSync(file));
+        }
+        return false;
+    }
+
+    // Check if all required dependencies are installed
+    areAllDependenciesInstalled(): boolean {
+        return this.isToolchainInstalled();
+    }
+
+    // Get output executable path for a source file
+    getOutputPath(sourceFile: string): string {
+        const dir = path.dirname(sourceFile);
+        const name = path.basename(sourceFile, path.extname(sourceFile));
+        return path.join(dir, `${name}.exe`);
+    }
+
+    // Get human-readable OS name
+    getOSDisplayName(): string {
+        switch (this.currentOS) {
+            case OperatingSystem.Windows:
+                return 'Windows';
+            case OperatingSystem.Linux:
+                return 'Ubuntu/Linux';
+            default:
+                return 'Unknown';
+        }
+    }
+
+    // Get required dependencies based on OS
+    getRequiredDependencies(): string[] {
+        if (this.isWindows()) {
+            return ['MinGW32 Toolchain (C++ Compiler + Libraries)'];
+        } else if (this.isLinux()) {
+            return [
+                'MinGW compiler (i686-w64-mingw32-g++)',
+                'Wine (for running Windows executables)',
+                'graphics.h library files'
+            ];
+        }
+        return [];
+    }
+
+    // Check for missing dependencies
+    getMissingDependencies(): string[] {
+        const missing: string[] = [];
+        
+        if (this.isWindows()) {
+            if (!this.isToolchainInstalled()) {
+                missing.push('MinGW32 Toolchain');
+            }
+        } else if (this.isLinux()) {
+            if (!this.isToolchainInstalled()) {
+                missing.push('Graphics.h toolchain (run installation script)');
+            }
+        }
+        
+        return missing;
+    }
+}
+
+================================================================================
+END OF FILE: paths.ts
+================================================================================
+
+
+================================================================================
+FILE: ubuntuDownloader.ts
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { spawn } from 'child_process';
+import * as fs from 'fs';
+
+export class UbuntuDownloader {
+    private isChecking = false;
+    private checkPromise: Promise<boolean> | null = null;
+
+    // Installation command that users need to run
+    private readonly INSTALL_COMMAND = 'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/refs/heads/main/Installers/ubuntu_install.sh | bash';
+
+    isInProgress(): boolean {
+        return this.isChecking;
+    }
+
+    // Check if graphics.h is installed system-wide
+    private async checkInstallation(): Promise<boolean> {
+        try {
+            // Check for required files
+            const requiredFiles = [
+                '/usr/local/include/graphics_h/graphics.h',
+                '/usr/local/include/graphics_h/winbgim.h',
+                '/usr/local/lib/graphics_h/libbgi.a'
+            ];
+
+            for (const file of requiredFiles) {
+                if (!fs.existsSync(file)) {
+                    return false;
+                }
+            }
+
+            // Check if compiler exists
+            const compilerCheck = await this.runCommand('which i686-w64-mingw32-g++');
+            if (!compilerCheck.success) {
+                return false;
+            }
+
+            // Check if wine exists
+            const wineCheck = await this.runCommand('which wine');
+            if (!wineCheck.success) {
+                return false;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Installation check failed:', error);
+            return false;
+        }
+    }
+
+    // Run a command and return result
+    private runCommand(command: string): Promise<{ success: boolean; output: string; error: string }> {
+        return new Promise((resolve) => {
+            const process = spawn('bash', ['-c', command]);
+            let stdout = '';
+            let stderr = '';
+
+            process.stdout.on('data', (data) => {
+                stdout += data.toString();
+            });
+
+            process.stderr.on('data', (data) => {
+                stderr += data.toString();
+            });
+
+            process.on('close', (code) => {
+                resolve({
+                    success: code === 0,
+                    output: stdout.trim(),
+                    error: stderr.trim()
+                });
+            });
+
+            process.on('error', (error) => {
+                resolve({
+                    success: false,
+                    output: '',
+                    error: error.message
+                });
+            });
+        });
+    }
+
+    // Show installation instructions with copy button
+    async promptForInstallation(): Promise<boolean> {
+        const message = `⚙️ Graphics.h Compiler Setup Required
+
+To compile graphics.h programs on Ubuntu, run this command in your terminal:
+
+${this.INSTALL_COMMAND}
+
+Click "Copy & Open Terminal" to copy the command and open a terminal.`;
+
+        const result = await vscode.window.showInformationMessage(
+            message,
+            { modal: true },
+            'Copy & Open Terminal',
+            'I Already Installed'
+        );
+
+        if (result === 'Copy & Open Terminal') {
+            // Copy command to clipboard
+            await vscode.env.clipboard.writeText(this.INSTALL_COMMAND);
+            
+            // Open terminal
+            await vscode.commands.executeCommand('workbench.action.terminal.new');
+            
+            // Show success message
+            vscode.window.showInformationMessage(
+                '✓ Command copied to clipboard!\n\nPaste it in the terminal (Ctrl+Shift+V) and press Enter.',
+                'Got it'
+            );
+
+            return false;
+
+        } else if (result === 'I Already Installed') {
+            // Verify installation
+            const installed = await this.checkInstallation();
+            
+            if (installed) {
+                vscode.window.showInformationMessage('✓ Graphics.h toolchain verified successfully!');
+                return true;
+            } else {
+                const retry = await vscode.window.showErrorMessage(
+                    'Graphics.h toolchain not found. Please run the installation command first.',
+                    'Show Command Again'
+                );
+                
+                if (retry === 'Show Command Again') {
+                    return this.promptForInstallation();
+                }
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    // Compile C++ file using the system-wide installation
+    async compile(
+        sourceFile: string,
+        outputChannel: vscode.OutputChannel
+    ): Promise<{ success: boolean; exeFile: string | null }> {
+        try {
+            // Verify installation first
+            const installed = await this.checkInstallation();
+            if (!installed) {
+                outputChannel.appendLine('[graphics-h] Graphics.h toolchain not installed');
+                outputChannel.appendLine('[graphics-h] Please run the setup command first');
+                return { success: false, exeFile: null };
+            }
+
+            const dir = path.dirname(sourceFile);
+            const basename = path.basename(sourceFile, path.extname(sourceFile));
+            const exeFile = path.join(dir, `${basename}.exe`);
+
+            outputChannel.appendLine(`[graphics-h] OS: Ubuntu/Linux`);
+            outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
+            outputChannel.appendLine(`[graphics-h] Output: ${path.basename(exeFile)}`);
+            outputChannel.appendLine('');
+
+            // Compile command - exactly as in the bash script but without wrapper
+            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -o "${exeFile}"`;
+
+            const startTime = Date.now();
+
+            return new Promise((resolve) => {
+                const compileProcess = spawn('bash', ['-c', compileCmd], {
+                    cwd: dir
+                });
+
+                let stderr = '';
+
+                compileProcess.stdout.on('data', (data) => {
+                    outputChannel.append(data.toString());
+                });
+
+                compileProcess.stderr.on('data', (data) => {
+                    const output = data.toString();
+                    stderr += output;
+                    outputChannel.append(output);
+                });
+
+                compileProcess.on('close', (code) => {
+                    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                    if (code !== 0) {
+                        outputChannel.appendLine('');
+                        outputChannel.appendLine(`[graphics-h] ✗ Build failed (${duration}s)`);
+                        resolve({ success: false, exeFile: null });
+                    } else {
+                        outputChannel.appendLine(`[graphics-h] ✓ Build succeeded (${duration}s)`);
+                        outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(exeFile)}`);
+                        resolve({ success: true, exeFile });
+                    }
+                });
+
+                compileProcess.on('error', (error) => {
+                    outputChannel.appendLine('');
+                    outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
+                    resolve({ success: false, exeFile: null });
+                });
+            });
+
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            outputChannel.appendLine(`[graphics-h] Compilation error: ${errorMsg}`);
+            return { success: false, exeFile: null };
+        }
+    }
+
+    // Run the compiled executable using Wine
+    async run(
+        exeFile: string,
+        outputChannel: vscode.OutputChannel
+    ): Promise<void> {
+        if (!fs.existsSync(exeFile)) {
+            vscode.window.showErrorMessage('Executable not found: ' + exeFile);
+            return;
+        }
+
+        // Verify Wine is installed
+        const wineCheck = await this.runCommand('which wine');
+        if (!wineCheck.success) {
+            vscode.window.showErrorMessage(
+                'Wine is not installed. Please run the setup command first.',
+                'Show Setup Command'
+            ).then(choice => {
+                if (choice === 'Show Setup Command') {
+                    this.promptForInstallation();
+                }
+            });
+            return;
+        }
+
+        outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exeFile)}`);
+        outputChannel.appendLine('');
+
+        const runCmd = `wine "${exeFile}"`;
+
+        return new Promise((resolve) => {
+            const runProcess = spawn('bash', ['-c', runCmd], {
+                cwd: path.dirname(exeFile)
+            });
+
+            runProcess.stdout.on('data', (data) => {
+                outputChannel.append(`[Program Output] ${data.toString()}`);
+            });
+
+            runProcess.stderr.on('data', (data) => {
+                const output = data.toString();
+                // Filter out Wine debug messages
+                if (!output.includes('fixme:') && !output.includes('wine:')) {
+                    outputChannel.append(`[Program Error] ${output}`);
+                }
+            });
+
+            runProcess.on('close', (code) => {
+                outputChannel.appendLine('');
+                if (code === 0) {
+                    outputChannel.appendLine(`[graphics-h] ✓ Program finished successfully`);
+                } else if (code !== null) {
+                    outputChannel.appendLine(`[graphics-h] ✗ Program exited with code ${code}`);
+                } else {
+                    outputChannel.appendLine(`[graphics-h] Program stopped`);
+                }
+                resolve();
+            });
+
+            runProcess.on('error', (error) => {
+                outputChannel.appendLine('');
+                outputChannel.appendLine('[graphics-h] Program execution failed:');
+                outputChannel.appendLine(error.message);
+                vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
+                resolve();
+            });
+        });
+    }
+
+    // Check if toolchain is ready
+    async isToolchainReady(): Promise<boolean> {
+        if (this.checkPromise) {
+            return this.checkPromise;
+        }
+
+        this.isChecking = true;
+
+        this.checkPromise = this.checkInstallation().finally(() => {
+            this.isChecking = false;
+            this.checkPromise = null;
+        });
+
+        return this.checkPromise;
+    }
+
+    // Get installation status details
+    async getInstallationStatus(): Promise<{
+        installed: boolean;
+        missing: string[];
+    }> {
+        const missing: string[] = [];
+
+        // Check files
+        const requiredFiles = [
+            { path: '/usr/local/include/graphics_h/graphics.h', name: 'graphics.h' },
+            { path: '/usr/local/include/graphics_h/winbgim.h', name: 'winbgim.h' },
+            { path: '/usr/local/lib/graphics_h/libbgi.a', name: 'libbgi.a' }
+        ];
+
+        for (const file of requiredFiles) {
+            if (!fs.existsSync(file.path)) {
+                missing.push(file.name);
+            }
+        }
+
+        // Check compiler
+        const compilerCheck = await this.runCommand('which i686-w64-mingw32-g++');
+        if (!compilerCheck.success) {
+            missing.push('MinGW compiler (i686-w64-mingw32-g++)');
+        }
+
+        // Check Wine
+        const wineCheck = await this.runCommand('which wine');
+        if (!wineCheck.success) {
+            missing.push('Wine');
+        }
+
+        return {
+            installed: missing.length === 0,
+            missing
+        };
+    }
+
+    // Show detailed status
+    async showDetailedStatus(): Promise<void> {
+        const status = await this.getInstallationStatus();
+
+        if (status.installed) {
+            vscode.window.showInformationMessage(
+                '✓ Graphics.h toolchain is fully installed!\n\n' +
+                'Platform: Ubuntu/Linux\n' +
+                'Compiler: i686-w64-mingw32-g++\n' +
+                'Runtime: Wine\n' +
+                'Status: Ready'
+            );
+        } else {
+            const message = 
+                '⚠️ Graphics.h toolchain is not fully installed\n\n' +
+                `Missing components:\n${status.missing.map(m => `  • ${m}`).join('\n')}\n\n` +
+                'Would you like to see the installation command?';
+
+            const choice = await vscode.window.showWarningMessage(
+                message,
+                { modal: true },
+                'Show Installation Command'
+            );
+            
+            if (choice === 'Show Installation Command') {
+                await this.promptForInstallation();
+            }
+        }
+    }
+}
+
+================================================================================
+END OF FILE: ubuntuDownloader.ts
+================================================================================
+
+
+================================================================================
+FILE: windowsDownloader.ts
+================================================================================
+
+import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as crypto from 'crypto';
+import fetch from 'node-fetch';
+import AdmZip from 'adm-zip';
+
+interface DownloadConfig {
+    url: string;
+    sha256?: string;
+}
+
+export class WindowsDownloader {
+    private isDownloading = false;
+    private downloadPromise: Promise<boolean> | null = null;
+
+    // Configuration for MinGW download
+    private readonly MINGW_CONFIG: DownloadConfig = {
+        url: 'https://github.com/AlbatrossC/graphics-h-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
+        sha256: '72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd'
+    };
+
+    isInProgress(): boolean {
+        return this.isDownloading;
+    }
+
+    // Verify downloaded file integrity using SHA256
+    private async verifyDownload(filePath: string, expectedHash: string): Promise<boolean> {
+        if (!expectedHash) {
+            return true;
+        }
+
+        try {
+            const fileBuffer = fs.readFileSync(filePath);
+            const hashSum = crypto.createHash('sha256');
+            hashSum.update(fileBuffer);
+            const actualHash = hashSum.digest('hex').toLowerCase();
+            const expected = expectedHash.toLowerCase();
+
+            if (actualHash !== expected) {
+                console.error('Hash mismatch:');
+                console.error('  Expected:', expected);
+                console.error('  Actual:  ', actualHash);
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Error verifying download:', error);
+            return false;
+        }
+    }
+
+    // Download from URL
+    private async downloadFromUrl(
+        url: string,
+        tempZip: string,
+        progress: vscode.Progress<{ message?: string; increment?: number }>
+    ): Promise<boolean> {
+        try {
+            progress.report({ 
+                message: `Downloading MinGW32 toolchain...`,
+                increment: 5
+            });
+
+            const response = await fetch(url, {
+                headers: { 
+                    'User-Agent': 'Mozilla/5.0',
+                    'Accept': 'application/octet-stream'
+                },
+                redirect: 'follow'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Download failed: HTTP ${response.status} ${response.statusText}`);
+            }
+
+            const totalSize = parseInt(response.headers.get('content-length') || '0');
+            
+            if (totalSize === 0) {
+                throw new Error('Could not determine file size');
+            }
+
+            await this.streamToDisk(response, tempZip, progress, totalSize);
+
+            if (this.MINGW_CONFIG.sha256) {
+                progress.report({ 
+                    message: `Verifying integrity...`,
+                    increment: 5
+                });
+
+                const isValid = await this.verifyDownload(tempZip, this.MINGW_CONFIG.sha256);
+                if (!isValid) {
+                    throw new Error(`Verification failed: Checksum mismatch`);
+                }
+            }
+
+            return true;
+
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.error(`Download from ${url} failed:`, errorMsg);
+            throw error;
+        }
+    }
+
+    // Stream download directly to disk
+    private async streamToDisk(
+        response: any,
+        filePath: string,
+        progress: vscode.Progress<{ message?: string; increment?: number }>,
+        totalSize: number
+    ): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const fileStream = fs.createWriteStream(filePath);
+            let downloadedSize = 0;
+            let lastReportedPercent = 0;
+
+            response.body.on('data', (chunk: Buffer) => {
+                downloadedSize += chunk.length;
+                const percent = Math.floor((downloadedSize / totalSize) * 100);
+                
+                if (percent >= lastReportedPercent + 5) {
+                    const sizeMB = (downloadedSize / 1024 / 1024).toFixed(1);
+                    const totalMB = (totalSize / 1024 / 1024).toFixed(1);
+                    
+                    progress.report({
+                        message: `Downloading: ${sizeMB}MB / ${totalMB}MB (${percent}%)`,
+                        increment: 5
+                    });
+                    
+                    lastReportedPercent = percent;
+                }
+            });
+
+            response.body.pipe(fileStream);
+
+            fileStream.on('finish', () => {
+                fileStream.close();
+                resolve();
+            });
+
+            fileStream.on('error', (error: Error) => {
+                fileStream.close();
+                if (fs.existsSync(filePath)) {
+                    try {
+                        fs.unlinkSync(filePath);
+                    } catch (cleanupError) {
+                        console.error('Failed to cleanup partial file:', cleanupError);
+                    }
+                }
+                reject(error);
+            });
+
+            response.body.on('error', (error: Error) => {
+                fileStream.close();
+                if (fs.existsSync(filePath)) {
+                    try {
+                        fs.unlinkSync(filePath);
+                    } catch (cleanupError) {
+                        console.error('Failed to cleanup partial file:', cleanupError);
+                    }
+                }
+                reject(error);
+            });
+        });
+    }
+
+    // Copy bundled graphics files to MinGW directories
+    private copyBundledGraphicsFiles(
+        mingwPath: string,
+        extensionPath: string,
+        progress: vscode.Progress<{ message?: string; increment?: number }>
+    ): void {
+        progress.report({
+            message: "Installing graphics.h files...",
+            increment: 5
+        });
+
+        const resourcesPath = path.join(extensionPath, 'resources', 'graphics');
+        const includeDir = path.join(mingwPath, 'include');
+        const libDir = path.join(mingwPath, 'lib');
+
+        const files = [
+            { name: 'graphics.h', targetDir: includeDir },
+            { name: 'winbgim.h', targetDir: includeDir },
+            { name: 'libbgi.a', targetDir: libDir }
+        ];
+
+        for (const file of files) {
+            const sourceFile = path.join(resourcesPath, file.name);
+            const targetFile = path.join(file.targetDir, file.name);
+
+            if (!fs.existsSync(sourceFile)) {
+                throw new Error(`Bundled file ${file.name} not found in extension resources`);
+            }
+
+            // Create target directory if it doesn't exist
+            if (!fs.existsSync(file.targetDir)) {
+                fs.mkdirSync(file.targetDir, { recursive: true });
+            }
+
+            fs.copyFileSync(sourceFile, targetFile);
+
+            if (!fs.existsSync(targetFile)) {
+                throw new Error(`Failed to copy ${file.name} to MinGW directory`);
+            }
+        }
+
+        progress.report({
+            message: "✓ Graphics.h files installed",
+            increment: 5
+        });
+    }
+
+    // Main download and installation function for Windows
+    async download(targetPath: string, extensionPath: string): Promise<boolean> {
+        if (this.downloadPromise) {
+            return this.downloadPromise;
+        }
+
+        this.isDownloading = true;
+
+        this.downloadPromise = new Promise<boolean>((resolve) => {
+            vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Graphics.h Toolchain Setup (Windows)",
+                cancellable: false
+            }, async (progress) => {
+                const tempZip = path.join(targetPath, 'mingw32_temp.zip');
+
+                try {
+                    // Create target directory
+                    progress.report({ 
+                        message: "Preparing installation...",
+                        increment: 5
+                    });
+                    
+                    if (!fs.existsSync(targetPath)) {
+                        fs.mkdirSync(targetPath, { recursive: true });
+                    }
+
+                    // Download MinGW32
+                    await this.downloadFromUrl(this.MINGW_CONFIG.url, tempZip, progress);
+
+                    // Extract MinGW32
+                    progress.report({ 
+                        message: "Extracting MinGW32 toolchain...",
+                        increment: 30
+                    });
+
+                    const zip = new AdmZip(tempZip);
+                    zip.extractAllTo(path.dirname(targetPath), true);
+
+                    // Clean up zip file
+                    if (fs.existsSync(tempZip)) {
+                        fs.unlinkSync(tempZip);
+                    }
+
+                    // Copy bundled graphics.h files
+                    this.copyBundledGraphicsFiles(targetPath, extensionPath, progress);
+
+                    // Verify installation
+                    progress.report({ 
+                        message: "Verifying installation...",
+                        increment: 10
+                    });
+
+                    const gppPath = path.join(targetPath, 'bin', 'g++.exe');
+                    if (!fs.existsSync(gppPath)) {
+                        throw new Error('MinGW installation verification failed');
+                    }
+
+                    progress.report({ 
+                        message: "Complete!",
+                        increment: 5
+                    });
+
+                    vscode.window.showInformationMessage('✓ Graphics.h toolchain installed successfully!');
+
+                    this.isDownloading = false;
+                    this.downloadPromise = null;
+                    resolve(true);
+
+                } catch (error) {
+                    this.isDownloading = false;
+                    this.downloadPromise = null;
+
+                    if (fs.existsSync(tempZip)) {
+                        try {
+                            fs.unlinkSync(tempZip);
+                        } catch (cleanupError) {
+                            console.error('Failed to delete partial zip:', cleanupError);
+                        }
+                    }
+
+                    const errorMsg = error instanceof Error ? error.message : String(error);
+                    
+                    vscode.window.showErrorMessage(
+                        `Toolchain setup failed: ${errorMsg}`,
+                        'Retry',
+                        'Report Issue'
+                    ).then(choice => {
+                        if (choice === 'Retry') {
+                            this.downloadPromise = null;
+                            this.download(targetPath, extensionPath);
+                        } else if (choice === 'Report Issue') {
+                            vscode.env.openExternal(
+                                vscode.Uri.parse('https://github.com/AlbatrossC/graphics-h-compiler/issues')
+                            );
+                        }
+                    });
+
+                    console.error('Installation error:', error);
+                    resolve(false);
+                }
+            });
+        });
+
+        return this.downloadPromise;
+    }
+
+    // Prompt user for permission to download
+    async promptForPermission(): Promise<boolean> {
+        const choice = await vscode.window.showInformationMessage(
+            `⚙️ Graphics.h Compiler setup required\n\n` +
+            `To compile graphics programs, a one-time setup is needed.\n` +
+            `📦 ~220MB download, ~770MB disk space\n\n` +
+            `Download and continue?`,
+            { modal: true },
+            'Download',
+            'Cancel'
+        );
+
+        return choice === 'Download';
+    }
+
+    // Update download configuration
+    updateConfig(config: Partial<DownloadConfig>): void {
+        Object.assign(this.MINGW_CONFIG, config);
+    }
+}
+
+================================================================================
+END OF FILE: windowsDownloader.ts
+================================================================================
+
