@@ -983,24 +983,24 @@
             font-size: 0.75rem;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
-            background: var(--primary);
+            background: #ff6b6b;
             color: #0a0a0a;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
         }
 
         .copy-error-btn:hover {
-            background: var(--primary-hover);
+            background: #ff5252;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+            box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
         }
 
         .copy-error-btn.copied {
-            background: var(--success);
-            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.5);
+            background: #4caf50;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.5);
         }
 
         .copy-error-btn svg {
@@ -1009,16 +1009,16 @@
         }
 
         [data-theme="light"] .copy-error-btn {
-            background: var(--primary);
-            box-shadow: 0 2px 8px rgba(0, 204, 106, 0.3);
+            background: #ff6b6b;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
         }
 
         [data-theme="light"] .copy-error-btn:hover {
-            box-shadow: 0 4px 12px rgba(0, 204, 106, 0.4);
+            box-shadow: 0 4px 12px rgba(255, 82, 82, 0.4);
         }
 
         [data-theme="light"] .copy-error-btn.copied {
-            box-shadow: 0 2px 8px rgba(0, 204, 106, 0.5);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.5);
         }
 
         /* Expand Button */
@@ -1121,7 +1121,7 @@
 
             <div class="header-center">
                 <div class="logo">
-                    <span class="logo-full">Online <span class="logo-highlight">graphics.h</span> C++ Compiler</span>
+                    <span class="logo-full">Online <span class="logo-highlight">graphics.h</span> Compiler</span>
                     <span class="logo-mobile"><span class="logo-highlight">graphics.h</span> Compiler</span>
                 </div>
             </div>
@@ -1168,7 +1168,7 @@
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                 </svg>
-                <span class="btn-text">Run</span>
+                <span class="btn-text">Compile and Run</span>
             </button>
         </div>
     </header>
@@ -1200,7 +1200,6 @@
             <div id="editor"></div>
             <div class="editor-footer">
                 <span class="editor-info" id="editor-info">Lines: 0 | Chars: 0</span>
-                <span class="editor-mode">C++</span>
             </div>
         </div>
 
@@ -1258,7 +1257,7 @@
                                 <path
                                     d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
                             </svg>
-                            <span id="copy-btn-text">Copy</span>
+                            <span id="copy-btn-text">Copy Errors</span>
                         </button>
                         <button id="expand-output-btn" class="expand-btn" title="Expand/Collapse panel">
                             <svg viewBox="0 0 24 24" fill="currentColor">
