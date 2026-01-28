@@ -1101,6 +1101,163 @@
         #terminal-wrapper.has-panel #dos-canvas {
             height: 70%;
         }
+
+        /* Scanf Warning Banner */
+        .scanf-warning {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1a1a1a;
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            max-width: 600px;
+        }
+
+        .scanf-warning.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .scanf-warning-icon {
+            width: 20px;
+            height: 20px;
+            color: #ff4444;
+            flex-shrink: 0;
+            animation: pulse-warning 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-warning {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .scanf-warning-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #ff6666;
+            line-height: 1.4;
+        }
+
+        .scanf-warning-close {
+            background: transparent;
+            border: none;
+            color: #ff6666;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .scanf-warning-close:hover {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+        }
+
+        .scanf-warning-close svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Light theme styles for scanf warning */
+        [data-theme="light"] .scanf-warning {
+            background: #fafafa;
+            border-color: #dc2626;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .scanf-warning-icon {
+            color: #dc2626;
+        }
+
+        [data-theme="light"] .scanf-warning-text {
+            color: #991b1b;
+        }
+
+        [data-theme="light"] .scanf-warning-close {
+            color: #b91c1c;
+        }
+
+        [data-theme="light"] .scanf-warning-close:hover {
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+        }
+
+        /* Mobile responsiveness for scanf warning */
+        @media (max-width: 768px) {
+            .scanf-warning {
+                bottom: 12px;
+                left: 10px;
+                right: 10px;
+                transform: translateX(0) translateY(100px);
+                max-width: none;
+                width: auto;
+                padding: 10px 14px;
+                gap: 8px;
+            }
+
+            .scanf-warning.visible {
+                transform: translateX(0) translateY(0);
+            }
+
+            .scanf-warning-icon {
+                width: 18px;
+                height: 18px;
+                flex-shrink: 0;
+            }
+
+            .scanf-warning-text {
+                font-size: 0.75rem;
+                line-height: 1.3;
+            }
+
+            .scanf-warning-close {
+                padding: 2px;
+            }
+
+            .scanf-warning-close svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 400px) {
+            .scanf-warning {
+                padding: 8px 12px;
+                gap: 6px;
+            }
+
+            .scanf-warning-icon {
+                width: 16px;
+                height: 16px;
+            }
+
+            .scanf-warning-text {
+                font-size: 0.7rem;
+            }
+        }
     </style>
 
     <script src="static/analytics.js" defer></script>
@@ -1276,6 +1433,22 @@
                 <div id="output-content" class="output-content"></div>
             </div>
         </div>
+    </div>
+
+    <!-- Scanf Warning Banner -->
+    <div id="scanf-warning" class="scanf-warning">
+        <svg class="scanf-warning-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+        </svg>
+        <span class="scanf-warning-text">Please hardcode values instead of taking input from the user, as input-based
+            programs may not work correctly.</span>
+        <button id="scanf-warning-close" class="scanf-warning-close" title="Dismiss">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path
+                    d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+            </svg>
+        </button>
     </div>
 
     <script>
@@ -1980,6 +2153,7 @@
             editor.on('change', () => {
                 updateEditorInfo();
                 updateSaveIndicator();
+                checkForScanf();
             });
 
             setTimeout(() => {
@@ -2000,12 +2174,45 @@
             editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
         }
 
+        // ==================== SCANF WARNING SYSTEM ====================
+        const scanfWarning = document.getElementById('scanf-warning');
+        const scanfWarningClose = document.getElementById('scanf-warning-close');
+        let scanfWarningDismissed = false; // Track if user manually dismissed the warning
+
+        // Pattern to detect scanf or cin in the code
+        const SCANF_PATTERN = /\b(scanf|cin)\b/;
+
+        function checkForScanf() {
+            if (!editor || !scanfWarning) return;
+
+            const code = editor.getValue();
+            const hasScanf = SCANF_PATTERN.test(code);
+
+            if (hasScanf && !scanfWarningDismissed) {
+                scanfWarning.classList.add('visible');
+            } else {
+                scanfWarning.classList.remove('visible');
+                // Reset dismissal state when scanf is removed
+                if (!hasScanf) {
+                    scanfWarningDismissed = false;
+                }
+            }
+        }
+
+        // Close button handler - allows user to dismiss the warning
+        scanfWarningClose.addEventListener('click', () => {
+            scanfWarning.classList.remove('visible');
+            scanfWarningDismissed = true;
+            Logger.info('Scanf warning dismissed by user');
+        });
+
         async function loadDefaultCode() {
             const savedCode = localStorage.getItem("tc_code");
             if (savedCode) {
                 editor.setValue(savedCode, -1);
                 updateEditorInfo();
                 updateSaveIndicator();
+                checkForScanf(); // Check for scanf on initial load
                 Logger.info('Restored saved code');
                 return;
             }
