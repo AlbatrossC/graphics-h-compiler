@@ -1103,6 +1103,11 @@ esbuild.build({
           "type": "boolean",
           "default": true,
           "description": "Clear output panel before each compilation"
+        },
+        "graphics-h-compiler.runInTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run program in Integrated Terminal (required for user input/scanf/cin)"
         }
       }
     }

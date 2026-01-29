@@ -1,14 +1,4 @@
-# Directory Structure Export
-# Root: C:\Users\jadha\Desktop\graphics.h-online-compiler\VScodeExtension\src
-# Total files: 5
-================================================================================
-
-
-================================================================================
-FILE: compiler.ts
-================================================================================
-
-import * as vscode from 'vscode';
+compiler.ts -> import * as vscode from 'vscode';
 import * as path from 'path';
 import { spawn, ChildProcess } from 'child_process';
 import { PathManager } from './paths';
@@ -561,16 +551,7 @@ export class GraphicsCompiler {
     }
 }
 
-================================================================================
-END OF FILE: compiler.ts
-================================================================================
-
-
-================================================================================
-FILE: extension.ts
-================================================================================
-
-import * as vscode from 'vscode';
+extension.ts -> import * as vscode from 'vscode';
 import { PathManager, OperatingSystem } from './paths';
 import { WindowsDownloader } from './windowsDownloader';
 import { UbuntuDownloader } from './ubuntuDownloader';
@@ -993,16 +974,7 @@ export function deactivate() {
     console.log('Graphics.h Compiler extension deactivated');
 }
 
-================================================================================
-END OF FILE: extension.ts
-================================================================================
-
-
-================================================================================
-FILE: paths.ts
-================================================================================
-
-import * as vscode from 'vscode';
+paths.ts -> import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -1167,16 +1139,7 @@ export class PathManager {
     }
 }
 
-================================================================================
-END OF FILE: paths.ts
-================================================================================
-
-
-================================================================================
-FILE: ubuntuDownloader.ts
-================================================================================
-
-import * as vscode from 'vscode';
+ubuntuDownloader.ts -> import * as vscode from 'vscode';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import * as fs from 'fs';
@@ -1542,16 +1505,7 @@ Click "Copy & Open Terminal" to copy the command and open a terminal.`;
     }
 }
 
-================================================================================
-END OF FILE: ubuntuDownloader.ts
-================================================================================
-
-
-================================================================================
-FILE: windowsDownloader.ts
-================================================================================
-
-import * as vscode from 'vscode';
+windowsDownloader.ts -> import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
@@ -1893,8 +1847,4 @@ export class WindowsDownloader {
         Object.assign(this.MINGW_CONFIG, config);
     }
 }
-
-================================================================================
-END OF FILE: windowsDownloader.ts
-================================================================================
 

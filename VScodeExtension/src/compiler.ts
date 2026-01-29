@@ -18,6 +18,7 @@ export class GraphicsCompiler {
     private activeProcesses: Set<ChildProcess> = new Set();
     private diagnosticCollection: vscode.DiagnosticCollection;
     private runningProgram: ChildProcess | null = null;
+    private terminal: vscode.Terminal | null = null;
 
     constructor(pathManager: PathManager) {
         this.pathManager = pathManager;
@@ -30,13 +31,14 @@ export class GraphicsCompiler {
         return {
             autoRun: config.get<boolean>('autoRun', true),
             showOutput: config.get<boolean>('showOutputPanel', true),
-            clearOutputBeforeCompile: config.get<boolean>('clearOutputBeforeCompile', true)
+            clearOutputBeforeCompile: config.get<boolean>('clearOutputBeforeCompile', true),
+            runInTerminal: config.get<boolean>('runInTerminal', true)
         };
     }
 
     private validateSourceFile(sourceFile: string): boolean {
         const normalizedPath = path.normalize(sourceFile);
-        
+
         if (normalizedPath.includes('..')) {
             vscode.window.showErrorMessage('Invalid file path: Path traversal detected');
             return false;
@@ -64,11 +66,11 @@ export class GraphicsCompiler {
     private parseCompilerErrors(stderr: string, sourceFile: string): CompilationError[] {
         const errors: CompilationError[] = [];
         const errorRegex = /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm;
-        
+
         let match;
         while ((match = errorRegex.exec(stderr)) !== null) {
             const [_, file, line, column, severity, message] = match;
-            
+
             errors.push({
                 file: file.trim(),
                 line: parseInt(line, 10),
@@ -88,7 +90,7 @@ export class GraphicsCompiler {
         for (const error of errors) {
             const line = Math.max(0, error.line - 1);
             const column = Math.max(0, error.column - 1);
-            
+
             const range = new vscode.Range(
                 new vscode.Position(line, column),
                 new vscode.Position(line, column + 100)
@@ -97,8 +99,8 @@ export class GraphicsCompiler {
             const diagnostic = new vscode.Diagnostic(
                 range,
                 error.message,
-                error.severity === 'error' 
-                    ? vscode.DiagnosticSeverity.Error 
+                error.severity === 'error'
+                    ? vscode.DiagnosticSeverity.Error
                     : vscode.DiagnosticSeverity.Warning
             );
 
@@ -114,6 +116,20 @@ export class GraphicsCompiler {
         this.diagnosticCollection.delete(uri);
     }
 
+    private getTerminal(): vscode.Terminal {
+        if (this.terminal && this.terminal.exitStatus === undefined) {
+            return this.terminal;
+        }
+
+        // Dispose old terminal if it exists but has exit status (meaning it was closed)
+        if (this.terminal) {
+            this.terminal.dispose();
+        }
+
+        this.terminal = vscode.window.createTerminal('Graphics.h Run');
+        return this.terminal;
+    }
+
     private async compileWindows(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
         const config = this.getConfig();
         const gppPath = this.pathManager.getGppPath();
@@ -126,7 +142,7 @@ export class GraphicsCompiler {
         if (config.clearOutputBeforeCompile) {
             this.outputChannel.clear();
         }
-        
+
         if (config.showOutput) {
             this.outputChannel.show(true);
         }
@@ -188,16 +204,16 @@ export class GraphicsCompiler {
                     if (stderr.trim().length === 0) {
                         this.outputChannel.appendLine('error: compilation failed with no error output');
                     }
-                    
+
                     this.outputChannel.appendLine('');
                     this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
-                    
+
                     const errors = this.parseCompilerErrors(stderr, sourceFile);
                     this.updateDiagnostics(errors, sourceFile);
 
                     const errorCount = errors.filter(e => e.severity === 'error').length;
                     const warningCount = errors.filter(e => e.severity === 'warning').length;
-                    
+
                     let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
                     if (warningCount > 0) {
                         message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
@@ -214,12 +230,12 @@ export class GraphicsCompiler {
                             vscode.commands.executeCommand('workbench.actions.view.problems');
                         }
                     });
-                    
+
                     resolve(null);
                 } else {
                     this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
                     this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
-                    
+
                     resolve(outputPath);
                 }
             });
@@ -227,9 +243,9 @@ export class GraphicsCompiler {
             compilerProcess.on('error', (error) => {
                 this.outputChannel.appendLine('');
                 this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
-                
+
                 this.activeProcesses.delete(compilerProcess);
-                
+
                 vscode.window.showErrorMessage(
                     `Compiler error: ${error.message}`,
                     'Show Output'
@@ -238,7 +254,7 @@ export class GraphicsCompiler {
                         this.outputChannel.show();
                     }
                 });
-                
+
                 resolve(null);
             });
         });
@@ -253,7 +269,7 @@ export class GraphicsCompiler {
         if (config.clearOutputBeforeCompile) {
             this.outputChannel.clear();
         }
-        
+
         if (config.showOutput) {
             this.outputChannel.show(true);
         }
@@ -307,16 +323,16 @@ export class GraphicsCompiler {
                     if (stderr.trim().length === 0) {
                         this.outputChannel.appendLine('error: compilation failed with no error output');
                     }
-                    
+
                     this.outputChannel.appendLine('');
                     this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
-                    
+
                     const errors = this.parseCompilerErrors(stderr, sourceFile);
                     this.updateDiagnostics(errors, sourceFile);
 
                     const errorCount = errors.filter(e => e.severity === 'error').length;
                     const warningCount = errors.filter(e => e.severity === 'warning').length;
-                    
+
                     let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
                     if (warningCount > 0) {
                         message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
@@ -333,12 +349,12 @@ export class GraphicsCompiler {
                             vscode.commands.executeCommand('workbench.actions.view.problems');
                         }
                     });
-                    
+
                     resolve(null);
                 } else {
                     this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
                     this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
-                    
+
                     resolve(outputPath);
                 }
             });
@@ -346,9 +362,9 @@ export class GraphicsCompiler {
             compilerProcess.on('error', (error) => {
                 this.outputChannel.appendLine('');
                 this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
-                
+
                 this.activeProcesses.delete(compilerProcess);
-                
+
                 vscode.window.showErrorMessage(
                     `Compiler error: ${error.message}`,
                     'Show Output'
@@ -357,7 +373,7 @@ export class GraphicsCompiler {
                         this.outputChannel.show();
                     }
                 });
-                
+
                 resolve(null);
             });
         });
@@ -381,6 +397,19 @@ export class GraphicsCompiler {
     private async runWindows(exePath: string): Promise<void> {
         if (!fs.existsSync(exePath)) {
             vscode.window.showErrorMessage('Executable not found: ' + exePath);
+            return;
+        }
+
+        const config = this.getConfig();
+
+        if (config.runInTerminal) {
+            const terminal = this.getTerminal();
+            terminal.show();
+            this.outputChannel.appendLine(`[graphics-h] Running in terminal: ${path.basename(exePath)}`);
+            this.outputChannel.appendLine('');
+
+            // Use cmd /c to ensure execution works in both PowerShell and CMD, and handles quoting
+            terminal.sendText(`cmd /c "${exePath}"`);
             return;
         }
 
@@ -420,7 +449,7 @@ export class GraphicsCompiler {
             this.outputChannel.appendLine('');
             this.outputChannel.appendLine('[graphics-h] Program execution failed:');
             this.outputChannel.appendLine(error.message);
-            
+
             vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
         });
 
@@ -434,6 +463,18 @@ export class GraphicsCompiler {
     private async runLinux(exePath: string): Promise<void> {
         if (!fs.existsSync(exePath)) {
             vscode.window.showErrorMessage('Executable not found: ' + exePath);
+            return;
+        }
+
+        const config = this.getConfig();
+
+        if (config.runInTerminal) {
+            const terminal = this.getTerminal();
+            terminal.show();
+            this.outputChannel.appendLine(`[graphics-h] Running in terminal: ${path.basename(exePath)}`);
+            this.outputChannel.appendLine('');
+
+            terminal.sendText(`wine "${exePath}"`);
             return;
         }
 
@@ -476,7 +517,7 @@ export class GraphicsCompiler {
             this.outputChannel.appendLine('');
             this.outputChannel.appendLine('[graphics-h] Program execution failed:');
             this.outputChannel.appendLine(error.message);
-            
+
             vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
         });
 
@@ -504,6 +545,14 @@ export class GraphicsCompiler {
             this.runningProgram = null;
             return true;
         }
+
+        if (this.terminal) {
+            this.outputChannel.appendLine('[graphics-h] Closing terminal...');
+            this.terminal.dispose();
+            this.terminal = null;
+            return true;
+        }
+
         return false;
     }
 
@@ -513,13 +562,13 @@ export class GraphicsCompiler {
 
     async compileAndRun(sourceFile: string): Promise<void> {
         const config = this.getConfig();
-        
+
         if (this.isProgramRunning()) {
             this.stopRunningProgram();
         }
 
         const exePath = await this.compile(sourceFile);
-        
+
         if (exePath && config.autoRun) {
             await this.run(exePath);
         } else if (exePath && !config.autoRun) {
@@ -540,6 +589,10 @@ export class GraphicsCompiler {
 
         if (this.runningProgram && !this.runningProgram.killed) {
             this.runningProgram.kill();
+        }
+
+        if (this.terminal) {
+            this.terminal.dispose();
         }
 
         this.activeProcesses.forEach(proc => {
