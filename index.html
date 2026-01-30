@@ -1,50 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- SEO Meta Tags -->
     <title>graphics.h Compiler - Run Graphics Programs Online | Modern C Graphics Development</title>
-    <meta name="description" content="Run graphics.h programs instantly in your browser or VS Code. Zero setup, no legacy tools needed. Perfect for students learning computer graphics programming with modern IntelliSense support.">
-    <meta name="keywords" content="graphics.h, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative, SPPU graphics, graphics programming, C compiler">
+    <meta name="description"
+        content="Run graphics.h programs instantly in your browser or VS Code. Zero setup, no legacy tools needed. Perfect for students learning computer graphics programming with modern IntelliSense support.">
+    <meta name="keywords"
+        content="graphics.h, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative, SPPU graphics, graphics programming, C compiler">
     <meta name="author" content="graphics.h compiler">
     <meta name="robots" content="index, follow">
     <meta name="language" content="English">
 
     <meta name="google-adsense-account" content="ca-pub-6918638598461716">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://graphics-h-compiler.vercel.app/">
     <meta property="og:title" content="graphics.h Compiler - Run Graphics Programs Anywhere">
-    <meta property="og:description" content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution. Say goodbye to Turbo C and DOSBox.">
+    <meta property="og:description"
+        content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution. Say goodbye to Turbo C and DOSBox.">
     <meta property="og:image" content="https://graphics-h-compiler.vercel.app/og-image.png">
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="https://graphics-h-compiler.vercel.app/">
     <meta property="twitter:title" content="graphics.h Compiler - Run Graphics Programs Anywhere">
-    <meta property="twitter:description" content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution.">
+    <meta property="twitter:description"
+        content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution.">
     <meta property="twitter:image" content="https://graphics-h-compiler.vercel.app/og-image.png">
-    
+
     <!-- Canonical URL -->
     <link rel="canonical" href="https://graphics-h-compiler.vercel.app/">
-    
+
     <!-- Favicon -->
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- Preload videos for faster loading -->
-    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo-v2.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4" as="video" type="video/mp4">
-    
+    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo-v2.mp4"
+        as="video" type="video/mp4">
+    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4" as="video"
+        type="video/mp4">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -90,16 +99,66 @@
             font-family: 'Space Mono', 'JetBrains Mono', monospace;
         }
 
+
+
+        .top-strip a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .top-strip a:hover {
+            text-decoration: underline;
+        }
+
         /* Header */
         header {
             position: fixed;
             top: 0;
+            /* Adjusted for top strip */
             left: 0;
             right: 0;
             z-index: 1000;
             background: var(--bg-dark);
             border-bottom: 2px solid var(--border-dark);
             transition: var(--transition);
+        }
+
+        /* Improved Header Button Styles */
+        .btn-simple {
+            border: none;
+            background: transparent;
+            color: inherit;
+            opacity: 0.8;
+            padding: 0.5rem 0.8rem;
+        }
+
+        .btn-simple:hover {
+            opacity: 1;
+            background: rgba(128, 128, 128, 0.1);
+            border-radius: 4px;
+        }
+
+        .btn-sppucodes {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-dark);
+            border-radius: 4px;
+        }
+
+        body.light .btn-sppucodes {
+            border-color: var(--border-light);
+        }
+
+        body:not(.light) .btn-sppucodes:hover {
+            background: var(--code-bg-dark);
+            border-color: var(--accent);
+        }
+
+        body.light .btn-sppucodes:hover {
+            background: var(--code-bg-light);
+            border-color: var(--accent-dark);
         }
 
         body.light header {
@@ -110,7 +169,7 @@
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 1rem 2rem;
+            padding: 0.7rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -210,26 +269,32 @@
             max-width: 1500px;
             margin: 0 auto;
             width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
         }
+
+
 
         .hero-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 4rem;
+            gap: 3vh;
             align-items: center;
+            width: 100%;
         }
 
         @media (min-width: 1024px) {
             .hero {
                 padding: 0 3rem;
             }
-            
+
             .hero-grid {
                 grid-template-columns: 1fr 1.15fr;
-                gap: 4rem;
+                gap: 2rem;
             }
         }
-        
+
         @media (max-width: 1023px) {
             .hero {
                 height: auto;
@@ -240,11 +305,11 @@
 
         /* Headline */
         .headline {
-            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-size: clamp(1.8rem, 4vw + 1vh, 3.5rem);
             font-weight: 700;
             line-height: 0.95;
             letter-spacing: -0.03em;
-            margin-bottom: 1.2rem;
+            margin-bottom: 2vh;
         }
 
         .headline .highlight {
@@ -261,14 +326,22 @@
         }
 
         @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
         }
 
         .subheadline {
             font-size: clamp(0.85rem, 1.6vw, 0.95rem);
             line-height: 1.6;
-            margin-bottom: 1.8rem;
+            margin-bottom: 2vh;
             opacity: 0.85;
             max-width: 520px;
         }
@@ -280,7 +353,7 @@
             gap: 0.8rem;
             padding: 0.7rem 1.2rem;
             border: 2px solid var(--accent);
-            margin-bottom: 1.2rem;
+            margin-bottom: 2vh;
             font-size: 0.8rem;
             font-weight: 600;
             font-family: 'IBM Plex Sans', sans-serif;
@@ -303,8 +376,17 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.9); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.9);
+            }
         }
 
         /* CTA Buttons */
@@ -312,7 +394,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 0.9rem;
-            margin-bottom: 1.3rem;
+            margin-bottom: 2vh;
         }
 
         .cta-btn {
@@ -445,6 +527,10 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             opacity: 0.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .demo-tab.active {
@@ -657,7 +743,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 repeating-linear-gradient(0deg, transparent, transparent 2px, currentColor 2px, currentColor 3px),
                 repeating-linear-gradient(90deg, transparent, transparent 2px, currentColor 2px, currentColor 3px);
             background-size: 50px 50px;
@@ -665,8 +751,13 @@
         }
 
         @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(50px, 50px);
+            }
         }
 
         /* Noise Texture */
@@ -715,8 +806,15 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(30px, -30px) scale(1.1); }
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(30px, -30px) scale(1.1);
+            }
         }
 
         /* Animated Lines */
@@ -755,22 +853,65 @@
             animation: lineExpandVertical 4s ease-in-out infinite;
         }
 
-        .line-1 { top: 20%; animation-delay: 0s; }
-        .line-2 { top: 50%; animation-delay: 1s; }
-        .line-3 { top: 80%; animation-delay: 2s; }
-        .line-4 { left: 25%; animation-delay: 0.5s; }
-        .line-5 { left: 75%; animation-delay: 1.5s; }
+        .line-1 {
+            top: 20%;
+            animation-delay: 0s;
+        }
+
+        .line-2 {
+            top: 50%;
+            animation-delay: 1s;
+        }
+
+        .line-3 {
+            top: 80%;
+            animation-delay: 2s;
+        }
+
+        .line-4 {
+            left: 25%;
+            animation-delay: 0.5s;
+        }
+
+        .line-5 {
+            left: 75%;
+            animation-delay: 1.5s;
+        }
 
         @keyframes lineExpandHorizontal {
-            0%, 100% { width: 0; opacity: 0; }
-            10%, 90% { opacity: 0.1; }
-            50% { width: 100%; }
+
+            0%,
+            100% {
+                width: 0;
+                opacity: 0;
+            }
+
+            10%,
+            90% {
+                opacity: 0.1;
+            }
+
+            50% {
+                width: 100%;
+            }
         }
 
         @keyframes lineExpandVertical {
-            0%, 100% { height: 0; opacity: 0; }
-            10%, 90% { opacity: 0.1; }
-            50% { height: 100%; }
+
+            0%,
+            100% {
+                height: 0;
+                opacity: 0;
+            }
+
+            10%,
+            90% {
+                opacity: 0.1;
+            }
+
+            50% {
+                height: 100%;
+            }
         }
 
         /* Scan Line Effect */
@@ -792,10 +933,10 @@
             left: 0;
             width: 100%;
             height: 3px;
-            background: linear-gradient(to bottom, 
-                transparent, 
-                var(--accent), 
-                transparent);
+            background: linear-gradient(to bottom,
+                    transparent,
+                    var(--accent),
+                    transparent);
             opacity: 0.15;
             animation: scan 8s linear infinite;
         }
@@ -805,8 +946,13 @@
         }
 
         @keyframes scan {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(100vh); }
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(100vh);
+            }
         }
 
         /* Responsive */
@@ -858,7 +1004,7 @@
             .scanline {
                 display: none;
             }
-            
+
             .accent-corner {
                 width: 200px;
                 height: 200px;
@@ -871,6 +1017,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -881,10 +1028,21 @@
             animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        .delay-4 { animation-delay: 0.4s; }
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
 
         /* Initial state */
         .animate-in {
@@ -892,13 +1050,14 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Background Elements -->
     <div class="bg-pattern"></div>
     <div class="noise-overlay"></div>
     <div class="accent-corner top-right"></div>
     <div class="accent-corner bottom-left"></div>
-    
+
     <!-- Animated Lines -->
     <div class="animated-lines">
         <div class="line horizontal line-1"></div>
@@ -907,7 +1066,7 @@
         <div class="line vertical line-4"></div>
         <div class="line vertical line-5"></div>
     </div>
-    
+
     <!-- Scanline Effect -->
     <div class="scanline"></div>
 
@@ -925,17 +1084,22 @@
                     <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
                     <i data-lucide="moon" class="theme-icon-dark"></i>
                 </button>
-                <button class="btn btn-outline" onclick="openContactModal()">
-                    <i data-lucide="mail"></i>
-                    <span class="btn-text">Contact</span>
-                </button>
-                <button class="btn btn-outline" onclick="openModal()">
+                <button class="btn btn-simple" onclick="openModal()">
                     <i data-lucide="info"></i>
                     <span class="btn-text">About</span>
                 </button>
-                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
+                    class="btn btn-simple">
                     <i data-lucide="github"></i>
                     <span class="btn-text">Source</span>
+                </a>
+                <button class="btn btn-simple" onclick="openContactModal()">
+                    <i data-lucide="mail"></i>
+                    <span class="btn-text">Contact</span>
+                </button>
+                <a href="https://sppucodes.com" target="_blank" class="btn btn-sppucodes btn">
+                    <i data-lucide="external-link"></i>
+                    <span class="btn-text">Sppucodes</span>
                 </a>
             </nav>
         </div>
@@ -959,7 +1123,9 @@
                     </h1>
 
                     <p class="subheadline animate-in delay-3">
-                        Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with broken legacy setups. This modern compiler brings graphics.h into the 21st century—run your programs instantly in any browser or directly within VS Code, with zero configuration required.
+                        Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with broken
+                        legacy setups. This modern compiler brings graphics.h into the 21st century—run your programs
+                        instantly in any browser or directly within VS Code, with zero configuration required.
                     </p>
 
                     <div class="cta-group animate-in delay-4">
@@ -967,10 +1133,8 @@
                             <i data-lucide="terminal"></i>
                             <span>Open Online Compiler</span>
                         </a>
-                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler" 
-                           target="_blank" 
-                           rel="noopener noreferrer" 
-                           class="cta-btn cta-btn-vscode">
+                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                            target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
                             <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
                             <span>Get VS Code Extension</span>
                         </a>
@@ -989,11 +1153,15 @@
 
                     <div class="video-container">
                         <div class="video-wrapper">
-                            <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline preload="auto">
-                                <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo-v2.mp4" type="video/mp4">
+                            <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline
+                                preload="auto">
+                                <source
+                                    src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo-v2.mp4"
+                                    type="video/mp4">
                             </video>
                             <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
-                                <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4" type="video/mp4">
+                                <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4"
+                                    type="video/mp4">
                             </video>
                         </div>
                     </div>
@@ -1012,10 +1180,10 @@
                     <!-- Tabs below video -->
                     <div class="demo-tabs">
                         <button class="demo-tab active" data-demo="vscode" onclick="switchDemo('vscode')">
-                            VS Code
+                            <i data-lucide="video" style="width: 16px; height: 16px;"></i> VS Code
                         </button>
                         <button class="demo-tab" data-demo="online" onclick="switchDemo('online')">
-                            Online
+                            <i data-lucide="video" style="width: 16px; height: 16px;"></i> Online
                         </button>
                     </div>
                 </div>
@@ -1033,7 +1201,9 @@
             <h2 class="modal-title">Why This Exists</h2>
 
             <p class="modal-text">
-                <strong>graphics.h</strong> is a legacy graphics library still taught in Computer Graphics courses—especially in SPPU curriculum. But running it today requires jumping through hoops: installing Turbo C, configuring DOSBox, dealing with broken environments.
+                <strong>graphics.h</strong> is a legacy graphics library still taught in Computer Graphics
+                courses—especially in SPPU curriculum. But running it today requires jumping through hoops: installing
+                Turbo C, configuring DOSBox, dealing with broken environments.
             </p>
 
             <p class="modal-text">
@@ -1059,13 +1229,15 @@
 
             <div class="modal-highlight">
                 <p class="modal-text">
-                    Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students focus on learning graphics, not wrestling with 1990s software.
+                    Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students focus
+                    on learning graphics, not wrestling with 1990s software.
                 </p>
             </div>
         </div>
     </div>
 
     <script src="static/analytics.js" async></script>
+    <script src="static/notification.js" async></script>
 
     <script>
         // Initialize Lucide icons
@@ -1076,14 +1248,14 @@
             const body = document.body;
             const isLight = body.classList.toggle('light');
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            
+
             // Update icons
             const lightIcons = document.querySelectorAll('.theme-icon-light');
             const darkIcons = document.querySelectorAll('.theme-icon-dark');
-            
+
             lightIcons.forEach(icon => icon.style.display = isLight ? 'block' : 'none');
             darkIcons.forEach(icon => icon.style.display = isLight ? 'none' : 'block');
-            
+
             lucide.createIcons();
         }
 
@@ -1118,14 +1290,14 @@
                 onlineVideo.classList.remove('active');
                 vscodeDescription.classList.add('active');
                 onlineDescription.classList.remove('active');
-                vscodeVideo.play().catch(() => {});
+                vscodeVideo.play().catch(() => { });
                 onlineVideo.pause();
             } else {
                 onlineVideo.classList.add('active');
                 vscodeVideo.classList.remove('active');
                 onlineDescription.classList.add('active');
                 vscodeDescription.classList.remove('active');
-                onlineVideo.play().catch(() => {});
+                onlineVideo.play().catch(() => { });
                 vscodeVideo.pause();
             }
 
@@ -1134,7 +1306,7 @@
 
         // Ensure video plays on load
         window.addEventListener('load', () => {
-            vscodeVideo.play().catch(() => {});
+            vscodeVideo.play().catch(() => { });
             lucide.createIcons();
         });
 
@@ -1142,9 +1314,9 @@
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 if (vscodeVideo.classList.contains('active')) {
-                    vscodeVideo.play().catch(() => {});
+                    vscodeVideo.play().catch(() => { });
                 } else {
-                    onlineVideo.play().catch(() => {});
+                    onlineVideo.play().catch(() => { });
                 }
             }
         });
@@ -1208,4 +1380,5 @@
     }
     </script>
 </body>
+
 </html>
