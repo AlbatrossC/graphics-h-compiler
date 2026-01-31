@@ -46,3 +46,30 @@
   vaScript.src = "/_vercel/insights/script.js";
   document.head.appendChild(vaScript);
 })();
+
+// LogRocket - Canvas Recording Support
+(function () {
+  var lrScript = document.createElement("script");
+  lrScript.src = "https://cdn.logr-in.com/LogRocket.min.js";
+  lrScript.crossOrigin = "anonymous";
+  lrScript.async = true;
+  
+  lrScript.onload = function () {
+    if (window.LogRocket) {
+      window.LogRocket.init('x5hkxx/graphics-oc');
+      console.log('[Analytics] LogRocket initialized for canvas recording');
+      
+      // Optional: Track custom events
+      if (window.LogRocket.identify) {
+        // You can identify users later when they interact
+        // LogRocket.identify('user-id', { name: 'User Name' });
+      }
+    }
+  };
+  
+  lrScript.onerror = function () {
+    console.warn('[Analytics] LogRocket failed to load');
+  };
+  
+  document.head.appendChild(lrScript);
+})();
