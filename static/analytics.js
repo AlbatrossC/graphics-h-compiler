@@ -47,29 +47,30 @@
   document.head.appendChild(vaScript);
 })();
 
-// LogRocket - Canvas Recording Support
+// Smartlook - Canvas Recording Support
 (function () {
-  var lrScript = document.createElement("script");
-  lrScript.src = "https://cdn.logr-in.com/LogRocket.min.js";
-  lrScript.crossOrigin = "anonymous";
-  lrScript.async = true;
+  window.smartlook = window.smartlook || function () {
+    window.smartlook.api.push(arguments);
+  };
+  window.smartlook.api = new Array();
   
-  lrScript.onload = function () {
-    if (window.LogRocket) {
-      window.LogRocket.init('x5hkxx/graphics-oc');
-      console.log('[Analytics] LogRocket initialized for canvas recording');
-      
-      // Optional: Track custom events
-      if (window.LogRocket.identify) {
-        // You can identify users later when they interact
-        // LogRocket.identify('user-id', { name: 'User Name' });
-      }
+  var slScript = document.createElement('script');
+  slScript.async = true;
+  slScript.type = 'text/javascript';
+  slScript.charset = 'utf-8';
+  slScript.src = 'https://web-sdk.smartlook.com/recorder.js';
+  
+  slScript.onload = function () {
+    if (window.smartlook) {
+      smartlook('init', '330b62a8ee9fe45ad617f570fbe2ec0e1abd164e', { region: 'eu' });
+      console.log('[Analytics] Smartlook initialized for canvas recording');
     }
   };
   
-  lrScript.onerror = function () {
-    console.warn('[Analytics] LogRocket failed to load');
+  slScript.onerror = function () {
+    console.warn('[Analytics] Smartlook failed to load');
   };
   
-  document.head.appendChild(lrScript);
+  var head = document.getElementsByTagName('head')[0];
+  head.appendChild(slScript);
 })();
