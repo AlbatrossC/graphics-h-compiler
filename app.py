@@ -53,6 +53,20 @@ def get_video(filename):
     
     return send_file(video_path, mimetype=mime_type)
 
+# Supabase Auth Config API
+@app.route('/api/auth/config')
+def auth_config():
+    supabase_url = os.getenv('SUPABASE_URL')
+    supabase_anon_key = os.getenv('SUPABASE_ANON_KEY')
+    
+    if not supabase_url or not supabase_anon_key:
+        return jsonify({'error': 'Auth not configured'}), 500
+    
+    return jsonify({
+        'supabaseUrl': supabase_url,
+        'supabaseAnonKey': supabase_anon_key
+    })
+
 # Contact API
 @app.route('/api/contact', methods=['POST', 'OPTIONS'])
 def contact():
