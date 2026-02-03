@@ -2,22 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "src": "app.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
-      "src": "/api/contact",
-      "dest": "/api/contact.js"
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/app.py"
     }
   ]
 }

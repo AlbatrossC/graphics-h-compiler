@@ -49,10 +49,8 @@
         rel="stylesheet">
 
     <!-- Preload videos for faster loading -->
-    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo-v2.mp4"
-        as="video" type="video/mp4">
-    <link rel="preload" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4" as="video"
-        type="video/mp4">
+    <link rel="preload" href="/static/videos/vscode-demo-v2.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="/static/videos/oc-demo.mp4" as="video" type="video/mp4">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1135,7 +1133,7 @@
                         </a>
                         <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
                             target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
-                            <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
+                            <img src="/static/vscode.svg" alt="VS Code" class="vscode-icon">
                             <span>Get VS Code Extension</span>
                         </a>
                     </div>
@@ -1155,13 +1153,10 @@
                         <div class="video-wrapper">
                             <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline
                                 preload="auto">
-                                <source
-                                    src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/vscode-demo-v2.mp4"
-                                    type="video/mp4">
+                                <source src="/static/videos/vscode-demo-v2.mp4" type="video/mp4">
                             </video>
                             <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
-                                <source src="https://ltjlklxc9homgiye.public.blob.vercel-storage.com/videos/oc-demo.mp4"
-                                    type="video/mp4">
+                                <source src="/static/videos/oc-demo.mp4" type="video/mp4">
                             </video>
                         </div>
                     </div>
@@ -1236,8 +1231,8 @@
         </div>
     </div>
 
-    <script src="static/analytics.js" async></script>
-    <script src="static/notification.js" async></script>
+    <script src="/static/analytics.js" async></script>
+    <script src="/static/notification.js" async></script>
 
     <script>
         // Initialize Lucide icons
