@@ -1,5 +1,4 @@
 from flask import Flask, send_file, send_from_directory, jsonify, request
-from flask_cors import CORS
 from dotenv import load_dotenv
 import requests as req
 import os
@@ -7,7 +6,6 @@ import os
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)
 
 VIDEOS_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'videos')
 os.makedirs(VIDEOS_FOLDER, exist_ok=True)
