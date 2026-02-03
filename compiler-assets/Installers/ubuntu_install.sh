@@ -116,7 +116,7 @@ cd "$TEMP_DIR" || {
 }
 
 # Download files from your GitHub repository (raw content)
-GITHUB_RAW_BASE="https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/graphics"
+GITHUB_RAW_BASE="https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/graphics"
 
 if ! wget -q "${GITHUB_RAW_BASE}/graphics.h" -O graphics.h; then
     print_error "Failed to download graphics.h"

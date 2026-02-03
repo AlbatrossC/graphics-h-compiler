@@ -6,6 +6,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "compiler-assets/libs/**/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "app.py",
       "use": "@vercel/python"
     }
@@ -14,6 +18,10 @@
     {
       "src": "/static/(.*)",
       "dest": "/static/$1"
+    },
+    {
+      "src": "/libs/(.*)",
+      "dest": "/compiler-assets/libs/$1"
     },
     {
       "src": "/(.*)",
