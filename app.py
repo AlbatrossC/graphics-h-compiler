@@ -30,6 +30,12 @@ def serve_static(path):
 def serve_libs(filename):
     return send_from_directory('compiler-assets/libs', filename)
 
+# Serve compiler assets (demos, zip files) for offline mode
+@app.route('/compiler-assets/<path:filepath>')
+def serve_compiler_assets(filepath):
+    return send_from_directory('compiler-assets', filepath)
+
+
 # Video API
 @app.route('/api/video/<path:filename>')
 def get_video(filename):

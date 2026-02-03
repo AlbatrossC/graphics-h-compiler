@@ -14,10 +14,14 @@
         content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser.">
     <link rel="canonical" href="https://graphics-h-compiler.vercel.app/compiler.html">
 
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+
+
     <!-- Preload Hints for Faster Loading -->
-    <link rel="preload" href="/api/compiler" as="fetch" crossorigin="anonymous">
-    <link rel="preconnect" href="https://ltjlklxc9homgiye.public.blob.vercel-storage.com">
     <link rel="preconnect" href="https://js-dos.com">
+
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation">
@@ -1104,6 +1108,7 @@
 
     <script src="static/analytics.js" defer></script>
     <script src="static/notification.js" async></script>
+    <script src="static/resource-loader.js"></script>
 </head>
 
 <body>
@@ -1358,16 +1363,36 @@
             aceTheme: false
         };
 
-        // Demo files configuration - FETCHING FROM BLOB STORAGE
-        const DEMO_FILES = {
-            'graphics-demo': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/graphics_demo.cpp',
-            'circle-pattern': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/circle-pattern.cpp',
-            'bouncing-ball': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/bouncing-ball.cpp',
-            'shooter-game': 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/shooter-game.cpp'
-        };
+        // Demo files configuration - loaded dynamically from manifest.json
+        let DEMO_FILES = {};
 
-        // TC.ZIP URL - Keep using hardcoded Vercel URL
-        const TC_ZIP_URL = 'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip';
+        // TC.ZIP URL - loaded dynamically from manifest.json
+        let TC_ZIP_URL = null;
+
+        // Initialize resources from manifest
+        async function initializeResourcesFromManifest() {
+            try {
+                await ResourceLoader.init();
+
+                // Load demo files mapping
+                DEMO_FILES = await ResourceLoader.getDemoFiles();
+                Logger.success('Demo files loaded from manifest');
+
+                // Get TC ZIP URL (will handle fallback automatically)
+                TC_ZIP_URL = await ResourceLoader.getResourceUrl('assets', 'tc-zip');
+                Logger.success('TC ZIP URL resolved from manifest');
+            } catch (error) {
+                Logger.error('Failed to initialize resources from manifest', error);
+                // Fallback to hardcoded values if manifest fails
+                DEMO_FILES = {
+                    'graphics-demo': '/compiler-assets/Demo_files/graphics_demo.cpp',
+                    'circle-pattern': '/compiler-assets/Demo_files/circle_pattern.cpp',
+                    'bouncing-ball': '/compiler-assets/Demo_files/bouncing_ball.cpp',
+                    'shooter-game': '/compiler-assets/Demo_files/shooter_game.cpp'
+                };
+                TC_ZIP_URL = '/compiler-assets/zip-files/tc-v1.zip';
+            }
+        }
 
         // ==================== CACHING SYSTEM ====================
         const CACHE_CONFIG = {
@@ -1790,46 +1815,34 @@
 
         async function loadAllScripts() {
             try {
-                Logger.info('Loading dependencies...');
+                Logger.info('Loading dependencies via ResourceLoader...');
                 updateLoadingProgress(10);
 
-                // Load JS-DOS
-                await loadScript(
-                    'https://js-dos.com/6.22/current/js-dos.js',
-                    '/libs/js-dos.js'
-                );
+                // Initialize resources from manifest first
+                await initializeResourcesFromManifest();
+
+                // Load JS-DOS using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'jsdos');
                 scriptsLoaded.jsdos = true;
                 updateLoadingProgress(30);
 
-                // Load Ace Editor
-                await loadScript(
-                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js',
-                    '/libs/ace.js'
-                );
+                // Load Ace Editor using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace');
                 scriptsLoaded.ace = true;
                 updateLoadingProgress(50);
 
                 await waitForAce();
 
-                // Load Ace C++ Mode
-                await loadScript(
-                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-c_cpp.js',
-                    '/libs/mode-c_cpp.js'
-                );
+                // Load Ace C++ Mode using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace-mode-cpp');
                 scriptsLoaded.aceMode = true;
                 updateLoadingProgress(70);
 
-                // Load Ace Monokai Theme
-                await loadScript(
-                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-monokai.js',
-                    '/libs/theme-monokai.js'
-                );
+                // Load Ace Monokai Theme using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace-theme-monokai');
 
-                // Load Ace Textmate Theme for light mode
-                await loadScript(
-                    'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-textmate.js',
-                    '/libs/theme-textmate.js'
-                );
+                // Load Ace Textmate Theme for light mode using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace-theme-textmate');
 
                 scriptsLoaded.aceTheme = true;
                 updateLoadingProgress(100);
@@ -1842,6 +1855,7 @@
                 return false;
             }
         }
+
 
         function updateLoadingProgress(percent) {
             if (loadingProgressBar) {
@@ -1878,12 +1892,6 @@
         async function loadDemoFile(demoKey, forceReload = false) {
             if (!editor) return;
 
-            const demoUrl = DEMO_FILES[demoKey];
-            if (!demoUrl) {
-                Logger.error(`Demo file not found: ${demoKey}`);
-                return;
-            }
-
             try {
                 // Check cache first (unless force reload)
                 if (!forceReload) {
@@ -1908,11 +1916,25 @@
                     }
                 }
 
-                Logger.info(`Loading ${demoKey} demo from Blob storage...${forceReload ? ' (force reload)' : ''}`);
+                Logger.info(`Loading ${demoKey} demo using ResourceLoader...${forceReload ? ' (force reload)' : ''}`);
 
-                // Add cache buster for force reload
-                const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
-                const response = await fetch(demoUrl + cacheBuster);
+                // Use ResourceLoader to fetch demo with automatic fallback to local files
+                let response;
+                try {
+                    // For force reload, add cache buster to the fetch
+                    const fetchOptions = forceReload ? { cache: 'no-cache' } : {};
+                    response = await ResourceLoader.fetchResource('demos', demoKey, fetchOptions);
+                } catch (resourceError) {
+                    Logger.warn(`ResourceLoader failed for ${demoKey}, trying direct DEMO_FILES fallback`);
+                    // Fallback to DEMO_FILES if ResourceLoader fails
+                    const demoUrl = DEMO_FILES[demoKey];
+                    if (demoUrl) {
+                        const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
+                        response = await fetch(demoUrl + cacheBuster);
+                    } else {
+                        throw new Error(`Demo file not found: ${demoKey}`);
+                    }
+                }
 
                 if (response.ok) {
                     const code = await response.text();
@@ -1936,16 +1958,17 @@
                     updateEditorInfo();
                     updateSaveIndicator();
 
-                    Logger.success(`Loaded ${demoKey} demo from Blob storage`);
+                    Logger.success(`Loaded ${demoKey} demo`);
                 } else {
                     Logger.error(`Failed to load demo: ${response.status}`);
                     alert('Failed to load demo file. Please try again.');
                 }
             } catch (e) {
                 Logger.error('Error loading demo file', e);
-                alert('Error loading demo file. Please check your connection.');
+                alert('Error loading demo file. Please check your connection or try offline mode.');
             }
         }
+
 
         // ==================== EDITOR INITIALIZATION ====================
 
@@ -2206,34 +2229,13 @@
 
                 updateLoadingProgress(40);
 
-                // Determine wdosbox URL with proper fallback
-                let wdosboxUrl = '/libs/wdosbox.js';
-                let usingOnline = false;
+                // Determine wdosbox URL using ResourceLoader with automatic fallback
+                let wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
+                const usingOnline = !ResourceLoader.isOffline() && wdosboxUrl && !wdosboxUrl.startsWith('/');
 
-                if (navigator.onLine) {
-                    try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-                        const response = await fetch("https://js-dos.com/6.22/current/wdosbox.js", {
-                            method: 'HEAD',
-                            cache: 'no-cache',
-                            signal: controller.signal
-                        });
-
-                        clearTimeout(timeoutId);
-
-                        if (response.ok) {
-                            wdosboxUrl = "https://js-dos.com/6.22/current/wdosbox.js";
-                            usingOnline = true;
-                        }
-                    } catch (e) {
-                        Logger.info('Using local WDOSBOX due to network timeout');
-                    }
-                }
-
-                Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX`);
+                Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
                 updateLoadingProgress(60);
+
 
                 Dos(canvas, {
                     wdosboxUrl: wdosboxUrl,
