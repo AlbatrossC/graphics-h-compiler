@@ -58,13 +58,15 @@ def get_video(filename):
 def auth_config():
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_anon_key = os.getenv('SUPABASE_ANON_KEY')
+    storage_worker_url = os.getenv('STORAGE_WORKER_URL')
     
     if not supabase_url or not supabase_anon_key:
         return jsonify({'error': 'Auth not configured'}), 500
     
     return jsonify({
         'supabaseUrl': supabase_url,
-        'supabaseAnonKey': supabase_anon_key
+        'supabaseAnonKey': supabase_anon_key,
+        'storageWorkerUrl': storage_worker_url
     })
 
 # Contact API

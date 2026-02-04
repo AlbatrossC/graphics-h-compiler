@@ -9,7 +9,18 @@
 	"compatibility_date": "2026-01-31",
 	"observability": {
 		"enabled": true
-	}
+	},
+	"vars": {
+		"SUPABASE_URL": "https://hlwnrfrdpablmlpoiahf.supabase.co",
+		"SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhsd25yZnJkcGFibG1scG9pYWhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMzQ2NjEsImV4cCI6MjA4NTcxMDY2MX0.ozph_h5aKwY2cyKZ4xW9e3h0B0ldKXaak3akA-4TaeM",
+		"PROD_ORIGIN": "https://graphics-h-compiler.vercel.app"
+	},
+	"r2_buckets": [
+		{
+			"binding": "USER_FILES_BUCKET",
+			"bucket_name": "graphics-compiler-users"
+		}
+	]
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
