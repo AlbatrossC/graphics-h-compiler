@@ -206,15 +206,6 @@
                         </svg>
                         <span>New File</span>
                     </button>
-                    <button id="new-folder-btn" class="explorer-action-btn">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
-                            </path>
-                            <line x1="12" y1="11" x2="12" y2="17"></line>
-                            <line x1="9" y1="14" x2="15" y2="14"></line>
-                        </svg>
-                        <span>New Folder</span>
-                    </button>
                 </div>
 
                 <!-- Cloud Storage Promo (Shown when NOT logged in) -->
@@ -253,29 +244,24 @@
                     </ul>
                 </div>
 
-                <!-- File Explorer (Shown when logged in) -->
+                <!-- File Explorer (Shown when logged in) - Flat File List -->
                 <div id="file-explorer-view" class="file-explorer" style="display: none;">
-                    <div class="explorer-section">
-                        <div class="folder-item" id="main-folder">
-                            <svg class="folder-arrow" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M7 10l5 5 5-5z" />
+                    <!-- Files Header -->
+                    <div class="files-header">
+                        <span class="files-title">Project Files</span>
+                        <span class="files-count" id="files-count">0 files</span>
+                    </div>
+
+                    <!-- Flat File List (no folder structure shown) -->
+                    <div class="file-list-flat" id="main-folder-files">
+                        <div class="file-item active" data-file="main.cpp" data-folder="main">
+                            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z">
+                                </path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
                             </svg>
-                            <svg class="folder-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
-                            </svg>
-                            <span class="folder-name">main</span>
-                        </div>
-                        <div class="file-list" id="main-folder-files">
-                            <div class="file-item active" data-file="main.cpp">
-                                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z">
-                                    </path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
-                                <span class="file-name">main.cpp</span>
-                            </div>
+                            <span class="file-name">main.cpp</span>
                         </div>
                     </div>
                 </div>
@@ -354,6 +340,13 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Initial Editor Loading Overlay -->
+            <div id="editor-loading-overlay" class="editor-loading-overlay">
+                <div class="editor-loading-spinner"></div>
+                <div class="editor-loading-text">Loading editor...</div>
+            </div>
+
             <div id="editor"></div>
             <div class="editor-footer">
                 <span class="editor-info" id="editor-info">Lines: 0 | Chars: 0</span>

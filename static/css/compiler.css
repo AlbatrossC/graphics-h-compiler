@@ -1325,98 +1325,71 @@ header {
 .file-explorer {
     flex: 1;
     overflow-y: auto;
-    padding: 8px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .file-explorer::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .file-explorer::-webkit-scrollbar-thumb {
     background: var(--border-color);
-    border-radius: 3px;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
 }
 
 .file-explorer::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
+    background-clip: padding-box;
 }
 
-.explorer-section {
-    margin-bottom: 4px;
-}
-
-.folder-item {
+/* Files Header */
+.files-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    color: var(--text-secondary);
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--vscode-bg);
+}
+
+.files-title {
+    font-size: 0.8125rem;
     font-weight: 600;
-    font-size: 0.875rem;
-    border-radius: 8px;
-    margin: 2px 4px;
-    transition: all 0.2s ease;
-}
-
-.folder-item:hover {
-    background: var(--vscode-line-bg);
     color: var(--text-primary);
+    letter-spacing: 0.01em;
 }
 
-.folder-item:hover .folder-icon {
-    color: #f5bc4d;
-}
-
-.folder-item svg {
-    width: 18px;
-    height: 18px;
-    transition: transform 0.2s ease, color 0.2s ease;
-    flex-shrink: 0;
-}
-
-.folder-item.collapsed svg.folder-arrow {
-    transform: rotate(-90deg);
-}
-
-.folder-arrow {
+.files-count {
+    font-size: 0.75rem;
     color: var(--text-muted);
-    opacity: 0.6;
+    font-weight: 400;
 }
 
-.folder-item:hover .folder-arrow {
-    opacity: 1;
-}
-
-.folder-icon {
-    color: #dcb67a;
-}
-
-.folder-name {
+/* Flat File List */
+.file-list-flat {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-list {
     display: flex;
     flex-direction: column;
-    padding-left: 4px;
+    padding: 8px 0;
 }
 
+/* File Item - Enhanced Styling */
 .file-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 12px 7px 24px;
+    gap: 12px;
+    padding: 10px 16px;
     cursor: pointer;
     color: var(--text-secondary);
-    font-size: 0.8rem;
-    border-radius: 4px;
-    margin: 1px 4px;
+    font-size: 0.875rem;
+    border-left: 3px solid transparent;
+    margin: 0;
     transition: all 0.15s ease;
-    border-left: 2px solid transparent;
+    position: relative;
 }
 
 .file-item:hover {
@@ -1425,7 +1398,7 @@ header {
 }
 
 .file-item.active {
-    background: var(--vscode-line-bg);
+    background: rgba(0, 255, 136, 0.08);
     color: var(--primary);
     border-left-color: var(--primary);
 }
@@ -1434,60 +1407,130 @@ header {
     background: rgba(0, 204, 106, 0.1);
 }
 
+/* File Icon */
 .file-item .file-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
-    color: #519aba;
     stroke-width: 1.5;
+    transition: transform 0.2s ease, color 0.2s ease;
 }
 
-/* File type colors */
-.file-item[data-ext="cpp"] .file-icon,
-.file-item[data-ext="c"] .file-icon {
+/* File icon colors based on type */
+.file-item .file-icon.icon-cpp {
     color: #519aba;
 }
 
-.file-item[data-ext="h"] .file-icon {
+.file-item .file-icon.icon-header {
     color: #a074c4;
 }
 
+.file-item .file-icon.icon-text {
+    color: #8b949e;
+}
+
+.file-item .file-icon.icon-default {
+    color: #7d8590;
+}
+
+.file-item:hover .file-icon {
+    transform: scale(1.05);
+}
+
+.file-item.active .file-icon {
+    color: var(--primary);
+}
+
+/* File Name */
 .file-item .file-name {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 400;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
+    letter-spacing: -0.01em;
 }
 
 .file-item.active .file-name {
     font-weight: 500;
 }
 
-/* File delete button */
-.file-delete-btn {
-    display: none;
-    width: 20px;
-    height: 20px;
-    padding: 3px;
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
+/* File Actions Container */
+.file-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
-.file-item:hover .file-delete-btn {
+.file-item:hover .file-actions {
+    opacity: 1;
+}
+
+/* File Action Buttons (Download & Delete) */
+.file-action-btn {
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
 }
 
+.file-action-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.file-action-btn:hover {
+    background: var(--vscode-line-bg);
+    color: var(--text-primary);
+}
+
+/* Download button hover */
+.file-download-btn:hover {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--primary);
+}
+
+/* Delete button hover */
 .file-delete-btn:hover {
-    background: rgba(255, 68, 68, 0.2);
+    background: rgba(255, 68, 68, 0.15);
     color: var(--danger);
+}
+
+/* Empty state */
+.file-list-flat:empty::after {
+    content: 'No files yet. Click "New File" to create one.';
+    display: block;
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+}
+
+/* Hide old folder-related elements */
+.folder-item,
+.folder-arrow,
+.folder-icon,
+.folder-name,
+.explorer-section {
+    display: none;
+}
+
+/* Keep file-list for backward compatibility but hide it */
+.file-list:not(.file-list-flat) {
+    display: none;
 }
 
 /* Cloud Storage Promo (Not Logged In) */
@@ -1952,4 +1995,242 @@ header {
     border-radius: 10px;
     background: var(--vscode-editor);
     border: 1px solid var(--border-color);
+}
+
+/* ==================== INITIAL EDITOR LOADING OVERLAY ==================== */
+.editor-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--vscode-editor);
+    z-index: 50;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.editor-loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.editor-loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(0, 255, 136, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.editor-loading-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+}
+
+/* ==================== ENHANCED FILE EXPLORER ==================== */
+/* Smoother folder animations */
+.folder-item {
+    position: relative;
+    user-select: none;
+}
+
+.folder-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: transparent;
+    border-radius: 0 3px 3px 0;
+    transition: background 0.2s ease;
+}
+
+.folder-item:hover::before {
+    background: var(--primary);
+    opacity: 0.3;
+}
+
+/* File item hover effects */
+.file-item {
+    position: relative;
+    user-select: none;
+}
+
+.file-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: transparent;
+    transition: background 0.2s ease;
+}
+
+.file-item.active::before {
+    background: var(--primary);
+}
+
+.file-item:hover:not(.active)::before {
+    background: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* Better file icon colors based on extension */
+.file-item .file-icon {
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.file-item:hover .file-icon {
+    transform: scale(1.05);
+}
+
+/* Explorer action buttons with subtle glow on hover */
+.explorer-action-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.explorer-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(0, 255, 136, 0.15) 0%, transparent 70%);
+    transition: width 0.3s ease, height 0.3s ease;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+}
+
+.explorer-action-btn:hover::before {
+    width: 150%;
+    height: 150%;
+}
+
+/* Folder expand/collapse animation */
+.file-list {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+
+.folder-item.collapsed+.file-list {
+    max-height: 0;
+    opacity: 0;
+}
+
+/* Scrollbar styling for file explorer */
+.file-explorer::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-explorer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.file-explorer::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.file-explorer::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+    background-clip: padding-box;
+}
+
+/* Empty state styling */
+.file-explorer:empty::after {
+    content: 'No files yet';
+    display: block;
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Sidebar loading state */
+.sidebar-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.sidebar-loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(0, 255, 136, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* File item skeleton loading */
+.file-item-skeleton {
+    padding: 7px 12px 7px 24px;
+    margin: 1px 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.skeleton-icon {
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(90deg, var(--vscode-line-bg) 25%, var(--border-color) 50%, var(--vscode-line-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-text {
+    flex: 1;
+    height: 12px;
+    background: linear-gradient(90deg, var(--vscode-line-bg) 25%, var(--border-color) 50%, var(--vscode-line-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Light theme adjustments for explorer */
+[data-theme="light"] .folder-item:hover::before {
+    background: var(--primary);
+    opacity: 0.2;
+}
+
+[data-theme="light"] .file-item:hover:not(.active)::before {
+    background: var(--text-muted);
+    opacity: 0.3;
+}
+
+[data-theme="light"] .editor-loading-spinner {
+    border-color: rgba(0, 204, 106, 0.2);
+    border-top-color: var(--primary);
+}
+
+[data-theme="light"] .explorer-action-btn::before {
+    background: radial-gradient(circle, rgba(0, 204, 106, 0.1) 0%, transparent 70%);
 }

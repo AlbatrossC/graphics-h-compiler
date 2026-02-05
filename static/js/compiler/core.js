@@ -96,7 +96,48 @@ const CLOUD_STATE = {
     lastSavedAt: null
 };
 
-const AUTOSAVE_DELAY_MS = 7000;
+// ==================== AUTOSAVE CONFIG ====================
+const AUTOSAVE_DELAY_MS = 30000;           // 30 seconds cloud autosave interval
+const TYPING_DEBOUNCE_MS = 3000;           // Wait 3 seconds after typing stops before autosave timer
+
+// ==================== FILE CONTENT CACHE ====================
+// Multi-tier caching: memory → localStorage draft → cloud (R2)
+const fileContentCache = new Map();
+const FILE_CACHE_TTL_MS = 5 * 60 * 1000;   // 5 minutes cache TTL
+
+// Cache management functions
+function getCachedFileContent(folder, filename) {
+    const key = `${folder}/${filename}`;
+    const cached = fileContentCache.get(key);
+
+    if (cached && (Date.now() - cached.timestamp < FILE_CACHE_TTL_MS)) {
+        return cached;
+    }
+
+    // Expired, remove from cache
+    if (cached) {
+        fileContentCache.delete(key);
+    }
+    return null;
+}
+
+function setCachedFileContent(folder, filename, content, hash = null) {
+    const key = `${folder}/${filename}`;
+    fileContentCache.set(key, {
+        content,
+        hash: hash || null,
+        timestamp: Date.now()
+    });
+}
+
+function clearCachedFileContent(folder, filename) {
+    const key = `${folder}/${filename}`;
+    fileContentCache.delete(key);
+}
+
+function clearAllFileCache() {
+    fileContentCache.clear();
+}
 
 // Demo files configuration - loaded dynamically from manifest.json
 let DEMO_FILES = {};

@@ -1,5 +1,42 @@
 const MAX_SEGMENT_LENGTH = 200;
 
+// ==================== WORKER-SIDE METADATA CACHE ====================
+// Reduces Supabase queries by caching file metadata in worker memory
+const metadataCache = new Map();
+const METADATA_CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+function getMetadataCacheKey(userId, folder, filename) {
+	return `${userId}/${folder}/${filename}`;
+}
+
+function getCachedMetadata(userId, folder, filename) {
+	const key = getMetadataCacheKey(userId, folder, filename);
+	const cached = metadataCache.get(key);
+
+	if (cached && (Date.now() - cached.timestamp < METADATA_CACHE_TTL_MS)) {
+		return cached.data;
+	}
+
+	// Expired, remove from cache
+	if (cached) {
+		metadataCache.delete(key);
+	}
+	return null;
+}
+
+function setCachedMetadata(userId, folder, filename, data) {
+	const key = getMetadataCacheKey(userId, folder, filename);
+	metadataCache.set(key, {
+		data,
+		timestamp: Date.now()
+	});
+}
+
+function clearCachedMetadata(userId, folder, filename) {
+	const key = getMetadataCacheKey(userId, folder, filename);
+	metadataCache.delete(key);
+}
+
 export default {
 	async fetch(request, env) {
 		const requestId = crypto.randomUUID();
@@ -42,8 +79,79 @@ export default {
 				);
 			}
 
-			const { userId, token } = await authenticateRequest(request, env);
 			const url = new URL(request.url);
+
+			// Special handling for beacon-save (token in body, not header)
+			if (request.method === 'POST' && url.pathname === '/files/beacon-save') {
+				try {
+					const body = await readJsonBody(request);
+					const token = body.token;
+
+					if (!token) {
+						return jsonResponse({ error: 'Missing token' }, 401, responseHeaders);
+					}
+
+					const user = await verifyUserViaSupabase(env, token);
+					if (!user?.id) {
+						return jsonResponse({ error: 'Invalid token' }, 401, responseHeaders);
+					}
+
+					const userId = user.id;
+					const folder = normalizeSegment(body.folder, 'folder');
+					const filename = normalizeSegment(body.filename, 'filename');
+					const content = typeof body.content === 'string' ? body.content : null;
+
+					if (content === null) {
+						return jsonResponse({ error: 'content is required' }, 400, responseHeaders);
+					}
+
+					// Compute hash server-side for beacon saves
+					const encoder = new TextEncoder();
+					const data = encoder.encode(content);
+					const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+					const hashArray = Array.from(new Uint8Array(hashBuffer));
+					const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+					// Check cache first
+					const cachedMeta = getCachedMetadata(userId, folder, filename);
+					if (cachedMeta && cachedMeta.file_hash === hash) {
+						return jsonResponse({ success: true, hash, skipped: true, cached: true }, 200, responseHeaders);
+					}
+
+					// Get fresh metadata if not cached
+					const existing = cachedMeta || await getFileMetadata(env, token, folder, filename);
+
+					// Skip if hash unchanged
+					if (existing && existing.file_hash === hash) {
+						setCachedMetadata(userId, folder, filename, existing);
+						return jsonResponse({ success: true, hash, skipped: true }, 200, responseHeaders);
+					}
+
+					const r2Key = `${userId}/${folder}/${filename}`;
+					await env.USER_FILES_BUCKET.put(r2Key, content, {
+						httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+					});
+
+					await upsertFileMetadata(env, token, {
+						id: existing?.id,
+						user_id: userId,
+						folder,
+						filename,
+						file_hash: hash,
+					});
+
+					// Update cache
+					setCachedMetadata(userId, folder, filename, { id: existing?.id, file_hash: hash });
+
+					console.log(`[${requestId}] Beacon save: ${folder}/${filename}`);
+					return jsonResponse({ success: true, hash }, 200, responseHeaders);
+				} catch (e) {
+					console.error(`[${requestId}] Beacon save error:`, e.message);
+					return jsonResponse({ error: e.message }, 500, responseHeaders);
+				}
+			}
+
+			const { userId, token } = await authenticateRequest(request, env);
 			const origin = request.headers.get('Origin') || 'none';
 			console.log(`[${requestId}] ${request.method} ${url.pathname} origin=${origin} user=${userId}`);
 
@@ -64,7 +172,14 @@ export default {
 					);
 				}
 
-				const existing = await getFileMetadata(
+				// Check cache first for faster response
+				const cachedMeta = getCachedMetadata(userId, folder, filename);
+				if (cachedMeta && cachedMeta.file_hash === hash) {
+					return jsonResponse({ success: true, hash, skipped: true, cached: true }, 200, responseHeaders);
+				}
+
+				// Get metadata (from cache or DB)
+				const existing = cachedMeta || await getFileMetadata(
 					env,
 					token,
 					folder,
@@ -73,6 +188,8 @@ export default {
 
 				// Skip if hash unchanged
 				if (existing && existing.file_hash === hash) {
+					// Update cache with this result
+					setCachedMetadata(userId, folder, filename, existing);
 					return jsonResponse({ success: true, hash, skipped: true }, 200, responseHeaders);
 				}
 
@@ -90,6 +207,9 @@ export default {
 					filename,
 					file_hash: hash,
 				});
+
+				// Update cache after successful save
+				setCachedMetadata(userId, folder, filename, { id: existing?.id, file_hash: hash });
 
 				return jsonResponse({ success: true, hash }, 200, responseHeaders);
 			}
@@ -137,13 +257,22 @@ export default {
 					}
 				}
 
-				// Fetch all metadata in parallel
-				const metadataPromises = validatedFiles.map(f =>
-					getFileMetadata(env, token, f.folder, f.filename)
-						.then(existing => ({ ...f, existing }))
-						.catch(() => ({ ...f, existing: null }))
-				);
-				const filesWithMetadata = await Promise.all(metadataPromises);
+				// Check cache and fetch metadata for uncached files
+				const filesWithMetadata = await Promise.all(validatedFiles.map(async f => {
+					const cachedMeta = getCachedMetadata(userId, f.folder, f.filename);
+					if (cachedMeta) {
+						return { ...f, existing: cachedMeta, fromCache: true };
+					}
+					try {
+						const existing = await getFileMetadata(env, token, f.folder, f.filename);
+						if (existing) {
+							setCachedMetadata(userId, f.folder, f.filename, existing);
+						}
+						return { ...f, existing, fromCache: false };
+					} catch (e) {
+						return { ...f, existing: null, fromCache: false };
+					}
+				}));
 
 				// Separate files that need saving vs skipping
 				const toSave = [];
@@ -175,6 +304,9 @@ export default {
 								file_hash: file.hash,
 							})
 						]);
+
+						// Update cache
+						setCachedMetadata(userId, file.folder, file.filename, { id: file.existing?.id, file_hash: file.hash });
 
 						return { folder: file.folder, filename: file.filename, success: true, hash: file.hash };
 					} catch (e) {
@@ -242,6 +374,9 @@ export default {
 
 				await env.USER_FILES_BUCKET.delete(r2Key);
 				await deleteFileMetadata(env, token, folder, filename);
+
+				// Clear from cache
+				clearCachedMetadata(userId, folder, filename);
 
 				return jsonResponse({ success: true }, 200, responseHeaders);
 			}

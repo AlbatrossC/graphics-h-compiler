@@ -268,6 +268,12 @@ async function initializeEditor() {
     setTimeout(() => {
         editor.focus();
         editorWrapper.classList.add('active');
+
+        // Hide the initial loading overlay
+        const editorLoadingOverlay = document.getElementById('editor-loading-overlay');
+        if (editorLoadingOverlay) {
+            editorLoadingOverlay.classList.add('hidden');
+        }
     }, 100);
 
     Logger.success('Editor ready');

@@ -128,7 +128,27 @@ async function runProgram() {
     }
 
     if (isUserLoggedIn) {
-        await forceSaveActiveFile();
+        // Cancel pending autosave since we're about to save
+        if (CLOUD_STATE.autosaveTimer) {
+            clearTimeout(CLOUD_STATE.autosaveTimer);
+            CLOUD_STATE.autosaveTimer = null;
+        }
+        if (typingDebounceTimer) {
+            clearTimeout(typingDebounceTimer);
+            typingDebounceTimer = null;
+        }
+
+        // Fire-and-forget: Save to cloud in background (don't block compilation)
+        // localStorage save happens immediately, cloud save is non-blocking
+        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const [folder, filename] = activeKey.split('/');
+        setLocalDraftImmediate(folder, filename, code);
+        localStorage.setItem('tc_code', code);
+
+        // Non-blocking cloud save
+        forceSaveActiveFile().catch(e => {
+            Logger.warn('Background save during run failed: ' + e.message);
+        });
     } else {
         saveCode();
     }
@@ -294,14 +314,76 @@ window.addEventListener('keydown', (e) => {
 
 document.addEventListener('visibilitychange', () => {
     if (document.hidden && isUserLoggedIn) {
-        forceSaveActiveFile();
+        // Non-blocking save when tab becomes hidden
+        forceSaveActiveFile().catch(() => { });
     }
 });
 
-window.addEventListener('beforeunload', () => {
-    if (isUserLoggedIn) {
-        forceSaveActiveFile();
+// Graceful tab close handler with sendBeacon for guaranteed delivery
+window.addEventListener('beforeunload', (event) => {
+    if (!isUserLoggedIn || !editor) return;
+
+    const code = editor.getValue();
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    const [folder, filename] = activeKey.split('/');
+
+    // Always save to localStorage immediately (synchronous, reliable)
+    try {
+        localStorage.setItem('tc_code', code);
+        localStorage.setItem(`draft_${folder}_${filename}`, code);
+    } catch (e) {
+        // localStorage might be full, ignore
     }
+
+    // Check if content has changed since last cloud save
+    const currentContent = code;
+    const lastSavedContent = localStorage.getItem(`lastCloudSave_${folder}_${filename}`);
+
+    // If content is the same, no need to save
+    if (currentContent === lastSavedContent) {
+        return;
+    }
+
+    // Try sendBeacon for guaranteed background save
+    if (navigator.sendBeacon && supabaseClient) {
+        try {
+            // Get session synchronously from localStorage cache if available
+            const sessionData = localStorage.getItem('sb-session');
+            let token = null;
+
+            if (sessionData) {
+                try {
+                    const parsed = JSON.parse(sessionData);
+                    token = parsed?.access_token;
+                } catch (e) { }
+            }
+
+            if (token) {
+                const payload = JSON.stringify({
+                    folder,
+                    filename,
+                    content: code,
+                    token: token // Include token in body since sendBeacon can't set headers
+                });
+
+                // sendBeacon is fire-and-forget, will complete even after tab closes
+                const sent = navigator.sendBeacon('/files/beacon-save', payload);
+                if (sent) {
+                    Logger.info('Tab close: sendBeacon fired for background save');
+                }
+            }
+        } catch (e) {
+            // sendBeacon failed, but localStorage save already happened
+        }
+    }
+
+    // Only show warning if there are significant unsaved changes AND last save was long ago
+    const lastSaveTime = CLOUD_STATE.lastSavedAt || 0;
+    const timeSinceLastSave = Date.now() - lastSaveTime;
+    const significantDelay = 5 * 60 * 1000; // 5 minutes
+
+    // Don't show warning - rely on localStorage + sendBeacon protection
+    // This provides smooth UX while still protecting user's work
 });
 
 // ==================== RESPONSIVE HANDLING ====================
@@ -336,10 +418,8 @@ const userName = document.getElementById('user-name');
 const userEmail = document.getElementById('user-email');
 const signoutBtn = document.getElementById('signout-btn');
 const googleSigninBtn = document.getElementById('google-signin-btn');
-const mainFolder = document.getElementById('main-folder');
 const mainFolderFiles = document.getElementById('main-folder-files');
 const newFileBtn = document.getElementById('new-file-btn');
-const newFolderBtn = document.getElementById('new-folder-btn');
 
 // User state (will be updated by auth logic)
 let isUserLoggedIn = false;
@@ -395,25 +475,10 @@ if (refreshBtn) {
     });
 }
 
-// Folder expand/collapse toggle
-if (mainFolder) {
-    mainFolder.addEventListener('click', () => {
-        mainFolder.classList.toggle('collapsed');
-        mainFolderFiles.style.display = mainFolder.classList.contains('collapsed') ? 'none' : 'flex';
-    });
-}
-
-// New File button (placeholder)
+// New File button
 if (newFileBtn) {
     newFileBtn.addEventListener('click', () => {
         createNewFile();
-    });
-}
-
-// New Folder button (placeholder)
-if (newFolderBtn) {
-    newFolderBtn.addEventListener('click', () => {
-        createNewFolder();
     });
 }
 
@@ -593,6 +658,10 @@ async function signOut() {
     try {
         Logger.info('Signing out...');
         await forceSaveActiveFile();
+
+        // Clear all caches on logout
+        clearAllFileCache();
+
         const { error } = await supabaseClient.auth.signOut();
         if (error) {
             Logger.error('Sign out failed: ' + error.message);

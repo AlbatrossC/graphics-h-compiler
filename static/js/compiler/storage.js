@@ -124,13 +124,16 @@ function showStatus(message, isError = false, duration = 3000) {
 async function saveCode() {
     if (!editor) return;
 
+    // Cancel any pending autosave since user explicitly clicked Save
+    cancelPendingAutosave();
+
     const code = editor.getValue();
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
 
-    // 1. Always save locally first
+    // 1. Always save locally first (immediate)
     localStorage.setItem('tc_code', code);
-    setLocalDraft(folder, filename, code);
+    setLocalDraftImmediate(folder, filename, code);
 
     // 2. If logged in, also save to cloud
     if (isUserLoggedIn && supabaseClient) {
@@ -139,6 +142,14 @@ async function saveCode() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session?.access_token) {
                 const hash = await computeSha256(code);
+
+                // Skip if unchanged
+                if (CLOUD_STATE.lastSavedHash === hash && lastCloudSaveHash === hash) {
+                    showStatus('✓ Already saved');
+                    hideProgress();
+                    updateSaveIndicator();
+                    return;
+                }
 
                 const response = await fetch('/files/save', {
                     method: 'POST',
@@ -153,9 +164,14 @@ async function saveCode() {
                     const result = await response.json();
                     CLOUD_STATE.lastSavedAt = Date.now();
                     CLOUD_STATE.lastSavedHash = hash;
+                    lastCloudSaveHash = hash;
+                    lastAutosaveTime = Date.now();
+
+                    // Update file cache
+                    setCachedFileContent(folder, filename, code, hash);
 
                     // Show success status
-                    showStatus('✓ Files saved!');
+                    showStatus('✓ Saved to cloud!');
                     Logger.success('Code saved to cloud');
                 } else {
                     const errData = await response.json().catch(() => ({}));
@@ -257,6 +273,9 @@ async function saveCloudCode() {
 // Pending save state to prevent redundant operations
 let pendingSaveHash = null;
 let isSaving = false;
+let typingDebounceTimer = null;
+let lastAutosaveTime = 0;
+let lastCloudSaveHash = null;
 
 // Force save active file (for autosave) - optimized with save locking
 async function forceSaveActiveFile() {
@@ -273,8 +292,9 @@ async function forceSaveActiveFile() {
     const [folder, filename] = activeKey.split('/');
     const hash = await computeSha256(code);
 
-    // Skip if unchanged (check both cloud hash and pending hash)
-    if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash) {
+    // Skip if unchanged (check both cloud hash, pending hash, and last cloud save hash)
+    if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash || lastCloudSaveHash === hash) {
+        Logger.info('Content unchanged, skipping cloud save');
         return;
     }
 
@@ -303,9 +323,15 @@ async function forceSaveActiveFile() {
             const result = await response.json();
             CLOUD_STATE.lastSavedAt = Date.now();
             CLOUD_STATE.lastSavedHash = hash;
+            lastCloudSaveHash = hash;
+            lastAutosaveTime = Date.now();
 
             // Use immediate save for autosave completion
             setLocalDraftImmediate(folder, filename, code);
+
+            // Update file content cache
+            setCachedFileContent(folder, filename, code, hash);
+
             updateSaveIndicator();
 
             if (result.skipped) {
@@ -322,16 +348,42 @@ async function forceSaveActiveFile() {
     }
 }
 
-// Schedule autosave with debouncing
+// Schedule autosave with typing debounce
+// Waits TYPING_DEBOUNCE_MS after user stops typing, then schedules cloud save after AUTOSAVE_DELAY_MS
 function scheduleAutosave() {
+    // Clear any pending typing debounce timer
+    if (typingDebounceTimer) {
+        clearTimeout(typingDebounceTimer);
+    }
+
+    // Clear any pending autosave timer
     if (CLOUD_STATE.autosaveTimer) {
         clearTimeout(CLOUD_STATE.autosaveTimer);
     }
 
-    CLOUD_STATE.autosaveTimer = setTimeout(async () => {
+    // Wait for user to stop typing first
+    typingDebounceTimer = setTimeout(() => {
+        typingDebounceTimer = null;
+
+        // Now schedule the actual autosave
+        CLOUD_STATE.autosaveTimer = setTimeout(async () => {
+            CLOUD_STATE.autosaveTimer = null;
+            await forceSaveActiveFile();
+        }, AUTOSAVE_DELAY_MS);
+
+    }, TYPING_DEBOUNCE_MS);
+}
+
+// Cancel all pending autosave timers (called before Run, explicit Save, etc.)
+function cancelPendingAutosave() {
+    if (typingDebounceTimer) {
+        clearTimeout(typingDebounceTimer);
+        typingDebounceTimer = null;
+    }
+    if (CLOUD_STATE.autosaveTimer) {
+        clearTimeout(CLOUD_STATE.autosaveTimer);
         CLOUD_STATE.autosaveTimer = null;
-        await forceSaveActiveFile();
-    }, AUTOSAVE_DELAY_MS);
+    }
 }
 
 // ==================== FILE EXPLORER FUNCTIONS ====================
@@ -377,89 +429,187 @@ async function refreshCloudFiles() {
     }
 }
 
-// Render file explorer UI
+// Render file explorer UI - flat file list (folders hidden from UI)
 function renderFileExplorer() {
     const mainFolderFiles = document.getElementById('main-folder-files');
+    const filesCount = document.getElementById('files-count');
     if (!mainFolderFiles) return;
 
     mainFolderFiles.innerHTML = '';
-
-    // Group files by folder
-    const folders = new Map();
-    CLOUD_STATE.files.forEach((file, key) => {
-        if (!folders.has(file.folder)) {
-            folders.set(file.folder, []);
-        }
-        folders.get(file.folder).push(file);
-    });
 
     // If no files, show default main.cpp
     if (CLOUD_STATE.files.size === 0) {
         const defaultItem = createFileItem('main', 'main.cpp');
         mainFolderFiles.appendChild(defaultItem);
+        if (filesCount) filesCount.textContent = '1 file';
         return;
     }
 
-    // Render main folder files
-    const mainFiles = folders.get('main') || [];
-    mainFiles.forEach(file => {
+    // Flatten all files from all folders into a single list
+    const allFiles = [];
+    CLOUD_STATE.files.forEach((file, key) => {
+        allFiles.push(file);
+    });
+
+    // Sort files alphabetically by filename
+    allFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+
+    // Render all files in flat list
+    allFiles.forEach(file => {
         const fileItem = createFileItem(file.folder, file.filename);
         mainFolderFiles.appendChild(fileItem);
     });
+
+    // Update file count
+    if (filesCount) {
+        const count = allFiles.length;
+        filesCount.textContent = `${count} file${count !== 1 ? 's' : ''}`;
+    }
 }
 
-// Create file item element
+// Create file item element with download button
 function createFileItem(folder, filename) {
     const item = document.createElement('div');
     item.className = 'file-item';
     item.dataset.folder = folder;
     item.dataset.file = filename;
 
+    // Get file extension for styling
+    const ext = filename.split('.').pop().toLowerCase();
+    item.dataset.ext = ext;
+
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     if (`${folder}/${filename}` === activeKey) {
         item.classList.add('active');
     }
 
+    // Get file type icon color class
+    const iconClass = getFileIconClass(ext);
+
     item.innerHTML = `
-        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="file-icon ${iconClass}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
         </svg>
         <span class="file-name">${filename}</span>
-        <button class="file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-        </button>
+        <div class="file-actions">
+            <button class="file-action-btn file-download-btn" title="Download file" onclick="event.stopPropagation(); downloadFile('${folder}', '${filename}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </button>
+            <button class="file-action-btn file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
     `;
 
     item.addEventListener('click', () => openFile(folder, filename));
     return item;
 }
 
-// Open a file
+// Get appropriate icon class based on file extension
+function getFileIconClass(ext) {
+    switch (ext) {
+        case 'cpp':
+        case 'c':
+            return 'icon-cpp';
+        case 'h':
+        case 'hpp':
+            return 'icon-header';
+        case 'txt':
+            return 'icon-text';
+        default:
+            return 'icon-default';
+    }
+}
+
+// Download file function - downloads current editor content
+function downloadFile(folder, filename) {
+    let content;
+
+    // If this is the active file, use editor content (includes unsaved changes)
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    if (`${folder}/${filename}` === activeKey && editor) {
+        content = editor.getValue();
+    } else {
+        // Try to get from cache or localStorage
+        const cached = getCachedFileContent(folder, filename);
+        if (cached) {
+            content = cached.content;
+        } else {
+            content = getLocalDraft(folder, filename) || '';
+        }
+    }
+
+    // Create blob and download
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+
+    Logger.info(`Downloaded ${filename}`);
+}
+
+// Open a file with multi-tier caching: memory → localStorage → cloud
 async function openFile(folder, filename, options = {}) {
+    // Cancel pending autosave before switching files
+    cancelPendingAutosave();
+
     if (!options.skipSave && isUserLoggedIn) {
-        await forceSaveActiveFile();
+        // Fire-and-forget save of current file (don't block file switch)
+        forceSaveActiveFile().catch(e => {
+            Logger.warn('Background save during file switch failed: ' + e.message);
+        });
     }
 
     const key = getFileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
 
-    // Try local draft first
+    // TIER 1: Check memory cache first (fastest)
+    const cached = getCachedFileContent(folder, filename);
+    if (cached) {
+        if (editor) {
+            editor.setValue(cached.content, -1);
+            editor.clearSelection();
+        }
+        if (cached.hash) {
+            CLOUD_STATE.lastSavedHash = cached.hash;
+            lastCloudSaveHash = cached.hash;
+        }
+        updateSaveIndicator();
+        highlightActiveFile();
+        Logger.info(`Opened ${filename} from memory cache (instant)`);
+        return;
+    }
+
+    // TIER 2: Try localStorage draft
     const draft = getLocalDraft(folder, filename);
     if (draft !== null) {
         if (editor) {
             editor.setValue(draft, -1);
             editor.clearSelection();
         }
+        // Cache in memory for next time
+        setCachedFileContent(folder, filename, draft);
         updateSaveIndicator();
         highlightActiveFile();
         Logger.info(`Opened ${filename} from local draft`);
         return;
     }
 
-    // Try cloud
+    // TIER 3: Fetch from cloud (slowest, only if cache miss)
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
@@ -473,12 +623,20 @@ async function openFile(folder, filename, options = {}) {
 
                 if (response.ok) {
                     const content = await response.text();
+                    const hash = await computeSha256(content);
+
                     if (editor) {
                         editor.setValue(content, -1);
                         editor.clearSelection();
                     }
-                    setLocalDraft(folder, filename, content);
-                    CLOUD_STATE.lastSavedHash = await computeSha256(content);
+
+                    // Update all cache layers
+                    setLocalDraftImmediate(folder, filename, content);
+                    setCachedFileContent(folder, filename, content, hash);
+
+                    CLOUD_STATE.lastSavedHash = hash;
+                    lastCloudSaveHash = hash;
+
                     updateSaveIndicator();
                     highlightActiveFile();
                     Logger.info(`Opened ${filename} from cloud`);
