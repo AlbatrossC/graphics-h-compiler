@@ -2,18 +2,20 @@ const MAX_SEGMENT_LENGTH = 200;
 
 export default {
 	async fetch(request, env) {
+		const requestId = crypto.randomUUID();
 		try {
 			const corsHeaders = buildCorsHeaders(request, env);
+			const responseHeaders = { ...corsHeaders, 'X-Request-Id': requestId };
 
 			if (request.method === 'OPTIONS') {
-				return new Response(null, { status: 204, headers: corsHeaders });
+				return new Response(null, { status: 204, headers: responseHeaders });
 			}
 
 			if (!corsHeaders['Access-Control-Allow-Origin']) {
 				return jsonResponse(
 					{ error: 'CORS origin not allowed' },
 					403,
-					corsHeaders
+					responseHeaders
 				);
 			}
 
@@ -25,7 +27,7 @@ export default {
 							'Missing R2 binding. Bind USER_FILES_BUCKET to graphics-compiler-users.',
 					},
 					500,
-					corsHeaders
+					responseHeaders
 				);
 			}
 
@@ -36,13 +38,16 @@ export default {
 						message: 'SUPABASE_URL and SUPABASE_ANON_KEY are required.',
 					},
 					500,
-					corsHeaders
+					responseHeaders
 				);
 			}
 
 			const { userId, token } = await authenticateRequest(request, env);
 			const url = new URL(request.url);
+			const origin = request.headers.get('Origin') || 'none';
+			console.log(`[${requestId}] ${request.method} ${url.pathname} origin=${origin} user=${userId}`);
 
+			// Single file save
 			if (request.method === 'POST' && url.pathname === '/files/save') {
 				const body = await readJsonBody(request);
 				const folder = normalizeSegment(body.folder, 'folder');
@@ -55,7 +60,7 @@ export default {
 					return jsonResponse(
 						{ error: 'content and hash are required' },
 						400,
-						corsHeaders
+						responseHeaders
 					);
 				}
 
@@ -66,8 +71,9 @@ export default {
 					filename
 				);
 
+				// Skip if hash unchanged
 				if (existing && existing.file_hash === hash) {
-					return jsonResponse({ success: true, hash }, 200, corsHeaders);
+					return jsonResponse({ success: true, hash, skipped: true }, 200, responseHeaders);
 				}
 
 				const r2Key = `${userId}/${folder}/${filename}`;
@@ -85,7 +91,80 @@ export default {
 					file_hash: hash,
 				});
 
-				return jsonResponse({ success: true, hash }, 200, corsHeaders);
+				return jsonResponse({ success: true, hash }, 200, responseHeaders);
+			}
+
+			// Batch save endpoint
+			if (request.method === 'POST' && url.pathname === '/files/batch-save') {
+				const body = await readJsonBody(request);
+				const files = body.files;
+
+				if (!Array.isArray(files) || files.length === 0) {
+					return jsonResponse(
+						{ error: 'files array is required' },
+						400,
+						responseHeaders
+					);
+				}
+
+				if (files.length > 20) {
+					return jsonResponse(
+						{ error: 'Maximum 20 files per batch' },
+						400,
+						responseHeaders
+					);
+				}
+
+				const results = [];
+				let savedCount = 0;
+				let skippedCount = 0;
+
+				for (const file of files) {
+					try {
+						const folder = normalizeSegment(file.folder, 'folder');
+						const filename = normalizeSegment(file.filename, 'filename');
+						const content = typeof file.content === 'string' ? file.content : null;
+						const hash = typeof file.hash === 'string' ? file.hash : null;
+
+						if (content === null || hash === null) {
+							results.push({ folder, filename, error: 'content and hash required' });
+							continue;
+						}
+
+						const existing = await getFileMetadata(env, token, folder, filename);
+
+						// Skip if hash unchanged
+						if (existing && existing.file_hash === hash) {
+							results.push({ folder, filename, success: true, skipped: true });
+							skippedCount++;
+							continue;
+						}
+
+						const r2Key = `${userId}/${folder}/${filename}`;
+						await env.USER_FILES_BUCKET.put(r2Key, content, {
+							httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+						});
+
+						await upsertFileMetadata(env, token, {
+							id: existing?.id,
+							user_id: userId,
+							folder,
+							filename,
+							file_hash: hash,
+						});
+
+						results.push({ folder, filename, success: true, hash });
+						savedCount++;
+					} catch (e) {
+						results.push({ folder: file.folder, filename: file.filename, error: e.message });
+					}
+				}
+
+				return jsonResponse({
+					success: true,
+					results,
+					summary: { saved: savedCount, skipped: skippedCount, failed: files.length - savedCount - skippedCount }
+				}, 200, responseHeaders);
 			}
 
 			if (request.method === 'GET' && url.pathname === '/files/read') {
@@ -101,22 +180,23 @@ export default {
 				const object = await env.USER_FILES_BUCKET.get(r2Key);
 
 				if (!object) {
-					return jsonResponse({ error: 'File not found' }, 404, corsHeaders);
+					return jsonResponse({ error: 'File not found' }, 404, responseHeaders);
 				}
 
 				const text = await object.text();
 				return new Response(text, {
 					status: 200,
 					headers: {
-						...corsHeaders,
+						...responseHeaders,
 						'Content-Type': 'text/plain; charset=utf-8',
+						'ETag': object.etag || '',
 					},
 				});
 			}
 
 			if (request.method === 'GET' && url.pathname === '/files/list') {
 				const list = await listFiles(env, token);
-				return jsonResponse({ files: list }, 200, corsHeaders);
+				return jsonResponse({ files: list }, 200, responseHeaders);
 			}
 
 			if (request.method === 'DELETE' && url.pathname === '/files/delete') {
@@ -134,19 +214,22 @@ export default {
 				await env.USER_FILES_BUCKET.delete(r2Key);
 				await deleteFileMetadata(env, token, folder, filename);
 
-				return jsonResponse({ success: true }, 200, corsHeaders);
+				return jsonResponse({ success: true }, 200, responseHeaders);
 			}
 
-			return jsonResponse({ error: 'Not found' }, 404, corsHeaders);
+			return jsonResponse({ error: 'Not found' }, 404, responseHeaders);
 		} catch (error) {
-			console.error('Worker error:', error);
+			console.error(`[${requestId}] Worker error:`, error.message, error.stack);
 			const status = error.statusCode || 500;
+			const corsHeaders = buildCorsHeaders(request, env);
+			const responseHeaders = { ...corsHeaders, 'X-Request-Id': requestId };
 			return jsonResponse(
 				{
 					error: status === 500 ? 'Internal server error' : error.message,
+					debug: error.message, // Include for debugging
 				},
 				status,
-				buildCorsHeaders(request, env)
+				responseHeaders
 			);
 		}
 	},
@@ -260,6 +343,8 @@ async function supabaseRequest(env, token, path, options = {}) {
 		...options.headers,
 	};
 
+	console.log(`[Supabase] ${options.method || 'GET'} ${path}`);
+
 	const response = await fetch(url, {
 		...options,
 		headers,
@@ -267,11 +352,14 @@ async function supabaseRequest(env, token, path, options = {}) {
 
 	if (!response.ok) {
 		const text = await response.text();
+		console.error(`[Supabase] Error: ${response.status} ${text}`);
 		throw Object.assign(
 			new Error(`Supabase error: ${response.status} ${text}`),
 			{ statusCode: 500 }
 		);
 	}
+
+	console.log(`[Supabase] ${options.method || 'GET'} ${path} → ${response.status}`);
 
 	if (response.status === 204) return null;
 	return response.json();

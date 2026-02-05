@@ -6,23 +6,31 @@ This document describes the end-to-end cloud storage system used by the Graphics
 
 1. **Frontend (browser)**
    - Uses Supabase Auth (Google OAuth) to obtain an access token.
-   - Sends requests to the Cloudflare Worker with `Authorization: Bearer <token>`.
-   - Autosaves code to the cloud every ~7 seconds of inactivity.
+   - Sends storage requests to the **Flask server** at `/files/*` with `Authorization: Bearer <token>`.
+   - Autosaves code to the cloud every ~10 seconds of inactivity (batch save).
+   - Offers explicit Save actions:
+     - **Save Locally** (always available)
+     - **Save to Cloud** (requires sign-in)
    - Forces save on Run, file switch, tab close, and logout.
 
-2. **Cloudflare Worker**
+2. **Flask Server Proxy**
+   - Proxies all `/files/*` requests to the Cloudflare Worker.
+   - Keeps the Worker URL server-side (never exposed to the browser).
+   - Forwards the user’s `Authorization` header.
+
+3. **Cloudflare Worker**
    - The only gateway to the private R2 bucket.
    - Verifies the access token by calling Supabase Auth.
    - Enforces per-user storage isolation via object paths.
    - Reads and writes file metadata through Supabase PostgREST using RLS.
 
-3. **Cloudflare R2 (private)**
+4. **Cloudflare R2 (private)**
    - Stores actual file contents.
    - Objects are stored at:
      `<user_id>/<folder>/<filename>`
    - Never exposed publicly.
 
-4. **Supabase Postgres (RLS)**
+5. **Supabase Postgres (RLS)**
    - Stores file metadata: folder, filename, hash, timestamps.
    - RLS ensures `auth.uid() = user_id`.
    - Accessed only via the user’s access token (no service role).
@@ -49,7 +57,7 @@ This document describes the end-to-end cloud storage system used by the Graphics
 - Folder and filename are validated as single path segments
   (no slashes, backslashes, or `..`).
 
-### Endpoints
+### Endpoints (Worker)
 
 #### `POST /files/save`
 Input: `{ folder, filename, content, hash }`
@@ -94,6 +102,10 @@ Allowed origins:
 
 Preflight (`OPTIONS`) handled explicitly.
 
+### Size Limits
+
+- There are **no file-size limits** enforced by the client or Worker.
+
 ## Supabase Postgres + RLS
 
 Table:
@@ -121,7 +133,7 @@ This ensures each user can only see and mutate their own metadata.
 
 Autosave is implemented with:
 
-- **Debounced autosave**: after ~7 seconds of inactivity.
+- **Debounced autosave**: after ~10 seconds of inactivity (batch save).
 - **Forced saves**:
   - Run button
   - File switch
@@ -154,9 +166,8 @@ If cloud save fails:
 
 - `supabaseUrl`
 - `supabaseAnonKey`
-- `storageWorkerUrl` (from `STORAGE_WORKER_URL`)
 
-This lets the frontend call the Worker directly when running locally.
+The Worker URL is **never exposed to the browser**. The Flask app proxies all `/files/*` requests to the Worker using `STORAGE_WORKER_URL`.
 
 ## Summary
 

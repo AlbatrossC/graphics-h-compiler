@@ -129,13 +129,21 @@
                 <span id="save-text">Not Saved</span>
             </div>
 
-            <button id="save-btn" class="btn btn-success" onclick="saveCode()">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
-                </svg>
-                <span class="btn-text">Save</span>
-            </button>
+            <div class="save-split">
+                <button id="save-local-btn" class="btn btn-success" onclick="saveLocalCode()">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                    </svg>
+                    <span class="btn-text">Save Locally</span>
+                </button>
+                <button id="save-cloud-btn" class="btn btn-primary" onclick="saveCloudCode()">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.35 10.04A7.49 7.49 0 0 0 5.1 8.59 5.99 5.99 0 0 0 6 20h13a5 5 0 0 0 .35-9.96z" />
+                    </svg>
+                    <span class="btn-text">Save to Cloud</span>
+                </button>
+            </div>
 
             <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -220,7 +228,7 @@
                             <svg viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                             </svg>
-                            <span>100 MB free storage</span>
+                            <span>No storage limits</span>
                         </li>
                         <li>
                             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -248,17 +256,17 @@
                                 <path
                                     d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
                             </svg>
-                            <span>main</span>
+                            <span class="folder-name">main</span>
                         </div>
                         <div class="file-list" id="main-folder-files">
                             <div class="file-item active" data-file="main.cpp">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    style="color: #519aba;">
+                                <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z">
                                     </path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                 </svg>
-                                <span>main.cpp</span>
+                                <span class="file-name">main.cpp</span>
                             </div>
                         </div>
                     </div>

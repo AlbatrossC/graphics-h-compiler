@@ -45,20 +45,28 @@
         const Logger = {
             prefix: '[Graphics.h Compiler]',
 
+            timestamp() {
+                return new Date().toISOString();
+            },
+
+            format(level, msg) {
+                return `${this.prefix} ${this.timestamp()} [${level}] ${msg}`;
+            },
+
             info(msg) {
-                console.log(`${this.prefix} ${msg}`);
+                console.log(this.format('INFO', msg));
             },
 
             success(msg) {
-                console.log(`${this.prefix} ✓ ${msg}`);
+                console.log(this.format('OK', msg));
             },
 
             error(msg, err) {
-                console.error(`${this.prefix} ✗ ${msg}`, err || '');
+                console.error(this.format('ERROR', msg), err || '');
             },
 
             warn(msg) {
-                console.warn(`${this.prefix} ⚠ ${msg}`);
+                console.warn(this.format('WARN', msg));
             }
         };
 
@@ -317,7 +325,6 @@
         const demoSelect = document.getElementById("demo-select");
         const clearBtn = document.getElementById("clear-btn");
         const editorInfo = document.getElementById("editor-info");
-        const saveBtn = document.getElementById("save-btn");
         const saveIndicator = document.getElementById("save-indicator");
         const saveText = document.getElementById("save-text");
 
