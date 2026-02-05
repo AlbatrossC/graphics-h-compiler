@@ -94,7 +94,7 @@ export default {
 				return jsonResponse({ success: true, hash }, 200, responseHeaders);
 			}
 
-			// Batch save endpoint
+			// Batch save endpoint - optimized with parallel operations
 			if (request.method === 'POST' && url.pathname === '/files/batch-save') {
 				const body = await readJsonBody(request);
 				const files = body.files;
@@ -115,9 +115,9 @@ export default {
 					);
 				}
 
-				const results = [];
-				let savedCount = 0;
-				let skippedCount = 0;
+				// Pre-validate and normalize all files first
+				const validatedFiles = [];
+				const errors = [];
 
 				for (const file of files) {
 					try {
@@ -127,43 +127,72 @@ export default {
 						const hash = typeof file.hash === 'string' ? file.hash : null;
 
 						if (content === null || hash === null) {
-							results.push({ folder, filename, error: 'content and hash required' });
+							errors.push({ folder: file.folder, filename: file.filename, error: 'content and hash required' });
 							continue;
 						}
 
-						const existing = await getFileMetadata(env, token, folder, filename);
-
-						// Skip if hash unchanged
-						if (existing && existing.file_hash === hash) {
-							results.push({ folder, filename, success: true, skipped: true });
-							skippedCount++;
-							continue;
-						}
-
-						const r2Key = `${userId}/${folder}/${filename}`;
-						await env.USER_FILES_BUCKET.put(r2Key, content, {
-							httpMetadata: { contentType: 'text/plain; charset=utf-8' },
-						});
-
-						await upsertFileMetadata(env, token, {
-							id: existing?.id,
-							user_id: userId,
-							folder,
-							filename,
-							file_hash: hash,
-						});
-
-						results.push({ folder, filename, success: true, hash });
-						savedCount++;
+						validatedFiles.push({ folder, filename, content, hash });
 					} catch (e) {
-						results.push({ folder: file.folder, filename: file.filename, error: e.message });
+						errors.push({ folder: file.folder, filename: file.filename, error: e.message });
 					}
 				}
+
+				// Fetch all metadata in parallel
+				const metadataPromises = validatedFiles.map(f =>
+					getFileMetadata(env, token, f.folder, f.filename)
+						.then(existing => ({ ...f, existing }))
+						.catch(() => ({ ...f, existing: null }))
+				);
+				const filesWithMetadata = await Promise.all(metadataPromises);
+
+				// Separate files that need saving vs skipping
+				const toSave = [];
+				const skipped = [];
+
+				for (const file of filesWithMetadata) {
+					if (file.existing && file.existing.file_hash === file.hash) {
+						skipped.push({ folder: file.folder, filename: file.filename, success: true, skipped: true });
+					} else {
+						toSave.push(file);
+					}
+				}
+
+				// Save files in parallel (R2 + metadata)
+				const savePromises = toSave.map(async (file) => {
+					try {
+						const r2Key = `${userId}/${file.folder}/${file.filename}`;
+
+						// R2 put and metadata update in parallel
+						await Promise.all([
+							env.USER_FILES_BUCKET.put(r2Key, file.content, {
+								httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+							}),
+							upsertFileMetadata(env, token, {
+								id: file.existing?.id,
+								user_id: userId,
+								folder: file.folder,
+								filename: file.filename,
+								file_hash: file.hash,
+							})
+						]);
+
+						return { folder: file.folder, filename: file.filename, success: true, hash: file.hash };
+					} catch (e) {
+						return { folder: file.folder, filename: file.filename, error: e.message };
+					}
+				});
+
+				const saveResults = await Promise.all(savePromises);
+
+				// Combine results
+				const results = [...errors, ...skipped, ...saveResults];
+				const savedCount = saveResults.filter(r => r.success).length;
+				const failedCount = errors.length + saveResults.filter(r => r.error).length;
 
 				return jsonResponse({
 					success: true,
 					results,
-					summary: { saved: savedCount, skipped: skippedCount, failed: files.length - savedCount - skippedCount }
+					summary: { saved: savedCount, skipped: skipped.length, failed: failedCount }
 				}, 200, responseHeaders);
 			}
 
@@ -237,11 +266,22 @@ export default {
 
 function buildCorsHeaders(request, env) {
 	const origin = request.headers.get('Origin') || '';
-	const allowed = new Set([
-		'http://localhost:5000',
-		env.PROD_ORIGIN || '',
-	]);
-	const allowOrigin = allowed.has(origin) ? origin : '';
+
+	// Check if origin is allowed
+	let allowOrigin = '';
+
+	// Allow localhost for development
+	if (origin === 'http://localhost:5000') {
+		allowOrigin = origin;
+	}
+	// Allow production origin
+	else if (env.PROD_ORIGIN && origin === env.PROD_ORIGIN) {
+		allowOrigin = origin;
+	}
+	// Allow Vercel preview/test branches (*.vercel.app)
+	else if (origin.endsWith('.vercel.app') && origin.startsWith('https://')) {
+		allowOrigin = origin;
+	}
 
 	return {
 		'Access-Control-Allow-Origin': allowOrigin,

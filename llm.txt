@@ -1,1850 +1,2192 @@
-compiler.ts -> import * as vscode from 'vscode';
-import * as path from 'path';
-import { spawn, ChildProcess } from 'child_process';
-import { PathManager } from './paths';
-import * as fs from 'fs';
+core.js -> // ==================== THEME TOGGLE ====================
 
-interface CompilationError {
-    file: string;
-    line: number;
-    column: number;
-    severity: 'error' | 'warning';
-    message: string;
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
 }
 
-export class GraphicsCompiler {
-    private pathManager: PathManager;
-    private outputChannel: vscode.OutputChannel;
-    private activeProcesses: Set<ChildProcess> = new Set();
-    private diagnosticCollection: vscode.DiagnosticCollection;
-    private runningProgram: ChildProcess | null = null;
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-    constructor(pathManager: PathManager) {
-        this.pathManager = pathManager;
-        this.outputChannel = vscode.window.createOutputChannel('Graphics.h Compiler');
-        this.diagnosticCollection = vscode.languages.createDiagnosticCollection('graphics-h');
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+
+    // Update Ace editor theme
+    if (editor) {
+        const aceTheme = newTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
+        editor.setTheme(aceTheme);
     }
 
-    private getConfig() {
-        const config = vscode.workspace.getConfiguration('graphics-h-compiler');
-        return {
-            autoRun: config.get<boolean>('autoRun', true),
-            showOutput: config.get<boolean>('showOutputPanel', true),
-            clearOutputBeforeCompile: config.get<boolean>('clearOutputBeforeCompile', true)
+    Logger.info(`Theme switched to ${newTheme}`);
+}
+
+function updateThemeIcon(theme) {
+    const darkIcon = document.getElementById('theme-icon-dark');
+    const lightIcon = document.getElementById('theme-icon-light');
+
+    if (theme === 'dark') {
+        darkIcon.style.display = 'block';
+        lightIcon.style.display = 'none';
+    } else {
+        darkIcon.style.display = 'none';
+        lightIcon.style.display = 'block';
+    }
+}
+
+document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+// Initialize theme on page load
+initializeTheme();
+
+// ==================== LOGGER ====================
+const Logger = {
+    prefix: '[Graphics.h Compiler]',
+
+    timestamp() {
+        return new Date().toISOString();
+    },
+
+    format(level, msg) {
+        return `${this.prefix} ${this.timestamp()} [${level}] ${msg}`;
+    },
+
+    info(msg) {
+        console.log(this.format('INFO', msg));
+    },
+
+    success(msg) {
+        console.log(this.format('OK', msg));
+    },
+
+    error(msg, err) {
+        console.error(this.format('ERROR', msg), err || '');
+    },
+
+    warn(msg) {
+        console.warn(this.format('WARN', msg));
+    }
+};
+
+// ==================== GLOBAL STATE ====================
+let dosInstance = null;
+let terminalFocused = false;
+let editor = null;
+let currentDemo = 'graphics-demo';
+let lastLoadedDemo = ''; // Track last loaded demo
+let scriptsLoaded = {
+    jsdos: false,
+    ace: false,
+    aceMode: false,
+    aceTheme: false
+};
+
+// ==================== CLOUD STORAGE STATE ====================
+const CLOUD_STATE = {
+    storageBaseUrl: '',
+    files: new Map(),
+    folders: new Set(['main']),
+    openTabs: [],
+    activeFileKey: 'main/main.cpp',
+    autosaveTimer: null,
+    isSaving: false,
+    lastSavedHash: null,
+    lastSavedAt: null
+};
+
+const AUTOSAVE_DELAY_MS = 7000;
+
+// Demo files configuration - loaded dynamically from manifest.json
+let DEMO_FILES = {};
+
+// TC.ZIP URL - loaded dynamically from manifest.json
+let TC_ZIP_URL = null;
+
+// Initialize resources from manifest
+async function initializeResourcesFromManifest() {
+    try {
+        await ResourceLoader.init();
+
+        // Load demo files mapping
+        DEMO_FILES = await ResourceLoader.getDemoFiles();
+        Logger.success('Demo files loaded from manifest');
+
+        // Get TC ZIP URL (will handle fallback automatically)
+        TC_ZIP_URL = await ResourceLoader.getResourceUrl('assets', 'tc-zip');
+        Logger.success('TC ZIP URL resolved from manifest');
+    } catch (error) {
+        Logger.error('Failed to initialize resources from manifest', error);
+        // Fallback to hardcoded values if manifest fails
+        DEMO_FILES = {
+            'graphics-demo': '/compiler-assets/Demo_files/graphics_demo.cpp',
+            'circle-pattern': '/compiler-assets/Demo_files/circle_pattern.cpp',
+            'bouncing-ball': '/compiler-assets/Demo_files/bouncing_ball.cpp',
+            'shooter-game': '/compiler-assets/Demo_files/shooter_game.cpp'
         };
-    }
-
-    private validateSourceFile(sourceFile: string): boolean {
-        const normalizedPath = path.normalize(sourceFile);
-        
-        if (normalizedPath.includes('..')) {
-            vscode.window.showErrorMessage('Invalid file path: Path traversal detected');
-            return false;
-        }
-
-        if (!fs.existsSync(normalizedPath)) {
-            vscode.window.showErrorMessage('Source file does not exist');
-            return false;
-        }
-
-        const stats = fs.statSync(normalizedPath);
-        if (!stats.isFile()) {
-            vscode.window.showErrorMessage('Path is not a file');
-            return false;
-        }
-
-        if (!normalizedPath.endsWith('.cpp') && !normalizedPath.endsWith('.c++')) {
-            vscode.window.showErrorMessage('File must be a C++ source file (.cpp or .c++)');
-            return false;
-        }
-
-        return true;
-    }
-
-    private parseCompilerErrors(stderr: string, sourceFile: string): CompilationError[] {
-        const errors: CompilationError[] = [];
-        const errorRegex = /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm;
-        
-        let match;
-        while ((match = errorRegex.exec(stderr)) !== null) {
-            const [_, file, line, column, severity, message] = match;
-            
-            errors.push({
-                file: file.trim(),
-                line: parseInt(line, 10),
-                column: parseInt(column, 10),
-                severity: severity as 'error' | 'warning',
-                message: message.trim()
-            });
-        }
-
-        return errors;
-    }
-
-    private updateDiagnostics(errors: CompilationError[], sourceFile: string): void {
-        const diagnostics: vscode.Diagnostic[] = [];
-        const uri = vscode.Uri.file(sourceFile);
-
-        for (const error of errors) {
-            const line = Math.max(0, error.line - 1);
-            const column = Math.max(0, error.column - 1);
-            
-            const range = new vscode.Range(
-                new vscode.Position(line, column),
-                new vscode.Position(line, column + 100)
-            );
-
-            const diagnostic = new vscode.Diagnostic(
-                range,
-                error.message,
-                error.severity === 'error' 
-                    ? vscode.DiagnosticSeverity.Error 
-                    : vscode.DiagnosticSeverity.Warning
-            );
-
-            diagnostic.source = 'graphics-h-compiler';
-            diagnostics.push(diagnostic);
-        }
-
-        this.diagnosticCollection.set(uri, diagnostics);
-    }
-
-    private clearDiagnostics(sourceFile: string): void {
-        const uri = vscode.Uri.file(sourceFile);
-        this.diagnosticCollection.delete(uri);
-    }
-
-    private async compileWindows(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
-        const config = this.getConfig();
-        const gppPath = this.pathManager.getGppPath();
-        const graphicsPath = this.pathManager.getGraphicsPath();
-        const libraryPath = this.pathManager.getLibraryPath();
-        const outputPath = this.pathManager.getOutputPath(sourceFile);
-
-        this.clearDiagnostics(sourceFile);
-
-        if (config.clearOutputBeforeCompile) {
-            this.outputChannel.clear();
-        }
-        
-        if (config.showOutput) {
-            this.outputChannel.show(true);
-        }
-
-        this.outputChannel.appendLine(`[graphics-h] OS: Windows`);
-        this.outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
-        this.outputChannel.appendLine(`[graphics-h] Output: ${path.basename(outputPath)}`);
-        this.outputChannel.appendLine('');
-
-        return new Promise((resolve) => {
-            const startTime = Date.now();
-
-            const command = gppPath;
-            const args = [
-                sourceFile,
-                '-I', graphicsPath,
-                '-L', libraryPath,
-                '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
-                '-static-libgcc',
-                '-static-libstdc++',
-                '-static',
-                '-o', outputPath
-            ];
-
-            const compilerProcess = spawn(command, args, {
-                cwd: path.dirname(sourceFile)
-            });
-
-            this.activeProcesses.add(compilerProcess);
-
-            let stderr = '';
-            let stdout = '';
-
-            compilerProcess.stdout.on('data', (data) => {
-                stdout += data.toString();
-            });
-
-            compilerProcess.stderr.on('data', (data) => {
-                const output = data.toString();
-                stderr += output;
-                this.outputChannel.append(output);
-            });
-
-            token?.onCancellationRequested(() => {
-                if (!compilerProcess.killed) {
-                    compilerProcess.kill();
-                    this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine('[graphics-h] Compilation cancelled by user');
-                    this.activeProcesses.delete(compilerProcess);
-                    resolve(null);
-                }
-            });
-
-            compilerProcess.on('close', (code) => {
-                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-                this.activeProcesses.delete(compilerProcess);
-
-                if (code !== 0) {
-                    if (stderr.trim().length === 0) {
-                        this.outputChannel.appendLine('error: compilation failed with no error output');
-                    }
-                    
-                    this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
-                    
-                    const errors = this.parseCompilerErrors(stderr, sourceFile);
-                    this.updateDiagnostics(errors, sourceFile);
-
-                    const errorCount = errors.filter(e => e.severity === 'error').length;
-                    const warningCount = errors.filter(e => e.severity === 'warning').length;
-                    
-                    let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
-                    if (warningCount > 0) {
-                        message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
-                    }
-
-                    vscode.window.showErrorMessage(
-                        message,
-                        'Show Output',
-                        'Show Problems'
-                    ).then(choice => {
-                        if (choice === 'Show Output') {
-                            this.outputChannel.show();
-                        } else if (choice === 'Show Problems') {
-                            vscode.commands.executeCommand('workbench.actions.view.problems');
-                        }
-                    });
-                    
-                    resolve(null);
-                } else {
-                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
-                    this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
-                    
-                    resolve(outputPath);
-                }
-            });
-
-            compilerProcess.on('error', (error) => {
-                this.outputChannel.appendLine('');
-                this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
-                
-                this.activeProcesses.delete(compilerProcess);
-                
-                vscode.window.showErrorMessage(
-                    `Compiler error: ${error.message}`,
-                    'Show Output'
-                ).then(choice => {
-                    if (choice === 'Show Output') {
-                        this.outputChannel.show();
-                    }
-                });
-                
-                resolve(null);
-            });
-        });
-    }
-
-    private async compileLinux(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
-        const config = this.getConfig();
-        const outputPath = this.pathManager.getOutputPath(sourceFile);
-
-        this.clearDiagnostics(sourceFile);
-
-        if (config.clearOutputBeforeCompile) {
-            this.outputChannel.clear();
-        }
-        
-        if (config.showOutput) {
-            this.outputChannel.show(true);
-        }
-
-        this.outputChannel.appendLine(`[graphics-h] OS: Ubuntu/Linux`);
-        this.outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
-        this.outputChannel.appendLine(`[graphics-h] Output: ${path.basename(outputPath)}`);
-        this.outputChannel.appendLine('');
-
-        return new Promise((resolve) => {
-            const startTime = Date.now();
-
-            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -static -o "${outputPath}"`;
-
-            const compilerProcess = spawn('bash', ['-c', compileCmd], {
-                cwd: path.dirname(sourceFile)
-            });
-
-            this.activeProcesses.add(compilerProcess);
-
-            let stderr = '';
-            let stdout = '';
-
-            compilerProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                stdout += output;
-                this.outputChannel.append(output);
-            });
-
-            compilerProcess.stderr.on('data', (data) => {
-                const output = data.toString();
-                stderr += output;
-                this.outputChannel.append(output);
-            });
-
-            token?.onCancellationRequested(() => {
-                if (!compilerProcess.killed) {
-                    compilerProcess.kill();
-                    this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine('[graphics-h] Compilation cancelled by user');
-                    this.activeProcesses.delete(compilerProcess);
-                    resolve(null);
-                }
-            });
-
-            compilerProcess.on('close', (code) => {
-                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-                this.activeProcesses.delete(compilerProcess);
-
-                if (code !== 0) {
-                    if (stderr.trim().length === 0) {
-                        this.outputChannel.appendLine('error: compilation failed with no error output');
-                    }
-                    
-                    this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
-                    
-                    const errors = this.parseCompilerErrors(stderr, sourceFile);
-                    this.updateDiagnostics(errors, sourceFile);
-
-                    const errorCount = errors.filter(e => e.severity === 'error').length;
-                    const warningCount = errors.filter(e => e.severity === 'warning').length;
-                    
-                    let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
-                    if (warningCount > 0) {
-                        message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
-                    }
-
-                    vscode.window.showErrorMessage(
-                        message,
-                        'Show Output',
-                        'Show Problems'
-                    ).then(choice => {
-                        if (choice === 'Show Output') {
-                            this.outputChannel.show();
-                        } else if (choice === 'Show Problems') {
-                            vscode.commands.executeCommand('workbench.actions.view.problems');
-                        }
-                    });
-                    
-                    resolve(null);
-                } else {
-                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
-                    this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
-                    
-                    resolve(outputPath);
-                }
-            });
-
-            compilerProcess.on('error', (error) => {
-                this.outputChannel.appendLine('');
-                this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
-                
-                this.activeProcesses.delete(compilerProcess);
-                
-                vscode.window.showErrorMessage(
-                    `Compiler error: ${error.message}`,
-                    'Show Output'
-                ).then(choice => {
-                    if (choice === 'Show Output') {
-                        this.outputChannel.show();
-                    }
-                });
-                
-                resolve(null);
-            });
-        });
-    }
-
-    async compile(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
-        if (!this.validateSourceFile(sourceFile)) {
-            return null;
-        }
-
-        if (this.pathManager.isWindows()) {
-            return this.compileWindows(sourceFile, token);
-        } else if (this.pathManager.isLinux()) {
-            return this.compileLinux(sourceFile, token);
-        } else {
-            vscode.window.showErrorMessage('Unsupported operating system');
-            return null;
-        }
-    }
-
-    private async runWindows(exePath: string): Promise<void> {
-        if (!fs.existsSync(exePath)) {
-            vscode.window.showErrorMessage('Executable not found: ' + exePath);
-            return;
-        }
-
-        this.outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exePath)}`);
-        this.outputChannel.appendLine('');
-
-        const programProcess = spawn(exePath, [], {
-            cwd: path.dirname(exePath),
-            detached: false,
-            stdio: ['ignore', 'pipe', 'pipe']
-        });
-
-        this.runningProgram = programProcess;
-
-        programProcess.stdout.on('data', (data) => {
-            this.outputChannel.append(`[Program Output] ${data.toString()}`);
-        });
-
-        programProcess.stderr.on('data', (data) => {
-            this.outputChannel.append(`[Program Error] ${data.toString()}`);
-        });
-
-        programProcess.on('close', (code) => {
-            this.runningProgram = null;
-            this.outputChannel.appendLine('');
-            if (code === 0) {
-                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
-            } else if (code !== null) {
-                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
-            } else {
-                this.outputChannel.appendLine(`[graphics-h] Program stopped`);
-            }
-        });
-
-        programProcess.on('error', (error) => {
-            this.runningProgram = null;
-            this.outputChannel.appendLine('');
-            this.outputChannel.appendLine('[graphics-h] Program execution failed:');
-            this.outputChannel.appendLine(error.message);
-            
-            vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
-        });
-
-        programProcess.on('exit', (code, signal) => {
-            if (signal) {
-                this.outputChannel.appendLine(`[graphics-h] Program terminated by signal: ${signal}`);
-            }
-        });
-    }
-
-    private async runLinux(exePath: string): Promise<void> {
-        if (!fs.existsSync(exePath)) {
-            vscode.window.showErrorMessage('Executable not found: ' + exePath);
-            return;
-        }
-
-        this.outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exePath)}`);
-        this.outputChannel.appendLine('');
-
-        const runCmd = `wine "${exePath}"`;
-
-        const programProcess = spawn('bash', ['-c', runCmd], {
-            cwd: path.dirname(exePath)
-        });
-
-        this.runningProgram = programProcess;
-
-        programProcess.stdout.on('data', (data) => {
-            this.outputChannel.append(`[Program Output] ${data.toString()}`);
-        });
-
-        programProcess.stderr.on('data', (data) => {
-            const output = data.toString();
-            if (!output.includes('fixme:') && !output.includes('wine:')) {
-                this.outputChannel.append(`[Program Error] ${output}`);
-            }
-        });
-
-        programProcess.on('close', (code) => {
-            this.runningProgram = null;
-            this.outputChannel.appendLine('');
-            if (code === 0) {
-                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
-            } else if (code !== null) {
-                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
-            } else {
-                this.outputChannel.appendLine(`[graphics-h] Program stopped`);
-            }
-        });
-
-        programProcess.on('error', (error) => {
-            this.runningProgram = null;
-            this.outputChannel.appendLine('');
-            this.outputChannel.appendLine('[graphics-h] Program execution failed:');
-            this.outputChannel.appendLine(error.message);
-            
-            vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
-        });
-
-        programProcess.on('exit', (code, signal) => {
-            if (signal) {
-                this.outputChannel.appendLine(`[graphics-h] Program terminated by signal: ${signal}`);
-            }
-        });
-    }
-
-    async run(exePath: string): Promise<void> {
-        if (this.pathManager.isWindows()) {
-            return this.runWindows(exePath);
-        } else if (this.pathManager.isLinux()) {
-            return this.runLinux(exePath);
-        } else {
-            vscode.window.showErrorMessage('Unsupported operating system');
-        }
-    }
-
-    stopRunningProgram(): boolean {
-        if (this.runningProgram && !this.runningProgram.killed) {
-            this.outputChannel.appendLine('[graphics-h] Stopping program...');
-            this.runningProgram.kill();
-            this.runningProgram = null;
-            return true;
-        }
-        return false;
-    }
-
-    isProgramRunning(): boolean {
-        return this.runningProgram !== null && !this.runningProgram.killed;
-    }
-
-    async compileAndRun(sourceFile: string): Promise<void> {
-        const config = this.getConfig();
-        
-        if (this.isProgramRunning()) {
-            this.stopRunningProgram();
-        }
-
-        const exePath = await this.compile(sourceFile);
-        
-        if (exePath && config.autoRun) {
-            await this.run(exePath);
-        } else if (exePath && !config.autoRun) {
-            const choice = await vscode.window.showInformationMessage(
-                'Compilation successful',
-                'Run Program'
-            );
-            if (choice === 'Run Program') {
-                await this.run(exePath);
-            }
-        }
-    }
-
-    dispose(): void {
-        this.diagnosticCollection.clear();
-        this.diagnosticCollection.dispose();
-        this.outputChannel.dispose();
-
-        if (this.runningProgram && !this.runningProgram.killed) {
-            this.runningProgram.kill();
-        }
-
-        this.activeProcesses.forEach(proc => {
-            if (!proc.killed) {
-                proc.kill();
-            }
-        });
-        this.activeProcesses.clear();
+        TC_ZIP_URL = '/compiler-assets/zip-files/tc-v1.zip';
     }
 }
 
-extension.ts -> import * as vscode from 'vscode';
-import { PathManager, OperatingSystem } from './paths';
-import { WindowsDownloader } from './windowsDownloader';
-import { UbuntuDownloader } from './ubuntuDownloader';
-import { GraphicsCompiler } from './compiler';
+// ==================== CACHING SYSTEM ====================
+const CACHE_CONFIG = {
+    TC_ZIP_CACHE_KEY: 'tc_zip_cache',
+    TC_ZIP_VERSION: 'tc-v1',
+    DEMO_CACHE_PREFIX: 'demo_cache_',
+    CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
+    DB_NAME: 'GraphicsHCompilerCache',
+    DB_VERSION: 1,
+    STORE_NAME: 'files'
+};
 
-let pathManager: PathManager;
-let windowsDownloader: WindowsDownloader | null = null;
-let ubuntuDownloader: UbuntuDownloader | null = null;
-let compiler: GraphicsCompiler;
-let statusBarItem: vscode.StatusBarItem;
+// IndexedDB for large file caching (TC ZIP)
+let cacheAvailable = true; // Flag to prevent repeated IndexedDB retries
 
-export function activate(context: vscode.ExtensionContext) {
-    console.log('Graphics.h Compiler extension activated');
+class CacheDB {
+    static db = null;
 
-    // Initialize core managers
-    pathManager = new PathManager(context);
-    const currentOS = pathManager.getOS();
-    
-    // Initialize OS-specific downloader
-    if (currentOS === OperatingSystem.Windows) {
-        windowsDownloader = new WindowsDownloader();
-    } else if (currentOS === OperatingSystem.Linux) {
-        ubuntuDownloader = new UbuntuDownloader();
+    static async open() {
+        if (!cacheAvailable) return null; // Don't retry if previously failed
+        if (this.db) return this.db;
+
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(CACHE_CONFIG.DB_NAME, CACHE_CONFIG.DB_VERSION);
+
+            request.onerror = () => {
+                cacheAvailable = false; // Mark cache as unavailable
+                Logger.warn('IndexedDB not available, caching disabled');
+                resolve(null);
+            };
+
+            request.onsuccess = () => {
+                this.db = request.result;
+                resolve(this.db);
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(CACHE_CONFIG.STORE_NAME)) {
+                    db.createObjectStore(CACHE_CONFIG.STORE_NAME, { keyPath: 'key' });
+                }
+            };
+        });
     }
-    
-    compiler = new GraphicsCompiler(pathManager);
 
-    // Show OS detection info
-    const osName = pathManager.getOSDisplayName();
-    console.log(`Detected OS: ${osName}`);
+    static async get(key) {
+        const db = await this.open();
+        if (!db) return null;
 
-    // Check for unsupported OS
-    if (currentOS !== OperatingSystem.Windows && currentOS !== OperatingSystem.Linux) {
-        vscode.window.showErrorMessage(
-            'Graphics.h Compiler: This extension only works on Windows and Ubuntu/Linux.',
-            'OK'
-        );
+        return new Promise((resolve) => {
+            try {
+                const transaction = db.transaction(CACHE_CONFIG.STORE_NAME, 'readonly');
+                const store = transaction.objectStore(CACHE_CONFIG.STORE_NAME);
+                const request = store.get(key);
+
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && result.timestamp) {
+                        const age = Date.now() - result.timestamp;
+                        if (age < CACHE_CONFIG.CACHE_TTL) {
+                            resolve(result.data);
+                            return;
+                        }
+                    }
+                    resolve(null);
+                };
+
+                request.onerror = () => resolve(null);
+            } catch (e) {
+                resolve(null);
+            }
+        });
+    }
+
+    static async set(key, data) {
+        const db = await this.open();
+        if (!db) return false;
+
+        return new Promise((resolve) => {
+            try {
+                const transaction = db.transaction(CACHE_CONFIG.STORE_NAME, 'readwrite');
+                const store = transaction.objectStore(CACHE_CONFIG.STORE_NAME);
+                const request = store.put({
+                    key: key,
+                    data: data,
+                    timestamp: Date.now()
+                });
+
+                request.onsuccess = () => resolve(true);
+                request.onerror = () => resolve(false);
+            } catch (e) {
+                resolve(false);
+            }
+        });
+    }
+}
+
+// Demo file cache using localStorage
+const DemoCache = {
+    get(demoKey) {
+        try {
+            const cacheKey = CACHE_CONFIG.DEMO_CACHE_PREFIX + demoKey;
+            const cached = localStorage.getItem(cacheKey);
+            if (!cached) return null;
+
+            const { code, timestamp } = JSON.parse(cached);
+            const age = Date.now() - timestamp;
+
+            if (age < CACHE_CONFIG.CACHE_TTL) {
+                return code;
+            }
+
+            // Expired, remove it
+            localStorage.removeItem(cacheKey);
+            return null;
+        } catch (e) {
+            return null;
+        }
+    },
+
+    set(demoKey, code) {
+        try {
+            const cacheKey = CACHE_CONFIG.DEMO_CACHE_PREFIX + demoKey;
+            localStorage.setItem(cacheKey, JSON.stringify({
+                code: code,
+                timestamp: Date.now()
+            }));
+            return true;
+        } catch (e) {
+            Logger.warn('Failed to cache demo file: ' + e.message);
+            return false;
+        }
+    }
+};
+
+// ==================== JS-DOS WARMUP SYSTEM ====================
+let warmupPromise = null;
+let tcZipPromise = null; // Shared promise to prevent duplicate downloads
+
+// Shared function to get TC ZIP - prevents race condition between warmup and run
+async function getTCZip() {
+    if (tcZipPromise) return tcZipPromise;
+
+    tcZipPromise = (async () => {
+        // Try cache first
+        let blob = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
+        if (blob) {
+            Logger.info('TC ZIP loaded from cache');
+            return blob;
+        }
+
+        // Download and cache
+        Logger.info('Downloading TC ZIP...');
+        const response = await fetch(TC_ZIP_URL);
+        if (!response.ok) {
+            throw new Error(`Failed to download compiler (HTTP ${response.status})`);
+        }
+        blob = await response.blob();
+
+        // Cache for next time (async, don't block)
+        CacheDB.set(CACHE_CONFIG.TC_ZIP_CACHE_KEY, blob)
+            .then(cached => {
+                if (cached) Logger.success('TC ZIP cached for future use');
+            });
+
+        return blob;
+    })();
+
+    return tcZipPromise;
+}
+
+// Update cache status indicator on Run button
+async function updateCacheStatus() {
+    try {
+        const cached = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
+        if (cached && runBtn) {
+            runBtn.title = 'Run (cached - instant) [Ctrl+Enter]';
+            Logger.info('Cache status: TC ZIP is cached');
+        } else if (runBtn) {
+            runBtn.title = 'Run [Ctrl+Enter]';
+        }
+    } catch (e) {
+        // Silently ignore
+    }
+}
+
+const canvas = document.getElementById("dos-canvas");
+const loading = document.getElementById("loading");
+const loadingText = document.getElementById("loading-text");
+const loadingProgressBar = document.getElementById("loading-progress-bar");
+const runBtn = document.getElementById("run-btn");
+const terminalWrapper = document.getElementById("terminal-wrapper");
+const keyboardBlocker = document.getElementById("keyboard-blocker");
+const editorWrapper = document.getElementById("editor-wrapper");
+const demoSelect = document.getElementById("demo-select");
+const clearBtn = document.getElementById("clear-btn");
+const editorInfo = document.getElementById("editor-info");
+const saveIndicator = document.getElementById("save-indicator");
+const saveText = document.getElementById("save-text");
+
+// ==================== OUTPUT PANEL HANDLERS ====================
+
+// Output Panel Elements
+const outputPanel = document.getElementById("output-panel");
+const outputContent = document.getElementById("output-content");
+const closeOutputBtn = document.getElementById("close-output-btn");
+let errorUpdateInterval = null;
+let lastErrorContent = '';
+
+closeOutputBtn.addEventListener('click', () => {
+    outputPanel.classList.remove('visible');
+    terminalWrapper.classList.remove('has-panel');
+    // Trigger resize to fix canvas layout
+    window.dispatchEvent(new Event('resize'));
+});
+
+// Copy Error Button Functionality
+const copyErrorBtn = document.getElementById("copy-error-btn");
+const copyBtnText = document.getElementById("copy-btn-text");
+
+copyErrorBtn.addEventListener('click', async () => {
+    const errorText = outputContent.textContent;
+
+    if (!errorText || errorText.trim() === '') {
         return;
     }
 
-    // Display welcome message on first activation
-    const hasShownWelcome = context.globalState.get<boolean>('graphics-h.welcomeShown', false);
-    if (!hasShownWelcome) {
-        showWelcomeMessage(context);
-        context.globalState.update('graphics-h.welcomeShown', true);
-    }
-
-    // Create status bar button
-    statusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        100
-    );
-    statusBarItem.command = 'graphics-h-compiler.compileAndRun';
-    context.subscriptions.push(statusBarItem);
-
-    // Update status bar
-    context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
-    );
-    updateStatusBar(vscode.window.activeTextEditor);
-
-    // Register commands
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'graphics-h-compiler.compileAndRun',
-            handleCompileAndRun
-        )
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'graphics-h-compiler.compileOnly',
-            handleCompileOnly
-        )
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'graphics-h-compiler.setupToolchain',
-            handleSetupToolchain
-        )
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'graphics-h-compiler.stopProgram',
-            handleStopProgram
-        )
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand(
-            'graphics-h-compiler.checkDependencies',
-            handleCheckDependencies
-        )
-    );
-
-    // Register cleanup
-    context.subscriptions.push({
-        dispose: () => {
-            if (compiler) {
-                compiler.dispose();
-            }
-        }
-    });
-
-    // Check dependencies quietly
-    checkDependenciesQuietly();
-}
-
-// Show welcome message
-function showWelcomeMessage(context: vscode.ExtensionContext): void {
-    const osName = pathManager.getOSDisplayName();
-    const message = `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`;
-
-    vscode.window.showInformationMessage(
-        message,
-        'Check Dependencies',
-        'Dismiss'
-    ).then(choice => {
-        if (choice === 'Check Dependencies') {
-            handleCheckDependencies();
-        }
-    });
-}
-
-// Update status bar
-function updateStatusBar(editor: vscode.TextEditor | undefined): void {
-    if (editor && editor.document.languageId === 'cpp') {
-        if (compiler && compiler.isProgramRunning()) {
-            statusBarItem.text = '$(debug-stop) Stop Graphics';
-            statusBarItem.tooltip = 'Stop Running Graphics Program';
-            statusBarItem.command = 'graphics-h-compiler.stopProgram';
-        } else {
-            statusBarItem.text = '$(play) Run Graphics';
-            statusBarItem.tooltip = 'Compile & Run Graphics Program (Ctrl+Alt+N)';
-            statusBarItem.command = 'graphics-h-compiler.compileAndRun';
-        }
-        statusBarItem.show();
-    } else {
-        statusBarItem.hide();
-    }
-}
-
-// Periodically update status bar
-setInterval(() => {
-    updateStatusBar(vscode.window.activeTextEditor);
-}, 1000);
-
-// Quiet dependency check - just verifies, doesn't install
-async function checkDependenciesQuietly(): Promise<void> {
-    const missing = pathManager.getMissingDependencies();
-    
-    if (missing.length > 0) {
-        console.log('Graphics.h dependencies not installed:', missing.join(', '));
-        console.log('User will be prompted when they try to compile.');
-    } else {
-        console.log('Graphics.h toolchain is ready');
-    }
-}
-
-// Check and display dependency status
-async function handleCheckDependencies(): Promise<void> {
-    const missing = pathManager.getMissingDependencies();
-    const required = pathManager.getRequiredDependencies();
-    const osName = pathManager.getOSDisplayName();
-
-    if (missing.length === 0) {
-        vscode.window.showInformationMessage(
-            `✓ All dependencies are installed!\n\n` +
-            `Platform: ${osName}\n` +
-            `Required: ${required.join(', ')}`
-        );
-        return;
-    }
-
-    const message = 
-        `⚠️ Missing dependencies on ${osName}:\n\n` +
-        `Missing: ${missing.join(', ')}\n\n` +
-        `Required: ${required.join(', ')}\n\n` +
-        `Would you like to install the missing dependencies now?`;
-
-    const choice = await vscode.window.showWarningMessage(
-        message,
-        { modal: true },
-        'Install Now',
-        'Cancel'
-    );
-
-    if (choice === 'Install Now') {
-        await handleSetupToolchain();
-    }
-}
-
-// Wait for toolchain and ask permission if needed (Windows)
-async function waitForToolchainWindows(): Promise<boolean> {
-    const missing = pathManager.getMissingDependencies();
-    
-    if (missing.length === 0) {
-        return true;
-    }
-
-    // Check if installation is in progress
-    const isInProgress = windowsDownloader?.isInProgress() ?? false;
-
-    if (isInProgress) {
-        vscode.window.showInformationMessage(
-            '⏳ Toolchain installation is already in progress. Please wait...'
-        );
-        return false;
-    }
-
-    // Toolchain not installed - ask user for permission
-    const hasPermission = await windowsDownloader!.promptForPermission();
-    
-    if (!hasPermission) {
-        vscode.window.showInformationMessage(
-            'ℹ️ Graphics.h toolchain is required to compile programs.\n\n' +
-            'You can install it anytime using:\n' +
-            'Command Palette (Ctrl+Shift+P) → "Graphics.h: Setup Graphics.h Toolchain"',
-            'OK'
-        );
-        return false;
-    }
-
-    // User gave permission - start installation
-    const targetPath = pathManager.getToolchainPath();
-    return await windowsDownloader!.download(targetPath, pathManager.getExtensionPath());
-}
-
-// Wait for toolchain and ask permission if needed (Ubuntu)
-async function waitForToolchainUbuntu(): Promise<boolean> {
-    const missing = pathManager.getMissingDependencies();
-    
-    if (missing.length === 0) {
-        return true;
-    }
-
-    // Toolchain not installed - show installation instructions
-    return await ubuntuDownloader!.promptForInstallation();
-}
-
-// Wait for toolchain (OS-agnostic)
-async function waitForToolchain(): Promise<boolean> {
-    if (pathManager.isWindows()) {
-        return await waitForToolchainWindows();
-    } else if (pathManager.isLinux()) {
-        return await waitForToolchainUbuntu();
-    }
-    return false;
-}
-
-// Handle compile and run
-async function handleCompileAndRun(): Promise<void> {
     try {
-        const ready = await waitForToolchain();
-        if (!ready) {
-            return;
-        }
+        await navigator.clipboard.writeText(errorText);
 
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No file is currently open');
-            return;
-        }
+        // Visual feedback
+        copyErrorBtn.classList.add('copied');
+        copyBtnText.textContent = 'Copied!';
 
-        const filePath = editor.document.uri.fsPath;
+        Logger.success('Errors copied to clipboard');
 
-        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
-            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
-            return;
-        }
+        // Reset after 2 seconds
+        setTimeout(() => {
+            copyErrorBtn.classList.remove('copied');
+            copyBtnText.textContent = 'Copy';
+        }, 2000);
+    } catch (err) {
+        Logger.error('Failed to copy errors', err);
 
-        if (editor.document.isDirty) {
-            const saved = await editor.document.save();
-            if (!saved) {
-                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
-                return;
-            }
-        }
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = errorText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
 
-        await compiler.compileAndRun(filePath);
-        updateStatusBar(editor);
-
-    } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        vscode.window.showErrorMessage(`Compilation failed: ${errorMsg}`);
-        console.error('Compilation error:', error);
-    }
-}
-
-// Handle compile only
-async function handleCompileOnly(): Promise<void> {
-    try {
-        const ready = await waitForToolchain();
-        if (!ready) {
-            return;
-        }
-
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No file is currently open');
-            return;
-        }
-
-        const filePath = editor.document.uri.fsPath;
-
-        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
-            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
-            return;
-        }
-
-        if (editor.document.isDirty) {
-            const saved = await editor.document.save();
-            if (!saved) {
-                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
-                return;
-            }
-        }
-
-        await compiler.compile(filePath);
-
-    } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        vscode.window.showErrorMessage(`Compilation failed: ${errorMsg}`);
-        console.error('Compilation error:', error);
-    }
-}
-
-// Handle manual setup (Windows)
-async function handleSetupToolchainWindows(): Promise<boolean> {
-    try {
-        const missing = pathManager.getMissingDependencies();
-        const osName = pathManager.getOSDisplayName();
-
-        if (missing.length === 0) {
-            const choice = await vscode.window.showWarningMessage(
-                `All dependencies are already installed on ${osName}. Do you want to reinstall?`,
-                { modal: true },
-                'Reinstall',
-                'Cancel'
-            );
-
-            if (choice !== 'Reinstall') {
-                return true;
-            }
-        }
-
-        // Ask for permission
-        const hasPermission = await windowsDownloader!.promptForPermission();
-            
-        if (!hasPermission) {
-            return false;
-        }
-
-        const targetPath = pathManager.getToolchainPath();
-        return await windowsDownloader!.download(targetPath, pathManager.getExtensionPath());
-
-    } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        vscode.window.showErrorMessage(`Setup failed: ${errorMsg}`);
-        console.error('Setup error:', error);
-        return false;
-    }
-}
-
-// Handle manual setup (Ubuntu)
-async function handleSetupToolchainUbuntu(): Promise<boolean> {
-    try {
-        const missing = pathManager.getMissingDependencies();
-
-        if (missing.length === 0) {
-            await ubuntuDownloader!.showDetailedStatus();
-            return true;
-        }
-
-        // Show installation instructions
-        return await ubuntuDownloader!.promptForInstallation();
-
-    } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : String(error);
-        vscode.window.showErrorMessage(`Setup failed: ${errorMsg}`);
-        console.error('Setup error:', error);
-        return false;
-    }
-}
-
-// Handle manual setup (OS-agnostic)
-async function handleSetupToolchain(): Promise<boolean> {
-    if (pathManager.isWindows()) {
-        return await handleSetupToolchainWindows();
-    } else if (pathManager.isLinux()) {
-        return await handleSetupToolchainUbuntu();
-    }
-    return false;
-}
-
-// Handle stop program
-async function handleStopProgram(): Promise<void> {
-    if (compiler && compiler.isProgramRunning()) {
-        const stopped = compiler.stopRunningProgram();
-        if (stopped) {
-            vscode.window.showInformationMessage('Graphics program stopped');
-            updateStatusBar(vscode.window.activeTextEditor);
-        }
-    } else {
-        vscode.window.showInformationMessage('No graphics program is currently running');
-    }
-}
-
-export function deactivate() {
-    if (statusBarItem) {
-        statusBarItem.dispose();
-    }
-
-    if (compiler) {
-        compiler.dispose();
-    }
-
-    console.log('Graphics.h Compiler extension deactivated');
-}
-
-paths.ts -> import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as os from 'os';
-
-export enum OperatingSystem {
-    Windows = 'windows',
-    Linux = 'linux',
-    Unknown = 'unknown'
-}
-
-export class PathManager {
-    private context: vscode.ExtensionContext;
-    private currentOS: OperatingSystem;
-
-    constructor(context: vscode.ExtensionContext) {
-        this.context = context;
-        this.currentOS = this.detectOS();
-    }
-
-    // Detect the current operating system
-    private detectOS(): OperatingSystem {
-        const platform = os.platform();
-        
-        if (platform === 'win32') {
-            return OperatingSystem.Windows;
-        } else if (platform === 'linux') {
-            return OperatingSystem.Linux;
-        }
-        
-        return OperatingSystem.Unknown;
-    }
-
-    // Get current OS
-    getOS(): OperatingSystem {
-        return this.currentOS;
-    }
-
-    // Get extension installation path
-    getExtensionPath(): string {
-        return this.context.extensionPath;
-    }
-
-    // Check if running on Windows
-    isWindows(): boolean {
-        return this.currentOS === OperatingSystem.Windows;
-    }
-
-    // Check if running on Linux
-    isLinux(): boolean {
-        return this.currentOS === OperatingSystem.Linux;
-    }
-
-    // Get toolchain installation directory (Windows only - stored in VS Code global storage)
-    getToolchainPath(): string {
-        if (this.isWindows()) {
-            return path.join(this.context.globalStorageUri.fsPath, 'mingw32');
-        }
-        // For Linux, toolchain is system-wide
-        return '/usr/local';
-    }
-
-    // Get path to bundled graphics libraries (Windows only)
-    getGraphicsPath(): string {
-        if (this.isWindows()) {
-            const mingwPath = this.getToolchainPath();
-            return path.join(mingwPath, 'include');
-        }
-        // For Linux, graphics.h is installed system-wide
-        return '/usr/local/include/graphics_h';
-    }
-
-    // Get path to libbgi.a (Windows only)
-    getLibraryPath(): string {
-        if (this.isWindows()) {
-            const mingwPath = this.getToolchainPath();
-            return path.join(mingwPath, 'lib');
-        }
-        // For Linux, library is installed system-wide
-        return '/usr/local/lib/graphics_h';
-    }
-
-    // Get path to g++ compiler executable (Windows only)
-    getGppPath(): string {
-        if (this.isWindows()) {
-            const mingwPath = this.getToolchainPath();
-            return path.join(mingwPath, 'bin', 'g++.exe');
-        }
-        // For Linux, use system-wide MinGW compiler
-        return 'i686-w64-mingw32-g++';
-    }
-
-    // Check if toolchain is installed
-    isToolchainInstalled(): boolean {
-        if (this.isWindows()) {
-            // Check if MinGW g++.exe exists
-            return fs.existsSync(this.getGppPath());
-        } else if (this.isLinux()) {
-            // Check if required files exist
-            const requiredFiles = [
-                '/usr/local/include/graphics_h/graphics.h',
-                '/usr/local/include/graphics_h/winbgim.h',
-                '/usr/local/lib/graphics_h/libbgi.a'
-            ];
-            return requiredFiles.every(file => fs.existsSync(file));
-        }
-        return false;
-    }
-
-    // Check if all required dependencies are installed
-    areAllDependenciesInstalled(): boolean {
-        return this.isToolchainInstalled();
-    }
-
-    // Get output executable path for a source file
-    getOutputPath(sourceFile: string): string {
-        const dir = path.dirname(sourceFile);
-        const name = path.basename(sourceFile, path.extname(sourceFile));
-        return path.join(dir, `${name}.exe`);
-    }
-
-    // Get human-readable OS name
-    getOSDisplayName(): string {
-        switch (this.currentOS) {
-            case OperatingSystem.Windows:
-                return 'Windows';
-            case OperatingSystem.Linux:
-                return 'Ubuntu/Linux';
-            default:
-                return 'Unknown';
-        }
-    }
-
-    // Get required dependencies based on OS
-    getRequiredDependencies(): string[] {
-        if (this.isWindows()) {
-            return ['MinGW32 Toolchain (C++ Compiler + Libraries)'];
-        } else if (this.isLinux()) {
-            return [
-                'MinGW compiler (i686-w64-mingw32-g++)',
-                'Wine (for running Windows executables)',
-                'graphics.h library files'
-            ];
-        }
-        return [];
-    }
-
-    // Check for missing dependencies
-    getMissingDependencies(): string[] {
-        const missing: string[] = [];
-        
-        if (this.isWindows()) {
-            if (!this.isToolchainInstalled()) {
-                missing.push('MinGW32 Toolchain');
-            }
-        } else if (this.isLinux()) {
-            if (!this.isToolchainInstalled()) {
-                missing.push('Graphics.h toolchain (run installation script)');
-            }
-        }
-        
-        return missing;
-    }
-}
-
-ubuntuDownloader.ts -> import * as vscode from 'vscode';
-import * as path from 'path';
-import { spawn } from 'child_process';
-import * as fs from 'fs';
-
-export class UbuntuDownloader {
-    private isChecking = false;
-    private checkPromise: Promise<boolean> | null = null;
-
-    // Installation command that users need to run
-    private readonly INSTALL_COMMAND = 'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/refs/heads/main/Installers/ubuntu_install.sh | bash';
-
-    isInProgress(): boolean {
-        return this.isChecking;
-    }
-
-    // Check if graphics.h is installed system-wide
-    private async checkInstallation(): Promise<boolean> {
         try {
-            // Check for required files
-            const requiredFiles = [
-                '/usr/local/include/graphics_h/graphics.h',
-                '/usr/local/include/graphics_h/winbgim.h',
-                '/usr/local/lib/graphics_h/libbgi.a'
-            ];
+            document.execCommand('copy');
+            copyErrorBtn.classList.add('copied');
+            copyBtnText.textContent = 'Copied!';
 
-            for (const file of requiredFiles) {
-                if (!fs.existsSync(file)) {
-                    return false;
+            setTimeout(() => {
+                copyErrorBtn.classList.remove('copied');
+                copyBtnText.textContent = 'Copy';
+            }, 2000);
+        } catch (fallbackErr) {
+            Logger.error('Fallback copy failed', fallbackErr);
+        }
+
+        document.body.removeChild(textArea);
+    }
+});
+
+// Expand Button Functionality
+const expandOutputBtn = document.getElementById("expand-output-btn");
+let isOutputExpanded = false;
+
+expandOutputBtn.addEventListener('click', () => {
+    isOutputExpanded = !isOutputExpanded;
+
+    if (isOutputExpanded) {
+        outputPanel.classList.add('expanded');
+        expandOutputBtn.classList.add('expanded');
+        expandOutputBtn.title = 'Collapse panel';
+    } else {
+        outputPanel.classList.remove('expanded');
+        expandOutputBtn.classList.remove('expanded');
+        expandOutputBtn.title = 'Expand panel';
+    }
+
+    // Trigger resize to fix canvas layout
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+
+    Logger.info(`Output panel ${isOutputExpanded ? 'expanded' : 'collapsed'}`);
+});
+
+async function checkCompilationErrors() {
+    try {
+        // Access Emscripten FS through dosInstance.em (js-dos 6.22)
+        if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) {
+            return;
+        }
+
+        const FS = dosInstance.em.FS;
+        const filePath = "/TURBOC3/BIN/ERR.TXT";
+
+        // Check if file exists
+        try {
+            FS.stat(filePath);
+        } catch (statErr) {
+            return; // File doesn't exist yet
+        }
+
+        // Read the file content
+        let content;
+        try {
+            content = FS.readFile(filePath, { encoding: 'utf8' });
+        } catch (readErr) {
+            const data = FS.readFile(filePath);
+            content = new TextDecoder().decode(data);
+        }
+
+        // Only update if content changed and is not empty
+        if (content && content.trim() !== "" && content !== lastErrorContent) {
+            lastErrorContent = content;
+
+            // Check if it contains errors
+            if (content.includes("Error") || content.includes("Fatal")) {
+                outputContent.textContent = content;
+                outputContent.classList.remove('output-success');
+                outputContent.classList.add('output-error');
+
+                // Show panel only for errors
+                if (!outputPanel.classList.contains('visible')) {
+                    outputPanel.classList.add('visible');
+                    terminalWrapper.classList.add('has-panel');
+                    setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
                 }
             }
-
-            // Check if compiler exists
-            const compilerCheck = await this.runCommand('which i686-w64-mingw32-g++');
-            if (!compilerCheck.success) {
-                return false;
-            }
-
-            // Check if wine exists
-            const wineCheck = await this.runCommand('which wine');
-            if (!wineCheck.success) {
-                return false;
-            }
-
-            return true;
-
-        } catch (error) {
-            console.error('Installation check failed:', error);
-            return false;
+            // For successful compilation, don't show the panel
         }
+    } catch (e) {
+        // Silently ignore errors during polling
     }
+}
 
-    // Run a command and return result
-    private runCommand(command: string): Promise<{ success: boolean; output: string; error: string }> {
-        return new Promise((resolve) => {
-            const process = spawn('bash', ['-c', command]);
-            let stdout = '';
-            let stderr = '';
 
-            process.stdout.on('data', (data) => {
-                stdout += data.toString();
+
+editor.js ->         // ==================== SCRIPT LOADING WITH FALLBACK ====================
+
+        function loadScript(url, fallbackUrl, timeout = 5000) {
+            return new Promise((resolve, reject) => {
+                const tryLoad = (src, isFallback = false) => {
+                    return new Promise((res, rej) => {
+                        const script = document.createElement('script');
+                        script.src = src;
+
+                        const timer = setTimeout(() => {
+                            script.onerror = null;
+                            script.onload = null;
+                            rej(new Error('Timeout'));
+                        }, timeout);
+
+                        script.onload = () => {
+                            clearTimeout(timer);
+                            if (isFallback) {
+                                Logger.info(`Using fallback: ${src}`);
+                            }
+                            res(true);
+                        };
+
+                        script.onerror = () => {
+                            clearTimeout(timer);
+                            rej(new Error(`Failed to load: ${src}`));
+                        };
+
+                        document.head.appendChild(script);
+                    });
+                };
+
+                tryLoad(url)
+                    .then(resolve)
+                    .catch(() => {
+                        Logger.warn(`Primary source failed, trying fallback`);
+                        tryLoad(fallbackUrl, true)
+                            .then(resolve)
+                            .catch(reject);
+                    });
             });
+        }
 
-            process.stderr.on('data', (data) => {
-                stderr += data.toString();
-            });
+        async function loadAllScripts() {
+            try {
+                Logger.info('Loading dependencies via ResourceLoader...');
+                updateLoadingProgress(10);
 
-            process.on('close', (code) => {
-                resolve({
-                    success: code === 0,
-                    output: stdout.trim(),
-                    error: stderr.trim()
-                });
-            });
+                // Initialize resources from manifest first
+                await initializeResourcesFromManifest();
 
-            process.on('error', (error) => {
-                resolve({
-                    success: false,
-                    output: '',
-                    error: error.message
-                });
-            });
-        });
-    }
+                // Load JS-DOS using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'jsdos');
+                scriptsLoaded.jsdos = true;
+                updateLoadingProgress(30);
 
-    // Show installation instructions with copy button
-    async promptForInstallation(): Promise<boolean> {
-        const message = `⚙️ Graphics.h Compiler Setup Required
+                // Load Ace Editor using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace');
+                scriptsLoaded.ace = true;
+                updateLoadingProgress(50);
 
-To compile graphics.h programs on Ubuntu, run this command in your terminal:
+                await waitForAce();
 
-${this.INSTALL_COMMAND}
+                // Load Ace C++ Mode using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace-mode-cpp');
+                scriptsLoaded.aceMode = true;
+                updateLoadingProgress(70);
 
-Click "Copy & Open Terminal" to copy the command and open a terminal.`;
+                // Load Ace Monokai Theme using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace-theme-monokai');
 
-        const result = await vscode.window.showInformationMessage(
-            message,
-            { modal: true },
-            'Copy & Open Terminal',
-            'I Already Installed'
-        );
+                // Load Ace Textmate Theme for light mode using ResourceLoader
+                await ResourceLoader.loadScript('libs', 'ace-theme-textmate');
 
-        if (result === 'Copy & Open Terminal') {
-            // Copy command to clipboard
-            await vscode.env.clipboard.writeText(this.INSTALL_COMMAND);
-            
-            // Open terminal
-            await vscode.commands.executeCommand('workbench.action.terminal.new');
-            
-            // Show success message
-            vscode.window.showInformationMessage(
-                '✓ Command copied to clipboard!\n\nPaste it in the terminal (Ctrl+Shift+V) and press Enter.',
-                'Got it'
-            );
+                scriptsLoaded.aceTheme = true;
+                updateLoadingProgress(100);
 
-            return false;
-
-        } else if (result === 'I Already Installed') {
-            // Verify installation
-            const installed = await this.checkInstallation();
-            
-            if (installed) {
-                vscode.window.showInformationMessage('✓ Graphics.h toolchain verified successfully!');
+                Logger.success('All dependencies loaded');
                 return true;
-            } else {
-                const retry = await vscode.window.showErrorMessage(
-                    'Graphics.h toolchain not found. Please run the installation command first.',
-                    'Show Command Again'
-                );
-                
-                if (retry === 'Show Command Again') {
-                    return this.promptForInstallation();
-                }
+            } catch (error) {
+                Logger.error('Failed to load dependencies', error);
+                alert('Failed to load required libraries. Please check your connection and try again.');
                 return false;
             }
         }
 
-        return false;
-    }
 
-    // Compile C++ file using the system-wide installation
-    async compile(
-        sourceFile: string,
-        outputChannel: vscode.OutputChannel
-    ): Promise<{ success: boolean; exeFile: string | null }> {
-        try {
-            // Verify installation first
-            const installed = await this.checkInstallation();
-            if (!installed) {
-                outputChannel.appendLine('[graphics-h] Graphics.h toolchain not installed');
-                outputChannel.appendLine('[graphics-h] Please run the setup command first');
-                return { success: false, exeFile: null };
+        function updateLoadingProgress(percent) {
+            if (loadingProgressBar) {
+                loadingProgressBar.style.width = `${percent}%`;
             }
+        }
 
-            const dir = path.dirname(sourceFile);
-            const basename = path.basename(sourceFile, path.extname(sourceFile));
-            const exeFile = path.join(dir, `${basename}.exe`);
-
-            outputChannel.appendLine(`[graphics-h] OS: Ubuntu/Linux`);
-            outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
-            outputChannel.appendLine(`[graphics-h] Output: ${path.basename(exeFile)}`);
-            outputChannel.appendLine('');
-
-            // Compile command - exactly as in the bash script but without wrapper
-            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -o "${exeFile}"`;
-
-            const startTime = Date.now();
-
+        function waitForAce() {
             return new Promise((resolve) => {
-                const compileProcess = spawn('bash', ['-c', compileCmd], {
-                    cwd: dir
-                });
-
-                let stderr = '';
-
-                compileProcess.stdout.on('data', (data) => {
-                    outputChannel.append(data.toString());
-                });
-
-                compileProcess.stderr.on('data', (data) => {
-                    const output = data.toString();
-                    stderr += output;
-                    outputChannel.append(output);
-                });
-
-                compileProcess.on('close', (code) => {
-                    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-
-                    if (code !== 0) {
-                        outputChannel.appendLine('');
-                        outputChannel.appendLine(`[graphics-h] ✗ Build failed (${duration}s)`);
-                        resolve({ success: false, exeFile: null });
-                    } else {
-                        outputChannel.appendLine(`[graphics-h] ✓ Build succeeded (${duration}s)`);
-                        outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(exeFile)}`);
-                        resolve({ success: true, exeFile });
+                const checkAce = setInterval(() => {
+                    if (typeof ace !== 'undefined') {
+                        clearInterval(checkAce);
+                        resolve();
                     }
-                });
-
-                compileProcess.on('error', (error) => {
-                    outputChannel.appendLine('');
-                    outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
-                    resolve({ success: false, exeFile: null });
-                });
+                }, 50);
             });
-
-        } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            outputChannel.appendLine(`[graphics-h] Compilation error: ${errorMsg}`);
-            return { success: false, exeFile: null };
-        }
-    }
-
-    // Run the compiled executable using Wine
-    async run(
-        exeFile: string,
-        outputChannel: vscode.OutputChannel
-    ): Promise<void> {
-        if (!fs.existsSync(exeFile)) {
-            vscode.window.showErrorMessage('Executable not found: ' + exeFile);
-            return;
         }
 
-        // Verify Wine is installed
-        const wineCheck = await this.runCommand('which wine');
-        if (!wineCheck.success) {
-            vscode.window.showErrorMessage(
-                'Wine is not installed. Please run the setup command first.',
-                'Show Setup Command'
-            ).then(choice => {
-                if (choice === 'Show Setup Command') {
-                    this.promptForInstallation();
+        // ==================== DEMO FILE MANAGEMENT - FIXED ====================
+
+        demoSelect.addEventListener('change', async (e) => {
+            const selectedDemo = e.target.value;
+
+            // Check if clicking the same demo that's already loaded
+            if (selectedDemo === lastLoadedDemo) {
+                Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
+                await loadDemoFile(selectedDemo, true); // Force reload
+            } else {
+                currentDemo = selectedDemo;
+                await loadDemoFile(selectedDemo, false);
+            }
+        });
+
+        async function loadDemoFile(demoKey, forceReload = false) {
+            if (!editor) return;
+
+            try {
+                // Check cache first (unless force reload)
+                if (!forceReload) {
+                    const cachedCode = DemoCache.get(demoKey);
+                    if (cachedCode) {
+                        Logger.info(`Loading ${demoKey} demo from cache`);
+                        editor.setValue('', -1);
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        editor.setValue(cachedCode, -1);
+                        editor.clearSelection();
+                        editor.moveCursorTo(0, 0);
+
+                        lastLoadedDemo = demoKey;
+                        currentDemo = demoKey;
+                        localStorage.removeItem("tc_code");
+
+                        updateEditorInfo();
+                        updateSaveIndicator();
+
+                        Logger.success(`Loaded ${demoKey} demo from cache`);
+                        return;
+                    }
                 }
-            });
-            return;
-        }
 
-        outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exeFile)}`);
-        outputChannel.appendLine('');
+                Logger.info(`Loading ${demoKey} demo using ResourceLoader...${forceReload ? ' (force reload)' : ''}`);
 
-        const runCmd = `wine "${exeFile}"`;
-
-        return new Promise((resolve) => {
-            const runProcess = spawn('bash', ['-c', runCmd], {
-                cwd: path.dirname(exeFile)
-            });
-
-            runProcess.stdout.on('data', (data) => {
-                outputChannel.append(`[Program Output] ${data.toString()}`);
-            });
-
-            runProcess.stderr.on('data', (data) => {
-                const output = data.toString();
-                // Filter out Wine debug messages
-                if (!output.includes('fixme:') && !output.includes('wine:')) {
-                    outputChannel.append(`[Program Error] ${output}`);
+                // Use ResourceLoader to fetch demo with automatic fallback to local files
+                let response;
+                try {
+                    // For force reload, add cache buster to the fetch
+                    const fetchOptions = forceReload ? { cache: 'no-cache' } : {};
+                    response = await ResourceLoader.fetchResource('demos', demoKey, fetchOptions);
+                } catch (resourceError) {
+                    Logger.warn(`ResourceLoader failed for ${demoKey}, trying direct DEMO_FILES fallback`);
+                    // Fallback to DEMO_FILES if ResourceLoader fails
+                    const demoUrl = DEMO_FILES[demoKey];
+                    if (demoUrl) {
+                        const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
+                        response = await fetch(demoUrl + cacheBuster);
+                    } else {
+                        throw new Error(`Demo file not found: ${demoKey}`);
+                    }
                 }
-            });
 
-            runProcess.on('close', (code) => {
-                outputChannel.appendLine('');
-                if (code === 0) {
-                    outputChannel.appendLine(`[graphics-h] ✓ Program finished successfully`);
-                } else if (code !== null) {
-                    outputChannel.appendLine(`[graphics-h] ✗ Program exited with code ${code}`);
+                if (response.ok) {
+                    const code = await response.text();
+
+                    // Cache the demo file
+                    DemoCache.set(demoKey, code);
+
+                    editor.setValue('', -1);
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    editor.setValue(code, -1);
+                    editor.clearSelection();
+                    editor.moveCursorTo(0, 0);
+
+                    // Update last loaded demo
+                    lastLoadedDemo = demoKey;
+                    currentDemo = demoKey;
+
+                    // Mark as modified when loading a demo
+                    if (isUserLoggedIn) {
+                        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                        const [folder, filename] = activeKey.split('/');
+                        setLocalDraft(folder, filename, code);
+                        CLOUD_STATE.lastSavedHash = null;
+                        scheduleAutosave();
+                    } else {
+                        localStorage.removeItem("tc_code");
+                    }
+
+                    updateEditorInfo();
+                    updateSaveIndicator();
+
+                    Logger.success(`Loaded ${demoKey} demo`);
                 } else {
-                    outputChannel.appendLine(`[graphics-h] Program stopped`);
+                    Logger.error(`Failed to load demo: ${response.status}`);
+                    alert('Failed to load demo file. Please try again.');
                 }
-                resolve();
-            });
-
-            runProcess.on('error', (error) => {
-                outputChannel.appendLine('');
-                outputChannel.appendLine('[graphics-h] Program execution failed:');
-                outputChannel.appendLine(error.message);
-                vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
-                resolve();
-            });
-        });
-    }
-
-    // Check if toolchain is ready
-    async isToolchainReady(): Promise<boolean> {
-        if (this.checkPromise) {
-            return this.checkPromise;
-        }
-
-        this.isChecking = true;
-
-        this.checkPromise = this.checkInstallation().finally(() => {
-            this.isChecking = false;
-            this.checkPromise = null;
-        });
-
-        return this.checkPromise;
-    }
-
-    // Get installation status details
-    async getInstallationStatus(): Promise<{
-        installed: boolean;
-        missing: string[];
-    }> {
-        const missing: string[] = [];
-
-        // Check files
-        const requiredFiles = [
-            { path: '/usr/local/include/graphics_h/graphics.h', name: 'graphics.h' },
-            { path: '/usr/local/include/graphics_h/winbgim.h', name: 'winbgim.h' },
-            { path: '/usr/local/lib/graphics_h/libbgi.a', name: 'libbgi.a' }
-        ];
-
-        for (const file of requiredFiles) {
-            if (!fs.existsSync(file.path)) {
-                missing.push(file.name);
+            } catch (e) {
+                Logger.error('Error loading demo file', e);
+                alert('Error loading demo file. Please check your connection or try offline mode.');
             }
         }
 
-        // Check compiler
-        const compilerCheck = await this.runCommand('which i686-w64-mingw32-g++');
-        if (!compilerCheck.success) {
-            missing.push('MinGW compiler (i686-w64-mingw32-g++)');
-        }
 
-        // Check Wine
-        const wineCheck = await this.runCommand('which wine');
-        if (!wineCheck.success) {
-            missing.push('Wine');
-        }
+        // ==================== EDITOR INITIALIZATION ====================
 
-        return {
-            installed: missing.length === 0,
-            missing
-        };
-    }
-
-    // Show detailed status
-    async showDetailedStatus(): Promise<void> {
-        const status = await this.getInstallationStatus();
-
-        if (status.installed) {
-            vscode.window.showInformationMessage(
-                '✓ Graphics.h toolchain is fully installed!\n\n' +
-                'Platform: Ubuntu/Linux\n' +
-                'Compiler: i686-w64-mingw32-g++\n' +
-                'Runtime: Wine\n' +
-                'Status: Ready'
-            );
-        } else {
-            const message = 
-                '⚠️ Graphics.h toolchain is not fully installed\n\n' +
-                `Missing components:\n${status.missing.map(m => `  • ${m}`).join('\n')}\n\n` +
-                'Would you like to see the installation command?';
-
-            const choice = await vscode.window.showWarningMessage(
-                message,
-                { modal: true },
-                'Show Installation Command'
-            );
-            
-            if (choice === 'Show Installation Command') {
-                await this.promptForInstallation();
+        async function initializeEditor() {
+            if (!scriptsLoaded.ace || typeof ace === 'undefined') {
+                setTimeout(initializeEditor, 100);
+                return;
             }
+
+            editor = ace.edit("editor");
+
+            // Set theme based on current theme setting
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const aceTheme = currentTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
+            editor.setTheme(aceTheme);
+
+            editor.session.setMode("ace/mode/c_cpp");
+
+            editor.setShowPrintMargin(false);
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                fontSize: "16px",
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                highlightActiveLine: true,
+                showGutter: true,
+                tabSize: 4,
+                useSoftTabs: true,
+                wrap: true
+            });
+
+            await loadDefaultCode();
+
+            editor.on('change', () => {
+                updateEditorInfo();
+                updateSaveIndicator();
+                if (isUserLoggedIn) {
+                    const activeKey = CLOUD_STATE.activeFileKey;
+                    if (activeKey) {
+                        const [folder, filename] = activeKey.split('/');
+                        setLocalDraft(folder, filename, editor.getValue());
+                    }
+                    CLOUD_STATE.lastSavedHash = null;
+                    scheduleAutosave();
+                }
+            });
+
+            setTimeout(() => {
+                editor.focus();
+                editorWrapper.classList.add('active');
+            }, 100);
+
+            Logger.success('Editor ready');
         }
+
+        function updateEditorInfo() {
+            if (!editor || !editorInfo) return;
+
+            const code = editor.getValue();
+            const lines = code.split('\n').length;
+            const chars = code.length;
+
+            editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
+        }
+
+
+
+        async function loadDefaultCode() {
+            if (isUserLoggedIn) {
+                await refreshCloudFiles();
+                const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                const [folder, filename] = activeKey.split('/');
+                await openFile(folder, filename, { skipSave: true });
+                return;
+            }
+
+            const savedCode = localStorage.getItem("tc_code");
+            if (savedCode) {
+                editor.setValue(savedCode, -1);
+                updateEditorInfo();
+                updateSaveIndicator();
+
+                Logger.info('Restored saved code');
+                return;
+            }
+
+            // Load default demo (graphics-demo)
+            await loadDemoFile('graphics-demo', false);
+        }
+
+        // Clear button functionality
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear the editor?')) {
+                editor.setValue('', -1);
+                if (isUserLoggedIn) {
+                    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                    const [folder, filename] = activeKey.split('/');
+                    setLocalDraft(folder, filename, '');
+                    CLOUD_STATE.lastSavedHash = null;
+                } else {
+                    localStorage.removeItem("tc_code");
+                }
+                lastLoadedDemo = ''; // Reset last loaded demo
+                updateEditorInfo();
+                updateSaveIndicator();
+                Logger.info('Editor cleared');
+            }
+        });
+
+
+
+runtime.js -> // ==================== FULLSCREEN FUNCTIONALITY - FIXED ====================
+
+let isEditorFullscreen = false;
+let isTerminalFullscreen = false;
+
+document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
+    isEditorFullscreen = !isEditorFullscreen;
+
+    if (isEditorFullscreen) {
+        editorWrapper.classList.add('fullscreen');
+        terminalWrapper.classList.add('hidden');
+    } else {
+        editorWrapper.classList.remove('fullscreen');
+        terminalWrapper.classList.remove('hidden');
     }
-}
 
-windowsDownloader.ts -> import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as crypto from 'crypto';
-import fetch from 'node-fetch';
-import AdmZip from 'adm-zip';
+    // Force editor resize after fullscreen toggle
+    setTimeout(() => {
+        if (editor) {
+            editor.resize();
+            editor.renderer.updateFull();
+        }
+    }, 100);
+});
 
-interface DownloadConfig {
-    url: string;
-    sha256?: string;
-}
+document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
+    isTerminalFullscreen = !isTerminalFullscreen;
 
-export class WindowsDownloader {
-    private isDownloading = false;
-    private downloadPromise: Promise<boolean> | null = null;
+    if (isTerminalFullscreen) {
+        terminalWrapper.classList.add('fullscreen');
+        editorWrapper.classList.add('hidden');
+    } else {
+        terminalWrapper.classList.remove('fullscreen');
+        editorWrapper.classList.remove('hidden');
+    }
 
-    // Configuration for MinGW download
-    private readonly MINGW_CONFIG: DownloadConfig = {
-        url: 'https://github.com/AlbatrossC/graphics-h-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
-        sha256: '72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd'
+    // Force canvas resize after fullscreen toggle
+    setTimeout(() => {
+        if (dosInstance) {
+            // Trigger canvas resize
+            window.dispatchEvent(new Event('resize'));
+        }
+    }, 100);
+});
+
+// ==================== KEYBOARD INPUT ISOLATION ====================
+
+let keyboardEventBlocker = null;
+
+function setupKeyboardBlocker() {
+    keyboardEventBlocker = function (e) {
+        if (!terminalFocused) {
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            return false;
+        }
     };
 
-    isInProgress(): boolean {
-        return this.isDownloading;
+    window.addEventListener('keydown', keyboardEventBlocker, true);
+    window.addEventListener('keyup', keyboardEventBlocker, true);
+    window.addEventListener('keypress', keyboardEventBlocker, true);
+}
+
+// ==================== FOCUS MANAGEMENT ====================
+
+function focusTerminal() {
+    if (!dosInstance) return;
+
+    terminalFocused = true;
+    canvas.focus();
+    canvas.tabIndex = 1;
+    terminalWrapper.classList.add('terminal-active');
+    editorWrapper.classList.remove('active');
+    keyboardBlocker.classList.remove('active');
+}
+
+function focusEditor() {
+    if (!editor) return;
+
+    terminalFocused = false;
+    canvas.tabIndex = -1;
+    canvas.blur();
+    editor.focus();
+    terminalWrapper.classList.remove('terminal-active');
+    editorWrapper.classList.add('active');
+    keyboardBlocker.classList.add('active');
+}
+
+keyboardBlocker.addEventListener('click', () => {
+    focusTerminal();
+});
+
+terminalWrapper.addEventListener('click', (e) => {
+    if (e.target === terminalWrapper || e.target === canvas) {
+        if (dosInstance && !terminalFocused) {
+            focusTerminal();
+        }
+    }
+});
+
+editorWrapper.addEventListener('click', () => {
+    focusEditor();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        focusEditor();
+        return false;
+    }
+}, true);
+
+// ==================== RUN PROGRAM ====================
+
+async function runProgram() {
+    if (!editor) {
+        alert('Editor is still loading. Please wait...');
+        return;
     }
 
-    // Verify downloaded file integrity using SHA256
-    private async verifyDownload(filePath: string, expectedHash: string): Promise<boolean> {
-        if (!expectedHash) {
-            return true;
-        }
+    const code = editor.getValue();
 
+    if (!code.trim()) {
+        alert('Please write some code first!');
+        return;
+    }
+
+    if (isUserLoggedIn) {
+        await forceSaveActiveFile();
+    } else {
+        saveCode();
+    }
+
+    Logger.info('Starting compilation...');
+    loading.classList.add('active');
+    loadingText.textContent = 'Initializing DOS environment...';
+    updateLoadingProgress(0);
+    runBtn.disabled = true;
+    runBtn.classList.add('loading');
+
+    if (dosInstance) {
         try {
-            const fileBuffer = fs.readFileSync(filePath);
-            const hashSum = crypto.createHash('sha256');
-            hashSum.update(fileBuffer);
-            const actualHash = hashSum.digest('hex').toLowerCase();
-            const expected = expectedHash.toLowerCase();
-
-            if (actualHash !== expected) {
-                console.error('Hash mismatch:');
-                console.error('  Expected:', expected);
-                console.error('  Actual:  ', actualHash);
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error verifying download:', error);
-            return false;
+            dosInstance.exit();
+        } catch (e) {
+            Logger.warn('Error closing previous DOS instance');
         }
+        dosInstance = null;
     }
 
-    // Download from URL
-    private async downloadFromUrl(
-        url: string,
-        tempZip: string,
-        progress: vscode.Progress<{ message?: string; increment?: number }>
-    ): Promise<boolean> {
-        try {
-            progress.report({ 
-                message: `Downloading MinGW32 toolchain...`,
-                increment: 5
-            });
-
-            const response = await fetch(url, {
-                headers: { 
-                    'User-Agent': 'Mozilla/5.0',
-                    'Accept': 'application/octet-stream'
-                },
-                redirect: 'follow'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Download failed: HTTP ${response.status} ${response.statusText}`);
-            }
-
-            const totalSize = parseInt(response.headers.get('content-length') || '0');
-            
-            if (totalSize === 0) {
-                throw new Error('Could not determine file size');
-            }
-
-            await this.streamToDisk(response, tempZip, progress, totalSize);
-
-            if (this.MINGW_CONFIG.sha256) {
-                progress.report({ 
-                    message: `Verifying integrity...`,
-                    increment: 5
-                });
-
-                const isValid = await this.verifyDownload(tempZip, this.MINGW_CONFIG.sha256);
-                if (!isValid) {
-                    throw new Error(`Verification failed: Checksum mismatch`);
-                }
-            }
-
-            return true;
-
-        } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            console.error(`Download from ${url} failed:`, errorMsg);
-            throw error;
-        }
+    // Clear existing error interval
+    if (errorUpdateInterval) {
+        clearInterval(errorUpdateInterval);
+        errorUpdateInterval = null;
     }
 
-    // Stream download directly to disk
-    private async streamToDisk(
-        response: any,
-        filePath: string,
-        progress: vscode.Progress<{ message?: string; increment?: number }>,
-        totalSize: number
-    ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const fileStream = fs.createWriteStream(filePath);
-            let downloadedSize = 0;
-            let lastReportedPercent = 0;
+    // Hide panel initially
+    outputPanel.classList.remove('visible');
+    terminalWrapper.classList.remove('has-panel');
+    lastErrorContent = '';
+    outputContent.textContent = '';
 
-            response.body.on('data', (chunk: Buffer) => {
-                downloadedSize += chunk.length;
-                const percent = Math.floor((downloadedSize / totalSize) * 100);
-                
-                if (percent >= lastReportedPercent + 5) {
-                    const sizeMB = (downloadedSize / 1024 / 1024).toFixed(1);
-                    const totalMB = (totalSize / 1024 / 1024).toFixed(1);
-                    
-                    progress.report({
-                        message: `Downloading: ${sizeMB}MB / ${totalMB}MB (${percent}%)`,
-                        increment: 5
-                    });
-                    
-                    lastReportedPercent = percent;
-                }
-            });
-
-            response.body.pipe(fileStream);
-
-            fileStream.on('finish', () => {
-                fileStream.close();
-                resolve();
-            });
-
-            fileStream.on('error', (error: Error) => {
-                fileStream.close();
-                if (fs.existsSync(filePath)) {
-                    try {
-                        fs.unlinkSync(filePath);
-                    } catch (cleanupError) {
-                        console.error('Failed to cleanup partial file:', cleanupError);
+    try {
+        // Wait for Dos to be available
+        if (!scriptsLoaded.jsdos || typeof Dos === 'undefined') {
+            loadingText.textContent = 'Waiting for JS-DOS...';
+            updateLoadingProgress(20);
+            await new Promise((resolve) => {
+                const checkDos = setInterval(() => {
+                    if (typeof Dos !== 'undefined') {
+                        clearInterval(checkDos);
+                        resolve();
                     }
-                }
-                reject(error);
+                }, 100);
             });
-
-            response.body.on('error', (error: Error) => {
-                fileStream.close();
-                if (fs.existsSync(filePath)) {
-                    try {
-                        fs.unlinkSync(filePath);
-                    } catch (cleanupError) {
-                        console.error('Failed to cleanup partial file:', cleanupError);
-                    }
-                }
-                reject(error);
-            });
-        });
-    }
-
-    // Copy bundled graphics files to MinGW directories
-    private copyBundledGraphicsFiles(
-        mingwPath: string,
-        extensionPath: string,
-        progress: vscode.Progress<{ message?: string; increment?: number }>
-    ): void {
-        progress.report({
-            message: "Installing graphics.h files...",
-            increment: 5
-        });
-
-        const resourcesPath = path.join(extensionPath, 'resources', 'graphics');
-        const includeDir = path.join(mingwPath, 'include');
-        const libDir = path.join(mingwPath, 'lib');
-
-        const files = [
-            { name: 'graphics.h', targetDir: includeDir },
-            { name: 'winbgim.h', targetDir: includeDir },
-            { name: 'libbgi.a', targetDir: libDir }
-        ];
-
-        for (const file of files) {
-            const sourceFile = path.join(resourcesPath, file.name);
-            const targetFile = path.join(file.targetDir, file.name);
-
-            if (!fs.existsSync(sourceFile)) {
-                throw new Error(`Bundled file ${file.name} not found in extension resources`);
-            }
-
-            // Create target directory if it doesn't exist
-            if (!fs.existsSync(file.targetDir)) {
-                fs.mkdirSync(file.targetDir, { recursive: true });
-            }
-
-            fs.copyFileSync(sourceFile, targetFile);
-
-            if (!fs.existsSync(targetFile)) {
-                throw new Error(`Failed to copy ${file.name} to MinGW directory`);
-            }
         }
 
-        progress.report({
-            message: "✓ Graphics.h files installed",
-            increment: 5
-        });
-    }
+        updateLoadingProgress(40);
 
-    // Main download and installation function for Windows
-    async download(targetPath: string, extensionPath: string): Promise<boolean> {
-        if (this.downloadPromise) {
-            return this.downloadPromise;
-        }
+        // Determine wdosbox URL using ResourceLoader with automatic fallback
+        let wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
+        const usingOnline = !ResourceLoader.isOffline() && wdosboxUrl && !wdosboxUrl.startsWith('/');
 
-        this.isDownloading = true;
+        Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
+        updateLoadingProgress(60);
 
-        this.downloadPromise = new Promise<boolean>((resolve) => {
-            vscode.window.withProgress({
-                location: vscode.ProgressLocation.Notification,
-                title: "Graphics.h Toolchain Setup (Windows)",
-                cancellable: false
-            }, async (progress) => {
-                const tempZip = path.join(targetPath, 'mingw32_temp.zip');
 
-                try {
-                    // Create target directory
-                    progress.report({ 
-                        message: "Preparing installation...",
-                        increment: 5
-                    });
-                    
-                    if (!fs.existsSync(targetPath)) {
-                        fs.mkdirSync(targetPath, { recursive: true });
-                    }
+        Dos(canvas, {
+            wdosboxUrl: wdosboxUrl,
+            cycles: "max",
+            autolock: false,
+        }).ready(async (fs, main) => {
 
-                    // Download MinGW32
-                    await this.downloadFromUrl(this.MINGW_CONFIG.url, tempZip, progress);
+            loadingText.textContent = 'Loading Turbo C++...';
+            updateLoadingProgress(70);
 
-                    // Extract MinGW32
-                    progress.report({ 
-                        message: "Extracting MinGW32 toolchain...",
-                        increment: 30
-                    });
+            try {
+                // Use shared getTCZip to prevent race condition with warmup
+                loadingText.textContent = 'Loading compiler...';
+                const tcBlob = await getTCZip();
 
-                    const zip = new AdmZip(tempZip);
-                    zip.extractAllTo(path.dirname(targetPath), true);
+                // Create a temporary URL for the blob
+                const blobUrl = URL.createObjectURL(tcBlob);
 
-                    // Clean up zip file
-                    if (fs.existsSync(tempZip)) {
-                        fs.unlinkSync(tempZip);
-                    }
+                Logger.info('Extracting compiler files...');
+                loadingText.textContent = 'Extracting compiler files...';
 
-                    // Copy bundled graphics.h files
-                    this.copyBundledGraphicsFiles(targetPath, extensionPath, progress);
+                // Now extract from the blob URL - js-dos can handle blob: URLs
+                await fs.extract(blobUrl);
 
-                    // Verify installation
-                    progress.report({ 
-                        message: "Verifying installation...",
-                        increment: 10
-                    });
+                // Clean up the blob URL
+                URL.revokeObjectURL(blobUrl);
 
-                    const gppPath = path.join(targetPath, 'bin', 'g++.exe');
-                    if (!fs.existsSync(gppPath)) {
-                        throw new Error('MinGW installation verification failed');
-                    }
+                Logger.success('Turbo C compiler loaded');
+            } catch (e) {
+                Logger.error('Compiler extraction failed', e);
+                throw new Error('Failed to load compiler: ' + e.message);
+            }
 
-                    progress.report({ 
-                        message: "Complete!",
-                        increment: 5
-                    });
+            loadingText.textContent = 'Writing source code...';
+            updateLoadingProgress(80);
+            fs.createFile("TURBOC3/BIN/USER.CPP", code);
 
-                    vscode.window.showInformationMessage('✓ Graphics.h toolchain installed successfully!');
+            const batchScript = `@ECHO OFF
+CD TURBOC3\\BIN
+IF EXIST USER.EXE DEL USER.EXE
+IF EXIST ERR.TXT DEL ERR.TXT
+TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
+IF EXIST USER.EXE GOTO SUCCESS
+CLS
+ECHO ========================================
+ECHO COMPILATION ERRORS:
+ECHO ========================================
+TYPE ERR.TXT
+ECHO.
+PAUSE
+EXIT
+:SUCCESS
+CLS
+USER.EXE
+PAUSE
+`;
 
-                    this.isDownloading = false;
-                    this.downloadPromise = null;
-                    resolve(true);
+            fs.createFile("AUTOEXEC.BAT", batchScript);
 
-                } catch (error) {
-                    this.isDownloading = false;
-                    this.downloadPromise = null;
+            loadingText.textContent = 'Starting program...';
+            updateLoadingProgress(90);
 
-                    if (fs.existsSync(tempZip)) {
-                        try {
-                            fs.unlinkSync(tempZip);
-                        } catch (cleanupError) {
-                            console.error('Failed to delete partial zip:', cleanupError);
-                        }
-                    }
+            dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
 
-                    const errorMsg = error instanceof Error ? error.message : String(error);
-                    
-                    vscode.window.showErrorMessage(
-                        `Toolchain setup failed: ${errorMsg}`,
-                        'Retry',
-                        'Report Issue'
-                    ).then(choice => {
-                        if (choice === 'Retry') {
-                            this.downloadPromise = null;
-                            this.download(targetPath, extensionPath);
-                        } else if (choice === 'Report Issue') {
-                            vscode.env.openExternal(
-                                vscode.Uri.parse('https://github.com/AlbatrossC/graphics-h-compiler/issues')
-                            );
-                        }
-                    });
+            setupKeyboardBlocker();
 
-                    console.error('Installation error:', error);
-                    resolve(false);
-                }
-            });
+            updateLoadingProgress(100);
+            loading.classList.remove('active');
+            runBtn.disabled = false;
+            runBtn.classList.remove('loading');
+
+            Logger.success('Program started successfully');
+
+            setTimeout(() => {
+                focusTerminal();
+            }, 500);
+
+            // Start checking for compilation errors
+            errorUpdateInterval = setInterval(() => checkCompilationErrors(), 1000);
         });
 
-        return this.downloadPromise;
-    }
-
-    // Prompt user for permission to download
-    async promptForPermission(): Promise<boolean> {
-        const choice = await vscode.window.showInformationMessage(
-            `⚙️ Graphics.h Compiler setup required\n\n` +
-            `To compile graphics programs, a one-time setup is needed.\n` +
-            `📦 ~220MB download, ~770MB disk space\n\n` +
-            `Download and continue?`,
-            { modal: true },
-            'Download',
-            'Cancel'
-        );
-
-        return choice === 'Download';
-    }
-
-    // Update download configuration
-    updateConfig(config: Partial<DownloadConfig>): void {
-        Object.assign(this.MINGW_CONFIG, config);
+    } catch (error) {
+        Logger.error('Failed to start DOS environment', error);
+        alert('Failed to start DOS environment. Error: ' + error.message);
+        loading.classList.remove('active');
+        runBtn.disabled = false;
+        runBtn.classList.remove('loading');
+        updateLoadingProgress(0);
     }
 }
+
+// ==================== KEYBOARD SHORTCUTS ====================
+
+window.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + Enter to run
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !terminalFocused) {
+        e.preventDefault();
+        runProgram();
+    }
+
+    // Ctrl/Cmd + S to save
+    if ((e.ctrlKey || e.metaKey) && e.key === 's' && !terminalFocused) {
+        e.preventDefault();
+        saveCode();
+    }
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && isUserLoggedIn) {
+        forceSaveActiveFile();
+    }
+});
+
+window.addEventListener('beforeunload', () => {
+    if (isUserLoggedIn) {
+        forceSaveActiveFile();
+    }
+});
+
+// ==================== RESPONSIVE HANDLING ====================
+
+function handleResize() {
+    if (editor) {
+        editor.resize();
+        editor.renderer.updateFull();
+    }
+}
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', () => {
+    setTimeout(handleResize, 300);
+});
+
+// ==================== SIDEBAR FUNCTIONALITY ====================
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const refreshBtn = document.getElementById('refresh-btn');
+const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
+const explorerActivityBtn = document.getElementById('explorer-activity-btn');
+const cloudPromoView = document.getElementById('cloud-promo-view');
+const fileExplorerView = document.getElementById('file-explorer-view');
+const authSection = document.getElementById('auth-section');
+const userProfileSection = document.getElementById('user-profile-section');
+const userProfileBtn = document.getElementById('user-profile-btn');
+const userProfileDropdown = document.getElementById('user-profile-dropdown');
+const userAvatar = document.getElementById('user-avatar');
+const userName = document.getElementById('user-name');
+const userEmail = document.getElementById('user-email');
+const signoutBtn = document.getElementById('signout-btn');
+const googleSigninBtn = document.getElementById('google-signin-btn');
+const mainFolder = document.getElementById('main-folder');
+const mainFolderFiles = document.getElementById('main-folder-files');
+const newFileBtn = document.getElementById('new-file-btn');
+const newFolderBtn = document.getElementById('new-folder-btn');
+
+// User state (will be updated by auth logic)
+let isUserLoggedIn = false;
+let currentUser = null;
+let supabaseClient = null;
+
+// Mobile toggle
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('active');
+    });
+}
+
+// Mobile overlay close
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+    });
+}
+
+// Desktop collapse toggle
+if (sidebarCollapseBtn) {
+    sidebarCollapseBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        // Resize editor after collapse animation
+        setTimeout(() => {
+            if (editor) {
+                editor.resize();
+                editor.renderer.updateFull();
+            }
+        }, 350);
+    });
+}
+
+// Activity bar button to toggle sidebar
+if (explorerActivityBtn) {
+    explorerActivityBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        setTimeout(() => {
+            if (editor) {
+                editor.resize();
+                editor.renderer.updateFull();
+            }
+        }, 350);
+    });
+}
+
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+        refreshCloudFiles();
+    });
+}
+
+// Folder expand/collapse toggle
+if (mainFolder) {
+    mainFolder.addEventListener('click', () => {
+        mainFolder.classList.toggle('collapsed');
+        mainFolderFiles.style.display = mainFolder.classList.contains('collapsed') ? 'none' : 'flex';
+    });
+}
+
+// New File button (placeholder)
+if (newFileBtn) {
+    newFileBtn.addEventListener('click', () => {
+        createNewFile();
+    });
+}
+
+// New Folder button (placeholder)
+if (newFolderBtn) {
+    newFolderBtn.addEventListener('click', () => {
+        createNewFolder();
+    });
+}
+
+// User profile dropdown toggle
+if (userProfileBtn) {
+    userProfileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userProfileDropdown.classList.toggle('open');
+    });
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (userProfileDropdown && !userProfileDropdown.contains(e.target) && !userProfileBtn.contains(e.target)) {
+        userProfileDropdown.classList.remove('open');
+    }
+});
+
+// Sign out button in dropdown
+if (signoutBtn) {
+    signoutBtn.addEventListener('click', async () => {
+        userProfileDropdown.classList.remove('open');
+        await signOut();
+    });
+}
+
+// Update UI based on login state
+function updateLoginUI(loggedIn, user = null) {
+    isUserLoggedIn = loggedIn;
+    currentUser = user;
+
+    if (loggedIn && user) {
+        // Show file explorer, hide promo
+        cloudPromoView.style.display = 'none';
+        fileExplorerView.style.display = 'block';
+
+        // Hide auth section, show user profile
+        authSection.style.display = 'none';
+        userProfileSection.style.display = 'block';
+
+        // Update user info
+        const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+        const email = user.email || '';
+        const avatarUrl = user.user_metadata?.avatar_url;
+
+        userName.textContent = displayName;
+        userEmail.textContent = email;
+
+        // Set avatar (first letter or image)
+        if (avatarUrl) {
+            userAvatar.innerHTML = `<img src="${avatarUrl}" alt="${displayName}">`;
+        } else {
+            userAvatar.innerHTML = displayName.charAt(0).toUpperCase();
+        }
+
+        Logger.success(`Signed in as ${displayName}`);
+
+        refreshCloudFiles()
+            .then(() => {
+                const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                const [folder, filename] = activeKey.split('/');
+                return openFile(folder, filename, { skipSave: true });
+            })
+            .catch(() => { });
+    } else {
+        // Show promo, hide file explorer
+        cloudPromoView.style.display = 'flex';
+        fileExplorerView.style.display = 'none';
+
+        // Show auth section, hide user profile
+        authSection.style.display = 'block';
+        userProfileSection.style.display = 'none';
+
+        CLOUD_STATE.files.clear();
+        CLOUD_STATE.folders = new Set(['main']);
+        CLOUD_STATE.openTabs = [];
+        CLOUD_STATE.activeFileKey = 'main/main.cpp';
+        updateSaveIndicator();
+    }
+}
+
+
+// ==================== SUPABASE AUTH ====================
+
+async function initSupabaseAuth() {
+    try {
+        // Fetch auth config from server
+        const response = await fetch('/api/auth/config');
+        if (!response.ok) {
+            Logger.warn('Auth not configured on server');
+            return;
+        }
+
+        const config = await response.json();
+        // Load Supabase JS client
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+        script.onload = () => {
+            // Initialize Supabase client
+            supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+            // Check for existing session
+            Logger.info('Checking for existing Supabase session...');
+            checkSession();
+
+            // Listen for auth state changes
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                Logger.info(`Auth state changed: ${event}`);
+                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') && session?.user) {
+                    updateLoginUI(true, session.user);
+                } else if (event === 'SIGNED_OUT') {
+                    updateLoginUI(false);
+                }
+            });
+
+            Logger.info('Supabase auth initialized');
+        };
+        script.onerror = () => {
+            Logger.warn('Failed to load Supabase client from CDN');
+        };
+        document.head.appendChild(script);
+    } catch (e) {
+        Logger.warn('Auth initialization failed: ' + e.message);
+    }
+}
+
+async function checkSession() {
+    if (!supabaseClient) return;
+
+    try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error) {
+            Logger.warn('Session lookup error: ' + error.message);
+        }
+        if (session?.user) {
+            Logger.info('Active session found');
+            updateLoginUI(true, session.user);
+        } else {
+            Logger.info('No active session');
+            updateLoginUI(false);
+        }
+    } catch (e) {
+        Logger.warn('Session check failed');
+        updateLoginUI(false);
+    }
+}
+
+async function signInWithGoogle() {
+    if (!supabaseClient) {
+        alert('Authentication is not configured. Please try again later.');
+        return;
+    }
+
+    try {
+        const redirectTo = `${window.location.origin}${window.location.pathname}`;
+        Logger.info(`Starting Google sign-in (redirect: ${redirectTo})`);
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo
+            }
+        });
+
+        if (error) {
+            Logger.error('Sign in failed: ' + error.message);
+            alert('Sign in failed: ' + error.message);
+        }
+    } catch (e) {
+        Logger.error('Sign in error: ' + e.message);
+        alert('Sign in failed. Please try again.');
+    }
+}
+
+async function signOut() {
+    if (!supabaseClient) return;
+
+    try {
+        Logger.info('Signing out...');
+        await forceSaveActiveFile();
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+            Logger.error('Sign out failed: ' + error.message);
+        } else {
+            updateLoginUI(false);
+            Logger.info('Signed out successfully');
+        }
+    } catch (e) {
+        Logger.error('Sign out error: ' + e.message);
+    }
+}
+
+// Google Sign-In button click handler (only for signing in)
+if (googleSigninBtn) {
+    googleSigninBtn.addEventListener('click', async () => {
+        await signInWithGoogle();
+    });
+}
+
+
+// Initialize auth on page load
+initSupabaseAuth();
+
+
+// ==================== JS-DOS BACKGROUND WARMUP ====================
+
+async function warmupJSDOS() {
+    if (warmupPromise) return warmupPromise;
+
+    warmupPromise = new Promise(async (resolve) => {
+        try {
+            // Wait for JS-DOS to be available
+            if (typeof Dos === 'undefined') {
+                let attempts = 0;
+                while (typeof Dos === 'undefined' && attempts < 50) {
+                    await new Promise(r => setTimeout(r, 100));
+                    attempts++;
+                }
+                if (typeof Dos === 'undefined') {
+                    Logger.warn('JS-DOS not available for warmup');
+                    resolve(false);
+                    return;
+                }
+            }
+
+            Logger.info('Starting JS-DOS background warmup...');
+
+            // Pre-fetch and cache TC ZIP using shared function
+            try {
+                await getTCZip();
+                Logger.success('TC ZIP ready for instant run');
+            } catch (e) {
+                Logger.warn('Failed to pre-cache TC ZIP: ' + e.message);
+            }
+
+            // Pre-cache all demo files in background
+            prefetchDemoFiles();
+
+            Logger.success('JS-DOS warmup complete - Run will be instant!');
+            resolve(true);
+        } catch (e) {
+            Logger.warn('Warmup failed: ' + e.message);
+            resolve(false);
+        }
+    });
+
+    return warmupPromise;
+}
+
+async function prefetchDemoFiles() {
+    // Pre-fetch all demo files in background
+    for (const [key, url] of Object.entries(DEMO_FILES)) {
+        if (!DemoCache.get(key)) {
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    const code = await response.text();
+                    DemoCache.set(key, code);
+                    Logger.info(`Pre-cached demo: ${key}`);
+                }
+            } catch (e) {
+                // Silently fail for background prefetch
+            }
+        }
+    }
+}
+
+// ==================== INITIALIZATION ====================
+
+(async function init() {
+    Logger.info('Initializing compiler...');
+    updateSaveIndicator();
+
+    const loaded = await loadAllScripts();
+    if (loaded) {
+        await initializeEditor();
+
+        // Start background warmup after editor is ready
+        // This runs silently in background, making Run feel instant
+        setTimeout(() => {
+            warmupJSDOS();
+            updateCacheStatus();
+        }, 500);
+
+        Logger.success('Compiler ready');
+    }
+})();
+
+
+storage.js -> // ==================== CLOUD STORAGE FUNCTIONS ====================
+
+// Compute SHA-256 hash of content
+async function computeSha256(content) {
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(content);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+        // Fallback for older browsers
+        let hash = 0;
+        for (let i = 0; i < content.length; i++) {
+            const char = content.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString(16);
+    }
+}
+
+// File key helper
+function getFileKey(folder, filename) {
+    return `${folder}/${filename}`;
+}
+
+// Local draft management
+function setLocalDraft(folder, filename, content) {
+    try {
+        localStorage.setItem(`draft_${folder}_${filename}`, content);
+    } catch (e) {
+        Logger.warn('Failed to save local draft');
+    }
+}
+
+function getLocalDraft(folder, filename) {
+    try {
+        return localStorage.getItem(`draft_${folder}_${filename}`);
+    } catch (e) {
+        return null;
+    }
+}
+
+function clearLocalDraft(folder, filename) {
+    try {
+        localStorage.removeItem(`draft_${folder}_${filename}`);
+    } catch (e) {
+        // Ignore
+    }
+}
+
+// ==================== PROGRESS BAR & STATUS ====================
+
+const progressBar = document.getElementById('progress-bar');
+const progressFill = document.getElementById('progress-fill');
+const statusMessage = document.getElementById('status-message');
+const statusText = document.getElementById('status-text');
+
+// Show progress bar (indeterminate)
+function showProgress() {
+    if (progressBar && progressFill) {
+        progressBar.classList.remove('hidden');
+        progressFill.classList.add('indeterminate');
+    }
+}
+
+// Hide progress bar
+function hideProgress() {
+    if (progressBar && progressFill) {
+        progressFill.classList.remove('indeterminate');
+        progressBar.classList.add('hidden');
+    }
+}
+
+// Show status message (auto-hides after delay)
+function showStatus(message, isError = false, duration = 3000) {
+    if (statusMessage && statusText) {
+        statusText.textContent = message;
+        statusMessage.classList.remove('hidden', 'error');
+        if (isError) {
+            statusMessage.classList.add('error');
+        }
+
+        // Auto-hide after duration
+        setTimeout(() => {
+            statusMessage.classList.add('hidden');
+        }, duration);
+    }
+}
+
+// ==================== SAVE FUNCTIONS ====================
+
+// Unified save function - saves BOTH locally and to cloud
+async function saveCode() {
+    if (!editor) return;
+
+    const code = editor.getValue();
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    const [folder, filename] = activeKey.split('/');
+
+    // 1. Always save locally first
+    localStorage.setItem('tc_code', code);
+    setLocalDraft(folder, filename, code);
+
+    // 2. If logged in, also save to cloud
+    if (isUserLoggedIn && supabaseClient) {
+        showProgress();
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                const hash = await computeSha256(code);
+
+                const response = await fetch('/files/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ folder, filename, content: code, hash })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    CLOUD_STATE.lastSavedAt = Date.now();
+                    CLOUD_STATE.lastSavedHash = hash;
+
+                    // Show success status
+                    showStatus('✓ Files saved!');
+                    Logger.success('Code saved to cloud');
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    showStatus('Save failed', true);
+                    Logger.warn(`Cloud save failed: ${errData.error || response.status}`);
+                }
+            }
+        } catch (e) {
+            showStatus('Save failed', true);
+            Logger.warn('Cloud save error: ' + e.message);
+        } finally {
+            hideProgress();
+        }
+    } else {
+        // Not logged in - just show local save status
+        showStatus('✓ Saved locally');
+    }
+
+    updateSaveIndicator();
+}
+
+// Save code locally only (internal helper)
+function saveLocalCode() {
+    if (!editor) return;
+
+    const code = editor.getValue();
+    localStorage.setItem('tc_code', code);
+
+    if (isUserLoggedIn) {
+        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const [folder, filename] = activeKey.split('/');
+        setLocalDraft(folder, filename, code);
+    }
+
+    Logger.success('Code saved locally');
+    updateSaveIndicator();
+}
+
+// Save code to cloud
+async function saveCloudCode() {
+    if (!editor) return;
+
+    if (!isUserLoggedIn || !supabaseClient) {
+        alert('Please sign in to save to cloud');
+        return;
+    }
+
+    const code = editor.getValue();
+
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+            alert('Session expired. Please sign in again.');
+            return;
+        }
+
+        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const [folder, filename] = activeKey.split('/');
+        const hash = await computeSha256(code);
+
+        Logger.info(`Saving to cloud: ${folder}/${filename}`);
+
+        const response = await fetch('/files/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ folder, filename, content: code, hash })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.skipped) {
+                Logger.info('Cloud save skipped (unchanged)');
+            } else {
+                Logger.success('Code saved to cloud');
+            }
+            CLOUD_STATE.lastSavedAt = Date.now();
+            CLOUD_STATE.lastSavedHash = hash;
+
+            // Also save locally
+            localStorage.setItem('tc_code', code);
+            setLocalDraft(folder, filename, code);
+
+            updateSaveIndicator();
+        } else {
+            const errData = await response.json().catch(() => ({}));
+            Logger.error(`Cloud save failed: ${errData.error || response.status}`);
+            alert('Failed to save to cloud. Please try again.');
+        }
+    } catch (e) {
+        Logger.error('Cloud save error: ' + e.message);
+        alert('Failed to save to cloud: ' + e.message);
+    }
+}
+
+// Force save active file (for autosave)
+async function forceSaveActiveFile() {
+    if (!editor || !isUserLoggedIn || !supabaseClient) return;
+
+    const code = editor.getValue();
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    const [folder, filename] = activeKey.split('/');
+    const hash = await computeSha256(code);
+
+    // Skip if unchanged
+    if (CLOUD_STATE.lastSavedHash === hash) {
+        return;
+    }
+
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) return;
+
+        const response = await fetch('/files/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ folder, filename, content: code, hash })
+        });
+
+        if (response.ok) {
+            CLOUD_STATE.lastSavedAt = Date.now();
+            CLOUD_STATE.lastSavedHash = hash;
+            setLocalDraft(folder, filename, code);
+            updateSaveIndicator();
+            Logger.info('Autosave complete');
+        }
+    } catch (e) {
+        Logger.warn('Autosave failed: ' + e.message);
+    }
+}
+
+// Schedule autosave
+function scheduleAutosave() {
+    if (CLOUD_STATE.autosaveTimer) {
+        clearTimeout(CLOUD_STATE.autosaveTimer);
+    }
+
+    CLOUD_STATE.autosaveTimer = setTimeout(async () => {
+        await forceSaveActiveFile();
+    }, AUTOSAVE_DELAY_MS);
+}
+
+// ==================== FILE EXPLORER FUNCTIONS ====================
+
+// Refresh cloud files list
+async function refreshCloudFiles() {
+    if (!isUserLoggedIn || !supabaseClient) return;
+
+    showProgress();
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+            hideProgress();
+            return;
+        }
+
+        const response = await fetch('/files/list', {
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            CLOUD_STATE.files.clear();
+            CLOUD_STATE.folders = new Set(['main']);
+
+            if (data.files && Array.isArray(data.files)) {
+                data.files.forEach(file => {
+                    const key = getFileKey(file.folder, file.filename);
+                    CLOUD_STATE.files.set(key, file);
+                    CLOUD_STATE.folders.add(file.folder);
+                });
+            }
+
+            renderFileExplorer();
+            Logger.info(`Loaded ${CLOUD_STATE.files.size} files from cloud`);
+        }
+    } catch (e) {
+        Logger.warn('Failed to refresh cloud files: ' + e.message);
+    } finally {
+        hideProgress();
+    }
+}
+
+// Render file explorer UI
+function renderFileExplorer() {
+    const mainFolderFiles = document.getElementById('main-folder-files');
+    if (!mainFolderFiles) return;
+
+    mainFolderFiles.innerHTML = '';
+
+    // Group files by folder
+    const folders = new Map();
+    CLOUD_STATE.files.forEach((file, key) => {
+        if (!folders.has(file.folder)) {
+            folders.set(file.folder, []);
+        }
+        folders.get(file.folder).push(file);
+    });
+
+    // If no files, show default main.cpp
+    if (CLOUD_STATE.files.size === 0) {
+        const defaultItem = createFileItem('main', 'main.cpp');
+        mainFolderFiles.appendChild(defaultItem);
+        return;
+    }
+
+    // Render main folder files
+    const mainFiles = folders.get('main') || [];
+    mainFiles.forEach(file => {
+        const fileItem = createFileItem(file.folder, file.filename);
+        mainFolderFiles.appendChild(fileItem);
+    });
+}
+
+// Create file item element
+function createFileItem(folder, filename) {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.dataset.folder = folder;
+    item.dataset.file = filename;
+
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    if (`${folder}/${filename}` === activeKey) {
+        item.classList.add('active');
+    }
+
+    item.innerHTML = `
+        <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+        <span class="file-name">${filename}</span>
+        <button class="file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </button>
+    `;
+
+    item.addEventListener('click', () => openFile(folder, filename));
+    return item;
+}
+
+// Open a file
+async function openFile(folder, filename, options = {}) {
+    if (!options.skipSave && isUserLoggedIn) {
+        await forceSaveActiveFile();
+    }
+
+    const key = getFileKey(folder, filename);
+    CLOUD_STATE.activeFileKey = key;
+
+    // Try local draft first
+    const draft = getLocalDraft(folder, filename);
+    if (draft !== null) {
+        if (editor) {
+            editor.setValue(draft, -1);
+            editor.clearSelection();
+        }
+        updateSaveIndicator();
+        highlightActiveFile();
+        Logger.info(`Opened ${filename} from local draft`);
+        return;
+    }
+
+    // Try cloud
+    if (isUserLoggedIn && supabaseClient) {
+        showProgress();
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                const response = await fetch(`/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const content = await response.text();
+                    if (editor) {
+                        editor.setValue(content, -1);
+                        editor.clearSelection();
+                    }
+                    setLocalDraft(folder, filename, content);
+                    CLOUD_STATE.lastSavedHash = await computeSha256(content);
+                    updateSaveIndicator();
+                    highlightActiveFile();
+                    Logger.info(`Opened ${filename} from cloud`);
+                    hideProgress();
+                    return;
+                }
+            }
+        } catch (e) {
+            Logger.warn('Failed to load from cloud: ' + e.message);
+        } finally {
+            hideProgress();
+        }
+    }
+
+    // Default: empty file
+    if (editor) {
+        editor.setValue('', -1);
+    }
+    highlightActiveFile();
+}
+
+function highlightActiveFile() {
+    document.querySelectorAll('.file-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    const [folder, filename] = activeKey.split('/');
+
+    document.querySelectorAll('.file-item').forEach(item => {
+        if (item.dataset.folder === folder && item.dataset.file === filename) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// ==================== CREATE FILE/FOLDER (SIMPLIFIED) ====================
+
+async function createNewFile() {
+    // Show a simple prompt for the file name
+    const filename = prompt('Enter file name:\n(e.g., mycode.cpp, test.c, program.cpp)');
+
+    if (!filename || !filename.trim()) {
+        return; // User cancelled
+    }
+
+    // Clean and validate filename
+    let cleanName = filename.trim();
+
+    // Add .cpp extension if no extension provided
+    if (!cleanName.includes('.')) {
+        cleanName += '.cpp';
+    }
+
+    // Remove any invalid characters
+    cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
+
+    if (!cleanName || cleanName === '.cpp') {
+        alert('Invalid file name. Please use letters, numbers, and underscores.');
+        return;
+    }
+
+    const folder = 'main';
+    const key = getFileKey(folder, cleanName);
+
+    // Check if file already exists
+    if (CLOUD_STATE.files.has(key)) {
+        alert(`File "${cleanName}" already exists.`);
+        return;
+    }
+
+    // Default content for new file
+    const defaultContent = `// ${cleanName}
+// Created on ${new Date().toLocaleDateString()}
+
+#include <graphics.h>
+#include <conio.h>
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+    
+    // Your code here
+    
+    getch();
+    closegraph();
+    return 0;
+}
+`;
+
+    // Save locally first
+    setLocalDraft(folder, cleanName, defaultContent);
+
+    // If logged in, save to cloud
+    if (isUserLoggedIn && supabaseClient) {
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                const hash = await computeSha256(defaultContent);
+
+                const response = await fetch('/files/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ folder, filename: cleanName, content: defaultContent, hash })
+                });
+
+                if (response.ok) {
+                    Logger.success(`Created new file: ${cleanName}`);
+                    await refreshCloudFiles();
+                    await openFile(folder, cleanName);
+                    return;
+                }
+            }
+        } catch (e) {
+            Logger.warn('Failed to save new file to cloud: ' + e.message);
+        }
+    }
+
+    // Update local state and open file
+    CLOUD_STATE.files.set(key, { folder, filename: cleanName });
+    renderFileExplorer();
+    await openFile(folder, cleanName);
+    Logger.success(`Created new file: ${cleanName}`);
+}
+
+async function createNewFolder() {
+    // Show a simple prompt
+    const folderName = prompt('Enter folder name:\n(e.g., projects, examples, homework)');
+
+    if (!folderName || !folderName.trim()) {
+        return; // User cancelled
+    }
+
+    // Clean and validate folder name
+    let cleanName = folderName.trim().toLowerCase();
+    cleanName = cleanName.replace(/[^a-z0-9_-]/g, '');
+
+    if (!cleanName) {
+        alert('Invalid folder name. Please use letters, numbers, and underscores.');
+        return;
+    }
+
+    // Check if folder already exists
+    if (CLOUD_STATE.folders.has(cleanName)) {
+        alert(`Folder "${cleanName}" already exists.`);
+        return;
+    }
+
+    // Add folder to state
+    CLOUD_STATE.folders.add(cleanName);
+
+    // Create a default file in the new folder
+    const defaultFilename = 'main.cpp';
+    const defaultContent = `// ${cleanName}/${defaultFilename}
+// Created on ${new Date().toLocaleDateString()}
+
+#include <graphics.h>
+#include <conio.h>
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+    
+    // Your code here
+    
+    getch();
+    closegraph();
+    return 0;
+}
+`;
+
+    // Save locally
+    setLocalDraft(cleanName, defaultFilename, defaultContent);
+
+    // If logged in, save to cloud
+    if (isUserLoggedIn && supabaseClient) {
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                const hash = await computeSha256(defaultContent);
+
+                const response = await fetch('/files/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ folder: cleanName, filename: defaultFilename, content: defaultContent, hash })
+                });
+
+                if (response.ok) {
+                    Logger.success(`Created new folder: ${cleanName}`);
+                    await refreshCloudFiles();
+                    await openFile(cleanName, defaultFilename);
+                    return;
+                }
+            }
+        } catch (e) {
+            Logger.warn('Failed to create folder in cloud: ' + e.message);
+        }
+    }
+
+    // Update local state
+    const key = getFileKey(cleanName, defaultFilename);
+    CLOUD_STATE.files.set(key, { folder: cleanName, filename: defaultFilename });
+    renderFileExplorer();
+    await openFile(cleanName, defaultFilename);
+    Logger.success(`Created new folder: ${cleanName}`);
+}
+
+// Delete a file
+async function deleteFile(folder, filename) {
+    if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) {
+        return;
+    }
+
+    const key = getFileKey(folder, filename);
+
+    // Delete from cloud if logged in
+    if (isUserLoggedIn && supabaseClient) {
+        try {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                const response = await fetch('/files/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ folder, filename })
+                });
+
+                if (response.ok) {
+                    Logger.success(`Deleted ${filename}`);
+                }
+            }
+        } catch (e) {
+            Logger.warn('Failed to delete from cloud: ' + e.message);
+        }
+    }
+
+    // Remove from local state
+    CLOUD_STATE.files.delete(key);
+    clearLocalDraft(folder, filename);
+
+    // If we deleted the active file, switch to main.cpp
+    if (CLOUD_STATE.activeFileKey === key) {
+        CLOUD_STATE.activeFileKey = 'main/main.cpp';
+        await openFile('main', 'main.cpp');
+    }
+
+    renderFileExplorer();
+}
+
+// ==================== SAVE INDICATOR ====================
+
+function updateSaveIndicator() {
+    if (!saveIndicator || !saveText) return;
+
+    const code = editor?.getValue() || '';
+    const savedCode = localStorage.getItem('tc_code') || '';
+
+    if (code === savedCode) {
+        saveIndicator.classList.add('saved');
+        saveText.textContent = 'Saved';
+    } else {
+        saveIndicator.classList.remove('saved');
+        saveText.textContent = 'Unsaved';
+    }
+}
+
 

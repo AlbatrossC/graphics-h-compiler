@@ -25,13 +25,42 @@ function getFileKey(folder, filename) {
     return `${folder}/${filename}`;
 }
 
-// Local draft management
-function setLocalDraft(folder, filename, content) {
+// ==================== DEBOUNCED LOCAL DRAFT MANAGEMENT ====================
+// Debounce timers for local draft saves to reduce write operations
+const draftSaveTimers = new Map();
+const DRAFT_SAVE_DEBOUNCE_MS = 100;
+
+// Immediate local draft save (for critical saves)
+function setLocalDraftImmediate(folder, filename, content) {
     try {
         localStorage.setItem(`draft_${folder}_${filename}`, content);
     } catch (e) {
         Logger.warn('Failed to save local draft');
     }
+}
+
+// Debounced local draft save (for typing - reduces write operations)
+function setLocalDraft(folder, filename, content) {
+    const key = getFileKey(folder, filename);
+
+    // Clear existing timer
+    if (draftSaveTimers.has(key)) {
+        clearTimeout(draftSaveTimers.get(key));
+    }
+
+    // Schedule debounced save
+    draftSaveTimers.set(key, setTimeout(() => {
+        setLocalDraftImmediate(folder, filename, content);
+        draftSaveTimers.delete(key);
+    }, DRAFT_SAVE_DEBOUNCE_MS));
+}
+
+// Flush all pending draft saves immediately
+function flushPendingDrafts() {
+    draftSaveTimers.forEach((timer, key) => {
+        clearTimeout(timer);
+        draftSaveTimers.delete(key);
+    });
 }
 
 function getLocalDraft(folder, filename) {
@@ -224,23 +253,42 @@ async function saveCloudCode() {
     }
 }
 
-// Force save active file (for autosave)
+// ==================== OPTIMIZED AUTOSAVE SYSTEM ====================
+// Pending save state to prevent redundant operations
+let pendingSaveHash = null;
+let isSaving = false;
+
+// Force save active file (for autosave) - optimized with save locking
 async function forceSaveActiveFile() {
     if (!editor || !isUserLoggedIn || !supabaseClient) return;
+
+    // Prevent concurrent saves
+    if (isSaving) {
+        Logger.info('Save already in progress, skipping');
+        return;
+    }
 
     const code = editor.getValue();
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
     const hash = await computeSha256(code);
 
-    // Skip if unchanged
-    if (CLOUD_STATE.lastSavedHash === hash) {
+    // Skip if unchanged (check both cloud hash and pending hash)
+    if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash) {
         return;
     }
 
+    // Mark this hash as pending to prevent duplicate saves
+    pendingSaveHash = hash;
+    isSaving = true;
+
     try {
         const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) return;
+        if (!session?.access_token) {
+            isSaving = false;
+            pendingSaveHash = null;
+            return;
+        }
 
         const response = await fetch('/files/save', {
             method: 'POST',
@@ -252,24 +300,36 @@ async function forceSaveActiveFile() {
         });
 
         if (response.ok) {
+            const result = await response.json();
             CLOUD_STATE.lastSavedAt = Date.now();
             CLOUD_STATE.lastSavedHash = hash;
-            setLocalDraft(folder, filename, code);
+
+            // Use immediate save for autosave completion
+            setLocalDraftImmediate(folder, filename, code);
             updateSaveIndicator();
-            Logger.info('Autosave complete');
+
+            if (result.skipped) {
+                Logger.info('Autosave skipped (unchanged on server)');
+            } else {
+                Logger.info('Autosave complete');
+            }
         }
     } catch (e) {
         Logger.warn('Autosave failed: ' + e.message);
+    } finally {
+        isSaving = false;
+        pendingSaveHash = null;
     }
 }
 
-// Schedule autosave
+// Schedule autosave with debouncing
 function scheduleAutosave() {
     if (CLOUD_STATE.autosaveTimer) {
         clearTimeout(CLOUD_STATE.autosaveTimer);
     }
 
     CLOUD_STATE.autosaveTimer = setTimeout(async () => {
+        CLOUD_STATE.autosaveTimer = null;
         await forceSaveActiveFile();
     }, AUTOSAVE_DELAY_MS);
 }

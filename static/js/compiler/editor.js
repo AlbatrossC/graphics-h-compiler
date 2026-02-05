@@ -1,316 +1,329 @@
-        // ==================== SCRIPT LOADING WITH FALLBACK ====================
+// ==================== SCRIPT LOADING WITH FALLBACK ====================
 
-        function loadScript(url, fallbackUrl, timeout = 5000) {
-            return new Promise((resolve, reject) => {
-                const tryLoad = (src, isFallback = false) => {
-                    return new Promise((res, rej) => {
-                        const script = document.createElement('script');
-                        script.src = src;
+function loadScript(url, fallbackUrl, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        const tryLoad = (src, isFallback = false) => {
+            return new Promise((res, rej) => {
+                const script = document.createElement('script');
+                script.src = src;
 
-                        const timer = setTimeout(() => {
-                            script.onerror = null;
-                            script.onload = null;
-                            rej(new Error('Timeout'));
-                        }, timeout);
+                const timer = setTimeout(() => {
+                    script.onerror = null;
+                    script.onload = null;
+                    rej(new Error('Timeout'));
+                }, timeout);
 
-                        script.onload = () => {
-                            clearTimeout(timer);
-                            if (isFallback) {
-                                Logger.info(`Using fallback: ${src}`);
-                            }
-                            res(true);
-                        };
-
-                        script.onerror = () => {
-                            clearTimeout(timer);
-                            rej(new Error(`Failed to load: ${src}`));
-                        };
-
-                        document.head.appendChild(script);
-                    });
+                script.onload = () => {
+                    clearTimeout(timer);
+                    if (isFallback) {
+                        Logger.info(`Using fallback: ${src}`);
+                    }
+                    res(true);
                 };
 
-                tryLoad(url)
+                script.onerror = () => {
+                    clearTimeout(timer);
+                    rej(new Error(`Failed to load: ${src}`));
+                };
+
+                document.head.appendChild(script);
+            });
+        };
+
+        tryLoad(url)
+            .then(resolve)
+            .catch(() => {
+                Logger.warn(`Primary source failed, trying fallback`);
+                tryLoad(fallbackUrl, true)
                     .then(resolve)
-                    .catch(() => {
-                        Logger.warn(`Primary source failed, trying fallback`);
-                        tryLoad(fallbackUrl, true)
-                            .then(resolve)
-                            .catch(reject);
-                    });
+                    .catch(reject);
             });
-        }
+    });
+}
 
-        async function loadAllScripts() {
-            try {
-                Logger.info('Loading dependencies via ResourceLoader...');
-                updateLoadingProgress(10);
+async function loadAllScripts() {
+    try {
+        Logger.info('Loading dependencies via ResourceLoader...');
+        updateLoadingProgress(10);
 
-                // Initialize resources from manifest first
-                await initializeResourcesFromManifest();
+        // Initialize resources from manifest first
+        await initializeResourcesFromManifest();
 
-                // Load JS-DOS using ResourceLoader
-                await ResourceLoader.loadScript('libs', 'jsdos');
-                scriptsLoaded.jsdos = true;
-                updateLoadingProgress(30);
+        // Load JS-DOS using ResourceLoader
+        await ResourceLoader.loadScript('libs', 'jsdos');
+        scriptsLoaded.jsdos = true;
+        updateLoadingProgress(30);
 
-                // Load Ace Editor using ResourceLoader
-                await ResourceLoader.loadScript('libs', 'ace');
-                scriptsLoaded.ace = true;
-                updateLoadingProgress(50);
+        // Load Ace Editor using ResourceLoader
+        await ResourceLoader.loadScript('libs', 'ace');
+        scriptsLoaded.ace = true;
+        updateLoadingProgress(50);
 
-                await waitForAce();
+        await waitForAce();
 
-                // Load Ace C++ Mode using ResourceLoader
-                await ResourceLoader.loadScript('libs', 'ace-mode-cpp');
-                scriptsLoaded.aceMode = true;
-                updateLoadingProgress(70);
+        // Load Ace C++ Mode using ResourceLoader
+        await ResourceLoader.loadScript('libs', 'ace-mode-cpp');
+        scriptsLoaded.aceMode = true;
+        updateLoadingProgress(70);
 
-                // Load Ace Monokai Theme using ResourceLoader
-                await ResourceLoader.loadScript('libs', 'ace-theme-monokai');
+        // Load Ace Monokai Theme using ResourceLoader
+        await ResourceLoader.loadScript('libs', 'ace-theme-monokai');
 
-                // Load Ace Textmate Theme for light mode using ResourceLoader
-                await ResourceLoader.loadScript('libs', 'ace-theme-textmate');
+        // Load Ace Textmate Theme for light mode using ResourceLoader
+        await ResourceLoader.loadScript('libs', 'ace-theme-textmate');
 
-                scriptsLoaded.aceTheme = true;
-                updateLoadingProgress(100);
+        scriptsLoaded.aceTheme = true;
+        updateLoadingProgress(100);
 
-                Logger.success('All dependencies loaded');
-                return true;
-            } catch (error) {
-                Logger.error('Failed to load dependencies', error);
-                alert('Failed to load required libraries. Please check your connection and try again.');
-                return false;
+        Logger.success('All dependencies loaded');
+        return true;
+    } catch (error) {
+        Logger.error('Failed to load dependencies', error);
+        alert('Failed to load required libraries. Please check your connection and try again.');
+        return false;
+    }
+}
+
+
+function updateLoadingProgress(percent) {
+    if (loadingProgressBar) {
+        loadingProgressBar.style.width = `${percent}%`;
+    }
+}
+
+function waitForAce() {
+    return new Promise((resolve) => {
+        const checkAce = setInterval(() => {
+            if (typeof ace !== 'undefined') {
+                clearInterval(checkAce);
+                resolve();
             }
-        }
+        }, 50);
+    });
+}
 
+// ==================== DEMO FILE MANAGEMENT - FIXED ====================
 
-        function updateLoadingProgress(percent) {
-            if (loadingProgressBar) {
-                loadingProgressBar.style.width = `${percent}%`;
-            }
-        }
+demoSelect.addEventListener('change', async (e) => {
+    const selectedDemo = e.target.value;
 
-        function waitForAce() {
-            return new Promise((resolve) => {
-                const checkAce = setInterval(() => {
-                    if (typeof ace !== 'undefined') {
-                        clearInterval(checkAce);
-                        resolve();
-                    }
-                }, 50);
-            });
-        }
+    // Check if clicking the same demo that's already loaded
+    if (selectedDemo === lastLoadedDemo) {
+        Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
+        await loadDemoFile(selectedDemo, true); // Force reload
+    } else {
+        currentDemo = selectedDemo;
+        await loadDemoFile(selectedDemo, false);
+    }
+});
 
-        // ==================== DEMO FILE MANAGEMENT - FIXED ====================
+async function loadDemoFile(demoKey, forceReload = false) {
+    if (!editor) return;
 
-        demoSelect.addEventListener('change', async (e) => {
-            const selectedDemo = e.target.value;
+    try {
+        // Check cache first (unless force reload)
+        if (!forceReload) {
+            const cachedCode = DemoCache.get(demoKey);
+            if (cachedCode) {
+                Logger.info(`Loading ${demoKey} demo from cache`);
+                editor.setValue('', -1);
+                await new Promise(resolve => setTimeout(resolve, 50));
+                editor.setValue(cachedCode, -1);
+                editor.clearSelection();
+                editor.moveCursorTo(0, 0);
 
-            // Check if clicking the same demo that's already loaded
-            if (selectedDemo === lastLoadedDemo) {
-                Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
-                await loadDemoFile(selectedDemo, true); // Force reload
-            } else {
-                currentDemo = selectedDemo;
-                await loadDemoFile(selectedDemo, false);
-            }
-        });
+                lastLoadedDemo = demoKey;
+                currentDemo = demoKey;
+                localStorage.removeItem("tc_code");
 
-        async function loadDemoFile(demoKey, forceReload = false) {
-            if (!editor) return;
-
-            try {
-                // Check cache first (unless force reload)
-                if (!forceReload) {
-                    const cachedCode = DemoCache.get(demoKey);
-                    if (cachedCode) {
-                        Logger.info(`Loading ${demoKey} demo from cache`);
-                        editor.setValue('', -1);
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                        editor.setValue(cachedCode, -1);
-                        editor.clearSelection();
-                        editor.moveCursorTo(0, 0);
-
-                        lastLoadedDemo = demoKey;
-                        currentDemo = demoKey;
-                        localStorage.removeItem("tc_code");
-
-                        updateEditorInfo();
-                        updateSaveIndicator();
-
-                        Logger.success(`Loaded ${demoKey} demo from cache`);
-                        return;
-                    }
-                }
-
-                Logger.info(`Loading ${demoKey} demo using ResourceLoader...${forceReload ? ' (force reload)' : ''}`);
-
-                // Use ResourceLoader to fetch demo with automatic fallback to local files
-                let response;
-                try {
-                    // For force reload, add cache buster to the fetch
-                    const fetchOptions = forceReload ? { cache: 'no-cache' } : {};
-                    response = await ResourceLoader.fetchResource('demos', demoKey, fetchOptions);
-                } catch (resourceError) {
-                    Logger.warn(`ResourceLoader failed for ${demoKey}, trying direct DEMO_FILES fallback`);
-                    // Fallback to DEMO_FILES if ResourceLoader fails
-                    const demoUrl = DEMO_FILES[demoKey];
-                    if (demoUrl) {
-                        const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
-                        response = await fetch(demoUrl + cacheBuster);
-                    } else {
-                        throw new Error(`Demo file not found: ${demoKey}`);
-                    }
-                }
-
-                if (response.ok) {
-                    const code = await response.text();
-
-                    // Cache the demo file
-                    DemoCache.set(demoKey, code);
-
-                    editor.setValue('', -1);
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                    editor.setValue(code, -1);
-                    editor.clearSelection();
-                    editor.moveCursorTo(0, 0);
-
-                    // Update last loaded demo
-                    lastLoadedDemo = demoKey;
-                    currentDemo = demoKey;
-
-                    // Mark as modified when loading a demo
-                    if (isUserLoggedIn) {
-                        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-                        const [folder, filename] = activeKey.split('/');
-                        setLocalDraft(folder, filename, code);
-                        CLOUD_STATE.lastSavedHash = null;
-                        scheduleAutosave();
-                    } else {
-                        localStorage.removeItem("tc_code");
-                    }
-
-                    updateEditorInfo();
-                    updateSaveIndicator();
-
-                    Logger.success(`Loaded ${demoKey} demo`);
-                } else {
-                    Logger.error(`Failed to load demo: ${response.status}`);
-                    alert('Failed to load demo file. Please try again.');
-                }
-            } catch (e) {
-                Logger.error('Error loading demo file', e);
-                alert('Error loading demo file. Please check your connection or try offline mode.');
-            }
-        }
-
-
-        // ==================== EDITOR INITIALIZATION ====================
-
-        async function initializeEditor() {
-            if (!scriptsLoaded.ace || typeof ace === 'undefined') {
-                setTimeout(initializeEditor, 100);
-                return;
-            }
-
-            editor = ace.edit("editor");
-
-            // Set theme based on current theme setting
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const aceTheme = currentTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
-            editor.setTheme(aceTheme);
-
-            editor.session.setMode("ace/mode/c_cpp");
-
-            editor.setShowPrintMargin(false);
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                fontSize: "16px",
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-                highlightActiveLine: true,
-                showGutter: true,
-                tabSize: 4,
-                useSoftTabs: true,
-                wrap: true
-            });
-
-            await loadDefaultCode();
-
-            editor.on('change', () => {
                 updateEditorInfo();
                 updateSaveIndicator();
-                if (isUserLoggedIn) {
-                    const activeKey = CLOUD_STATE.activeFileKey;
-                    if (activeKey) {
-                        const [folder, filename] = activeKey.split('/');
-                        setLocalDraft(folder, filename, editor.getValue());
-                    }
-                    CLOUD_STATE.lastSavedHash = null;
-                    scheduleAutosave();
-                }
-            });
 
-            setTimeout(() => {
-                editor.focus();
-                editorWrapper.classList.add('active');
-            }, 100);
-
-            Logger.success('Editor ready');
+                Logger.success(`Loaded ${demoKey} demo from cache`);
+                return;
+            }
         }
 
-        function updateEditorInfo() {
-            if (!editor || !editorInfo) return;
+        Logger.info(`Loading ${demoKey} demo using ResourceLoader...${forceReload ? ' (force reload)' : ''}`);
 
-            const code = editor.getValue();
-            const lines = code.split('\n').length;
-            const chars = code.length;
-
-            editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
+        // Use ResourceLoader to fetch demo with automatic fallback to local files
+        let response;
+        try {
+            // For force reload, add cache buster to the fetch
+            const fetchOptions = forceReload ? { cache: 'no-cache' } : {};
+            response = await ResourceLoader.fetchResource('demos', demoKey, fetchOptions);
+        } catch (resourceError) {
+            Logger.warn(`ResourceLoader failed for ${demoKey}, trying direct DEMO_FILES fallback`);
+            // Fallback to DEMO_FILES if ResourceLoader fails
+            const demoUrl = DEMO_FILES[demoKey];
+            if (demoUrl) {
+                const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
+                response = await fetch(demoUrl + cacheBuster);
+            } else {
+                throw new Error(`Demo file not found: ${demoKey}`);
+            }
         }
 
+        if (response.ok) {
+            const code = await response.text();
 
+            // Cache the demo file
+            DemoCache.set(demoKey, code);
 
-        async function loadDefaultCode() {
+            editor.setValue('', -1);
+            await new Promise(resolve => setTimeout(resolve, 50));
+            editor.setValue(code, -1);
+            editor.clearSelection();
+            editor.moveCursorTo(0, 0);
+
+            // Update last loaded demo
+            lastLoadedDemo = demoKey;
+            currentDemo = demoKey;
+
+            // Mark as modified when loading a demo
             if (isUserLoggedIn) {
-                await refreshCloudFiles();
                 const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
                 const [folder, filename] = activeKey.split('/');
-                await openFile(folder, filename, { skipSave: true });
-                return;
+                setLocalDraft(folder, filename, code);
+                CLOUD_STATE.lastSavedHash = null;
+                scheduleAutosave();
+            } else {
+                localStorage.removeItem("tc_code");
             }
 
-            const savedCode = localStorage.getItem("tc_code");
-            if (savedCode) {
-                editor.setValue(savedCode, -1);
-                updateEditorInfo();
-                updateSaveIndicator();
+            updateEditorInfo();
+            updateSaveIndicator();
 
-                Logger.info('Restored saved code');
-                return;
-            }
-
-            // Load default demo (graphics-demo)
-            await loadDemoFile('graphics-demo', false);
+            Logger.success(`Loaded ${demoKey} demo`);
+        } else {
+            Logger.error(`Failed to load demo: ${response.status}`);
+            alert('Failed to load demo file. Please try again.');
         }
+    } catch (e) {
+        Logger.error('Error loading demo file', e);
+        alert('Error loading demo file. Please check your connection or try offline mode.');
+    }
+}
 
-        // Clear button functionality
-        clearBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear the editor?')) {
-                editor.setValue('', -1);
-                if (isUserLoggedIn) {
-                    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-                    const [folder, filename] = activeKey.split('/');
-                    setLocalDraft(folder, filename, '');
-                    CLOUD_STATE.lastSavedHash = null;
-                } else {
-                    localStorage.removeItem("tc_code");
-                }
-                lastLoadedDemo = ''; // Reset last loaded demo
-                updateEditorInfo();
-                updateSaveIndicator();
-                Logger.info('Editor cleared');
+
+// ==================== EDITOR INITIALIZATION ====================
+
+async function initializeEditor() {
+    if (!scriptsLoaded.ace || typeof ace === 'undefined') {
+        setTimeout(initializeEditor, 100);
+        return;
+    }
+
+    editor = ace.edit("editor");
+
+    // Set theme based on current theme setting
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const aceTheme = currentTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
+    editor.setTheme(aceTheme);
+
+    editor.session.setMode("ace/mode/c_cpp");
+
+    editor.setShowPrintMargin(false);
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        fontSize: "16px",
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+        highlightActiveLine: true,
+        showGutter: true,
+        tabSize: 4,
+        useSoftTabs: true,
+        wrap: true
+    });
+
+    await loadDefaultCode();
+
+    // Debounced UI update timer for smoother typing
+    let uiUpdateTimer = null;
+    const UI_UPDATE_DEBOUNCE_MS = 150;
+
+    editor.on('change', () => {
+        // Debounce UI updates for smooth typing
+        if (uiUpdateTimer) {
+            clearTimeout(uiUpdateTimer);
+        }
+        uiUpdateTimer = setTimeout(() => {
+            updateEditorInfo();
+            updateSaveIndicator();
+            uiUpdateTimer = null;
+        }, UI_UPDATE_DEBOUNCE_MS);
+
+        // Schedule cloud autosave (already debounced)
+        if (isUserLoggedIn) {
+            const activeKey = CLOUD_STATE.activeFileKey;
+            if (activeKey) {
+                const [folder, filename] = activeKey.split('/');
+                setLocalDraft(folder, filename, editor.getValue());
             }
-        });
+            CLOUD_STATE.lastSavedHash = null;
+            scheduleAutosave();
+        }
+    });
+
+    setTimeout(() => {
+        editor.focus();
+        editorWrapper.classList.add('active');
+    }, 100);
+
+    Logger.success('Editor ready');
+}
+
+function updateEditorInfo() {
+    if (!editor || !editorInfo) return;
+
+    const code = editor.getValue();
+    const lines = code.split('\n').length;
+    const chars = code.length;
+
+    editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
+}
+
+
+
+async function loadDefaultCode() {
+    if (isUserLoggedIn) {
+        await refreshCloudFiles();
+        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const [folder, filename] = activeKey.split('/');
+        await openFile(folder, filename, { skipSave: true });
+        return;
+    }
+
+    const savedCode = localStorage.getItem("tc_code");
+    if (savedCode) {
+        editor.setValue(savedCode, -1);
+        updateEditorInfo();
+        updateSaveIndicator();
+
+        Logger.info('Restored saved code');
+        return;
+    }
+
+    // Load default demo (graphics-demo)
+    await loadDemoFile('graphics-demo', false);
+}
+
+// Clear button functionality
+clearBtn.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear the editor?')) {
+        editor.setValue('', -1);
+        if (isUserLoggedIn) {
+            const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+            const [folder, filename] = activeKey.split('/');
+            setLocalDraft(folder, filename, '');
+            CLOUD_STATE.lastSavedHash = null;
+        } else {
+            localStorage.removeItem("tc_code");
+        }
+        lastLoadedDemo = ''; // Reset last loaded demo
+        updateEditorInfo();
+        updateSaveIndicator();
+        Logger.info('Editor cleared');
+    }
+});
 

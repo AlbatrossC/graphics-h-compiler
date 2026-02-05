@@ -686,16 +686,22 @@ async function prefetchDemoFiles() {
     Logger.info('Initializing compiler...');
     updateSaveIndicator();
 
+    // Start background warmup immediately (don't wait for editor)
+    // This runs in parallel with script loading for faster first run
+    const warmupEarly = setTimeout(() => {
+        warmupJSDOS();
+    }, 100);
+
     const loaded = await loadAllScripts();
     if (loaded) {
         await initializeEditor();
 
-        // Start background warmup after editor is ready
-        // This runs silently in background, making Run feel instant
-        setTimeout(() => {
-            warmupJSDOS();
-            updateCacheStatus();
-        }, 500);
+        // Clear early warmup if it hasn't started yet
+        clearTimeout(warmupEarly);
+
+        // Ensure warmup is running and update cache status
+        warmupJSDOS();
+        updateCacheStatus();
 
         Logger.success('Compiler ready');
     }
