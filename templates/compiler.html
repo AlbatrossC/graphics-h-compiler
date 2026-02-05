@@ -197,7 +197,7 @@
 
                 <!-- Large Action Buttons -->
                 <div class="explorer-actions">
-                    <button id="new-file-btn" class="explorer-action-btn">
+                    <button id="new-file-btn" class="explorer-action-btn" style="display: none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
@@ -327,16 +327,18 @@
                 </div>
 
                 <div class="panel-actions">
-                    <button id="clear-btn" class="icon-btn" title="Clear Editor">
+                    <button id="clear-btn" class="icon-btn icon-btn-label" title="Clear Code">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                         </svg>
+                        <span class="panel-btn-text">Clear Code</span>
                     </button>
-                    <button id="fullscreen-editor-btn" class="icon-btn" title="Toggle Fullscreen">
+                    <button id="fullscreen-editor-btn" class="icon-btn icon-btn-label" title="Fullscreen">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
                         </svg>
+                        <span class="panel-btn-text">Fullscreen</span>
                     </button>
                 </div>
             </div>
@@ -363,10 +365,11 @@
                     DOS Output
                 </div>
                 <div class="panel-actions">
-                    <button id="fullscreen-terminal-btn" class="icon-btn" title="Toggle Fullscreen">
+                    <button id="fullscreen-terminal-btn" class="icon-btn icon-btn-label" title="Fullscreen">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
                         </svg>
+                        <span class="panel-btn-text">Fullscreen</span>
                     </button>
                 </div>
             </div>
@@ -389,7 +392,9 @@
                 </div>
             </div>
 
-            <canvas id="dos-canvas" tabindex="-1"></canvas>
+            <div class="terminal-canvas-wrap">
+                <canvas id="dos-canvas" tabindex="-1"></canvas>
+            </div>
 
             <div id="output-panel">
                 <div class="output-header">
@@ -424,6 +429,30 @@
                     </div>
                 </div>
                 <div id="output-content" class="output-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Modal -->
+    <div id="new-file-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>New File</h3>
+                <button id="new-file-close" class="icon-btn" title="Close">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="new-file-input">Enter a name</label>
+                <input id="new-file-input" type="text" placeholder="e.g., mycode.cpp">
+                <p class="modal-hint">Only letters, numbers, dots, underscores, and dashes are allowed.</p>
+            </div>
+            <div class="modal-actions">
+                <button id="new-file-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="new-file-create" class="btn btn-primary">Create File</button>
             </div>
         </div>
     </div>

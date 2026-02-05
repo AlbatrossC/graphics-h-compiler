@@ -420,6 +420,11 @@ const signoutBtn = document.getElementById('signout-btn');
 const googleSigninBtn = document.getElementById('google-signin-btn');
 const mainFolderFiles = document.getElementById('main-folder-files');
 const newFileBtn = document.getElementById('new-file-btn');
+const newFileModal = document.getElementById('new-file-modal');
+const newFileInput = document.getElementById('new-file-input');
+const newFileCreate = document.getElementById('new-file-create');
+const newFileCancel = document.getElementById('new-file-cancel');
+const newFileClose = document.getElementById('new-file-close');
 
 // User state (will be updated by auth logic)
 let isUserLoggedIn = false;
@@ -478,7 +483,61 @@ if (refreshBtn) {
 // New File button
 if (newFileBtn) {
     newFileBtn.addEventListener('click', () => {
-        createNewFile();
+        if (!isUserLoggedIn) {
+            return;
+        }
+        openNewFileModal();
+    });
+}
+
+function openNewFileModal() {
+    if (!newFileModal || !newFileInput) return;
+    newFileModal.classList.remove('hidden');
+    newFileInput.value = '';
+    newFileInput.focus();
+}
+
+function closeNewFileModal() {
+    if (!newFileModal) return;
+    newFileModal.classList.add('hidden');
+}
+
+if (newFileCreate) {
+    newFileCreate.addEventListener('click', () => {
+        const filename = newFileInput ? newFileInput.value : '';
+        closeNewFileModal();
+        createNewFile(filename);
+    });
+}
+
+if (newFileCancel) {
+    newFileCancel.addEventListener('click', () => {
+        closeNewFileModal();
+    });
+}
+
+if (newFileClose) {
+    newFileClose.addEventListener('click', () => {
+        closeNewFileModal();
+    });
+}
+
+if (newFileModal) {
+    newFileModal.addEventListener('click', (e) => {
+        if (e.target === newFileModal) {
+            closeNewFileModal();
+        }
+    });
+}
+
+if (newFileInput) {
+    newFileInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            newFileCreate?.click();
+        } else if (e.key === 'Escape') {
+            closeNewFileModal();
+        }
     });
 }
 
@@ -514,6 +573,9 @@ function updateLoginUI(loggedIn, user = null) {
         // Show file explorer, hide promo
         cloudPromoView.style.display = 'none';
         fileExplorerView.style.display = 'block';
+        if (newFileBtn) {
+            newFileBtn.style.display = 'flex';
+        }
 
         // Hide auth section, show user profile
         authSection.style.display = 'none';
@@ -547,6 +609,10 @@ function updateLoginUI(loggedIn, user = null) {
         // Show promo, hide file explorer
         cloudPromoView.style.display = 'flex';
         fileExplorerView.style.display = 'none';
+        if (newFileBtn) {
+            newFileBtn.style.display = 'none';
+        }
+        closeNewFileModal();
 
         // Show auth section, hide user profile
         authSection.style.display = 'block';

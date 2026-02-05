@@ -675,16 +675,14 @@ function highlightActiveFile() {
 
 // ==================== CREATE FILE/FOLDER (SIMPLIFIED) ====================
 
-async function createNewFile() {
-    // Show a simple prompt for the file name
-    const filename = prompt('Enter file name:\n(e.g., mycode.cpp, test.c, program.cpp)');
-
-    if (!filename || !filename.trim()) {
-        return; // User cancelled
+async function createNewFile(filename) {
+    const inputName = filename || '';
+    if (!inputName || !inputName.trim()) {
+        return;
     }
 
     // Clean and validate filename
-    let cleanName = filename.trim();
+    let cleanName = inputName.trim();
 
     // Add .cpp extension if no extension provided
     if (!cleanName.includes('.')) {
