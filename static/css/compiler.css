@@ -1057,9 +1057,81 @@ header {
     height: 100%;
 }
 
-/* Activity Bar (always visible on desktop) */
+/* ==================== PROGRESS BAR (Header) ==================== */
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--border-color);
+    z-index: 1000;
+}
+
+.progress-bar.hidden {
+    display: none;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--primary);
+    transition: width 0.3s ease;
+}
+
+.progress-fill.indeterminate {
+    width: 30%;
+    animation: progress-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(400%);
+    }
+}
+
+/* ==================== STATUS MESSAGE ==================== */
+.status-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: var(--primary);
+    color: #0a0a0a;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+    animation: fade-in 0.3s ease;
+}
+
+.status-message.hidden {
+    display: none;
+}
+
+.status-message.error {
+    background: var(--danger);
+    color: white;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==================== ACTIVITY BAR ==================== */
 .activity-bar {
-    width: 52px;
+    width: 50px;
     background: var(--vscode-bg);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -1111,7 +1183,7 @@ header {
     height: 22px;
 }
 
-/* Sidebar Panel */
+/* ==================== SIDEBAR PANEL ==================== */
 #sidebar {
     width: 280px;
     min-width: 280px;
@@ -1120,7 +1192,7 @@ header {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    transition: width 0.3s ease, min-width 0.3s ease;
+    transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease;
     z-index: 90;
     overflow: hidden;
 }
@@ -1129,30 +1201,36 @@ header {
     width: 0;
     min-width: 0;
     border-right: none;
+    opacity: 0;
 }
 
-
+/* ==================== SIDEBAR HEADER ==================== */
 .sidebar-header {
     padding: 14px 16px;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--text-secondary);
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--border-color);
     min-height: 48px;
-    background: linear-gradient(180deg, rgba(0, 255, 136, 0.03), transparent);
+    background: var(--vscode-sidebar);
 }
 
 .sidebar-header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
+.sidebar-header-left>span {
+    color: var(--primary);
+}
+
+/* ==================== SIDEBAR BUTTONS ==================== */
 .sidebar-collapse-btn {
     width: 24px;
     height: 24px;
@@ -1161,7 +1239,7 @@ header {
     justify-content: center;
     background: transparent;
     border: none;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.2s ease;
@@ -1190,7 +1268,7 @@ header {
     justify-content: center;
     background: transparent;
     border: none;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.2s ease;
@@ -1206,14 +1284,65 @@ header {
     height: 14px;
 }
 
+/* ==================== EXPLORER ACTIONS ==================== */
+.explorer-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.explorer-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--vscode-line-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.explorer-action-btn:hover {
+    background: var(--vscode-sidebar);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.explorer-action-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2;
+}
+
+/* ==================== FILE EXPLORER ==================== */
 .file-explorer {
     flex: 1;
     overflow-y: auto;
-    padding: 12px 8px;
+    padding: 8px;
+}
+
+.file-explorer::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-explorer::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.file-explorer::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .explorer-section {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
 }
 
 .folder-item {
@@ -1273,20 +1402,20 @@ header {
 .file-list {
     display: flex;
     flex-direction: column;
-    padding-left: 8px;
+    padding-left: 4px;
 }
 
 .file-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px 8px 32px;
+    gap: 8px;
+    padding: 7px 12px 7px 24px;
     cursor: pointer;
     color: var(--text-secondary);
-    font-size: 0.875rem;
-    border-radius: 8px;
-    margin: 2px 4px;
-    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    margin: 1px 4px;
+    transition: all 0.15s ease;
     border-left: 2px solid transparent;
 }
 
@@ -1296,7 +1425,7 @@ header {
 }
 
 .file-item.active {
-    background: rgba(0, 255, 136, 0.1);
+    background: var(--vscode-line-bg);
     color: var(--primary);
     border-left-color: var(--primary);
 }
@@ -1333,6 +1462,32 @@ header {
 
 .file-item.active .file-name {
     font-weight: 500;
+}
+
+/* File delete button */
+.file-delete-btn {
+    display: none;
+    width: 20px;
+    height: 20px;
+    padding: 3px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.file-item:hover .file-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-delete-btn:hover {
+    background: rgba(255, 68, 68, 0.2);
+    color: var(--danger);
 }
 
 /* Cloud Storage Promo (Not Logged In) */

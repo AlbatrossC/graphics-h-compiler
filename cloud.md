@@ -1,98 +1,152 @@
-# Cloud Architecture and Implementation Details
+# Cloud Storage Architecture
 
-This document describes the end-to-end cloud storage system used by the Graphics.h Online Compiler, covering Cloudflare Workers, R2, Supabase Auth/Postgres (RLS), and the frontend autosave flow.
+## Overview
 
-## High-Level Architecture
+The Graphics.h Online Compiler uses a **three-tier architecture** for file storage:
 
-1. **Frontend (browser)**
-   - Uses Supabase Auth (Google OAuth) to obtain an access token.
-   - Sends storage requests to the **Flask server** at `/files/*` with `Authorization: Bearer <token>`.
-   - Autosaves code to the cloud every ~10 seconds of inactivity (batch save).
-   - Offers explicit Save actions:
-     - **Save Locally** (always available)
-     - **Save to Cloud** (requires sign-in)
-   - Forces save on Run, file switch, tab close, and logout.
+1. **Frontend (Browser)** - User interface, editor, file management
+2. **Flask API (Backend)** - Proxies requests to Cloudflare Worker
+3. **Cloudflare Worker + R2** - Secure file storage with Supabase Auth
 
-2. **Flask Server Proxy**
-   - Proxies all `/files/*` requests to the Cloudflare Worker.
-   - Keeps the Worker URL server-side (never exposed to the browser).
-   - Forwards the user’s `Authorization` header.
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐
+│    Frontend     │────▶│   Flask API     │────▶│   Cloudflare Worker     │
+│  (Browser JS)   │     │  (Python)       │     │   + R2 Storage          │
+└─────────────────┘     └─────────────────┘     └─────────────────────────┘
+        │                       │                         │
+        │                       │                         ├── Supabase Auth
+        │                       │                         └── R2 Bucket
+        │                       │
+        └── localStorage        └── Proxy + CORS
+```
 
-3. **Cloudflare Worker**
-   - The only gateway to the private R2 bucket.
-   - Verifies the access token by calling Supabase Auth.
-   - Enforces per-user storage isolation via object paths.
-   - Reads and writes file metadata through Supabase PostgREST using RLS.
+---
 
-4. **Cloudflare R2 (private)**
-   - Stores actual file contents.
-   - Objects are stored at:
-     `<user_id>/<folder>/<filename>`
-   - Never exposed publicly.
+## Save Flow
 
-5. **Supabase Postgres (RLS)**
-   - Stores file metadata: folder, filename, hash, timestamps.
-   - RLS ensures `auth.uid() = user_id`.
-   - Accessed only via the user’s access token (no service role).
+When user clicks **Save** button:
 
-## Cloudflare Worker Implementation
+```
+1. saveCode() triggered
+   ├── Save to localStorage (tc_code)
+   ├── Save to local draft (draft_folder_filename)
+   │
+   └── If logged in:
+       ├── Get Supabase session token
+       ├── Compute SHA-256 hash of content
+       └── POST /files/save
+           └── Flask proxies to Cloudflare Worker
+               ├── Verify JWT token with Supabase
+               ├── Check if hash unchanged (skip if same)
+               ├── Save content to R2 bucket
+               └── Upsert metadata to Supabase
+```
 
-### Authentication
+---
 
-- Every request must include:
-  `Authorization: Bearer <Supabase access token>`
-- The Worker verifies the token by calling:
-  `GET <SUPABASE_URL>/auth/v1/user`
-  with headers:
-  - `Authorization: Bearer <token>`
-  - `apikey: <SUPABASE_ANON_KEY>`
-- If verification fails, the Worker rejects the request (fail-closed).
-- The authenticated user ID is taken from the returned user object (`user.id`).
+## File Storage Structure
 
-### Storage Isolation
+### Local Storage (Browser)
+```
+localStorage:
+├── tc_code                    # Current editor content
+├── draft_main_main.cpp        # Draft for main/main.cpp
+├── draft_main_test.cpp        # Draft for main/test.cpp
+└── draft_projects_app.cpp     # Draft for projects/app.cpp
+```
 
-- The Worker **never accepts object paths from the client**.
-- It constructs object keys internally as:
-  `<user_id>/<folder>/<filename>`
-- Folder and filename are validated as single path segments
-  (no slashes, backslashes, or `..`).
+### Cloud Storage (R2)
+```
+R2 Bucket (user-files):
+└── {user_id}/
+    └── {folder}/
+        └── {filename}
 
-### Endpoints (Worker)
+Example:
+└── abc123-def456/
+    ├── main/
+    │   └── main.cpp
+    └── projects/
+        └── app.cpp
+```
 
-#### `POST /files/save`
-Input: `{ folder, filename, content, hash }`
+---
 
-Flow:
-1. Verify token.
-2. Fetch existing metadata (Supabase).
-3. If hash is unchanged, **skip R2 write**.
-4. If changed:
-   - PUT to R2
-   - Upsert metadata in Supabase
-5. Return `{ success: true, hash }`.
+## API Endpoints
 
-#### `GET /files/read`
-Input: `folder`, `filename` (query params)
+All endpoints require `Authorization: Bearer {supabase_jwt_token}` header.
 
-Flow:
-1. Verify token.
-2. Read object from R2.
-3. Return raw file content.
+### `POST /files/save`
+Save a single file.
 
-#### `GET /files/list`
+**Request:**
+```json
+{
+    "folder": "main",
+    "filename": "main.cpp",
+    "content": "#include <graphics.h>...",
+    "hash": "a1b2c3d4..."
+}
+```
 
-Flow:
-1. Verify token.
-2. Query Supabase PostgREST for metadata only.
-3. Return array of files.
+**Response:**
+```json
+{
+    "success": true,
+    "hash": "a1b2c3d4...",
+    "skipped": false
+}
+```
 
-#### `DELETE /files/delete`
-Input: `{ folder, filename }`
+- `skipped: true` means content unchanged (hash matched)
 
-Flow:
-1. Verify token.
-2. Delete object from R2.
-3. Delete metadata row from Supabase.
+### `GET /files/list`
+List all user files.
+
+**Response:**
+```json
+{
+    "files": [
+        {
+            "folder": "main",
+            "filename": "main.cpp",
+            "file_hash": "a1b2c3...",
+            "updated_at": "2026-02-05T10:00:00Z"
+        }
+    ]
+}
+```
+
+### `GET /files/read`
+Read file content.
+
+**Query params:** `?folder=main&filename=main.cpp`
+
+**Response:** Raw file content (text/plain)
+
+### `DELETE /files/delete`
+Delete a file.
+
+**Request:**
+```json
+{
+    "folder": "main",
+    "filename": "main.cpp"
+}
+```
+
+---
+
+## Authentication
+
+Uses **Supabase Auth** with Google OAuth.
+
+1. User clicks "Sign in with Google"
+2. Supabase handles OAuth flow
+3. User redirected back with session
+4. Frontend stores JWT in Supabase client
+5. All API requests include JWT in Authorization header
+6. Cloudflare Worker verifies JWT with Supabase
 
 ### CORS
 
@@ -100,83 +154,138 @@ Allowed origins:
 - `http://localhost:5000`
 - `https://graphics-h-compiler.vercel.app`
 
-Preflight (`OPTIONS`) handled explicitly.
+---
 
-### Size Limits
+## Autosave
 
-- There are **no file-size limits** enforced by the client or Worker.
+The editor automatically saves every **7 seconds** after the last change:
 
-## Supabase Postgres + RLS
+```javascript
+const AUTOSAVE_DELAY_MS = 7000;
 
-Table:
+function scheduleAutosave() {
+    clearTimeout(CLOUD_STATE.autosaveTimer);
+    CLOUD_STATE.autosaveTimer = setTimeout(async () => {
+        await forceSaveActiveFile();
+    }, AUTOSAVE_DELAY_MS);
+}
+```
+
+Autosave also triggers on:
+- Visibility change (tab hidden)
+- Before unload (closing browser)
+- Before running program
+
+---
+
+## Hash-Based Deduplication
+
+Every save includes a SHA-256 hash of the content:
+
+1. Frontend computes hash before sending
+2. Worker checks if hash matches existing file
+3. If unchanged, returns `skipped: true` (no write to R2)
+4. Reduces storage writes and costs
+
+---
+
+## File Explorer
+
+When user is logged in, the sidebar shows:
 
 ```
-create table public.user_files (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  folder text not null,
-  filename text not null,
-  file_hash text,
-  updated_at timestamptz not null default now()
+📁 main
+  └── 📄 main.cpp (active)
+  └── 📄 test.cpp
+```
+
+**Features:**
+- Create new file (adds .cpp extension automatically)
+- Create new folder (with default main.cpp)
+- Delete files (with confirmation)
+- Click to switch files
+- Visual indicator for active file
+
+---
+
+## JavaScript Files
+
+### `core.js`
+- Logger, global state, cache management
+- CLOUD_STATE object for file tracking
+- Demo file caching
+
+### `storage.js`
+- `saveCode()` - Unified save (local + cloud)
+- `createNewFile()` - Simple file creation
+- `createNewFolder()` - Simple folder creation
+- `deleteFile()` - File deletion
+- `refreshCloudFiles()` - Load file list from cloud
+- `openFile()` - Load file content
+- `updateSaveIndicator()` - UI state
+
+### `editor.js`
+- Ace Editor initialization
+- Demo file loading
+- Editor change handlers
+
+### `runtime.js`
+- JS-DOS integration
+- Program compilation and execution
+- Keyboard shortcuts
+- Supabase auth initialization
+
+---
+
+## Environment Variables
+
+### Flask (.env)
+```
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+STORAGE_WORKER_URL=https://xxx.workers.dev
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+### Cloudflare Worker (wrangler.jsonc)
+```json
+{
+    "vars": {
+        "SUPABASE_URL": "https://xxx.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJ...",
+        "PROD_ORIGIN": "https://graphics-h-compiler.vercel.app"
+    }
+}
+```
+
+---
+
+## Supabase Database
+
+### Table: `user_files`
+```sql
+CREATE TABLE public.user_files (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    folder TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    file_hash TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(user_id, folder, filename)
 );
 ```
 
-RLS policy:
-
+### Row Level Security
+```sql
+-- Users can only see/modify their own files
+CREATE POLICY "Users manage own files" ON user_files
+    FOR ALL USING (auth.uid() = user_id);
 ```
-auth.uid() = user_id
-```
 
-This ensures each user can only see and mutate their own metadata.
+---
 
-## Frontend Autosave Behavior
+## Size Limits
 
-Autosave is implemented with:
-
-- **Debounced autosave**: after ~10 seconds of inactivity (batch save).
-- **Forced saves**:
-  - Run button
-  - File switch
-  - Tab close
-  - Logout
-  - Visibility change (tab background)
-
-To reduce writes:
-- The client hashes content (SHA-256).
-- The Worker compares hashes before writing to R2.
-
-If cloud save fails:
-- The client stores a local draft in `localStorage`.
-- UI shows “Saved Locally”.
-
-## Configuration and Deployment
-
-### Worker config (wrangler.jsonc)
-
-- R2 binding:
-  - `USER_FILES_BUCKET` → `graphics-compiler-users`
-- Variables:
-  - `SUPABASE_URL`
-  - `SUPABASE_ANON_KEY`
-  - `PROD_ORIGIN`
-
-### Local server config
-
-`/api/auth/config` returns:
-
-- `supabaseUrl`
-- `supabaseAnonKey`
-
-The Worker URL is **never exposed to the browser**. The Flask app proxies all `/files/*` requests to the Worker using `STORAGE_WORKER_URL`.
-
-## Summary
-
-This setup ensures:
-
-- Strong auth (token validated by Supabase).
-- Full isolation between users.
-- No public access to R2.
-- Minimal writes (hash comparison).
-- Reliable autosave with local fallback.
-
-The Worker is deployable via `wrangler deploy` and functions end-to-end once env vars and bindings are set.
+- **No file size limits** enforced
+- Files stored as-is in R2
+- R2 has 5TB free storage per month

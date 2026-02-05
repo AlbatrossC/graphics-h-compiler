@@ -77,6 +77,11 @@
 <body>
 
     <header>
+        <!-- Progress Bar -->
+        <div id="progress-bar" class="progress-bar hidden">
+            <div id="progress-fill" class="progress-fill"></div>
+        </div>
+
         <div class="header-content">
             <div class="header-left">
                 <button id="sidebar-toggle" class="icon-btn sidebar-toggle" title="Toggle Explorer">
@@ -129,21 +134,18 @@
                 <span id="save-text">Not Saved</span>
             </div>
 
-            <div class="save-split">
-                <button id="save-local-btn" class="btn btn-success" onclick="saveLocalCode()">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path
-                            d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
-                    </svg>
-                    <span class="btn-text">Save Locally</span>
-                </button>
-                <button id="save-cloud-btn" class="btn btn-primary" onclick="saveCloudCode()">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.35 10.04A7.49 7.49 0 0 0 5.1 8.59 5.99 5.99 0 0 0 6 20h13a5 5 0 0 0 .35-9.96z" />
-                    </svg>
-                    <span class="btn-text">Save to Cloud</span>
-                </button>
+            <!-- Status Message -->
+            <div id="status-message" class="status-message hidden">
+                <span id="status-text"></span>
             </div>
+
+            <button id="save-btn" class="btn btn-success" onclick="saveCode()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                </svg>
+                <span class="btn-text">Save</span>
+            </button>
 
             <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
                 <svg viewBox="0 0 24 24" fill="currentColor">
