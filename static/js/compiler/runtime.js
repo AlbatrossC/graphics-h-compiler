@@ -230,15 +230,15 @@ async function runProgram() {
                 const blobUrl = URL.createObjectURL(tcBlob);
 
                 loadingText.textContent = 'Extracting compiler files...';
-                
+
                 // Track ZIP extraction (metrics only, no logging)
                 metrics.runtime.zipExtractionStarted++;
 
                 // Suppress third-party (js-dos) logging during extraction
                 const originalLog = console.log;
                 const originalInfo = console.info;
-                console.log = () => {}; // Silent
-                console.info = () => {}; // Silent
+                console.log = () => { }; // Silent
+                console.info = () => { }; // Silent
 
                 try {
                     // Now extract from the blob URL - js-dos can handle blob: URLs
@@ -440,7 +440,6 @@ const userAvatar = document.getElementById('user-avatar');
 const userName = document.getElementById('user-name');
 const userEmail = document.getElementById('user-email');
 const signoutBtn = document.getElementById('signout-btn');
-const googleSigninBtn = document.getElementById('google-signin-btn');
 const mainFolderFiles = document.getElementById('main-folder-files');
 const newFileBtn = document.getElementById('new-file-btn');
 const newFileModal = document.getElementById('new-file-modal');
@@ -649,137 +648,6 @@ function updateLoginUI(loggedIn, user = null) {
     }
 }
 
-
-// ==================== SUPABASE AUTH ====================
-
-async function initSupabaseAuth() {
-    try {
-        // Fetch auth config from server
-        const response = await fetch('/api/auth/config');
-        if (!response.ok) {
-            Logger.warn('Auth not configured on server');
-            return;
-        }
-
-        const config = await response.json();
-        // Load Supabase JS client
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        script.onload = () => {
-            // Initialize Supabase client
-            supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-
-            // Check for existing session
-            Logger.info('Checking for existing Supabase session...');
-            checkSession();
-
-            // Listen for auth state changes
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                Logger.info(`Auth state changed: ${event}`);
-                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') && session?.user) {
-                    // Cache the session in memory on successful auth (Tier 1)
-                    setCachedSession(session);
-                    updateLoginUI(true, session.user);
-                } else if (event === 'SIGNED_OUT') {
-                    // Clear session cache on sign-out
-                    clearSessionCache();
-                    updateLoginUI(false);
-                }
-            });
-
-            Logger.info('Supabase auth initialized');
-        };
-        script.onerror = () => {
-            Logger.warn('Failed to load Supabase client from CDN');
-        };
-        document.head.appendChild(script);
-    } catch (e) {
-        Logger.warn('Auth initialization failed: ' + e.message);
-    }
-}
-
-async function checkSession() {
-    if (!supabaseClient) return;
-
-    try {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
-        if (error) {
-            Logger.warn('Session lookup error: ' + error.message);
-        }
-        if (session?.user) {
-            Logger.info('Active session found');
-            // Cache the session on page load/refresh (Tier 1)
-            setCachedSession(session);
-            updateLoginUI(true, session.user);
-        } else {
-            Logger.info('No active session');
-            updateLoginUI(false);
-        }
-    } catch (e) {
-        Logger.warn('Session check failed');
-        updateLoginUI(false);
-    }
-}
-
-async function signInWithGoogle() {
-    if (!supabaseClient) {
-        alert('Authentication is not configured. Please try again later.');
-        return;
-    }
-
-    try {
-        const redirectTo = `${window.location.origin}${window.location.pathname}`;
-        Logger.info(`Starting Google sign-in (redirect: ${redirectTo})`);
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo
-            }
-        });
-
-        if (error) {
-            Logger.error('Sign in failed: ' + error.message);
-            alert('Sign in failed: ' + error.message);
-        }
-    } catch (e) {
-        Logger.error('Sign in error: ' + e.message);
-        alert('Sign in failed. Please try again.');
-    }
-}
-
-async function signOut() {
-    if (!supabaseClient) return;
-
-    try {
-        Logger.info('Signing out...');
-        await forceSaveActiveFile();
-
-        // Clear all caches on logout
-        clearAllFileCache();
-        clearSessionCache(); // Clear Tier 1 auth cache
-
-        const { error } = await supabaseClient.auth.signOut();
-        if (error) {
-            Logger.error('Sign out failed: ' + error.message);
-        } else {
-            updateLoginUI(false);
-            Logger.info('Signed out successfully');
-        }
-    } catch (e) {
-        Logger.error('Sign out error: ' + e.message);
-    }
-}
-
-// Google Sign-In button click handler (only for signing in)
-if (googleSigninBtn) {
-    googleSigninBtn.addEventListener('click', async () => {
-        await signInWithGoogle();
-    });
-}
-
-
-// Initialize auth on page load
-initSupabaseAuth();
 
 
 // ==================== JS-DOS BACKGROUND WARMUP ====================

@@ -496,7 +496,9 @@ async function refreshCloudFiles() {
 
     CLOUD_STATE.lastRefresh = Date.now();
 
-    showProgress();
+    // Optimistic: Don't show progress bar for background refreshes unless empty
+    if (CLOUD_STATE.files.size === 0) showProgress();
+
     try {
         const session = await getCachedSessionToken();
         if (!session?.access_token) {
@@ -512,18 +514,16 @@ async function refreshCloudFiles() {
 
         if (response.ok) {
             const data = await response.json();
-            CLOUD_STATE.files.clear();
-            CLOUD_STATE.folders = new Set(['main']);
 
-            if (data.files && Array.isArray(data.files)) {
-                data.files.forEach(file => {
-                    const key = getFileKey(file.folder, file.filename);
-                    CLOUD_STATE.files.set(key, file);
-                    CLOUD_STATE.folders.add(file.folder);
-                });
+            // CACHE: Save list to local storage for instant load next time
+            try {
+                localStorage.setItem('cached_file_list', JSON.stringify(data.files));
+                localStorage.setItem('cached_file_list_ts', Date.now().toString());
+            } catch (e) {
+                // Ignore quota errors
             }
 
-            renderFileExplorer();
+            updateCloudStateFiles(data.files);
             Logger.info(`Loaded ${CLOUD_STATE.files.size} files from cloud`);
         }
     } catch (e) {
@@ -531,6 +531,38 @@ async function refreshCloudFiles() {
     } finally {
         hideProgress();
     }
+}
+
+// Helper to update state from file list (used by cache and fetch)
+function updateCloudStateFiles(filesList) {
+    if (!Array.isArray(filesList)) return;
+
+    CLOUD_STATE.files.clear();
+    CLOUD_STATE.folders = new Set(['main']);
+
+    filesList.forEach(file => {
+        const key = getFileKey(file.folder, file.filename);
+        CLOUD_STATE.files.set(key, file);
+        CLOUD_STATE.folders.add(file.folder);
+    });
+
+    renderFileExplorer();
+}
+
+// Load file list from local cache (Instant Startup)
+function loadCachedFileList() {
+    try {
+        const cached = localStorage.getItem('cached_file_list');
+        if (cached) {
+            const files = JSON.parse(cached);
+            updateCloudStateFiles(files);
+            Logger.info('Loaded file list from local cache');
+            return true;
+        }
+    } catch (e) {
+        // Ignore corrupted cache
+    }
+    return false;
 }
 
 // Render file explorer UI
