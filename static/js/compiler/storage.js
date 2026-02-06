@@ -63,6 +63,7 @@ async function getCachedSessionToken() {
     // Try cache first (fastest - no network call)
     const cachedToken = getCachedToken();
     if (cachedToken) {
+        metrics.auth.clientCacheHits++;
         return { access_token: cachedToken };
     }
 
@@ -71,6 +72,8 @@ async function getCachedSessionToken() {
     if (!supabaseClient) {
         return null;
     }
+
+    metrics.auth.clientCacheMisses++;
 
     try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
@@ -82,6 +85,7 @@ async function getCachedSessionToken() {
         if (session) {
             // Store in cache for next time
             setCachedSession(session);
+            Logger.info(`[Auth][Client] Cache MISS → fetching session`);
             return session;
         }
 
@@ -128,6 +132,7 @@ const DRAFT_SAVE_DEBOUNCE_MS = 100;
 function setLocalDraftImmediate(folder, filename, content) {
     try {
         localStorage.setItem(`draft_${folder}_${filename}`, content);
+        metrics.storage.localDraftWrites++;
     } catch (e) {
         Logger.warn('Failed to save local draft');
     }
@@ -388,6 +393,7 @@ async function forceSaveActiveFile() {
 
     // Skip if unchanged (check both cloud hash, pending hash, and last cloud save hash)
     if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash || lastCloudSaveHash === hash) {
+        metrics.autosave.skippedClean++;
         Logger.info('Content unchanged, skipping cloud save');
         return;
     }
@@ -428,10 +434,13 @@ async function forceSaveActiveFile() {
 
             updateSaveIndicator();
 
+            metrics.autosave.executed++;
+            metrics.storage.cloudWrites++;
             if (result.skipped) {
+                metrics.storage.cloudSkips++;
                 Logger.info('Autosave skipped (unchanged on server)');
             } else {
-                Logger.info('Autosave complete');
+                Logger.info(`[Autosave] Executed | total=${metrics.autosave.executed}`);
             }
         }
     } catch (e) {
@@ -462,6 +471,7 @@ function scheduleAutosave() {
         // Now schedule the actual autosave
         CLOUD_STATE.autosaveTimer = setTimeout(async () => {
             CLOUD_STATE.autosaveTimer = null;
+            metrics.autosave.scheduled++;
             await forceSaveActiveFile();
         }, AUTOSAVE_DELAY_MS);
 
@@ -731,9 +741,10 @@ async function openFile(folder, filename, options = {}) {
                     CLOUD_STATE.lastSavedHash = hash;
                     lastCloudSaveHash = hash;
 
+                    metrics.storage.cloudReads++;
                     updateSaveIndicator();
                     highlightActiveFile();
-                    Logger.info(`Opened ${filename} from cloud`);
+                    Logger.info(`[Cloud] READ ${filename} | reads=${metrics.storage.cloudReads}`);
                     hideProgress();
                     return;
                 }

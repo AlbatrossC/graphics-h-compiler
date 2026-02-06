@@ -243,6 +243,16 @@ async function initializeEditor() {
     const UI_UPDATE_DEBOUNCE_MS = 150;
 
     editor.on('change', () => {
+        // Track editor changes (metrics only, no behavior change)
+        metrics.editor.changeCount++;
+        metrics.editor.lastChangeAt = Date.now();
+        
+        // Log periodically (not on every keystroke) to avoid spam
+        if (metrics.editor.changeCount % metrics.editor.changeLogInterval === 0) {
+            const elapsed = ((Date.now() - metrics.editor.lastChangeAt) / 1000).toFixed(1);
+            Logger.info(`[Editor] Changes: ${metrics.editor.changeCount}`);
+        }
+
         // Debounce UI updates for smooth typing
         if (uiUpdateTimer) {
             clearTimeout(uiUpdateTimer);

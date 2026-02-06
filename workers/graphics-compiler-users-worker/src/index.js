@@ -503,10 +503,12 @@ async function authenticateRequest(request, env) {
 	const cachedUserId = await getCachedUserId(token);
 	if (cachedUserId) {
 		// Cache hit - use cached userId, skip Supabase verification
+		console.log('[Auth][Worker] Cache HIT');
 		return { userId: cachedUserId.userId, token };
 	}
 
 	// Cache miss - verify with Supabase (only happens on first request with token)
+	console.log('[Auth][Worker] Cache MISS, verifying with Supabase');
 	const user = await verifyUserViaSupabase(env, token);
 	if (!user?.id) {
 		throw Object.assign(new Error('Invalid token'), {
@@ -522,6 +524,8 @@ async function authenticateRequest(request, env) {
 
 async function verifyUserViaSupabase(env, token) {
 	const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`;
+	console.log('[Auth][Worker] Supabase verification performed');
+	
 	const response = await fetch(url, {
 		method: 'GET',
 		headers: {
@@ -533,6 +537,7 @@ async function verifyUserViaSupabase(env, token) {
 	if (!response.ok) {
 		// Token is invalid (likely expired or revoked)
 		// Clear from cache so we don't accept it in the future
+		console.log('[Auth][Worker] Token invalid (401) – cache cleared');
 		await clearCachedUserIdForToken(token);
 		throw Object.assign(new Error('Unauthorized'), { statusCode: 401 });
 	}

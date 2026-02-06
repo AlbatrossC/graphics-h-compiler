@@ -44,6 +44,15 @@ initializeTheme();
 // ==================== LOGGER ====================
 const Logger = {
     prefix: '[Graphics.h Compiler]',
+    
+    // Color codes for console output (using console.log %c formatting)
+    colors: {
+        info: '#7c8df0',      // Blue
+        success: '#6ac47b',   // Green
+        error: '#cc4444',     // Red
+        warn: '#ffb454',      // Orange
+        debug: '#888888'      // Gray
+    },
 
     timestamp() {
         return new Date().toISOString();
@@ -54,19 +63,121 @@ const Logger = {
     },
 
     info(msg) {
-        console.log(this.format('INFO', msg));
+        const formatted = this.format('INFO', msg);
+        console.log(`%c${formatted}`, `color: ${this.colors.info}; font-weight: bold;`);
     },
 
     success(msg) {
-        console.log(this.format('OK', msg));
+        const formatted = this.format('OK', msg);
+        console.log(`%c${formatted}`, `color: ${this.colors.success}; font-weight: bold;`);
     },
 
     error(msg, err) {
-        console.error(this.format('ERROR', msg), err || '');
+        const formatted = this.format('ERROR', msg);
+        console.error(`%c${formatted}`, `color: ${this.colors.error}; font-weight: bold;`, err || '');
     },
 
     warn(msg) {
-        console.warn(this.format('WARN', msg));
+        const formatted = this.format('WARN', msg);
+        console.warn(`%c${formatted}`, `color: ${this.colors.warn}; font-weight: bold;`);
+    },
+
+    debug(msg) {
+        const formatted = this.format('DEBUG', msg);
+        console.log(`%c${formatted}`, `color: ${this.colors.debug};`);
+    }
+};
+
+// ==================== METRICS SYSTEM ====================
+// Global metrics object for observability (no behavioral impact)
+const metrics = {
+    // Editor activity tracking
+    editor: {
+        changeCount: 0,
+        lastChangeAt: null,
+        changeLogInterval: 10  // Log every N changes (not every keystroke)
+    },
+
+    // Idle detection tracking
+    idle: {
+        timerStartedCount: 0,
+        idleTriggeredCount: 0,
+        lastIdleAt: null
+    },
+
+    // Storage operations tracking
+    storage: {
+        localDraftWrites: 0,
+        cloudWrites: 0,
+        cloudReads: 0,
+        cloudSkips: 0
+    },
+
+    // Autosave behavior tracking
+    autosave: {
+        scheduled: 0,
+        executed: 0,
+        skippedClean: 0,
+        skippedGuest: 0
+    },
+
+    // Authentication caching effectiveness
+    auth: {
+        clientCacheHits: 0,
+        clientCacheMisses: 0,
+        workerCacheHits: 0,
+        workerCacheMisses: 0,
+        supabaseVerifications: 0
+    },
+
+    // Runtime/execution tracking
+    runtime: {
+        runCount: 0,
+        runtimeReuseErrors: 0,
+        zipExtractionStarted: 0,
+        zipExtractionCompleted: 0
+    }
+};
+
+// Print metrics summary to console
+function printMetricsSummary() {
+    console.group('[Metrics Summary]');
+    console.log('Editor changes:', metrics.editor.changeCount);
+    console.log('Idle triggers:', metrics.idle.idleTriggeredCount);
+    console.log('Local draft writes:', metrics.storage.localDraftWrites);
+    console.log('Cloud writes:', metrics.storage.cloudWrites);
+    console.log('Cloud reads:', metrics.storage.cloudReads);
+    console.log('Cloud skips:', metrics.storage.cloudSkips);
+    console.log('Autosave scheduled:', metrics.autosave.scheduled);
+    console.log('Autosave executed:', metrics.autosave.executed);
+    console.log('Autosave skipped (clean):', metrics.autosave.skippedClean);
+    console.log('Autosave skipped (guest):', metrics.autosave.skippedGuest);
+    console.log('Auth client hits/misses:', `${metrics.auth.clientCacheHits} / ${metrics.auth.clientCacheMisses}`);
+    console.log('Auth worker hits/misses:', `${metrics.auth.workerCacheHits} / ${metrics.auth.workerCacheMisses}`);
+    console.log('Supabase verifications:', metrics.auth.supabaseVerifications);
+    console.log('Runs triggered:', metrics.runtime.runCount);
+    console.log('Runs blocked (reuse):', metrics.runtime.runtimeReuseErrors);
+    console.log('ZIP extractions started:', metrics.runtime.zipExtractionStarted);
+    console.log('ZIP extractions completed:', metrics.runtime.zipExtractionCompleted);
+    console.groupEnd();
+}
+
+// Make metrics accessible from console for debugging
+window.metricsDebug = {
+    metrics,
+    printSummary: printMetricsSummary,
+    reset() {
+        console.log('Resetting all metrics...');
+        Object.keys(metrics).forEach(category => {
+            if (typeof metrics[category] === 'object' && !Array.isArray(metrics[category])) {
+                Object.keys(metrics[category]).forEach(key => {
+                    if (typeof metrics[category][key] === 'number') {
+                        metrics[category][key] = 0;
+                    }
+                });
+            }
+        });
+        console.log('Metrics reset complete');
     }
 };
 

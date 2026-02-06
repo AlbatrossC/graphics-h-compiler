@@ -127,6 +127,10 @@ async function runProgram() {
         return;
     }
 
+    // Track run execution
+    metrics.runtime.runCount++;
+    Logger.info(`[Run] Triggered | count=${metrics.runtime.runCount}`);
+
     if (isUserLoggedIn) {
         // Cancel pending autosave since we're about to save
         if (CLOUD_STATE.autosaveTimer) {
@@ -162,6 +166,8 @@ async function runProgram() {
 
     if (dosInstance) {
         try {
+            metrics.runtime.runtimeReuseErrors++;
+            Logger.warn('[Run] Runtime already alive – reuse prevented');
             dosInstance.exit();
         } catch (e) {
             Logger.warn('Error closing previous DOS instance');
@@ -223,11 +229,28 @@ async function runProgram() {
                 // Create a temporary URL for the blob
                 const blobUrl = URL.createObjectURL(tcBlob);
 
-                Logger.info('Extracting compiler files...');
                 loadingText.textContent = 'Extracting compiler files...';
+                
+                // Track ZIP extraction (metrics only, no logging)
+                metrics.runtime.zipExtractionStarted++;
 
-                // Now extract from the blob URL - js-dos can handle blob: URLs
-                await fs.extract(blobUrl);
+                // Suppress third-party (js-dos) logging during extraction
+                const originalLog = console.log;
+                const originalInfo = console.info;
+                console.log = () => {}; // Silent
+                console.info = () => {}; // Silent
+
+                try {
+                    // Now extract from the blob URL - js-dos can handle blob: URLs
+                    await fs.extract(blobUrl);
+                } finally {
+                    // Restore console logging
+                    console.log = originalLog;
+                    console.info = originalInfo;
+                }
+
+                // Track completion (metrics only, no logging)
+                metrics.runtime.zipExtractionCompleted++;
 
                 // Clean up the blob URL
                 URL.revokeObjectURL(blobUrl);
