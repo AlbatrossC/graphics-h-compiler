@@ -177,11 +177,11 @@ void outtextxy(int x, int y, const char *text);
 The extension does **not** auto-download on Linux. Users must run the installation script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/Installers/ubuntu_install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/Installers/ubuntu_install.sh | bash
 ```
 
 **Script Source:**  
-https://github.com/AlbatrossC/graphics-h-compiler/blob/main/Installers/ubuntu_install.sh
+https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Installers/ubuntu_install.sh
 
 **What the Script Installs:**
 
@@ -724,7 +724,7 @@ vscode.window.withProgress({
 ```typescript
 class UbuntuDownloader {
   private readonly INSTALL_COMMAND = 
-    'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/Installers/ubuntu_install.sh | bash'
+    'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/Installers/ubuntu_install.sh | bash'
   
   promptForInstallation(): Promise<boolean>
   - Show modal with install command

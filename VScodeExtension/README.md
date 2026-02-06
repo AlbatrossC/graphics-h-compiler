@@ -70,7 +70,7 @@ The extension will prompt you to run an installation script that installs:
 
 **Note:** Ubuntu installation requires running a command in the terminal. The extension provides a "Copy & Open Terminal" button for convenience.
 
-[View the Ubuntu installation script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/Installers/ubuntu_install.sh)
+[View the Ubuntu installation script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Installers/ubuntu_install.sh)
 
 ---
 
@@ -91,7 +91,7 @@ Access settings via `Ctrl+,` and search for **"graphics-h-compiler"**:
 - **[Try Online Compiler](https://graphics-h-compiler.vercel.app//)** - No installation required
 - **[GitHub Repository](https://github.com/AlbatrossC/graphics-h-compiler)** - Source code and documentation
 - **[Report Issues](https://github.com/AlbatrossC/graphics-h-compiler/issues)** - Bug reports and feature requests
-- **[Ubuntu Install Script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/Installers/ubuntu_install.sh)** - View what gets installed
+- **[Ubuntu Install Script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Installers/ubuntu_install.sh)** - View what gets installed
 
 ---
 

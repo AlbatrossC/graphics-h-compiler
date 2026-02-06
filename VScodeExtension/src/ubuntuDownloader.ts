@@ -8,7 +8,7 @@ export class UbuntuDownloader {
     private checkPromise: Promise<boolean> | null = null;
 
     // Installation command that users need to run
-    private readonly INSTALL_COMMAND = 'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/refs/heads/main/Installers/ubuntu_install.sh | bash';
+    private readonly INSTALL_COMMAND = 'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/refs/heads/main/compiler-assets/Installers/ubuntu_install.sh | bash';
 
     isInProgress(): boolean {
         return this.isChecking;
