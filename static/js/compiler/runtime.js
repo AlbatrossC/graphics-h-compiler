@@ -132,7 +132,6 @@ async function runProgram() {
     Logger.info(`[Run] Triggered | count=${metrics.runtime.runCount}`);
 
     if (isUserLoggedIn) {
-        // Cancel pending autosave since we're about to save
         if (CLOUD_STATE.autosaveTimer) {
             clearTimeout(CLOUD_STATE.autosaveTimer);
             CLOUD_STATE.autosaveTimer = null;
@@ -142,15 +141,12 @@ async function runProgram() {
             typingDebounceTimer = null;
         }
 
-        // Fire-and-forget: Save to cloud in background (don't block compilation)
-        // localStorage save happens immediately, cloud save is non-blocking
         const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [folder, filename] = activeKey.split('/');
         setLocalDraftImmediate(folder, filename, code);
         localStorage.setItem('tc_code', code);
 
-        // Non-blocking cloud save
-        forceSaveActiveFile().catch(e => {
+        forceSaveActiveFile('compileRun').catch(e => {
             Logger.warn('Background save during run failed: ' + e.message);
         });
     } else {
@@ -337,8 +333,7 @@ window.addEventListener('keydown', (e) => {
 
 document.addEventListener('visibilitychange', () => {
     if (document.hidden && isUserLoggedIn) {
-        // Non-blocking save when tab becomes hidden
-        forceSaveActiveFile().catch(() => { });
+        forceSaveActiveFile('exit').catch(() => { });
     }
 });
 

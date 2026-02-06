@@ -231,18 +231,16 @@ function showStatus(message, isError = false, duration = 3000) {
 async function saveCode() {
     if (!editor) return;
 
-    // Cancel any pending autosave since user explicitly clicked Save
     cancelPendingAutosave();
 
     const code = editor.getValue();
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
 
-    // 1. Always save locally first (immediate)
     localStorage.setItem('tc_code', code);
     setLocalDraftImmediate(folder, filename, code);
+    autosaveMetrics.operations.localWrites++;
 
-    // 2. If logged in, also save to cloud
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
@@ -250,7 +248,6 @@ async function saveCode() {
             if (session?.access_token) {
                 const hash = await computeSha256(code);
 
-                // Skip if unchanged
                 if (CLOUD_STATE.lastSavedHash === hash && lastCloudSaveHash === hash) {
                     showStatus('✓ Already saved');
                     hideProgress();
@@ -258,30 +255,8 @@ async function saveCode() {
                     return;
                 }
 
-                const response = await fetch('/files/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                    },
-                    body: JSON.stringify({ folder, filename, content: code, hash })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    CLOUD_STATE.lastSavedAt = Date.now();
-                    CLOUD_STATE.lastSavedHash = hash;
-                    lastCloudSaveHash = hash;
-                    lastAutosaveTime = Date.now();
-
-                    setCachedFileContent(folder, filename, code, hash);
-                    showStatus('✓ Saved to cloud!');
-                    Logger.success('Code saved to cloud');
-                } else {
-                    const errData = await response.json().catch(() => ({}));
-                    showStatus('Save failed', true);
-                    Logger.warn(`Cloud save failed: ${errData.error || response.status}`);
-                }
+                await forceSaveActiveFile('manual');
+                showStatus('✓ Saved to cloud!');
             }
         } catch (e) {
             showStatus('Save failed', true);
@@ -378,12 +353,26 @@ let typingDebounceTimer = null;
 let lastAutosaveTime = 0;
 let lastCloudSaveHash = null;
 
-// Force save active file (for autosave) - optimized with save locking
-async function forceSaveActiveFile() {
+// Enhanced metrics for autosave tracking
+const autosaveMetrics = {
+    triggers: {
+        manual: 0,      // User clicked Save
+        idle: 0,        // Idle timer triggered
+        compileRun: 0,  // Before compile & run
+        exit: 0         // Tab close / visibility change
+    },
+    operations: {
+        cloudWrites: 0,
+        cloudSkips: 0,
+        localWrites: 0
+    }
+};
+
+async function forceSaveActiveFile(trigger = 'idle') {
     if (!editor || !isUserLoggedIn || !supabaseClient) return;
 
     if (isSaving) {
-        Logger.info('Save already in progress, skipping');
+        Logger.debug(`[Autosave] Save in progress, skipping (trigger: ${trigger})`);
         return;
     }
 
@@ -394,12 +383,16 @@ async function forceSaveActiveFile() {
 
     if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash || lastCloudSaveHash === hash) {
         metrics.autosave.skippedClean++;
-        Logger.info('Content unchanged, skipping cloud save');
+        Logger.debug(`[Autosave] Content unchanged, skipped (trigger: ${trigger})`);
         return;
     }
 
     pendingSaveHash = hash;
     isSaving = true;
+    autosaveMetrics.triggers[trigger]++;
+
+    const startTime = Date.now();
+    Logger.info(`[Autosave] Starting (trigger: ${trigger}, file: ${filename})`);
 
     try {
         const session = await getCachedSessionToken();
@@ -420,6 +413,8 @@ async function forceSaveActiveFile() {
 
         if (response.ok) {
             const result = await response.json();
+            const duration = Date.now() - startTime;
+
             CLOUD_STATE.lastSavedAt = Date.now();
             CLOUD_STATE.lastSavedHash = hash;
             lastCloudSaveHash = hash;
@@ -430,23 +425,25 @@ async function forceSaveActiveFile() {
             updateSaveIndicator();
 
             metrics.autosave.executed++;
-            metrics.storage.cloudWrites++;
+
             if (result.skipped) {
-                metrics.storage.cloudSkips++;
-                Logger.info('Autosave skipped (unchanged on server)');
+                autosaveMetrics.operations.cloudSkips++;
+                Logger.info(`[Autosave] ✓ Skipped by server (${duration}ms, trigger: ${trigger})`);
             } else {
-                Logger.info(`[Autosave] Executed | total=${metrics.autosave.executed}`);
+                autosaveMetrics.operations.cloudWrites++;
+                Logger.success(`[Autosave] ✓ Saved to cloud (${duration}ms, trigger: ${trigger})`);
             }
+
+            printAutosaveStats();
         }
     } catch (e) {
-        Logger.warn('Autosave failed: ' + e.message);
+        Logger.warn(`[Autosave] ✗ Failed (trigger: ${trigger}): ${e.message}`);
     } finally {
         isSaving = false;
         pendingSaveHash = null;
     }
 }
 
-// Schedule autosave with typing debounce
 function scheduleAutosave() {
     if (typingDebounceTimer) {
         clearTimeout(typingDebounceTimer);
@@ -462,7 +459,7 @@ function scheduleAutosave() {
         CLOUD_STATE.autosaveTimer = setTimeout(async () => {
             CLOUD_STATE.autosaveTimer = null;
             metrics.autosave.scheduled++;
-            await forceSaveActiveFile();
+            await forceSaveActiveFile('idle');
         }, AUTOSAVE_DELAY_MS);
 
     }, TYPING_DEBOUNCE_MS);
@@ -477,6 +474,18 @@ function cancelPendingAutosave() {
         clearTimeout(CLOUD_STATE.autosaveTimer);
         CLOUD_STATE.autosaveTimer = null;
     }
+}
+
+function printAutosaveStats() {
+    const total = autosaveMetrics.operations.cloudWrites + autosaveMetrics.operations.cloudSkips;
+    console.log(
+        `%c[Stats] Autosave: ${total} ops | ` +
+        `Writes: ${autosaveMetrics.operations.cloudWrites} | ` +
+        `Skips: ${autosaveMetrics.operations.cloudSkips} | ` +
+        `Triggers: Manual=${autosaveMetrics.triggers.manual} Idle=${autosaveMetrics.triggers.idle} ` +
+        `Run=${autosaveMetrics.triggers.compileRun} Exit=${autosaveMetrics.triggers.exit}`,
+        'color: #6ac47b; font-weight: bold;'
+    );
 }
 
 // ==================== FILE EXPLORER FUNCTIONS ====================
