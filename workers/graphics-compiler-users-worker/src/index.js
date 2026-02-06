@@ -1,7 +1,6 @@
 const MAX_SEGMENT_LENGTH = 200;
 
 // ==================== WORKER-SIDE METADATA CACHE ====================
-// Reduces Supabase queries by caching file metadata in worker memory
 const metadataCache = new Map();
 const METADATA_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
@@ -17,7 +16,6 @@ function getCachedMetadata(userId, folder, filename) {
 		return cached.data;
 	}
 
-	// Expired, remove from cache
 	if (cached) {
 		metadataCache.delete(key);
 	}
@@ -38,16 +36,9 @@ function clearCachedMetadata(userId, folder, filename) {
 }
 
 // ==================== WORKER-SIDE USER VERIFICATION CACHE (TIER 2) ====================
-// Caches verified userId for each access token to avoid re-verifying with Supabase
-// This dramatically reduces auth API calls by caching positive verification results
-// Key: hash of token (for privacy/security - we don't store raw tokens)
-// Value: { userId, expiresAt }
-// TTL: 30 minutes (safe because tokens expire in 1 hour, we re-verify on 401)
-
 const userVerificationCache = new Map();
 const USER_VERIFICATION_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-// Cache key is the SHA-256 hash of the token (not the token itself, for security)
 async function hashToken(token) {
 	const encoder = new TextEncoder();
 	const data = encoder.encode(token);
@@ -56,54 +47,117 @@ async function hashToken(token) {
 	return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Get cached userId for token if it exists and hasn't expired
-// Returns { userId: string } or null if cache miss or expired
 async function getCachedUserId(token) {
-	const tokenHash = await hashToken(token);
-	const cached = userVerificationCache.get(tokenHash);
+	try {
+		const tokenHash = await hashToken(token);
+		const cached = userVerificationCache.get(tokenHash);
 
-	if (!cached) {
-		return null; // Cache miss
-	}
+		if (!cached) {
+			return null;
+		}
 
-	// Check if cache entry has expired
-	if (Date.now() >= cached.expiresAt) {
-		// Expired, clean up
-		userVerificationCache.delete(tokenHash);
+		if (Date.now() >= cached.expiresAt) {
+			userVerificationCache.delete(tokenHash);
+			return null;
+		}
+
+		return { userId: cached.userId };
+	} catch (e) {
+		console.error('Cache lookup error:', e);
 		return null;
 	}
-
-	// Cache hit - return cached userId (skip Supabase call!)
-	return { userId: cached.userId };
 }
 
-// Store verified userId in cache with TTL
-// Called after successful Supabase verification
 async function setCachedUserId(token, userId) {
-	const tokenHash = await hashToken(token);
-	userVerificationCache.set(tokenHash, {
-		userId,
-		expiresAt: Date.now() + USER_VERIFICATION_CACHE_TTL_MS
-	});
+	try {
+		const tokenHash = await hashToken(token);
+		userVerificationCache.set(tokenHash, {
+			userId,
+			expiresAt: Date.now() + USER_VERIFICATION_CACHE_TTL_MS
+		});
+	} catch (e) {
+		console.error('Cache set error:', e);
+	}
 }
 
-// Clear a specific token from cache (called on 401 errors)
 async function clearCachedUserIdForToken(token) {
-	const tokenHash = await hashToken(token);
-	userVerificationCache.delete(tokenHash);
+	try {
+		const tokenHash = await hashToken(token);
+		userVerificationCache.delete(tokenHash);
+	} catch (e) {
+		console.error('Cache clear error:', e);
+	}
+}
+
+// ==================== FAST JWT VERIFICATION (LOCAL) ====================
+function base64UrlToUint8Array(base64Url) {
+	const padding = '='.repeat((4 - base64Url.length % 4) % 4);
+	const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
+	const rawData = atob(base64);
+	const outputArray = new Uint8Array(rawData.length);
+	for (let i = 0; i < rawData.length; ++i) {
+		outputArray[i] = rawData.charCodeAt(i);
+	}
+	return outputArray;
+}
+
+// Verify JWT signature locally using Web Crypto API (no external calls)
+// REQUIRES: env.SUPABASE_JWT_SECRET to be set
+async function verifyJwtLocal(token, secret) {
+	try {
+		const parts = token.split('.');
+		if (parts.length !== 3) throw new Error('Invalid token structure');
+
+		const [headerB64, payloadB64, signatureB64] = parts;
+
+		// 1. Verify Signature
+		const encoder = new TextEncoder();
+		const keyData = encoder.encode(secret);
+		const key = await crypto.subtle.importKey(
+			'raw',
+			keyData,
+			{ name: 'HMAC', hash: 'SHA-256' },
+			false,
+			['verify']
+		);
+
+		const data = encoder.encode(`${headerB64}.${payloadB64}`);
+		const signature = base64UrlToUint8Array(signatureB64);
+
+		const isValid = await crypto.subtle.verify('HMAC', key, signature, data);
+		if (!isValid) return null;
+
+		// 2. Decode payload and check expiry
+		const payloadJson = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+		const payload = JSON.parse(payloadJson);
+
+		const now = Math.floor(Date.now() / 1000);
+		if (payload.exp && now > payload.exp) {
+			console.log('[Auth] Token expired');
+			return null;
+		}
+
+		return { id: payload.sub, email: payload.email };
+	} catch (e) {
+		console.error('[Auth] Local verification failed:', e);
+		return null;
+	}
 }
 
 export default {
 	async fetch(request, env) {
 		const requestId = crypto.randomUUID();
+
 		try {
 			const corsHeaders = buildCorsHeaders(request, env);
 			const responseHeaders = { ...corsHeaders, 'X-Request-Id': requestId };
 
+			// Handle CORS preflight
 			if (request.method === 'OPTIONS') {
 				return new Response(null, { status: 204, headers: responseHeaders });
 			}
 
+			// Validate CORS origin
 			if (!corsHeaders['Access-Control-Allow-Origin']) {
 				return jsonResponse(
 					{ error: 'CORS origin not allowed' },
@@ -112,30 +166,27 @@ export default {
 				);
 			}
 
+			// Validate environment
 			if (!env.USER_FILES_BUCKET) {
+				console.error('[Config] Missing USER_FILES_BUCKET binding');
 				return jsonResponse(
-					{
-						error: 'Configuration error',
-						message:
-							'Missing R2 binding. Bind USER_FILES_BUCKET to graphics-compiler-users.',
-					},
+					{ error: 'Storage not configured' },
 					500,
 					responseHeaders
 				);
 			}
 
 			if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+				console.error('[Config] Missing Supabase configuration');
 				return jsonResponse(
-					{
-						error: 'Configuration error',
-						message: 'SUPABASE_URL and SUPABASE_ANON_KEY are required.',
-					},
+					{ error: 'Auth not configured' },
 					500,
 					responseHeaders
 				);
 			}
 
 			const url = new URL(request.url);
+			// console.log(`[${requestId}] ${request.method} ${url.pathname}`);
 
 			// Special handling for beacon-save (token in body, not header)
 			if (request.method === 'POST' && url.pathname === '/files/beacon-save') {
@@ -147,7 +198,14 @@ export default {
 						return jsonResponse({ error: 'Missing token' }, 401, responseHeaders);
 					}
 
-					const user = await verifyUserViaSupabase(env, token);
+					// Verify user with timeout
+					const user = await Promise.race([
+						verifyUser(env, token),
+						new Promise((_, reject) =>
+							setTimeout(() => reject(new Error('Auth timeout')), 10000)
+						)
+					]);
+
 					if (!user?.id) {
 						return jsonResponse({ error: 'Invalid token' }, 401, responseHeaders);
 					}
@@ -161,7 +219,7 @@ export default {
 						return jsonResponse({ error: 'content is required' }, 400, responseHeaders);
 					}
 
-					// Compute hash server-side for beacon saves
+					// Compute hash
 					const encoder = new TextEncoder();
 					const data = encoder.encode(content);
 					const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -183,11 +241,13 @@ export default {
 						return jsonResponse({ success: true, hash, skipped: true }, 200, responseHeaders);
 					}
 
+					// Save to R2
 					const r2Key = `${userId}/${folder}/${filename}`;
 					await env.USER_FILES_BUCKET.put(r2Key, content, {
 						httpMetadata: { contentType: 'text/plain; charset=utf-8' },
 					});
 
+					// Update metadata
 					await upsertFileMetadata(env, token, {
 						id: existing?.id,
 						user_id: userId,
@@ -202,22 +262,39 @@ export default {
 					console.log(`[${requestId}] Beacon save: ${folder}/${filename}`);
 					return jsonResponse({ success: true, hash }, 200, responseHeaders);
 				} catch (e) {
-					console.error(`[${requestId}] Beacon save error:`, e.message);
-					return jsonResponse({ error: e.message }, 500, responseHeaders);
+					console.error(`[${requestId}] Beacon save error:`, e);
+					return jsonResponse({ error: e.message || 'Beacon save failed' }, 500, responseHeaders);
 				}
 			}
 
-			const { userId, token } = await authenticateRequest(request, env);
-			const origin = request.headers.get('Origin') || 'none';
-			console.log(`[${requestId}] ${request.method} ${url.pathname} origin=${origin} user=${userId}`);
+			// Authenticate request with timeout protection
+			let userId, token;
+			try {
+				const authResult = await Promise.race([
+					authenticateRequest(request, env),
+					new Promise((_, reject) =>
+						setTimeout(() => reject(new Error('Authentication timeout')), 10000)
+					)
+				]);
+				userId = authResult.userId;
+				token = authResult.token;
+			} catch (authError) {
+				console.error(`[${requestId}] Auth error:`, authError);
+				return jsonResponse(
+					{ error: authError.message || 'Authentication failed' },
+					authError.statusCode || 401,
+					responseHeaders
+				);
+			}
+
+			// console.log(`[${requestId}] Authenticated user: ${userId}`);
 
 			// Single file save
 			if (request.method === 'POST' && url.pathname === '/files/save') {
 				const body = await readJsonBody(request);
 				const folder = normalizeSegment(body.folder, 'folder');
 				const filename = normalizeSegment(body.filename, 'filename');
-				const content =
-					typeof body.content === 'string' ? body.content : null;
+				const content = typeof body.content === 'string' ? body.content : null;
 				const hash = typeof body.hash === 'string' ? body.hash : null;
 
 				if (content === null || hash === null) {
@@ -228,34 +305,28 @@ export default {
 					);
 				}
 
-				// Check cache first for faster response
+				// Check cache first
 				const cachedMeta = getCachedMetadata(userId, folder, filename);
 				if (cachedMeta && cachedMeta.file_hash === hash) {
 					return jsonResponse({ success: true, hash, skipped: true, cached: true }, 200, responseHeaders);
 				}
 
-				// Get metadata (from cache or DB)
-				const existing = cachedMeta || await getFileMetadata(
-					env,
-					token,
-					folder,
-					filename
-				);
+				// Get metadata
+				const existing = cachedMeta || await getFileMetadata(env, token, folder, filename);
 
 				// Skip if hash unchanged
 				if (existing && existing.file_hash === hash) {
-					// Update cache with this result
 					setCachedMetadata(userId, folder, filename, existing);
 					return jsonResponse({ success: true, hash, skipped: true }, 200, responseHeaders);
 				}
 
+				// Save to R2
 				const r2Key = `${userId}/${folder}/${filename}`;
 				await env.USER_FILES_BUCKET.put(r2Key, content, {
-					httpMetadata: {
-						contentType: 'text/plain; charset=utf-8',
-					},
+					httpMetadata: { contentType: 'text/plain; charset=utf-8' },
 				});
 
+				// Update metadata
 				await upsertFileMetadata(env, token, {
 					id: existing?.id,
 					user_id: userId,
@@ -264,13 +335,14 @@ export default {
 					file_hash: hash,
 				});
 
-				// Update cache after successful save
+				// Update cache
 				setCachedMetadata(userId, folder, filename, { id: existing?.id, file_hash: hash });
 
+				// console.log(`[${requestId}] Saved: ${folder}/${filename}`);
 				return jsonResponse({ success: true, hash }, 200, responseHeaders);
 			}
 
-			// Batch save endpoint - optimized with parallel operations
+			// Batch save endpoint
 			if (request.method === 'POST' && url.pathname === '/files/batch-save') {
 				const body = await readJsonBody(request);
 				const files = body.files;
@@ -291,7 +363,7 @@ export default {
 					);
 				}
 
-				// Pre-validate and normalize all files first
+				// Validate all files
 				const validatedFiles = [];
 				const errors = [];
 
@@ -313,7 +385,7 @@ export default {
 					}
 				}
 
-				// Check cache and fetch metadata for uncached files
+				// Check cache and fetch metadata
 				const filesWithMetadata = await Promise.all(validatedFiles.map(async f => {
 					const cachedMeta = getCachedMetadata(userId, f.folder, f.filename);
 					if (cachedMeta) {
@@ -330,7 +402,7 @@ export default {
 					}
 				}));
 
-				// Separate files that need saving vs skipping
+				// Separate files that need saving
 				const toSave = [];
 				const skipped = [];
 
@@ -342,12 +414,11 @@ export default {
 					}
 				}
 
-				// Save files in parallel (R2 + metadata)
+				// Save files in parallel
 				const savePromises = toSave.map(async (file) => {
 					try {
 						const r2Key = `${userId}/${file.folder}/${file.filename}`;
 
-						// R2 put and metadata update in parallel
 						await Promise.all([
 							env.USER_FILES_BUCKET.put(r2Key, file.content, {
 								httpMetadata: { contentType: 'text/plain; charset=utf-8' },
@@ -361,18 +432,17 @@ export default {
 							})
 						]);
 
-						// Update cache
 						setCachedMetadata(userId, file.folder, file.filename, { id: file.existing?.id, file_hash: file.hash });
 
 						return { folder: file.folder, filename: file.filename, success: true, hash: file.hash };
 					} catch (e) {
+						console.error(`[${requestId}] Batch save error for ${file.folder}/${file.filename}:`, e);
 						return { folder: file.folder, filename: file.filename, error: e.message };
 					}
 				});
 
 				const saveResults = await Promise.all(savePromises);
 
-				// Combine results
 				const results = [...errors, ...skipped, ...saveResults];
 				const savedCount = saveResults.filter(r => r.success).length;
 				const failedCount = errors.length + saveResults.filter(r => r.error).length;
@@ -384,16 +454,12 @@ export default {
 				}, 200, responseHeaders);
 			}
 
+			// Read file
 			if (request.method === 'GET' && url.pathname === '/files/read') {
-				const folder = normalizeSegment(
-					url.searchParams.get('folder'),
-					'folder'
-				);
-				const filename = normalizeSegment(
-					url.searchParams.get('filename'),
-					'filename'
-				);
+				const folder = normalizeSegment(url.searchParams.get('folder'), 'folder');
+				const filename = normalizeSegment(url.searchParams.get('filename'), 'filename');
 				const r2Key = `${userId}/${folder}/${filename}`;
+
 				const object = await env.USER_FILES_BUCKET.get(r2Key);
 
 				if (!object) {
@@ -411,11 +477,13 @@ export default {
 				});
 			}
 
+			// List files
 			if (request.method === 'GET' && url.pathname === '/files/list') {
 				const list = await listFiles(env, token);
 				return jsonResponse({ files: list }, 200, responseHeaders);
 			}
 
+			// Delete file
 			if (request.method === 'DELETE' && url.pathname === '/files/delete') {
 				const body = await readJsonBody(request, true);
 				const folder = normalizeSegment(
@@ -430,23 +498,23 @@ export default {
 
 				await env.USER_FILES_BUCKET.delete(r2Key);
 				await deleteFileMetadata(env, token, folder, filename);
-
-				// Clear from cache
 				clearCachedMetadata(userId, folder, filename);
 
 				return jsonResponse({ success: true }, 200, responseHeaders);
 			}
 
 			return jsonResponse({ error: 'Not found' }, 404, responseHeaders);
+
 		} catch (error) {
 			console.error(`[${requestId}] Worker error:`, error.message, error.stack);
 			const status = error.statusCode || 500;
 			const corsHeaders = buildCorsHeaders(request, env);
 			const responseHeaders = { ...corsHeaders, 'X-Request-Id': requestId };
+
 			return jsonResponse(
 				{
 					error: status === 500 ? 'Internal server error' : error.message,
-					debug: error.message, // Include for debugging
+					requestId: requestId,
 				},
 				status,
 				responseHeaders
@@ -457,20 +525,13 @@ export default {
 
 function buildCorsHeaders(request, env) {
 	const origin = request.headers.get('Origin') || '';
-
-	// Check if origin is allowed
 	let allowOrigin = '';
 
-	// Allow localhost for development
 	if (origin === 'http://localhost:5000') {
 		allowOrigin = origin;
-	}
-	// Allow production origin
-	else if (env.PROD_ORIGIN && origin === env.PROD_ORIGIN) {
+	} else if (env.PROD_ORIGIN && origin === env.PROD_ORIGIN) {
 		allowOrigin = origin;
-	}
-	// Allow Vercel preview/test branches (*.vercel.app)
-	else if (origin.endsWith('.vercel.app') && origin.startsWith('https://')) {
+	} else if (origin.endsWith('.vercel.app') && origin.startsWith('https://')) {
 		allowOrigin = origin;
 	}
 
@@ -486,46 +547,51 @@ function buildCorsHeaders(request, env) {
 async function authenticateRequest(request, env) {
 	const auth = request.headers.get('Authorization') || '';
 	if (!auth.startsWith('Bearer ')) {
-		throw Object.assign(new Error('Missing bearer token'), {
-			statusCode: 401,
-		});
+		throw Object.assign(new Error('Missing bearer token'), { statusCode: 401 });
 	}
 
 	const token = auth.slice(7).trim();
 	if (!token) {
-		throw Object.assign(new Error('Missing bearer token'), {
-			statusCode: 401,
-		});
+		throw Object.assign(new Error('Missing bearer token'), { statusCode: 401 });
 	}
 
-	// TIER 2 CACHE: Check if we've already verified this token
-	// This avoids calling Supabase on ~99% of requests
+	// Check cache first
 	const cachedUserId = await getCachedUserId(token);
 	if (cachedUserId) {
-		// Cache hit - use cached userId, skip Supabase verification
-		console.log('[Auth][Worker] Cache HIT');
 		return { userId: cachedUserId.userId, token };
 	}
 
-	// Cache miss - verify with Supabase (only happens on first request with token)
-	console.log('[Auth][Worker] Cache MISS, verifying with Supabase');
-	const user = await verifyUserViaSupabase(env, token);
+	// Verify user
+	const user = await verifyUser(env, token);
 	if (!user?.id) {
-		throw Object.assign(new Error('Invalid token'), {
-			statusCode: 401,
-		});
+		throw Object.assign(new Error('Invalid token'), { statusCode: 401 });
 	}
 
-	// Cache successful verification for future requests
+	// Cache successful verification
 	await setCachedUserId(token, user.id);
 
 	return { userId: user.id, token };
 }
 
+// Unified user verification (Local -> Remote Fallback)
+async function verifyUser(env, token) {
+	// FAST Local Verification (if secret is available)
+	if (env.SUPABASE_JWT_SECRET) {
+		const localUser = await verifyJwtLocal(token, env.SUPABASE_JWT_SECRET);
+		if (localUser) {
+			return localUser;
+		}
+		// If local fails (e.g. key mismatch), fall back to remote
+		console.warn('[Auth] Local verification failed, falling back to remote');
+	}
+
+	// SLOW Remote Verification
+	return verifyUserViaSupabase(env, token);
+}
+
 async function verifyUserViaSupabase(env, token) {
 	const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`;
-	console.log('[Auth][Worker] Supabase verification performed');
-	
+
 	const response = await fetch(url, {
 		method: 'GET',
 		headers: {
@@ -535,9 +601,6 @@ async function verifyUserViaSupabase(env, token) {
 	});
 
 	if (!response.ok) {
-		// Token is invalid (likely expired or revoked)
-		// Clear from cache so we don't accept it in the future
-		console.log('[Auth][Worker] Token invalid (401) – cache cleared');
 		await clearCachedUserIdForToken(token);
 		throw Object.assign(new Error('Unauthorized'), { statusCode: 401 });
 	}
@@ -547,16 +610,12 @@ async function verifyUserViaSupabase(env, token) {
 
 function normalizeSegment(value, label) {
 	if (typeof value !== 'string') {
-		throw Object.assign(new Error(`${label} is required`), {
-			statusCode: 400,
-		});
+		throw Object.assign(new Error(`${label} is required`), { statusCode: 400 });
 	}
 
 	const trimmed = value.trim();
 	if (!trimmed) {
-		throw Object.assign(new Error(`${label} is required`), {
-			statusCode: 400,
-		});
+		throw Object.assign(new Error(`${label} is required`), { statusCode: 400 });
 	}
 
 	if (
@@ -594,8 +653,6 @@ async function supabaseRequest(env, token, path, options = {}) {
 		...options.headers,
 	};
 
-	console.log(`[Supabase] ${options.method || 'GET'} ${path}`);
-
 	const response = await fetch(url, {
 		...options,
 		headers,
@@ -605,12 +662,10 @@ async function supabaseRequest(env, token, path, options = {}) {
 		const text = await response.text();
 		console.error(`[Supabase] Error: ${response.status} ${text}`);
 		throw Object.assign(
-			new Error(`Supabase error: ${response.status} ${text}`),
+			new Error(`Supabase error: ${response.status}`),
 			{ statusCode: 500 }
 		);
 	}
-
-	console.log(`[Supabase] ${options.method || 'GET'} ${path} → ${response.status}`);
 
 	if (response.status === 204) return null;
 	return response.json();

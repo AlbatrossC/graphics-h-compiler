@@ -1,27 +1,29 @@
 // ==================== AUTHENTICATION CACHING (TIER 1: CLIENT-SIDE) ====================
-// Caches the Supabase session in memory to avoid re-fetching from Supabase on every operation
-// This reduces auth API calls by ~99% (from 290/hour to 3/hour)
+// CRITICAL: This cache prevents redundant auth checks on EVERY operation
+// Without this, we'd be calling Supabase 100+ times per minute!
 
 const sessionCache = {
     accessToken: null,
     expiresAt: null,
-    user: null
+    user: null,
+    lastVerified: null // Track when we last verified with Supabase
 };
 
-// Get cached access token if it exists and hasn't expired
-// Returns null if cache is empty or expired
+const SESSION_REFRESH_INTERVAL = 45 * 60 * 1000; // Only refresh every 45 minutes
+const SESSION_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minute safety buffer
+
+// Get cached access token WITHOUT hitting Supabase
 function getCachedToken() {
     if (!sessionCache.accessToken || !sessionCache.expiresAt) {
         return null;
     }
 
-    // Check if token has expired (with 5-minute buffer for safety)
-    const expiryBuffer = 5 * 60 * 1000; // 5 minutes
-    if (Date.now() >= (sessionCache.expiresAt - expiryBuffer)) {
-        // Token expired or expiring soon, clear cache
+    // Check if token has expired
+    if (Date.now() >= (sessionCache.expiresAt - SESSION_EXPIRY_BUFFER)) {
         sessionCache.accessToken = null;
         sessionCache.expiresAt = null;
         sessionCache.user = null;
+        sessionCache.lastVerified = null;
         return null;
     }
 
@@ -29,46 +31,45 @@ function getCachedToken() {
 }
 
 // Store session in cache when user authenticates
-// Called from Supabase auth state change event
 function setCachedSession(session) {
     if (!session || !session.access_token) {
-        // Clear cache if session is invalid
         sessionCache.accessToken = null;
         sessionCache.expiresAt = null;
         sessionCache.user = null;
+        sessionCache.lastVerified = null;
         return;
     }
 
-    // Store access token and expiration time
     // Supabase tokens expire in 1 hour by default
+    const expiresIn = session.expires_in || 3600; // seconds
+
     sessionCache.accessToken = session.access_token;
-    sessionCache.expiresAt = Date.now() + (60 * 60 * 1000); // 1 hour
+    sessionCache.expiresAt = Date.now() + (expiresIn * 1000);
     sessionCache.user = session.user || null;
+    sessionCache.lastVerified = Date.now();
 
     Logger.info('Session cached in memory');
 }
 
-// Clear all cached session data (called on sign-out)
+// Clear all cached session data
 function clearSessionCache() {
     sessionCache.accessToken = null;
     sessionCache.expiresAt = null;
     sessionCache.user = null;
+    sessionCache.lastVerified = null;
     Logger.info('Session cache cleared');
 }
 
-// Wrapper around supabaseClient.auth.getSession() that uses cached version
-// First checks memory cache, only calls Supabase if cache miss
-// This is safe because tokens expire after 1 hour (Supabase default)
+// Get session token with intelligent caching
 async function getCachedSessionToken() {
-    // Try cache first (fastest - no network call)
+    // FAST PATH: Use cached token if valid
     const cachedToken = getCachedToken();
     if (cachedToken) {
         metrics.auth.clientCacheHits++;
         return { access_token: cachedToken };
     }
 
-    // Cache miss - fetch fresh session from Supabase
-    // This only happens on first login, page refresh, or token expiration
+    // SLOW PATH: Token expired or not cached, need to refresh
     if (!supabaseClient) {
         return null;
     }
@@ -76,22 +77,37 @@ async function getCachedSessionToken() {
     metrics.auth.clientCacheMisses++;
 
     try {
+        // Check if we need to verify with Supabase
+        // Only verify if: (1) no cache OR (2) cache is old (>15 min)
+        const needsVerification = !sessionCache.lastVerified ||
+            (Date.now() - sessionCache.lastVerified > SESSION_REFRESH_INTERVAL);
+
+        if (!needsVerification && sessionCache.accessToken) {
+            // Cache is recent enough, reuse it
+            return { access_token: sessionCache.accessToken };
+        }
+
+        metrics.auth.supabaseVerifications++;
+
+        // Actually fetch from Supabase (expensive operation)
         const { data: { session }, error } = await supabaseClient.auth.getSession();
+
         if (error) {
             Logger.warn('Session refresh error: ' + error.message);
+            clearSessionCache();
             return null;
         }
 
         if (session) {
-            // Store in cache for next time
             setCachedSession(session);
-            Logger.info(`[Auth][Client] Cache MISS → fetching session`);
             return session;
         }
 
+        clearSessionCache();
         return null;
     } catch (e) {
         Logger.warn('Failed to get fresh session: ' + e.message);
+        clearSessionCache();
         return null;
     }
 }
@@ -124,7 +140,6 @@ function getFileKey(folder, filename) {
 }
 
 // ==================== DEBOUNCED LOCAL DRAFT MANAGEMENT ====================
-// Debounce timers for local draft saves to reduce write operations
 const draftSaveTimers = new Map();
 const DRAFT_SAVE_DEBOUNCE_MS = 100;
 
@@ -142,19 +157,16 @@ function setLocalDraftImmediate(folder, filename, content) {
 function setLocalDraft(folder, filename, content) {
     const key = getFileKey(folder, filename);
 
-    // Clear existing timer
     if (draftSaveTimers.has(key)) {
         clearTimeout(draftSaveTimers.get(key));
     }
 
-    // Schedule debounced save
     draftSaveTimers.set(key, setTimeout(() => {
         setLocalDraftImmediate(folder, filename, content);
         draftSaveTimers.delete(key);
     }, DRAFT_SAVE_DEBOUNCE_MS));
 }
 
-// Flush all pending draft saves immediately
 function flushPendingDrafts() {
     draftSaveTimers.forEach((timer, key) => {
         clearTimeout(timer);
@@ -185,7 +197,6 @@ const progressFill = document.getElementById('progress-fill');
 const statusMessage = document.getElementById('status-message');
 const statusText = document.getElementById('status-text');
 
-// Show progress bar (indeterminate)
 function showProgress() {
     if (progressBar && progressFill) {
         progressBar.classList.remove('hidden');
@@ -193,7 +204,6 @@ function showProgress() {
     }
 }
 
-// Hide progress bar
 function hideProgress() {
     if (progressBar && progressFill) {
         progressFill.classList.remove('indeterminate');
@@ -201,7 +211,6 @@ function hideProgress() {
     }
 }
 
-// Show status message (auto-hides after delay)
 function showStatus(message, isError = false, duration = 3000) {
     if (statusMessage && statusText) {
         statusText.textContent = message;
@@ -210,7 +219,6 @@ function showStatus(message, isError = false, duration = 3000) {
             statusMessage.classList.add('error');
         }
 
-        // Auto-hide after duration
         setTimeout(() => {
             statusMessage.classList.add('hidden');
         }, duration);
@@ -266,10 +274,7 @@ async function saveCode() {
                     lastCloudSaveHash = hash;
                     lastAutosaveTime = Date.now();
 
-                    // Update file cache
                     setCachedFileContent(folder, filename, code, hash);
-
-                    // Show success status
                     showStatus('✓ Saved to cloud!');
                     Logger.success('Code saved to cloud');
                 } else {
@@ -285,7 +290,6 @@ async function saveCode() {
             hideProgress();
         }
     } else {
-        // Not logged in - just show local save status
         showStatus('✓ Saved locally');
     }
 
@@ -352,7 +356,6 @@ async function saveCloudCode() {
             CLOUD_STATE.lastSavedAt = Date.now();
             CLOUD_STATE.lastSavedHash = hash;
 
-            // Also save locally
             localStorage.setItem('tc_code', code);
             setLocalDraft(folder, filename, code);
 
@@ -369,7 +372,6 @@ async function saveCloudCode() {
 }
 
 // ==================== OPTIMIZED AUTOSAVE SYSTEM ====================
-// Pending save state to prevent redundant operations
 let pendingSaveHash = null;
 let isSaving = false;
 let typingDebounceTimer = null;
@@ -380,7 +382,6 @@ let lastCloudSaveHash = null;
 async function forceSaveActiveFile() {
     if (!editor || !isUserLoggedIn || !supabaseClient) return;
 
-    // Prevent concurrent saves
     if (isSaving) {
         Logger.info('Save already in progress, skipping');
         return;
@@ -391,14 +392,12 @@ async function forceSaveActiveFile() {
     const [folder, filename] = activeKey.split('/');
     const hash = await computeSha256(code);
 
-    // Skip if unchanged (check both cloud hash, pending hash, and last cloud save hash)
     if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash || lastCloudSaveHash === hash) {
         metrics.autosave.skippedClean++;
         Logger.info('Content unchanged, skipping cloud save');
         return;
     }
 
-    // Mark this hash as pending to prevent duplicate saves
     pendingSaveHash = hash;
     isSaving = true;
 
@@ -426,12 +425,8 @@ async function forceSaveActiveFile() {
             lastCloudSaveHash = hash;
             lastAutosaveTime = Date.now();
 
-            // Use immediate save for autosave completion
             setLocalDraftImmediate(folder, filename, code);
-
-            // Update file content cache
             setCachedFileContent(folder, filename, code, hash);
-
             updateSaveIndicator();
 
             metrics.autosave.executed++;
@@ -452,23 +447,18 @@ async function forceSaveActiveFile() {
 }
 
 // Schedule autosave with typing debounce
-// Waits TYPING_DEBOUNCE_MS after user stops typing, then schedules cloud save after AUTOSAVE_DELAY_MS
 function scheduleAutosave() {
-    // Clear any pending typing debounce timer
     if (typingDebounceTimer) {
         clearTimeout(typingDebounceTimer);
     }
 
-    // Clear any pending autosave timer
     if (CLOUD_STATE.autosaveTimer) {
         clearTimeout(CLOUD_STATE.autosaveTimer);
     }
 
-    // Wait for user to stop typing first
     typingDebounceTimer = setTimeout(() => {
         typingDebounceTimer = null;
 
-        // Now schedule the actual autosave
         CLOUD_STATE.autosaveTimer = setTimeout(async () => {
             CLOUD_STATE.autosaveTimer = null;
             metrics.autosave.scheduled++;
@@ -478,7 +468,6 @@ function scheduleAutosave() {
     }, TYPING_DEBOUNCE_MS);
 }
 
-// Cancel all pending autosave timers (called before Run, explicit Save, etc.)
 function cancelPendingAutosave() {
     if (typingDebounceTimer) {
         clearTimeout(typingDebounceTimer);
@@ -492,9 +481,20 @@ function cancelPendingAutosave() {
 
 // ==================== FILE EXPLORER FUNCTIONS ====================
 
-// Refresh cloud files list
+// CRITICAL FIX: Only refresh when absolutely necessary
 async function refreshCloudFiles() {
     if (!isUserLoggedIn || !supabaseClient) return;
+
+    // Prevent excessive refreshes
+    const lastRefresh = CLOUD_STATE.lastRefresh || 0;
+    const MIN_REFRESH_INTERVAL = 5000; // 5 seconds minimum
+
+    if (Date.now() - lastRefresh < MIN_REFRESH_INTERVAL) {
+        Logger.info('Refresh skipped (too soon)');
+        return;
+    }
+
+    CLOUD_STATE.lastRefresh = Date.now();
 
     showProgress();
     try {
@@ -533,7 +533,7 @@ async function refreshCloudFiles() {
     }
 }
 
-// Render file explorer UI - flat file list (folders hidden from UI)
+// Render file explorer UI
 function renderFileExplorer() {
     const mainFolderFiles = document.getElementById('main-folder-files');
     const filesCount = document.getElementById('files-count');
@@ -541,7 +541,6 @@ function renderFileExplorer() {
 
     mainFolderFiles.innerHTML = '';
 
-    // If no files, show default main.cpp
     if (CLOUD_STATE.files.size === 0) {
         const defaultItem = createFileItem('main', 'main.cpp');
         mainFolderFiles.appendChild(defaultItem);
@@ -549,36 +548,31 @@ function renderFileExplorer() {
         return;
     }
 
-    // Flatten all files from all folders into a single list
     const allFiles = [];
     CLOUD_STATE.files.forEach((file, key) => {
         allFiles.push(file);
     });
 
-    // Sort files alphabetically by filename
     allFiles.sort((a, b) => a.filename.localeCompare(b.filename));
 
-    // Render all files in flat list
     allFiles.forEach(file => {
         const fileItem = createFileItem(file.folder, file.filename);
         mainFolderFiles.appendChild(fileItem);
     });
 
-    // Update file count
     if (filesCount) {
         const count = allFiles.length;
         filesCount.textContent = `${count} file${count !== 1 ? 's' : ''}`;
     }
 }
 
-// Create file item element with download button
+// Create file item element
 function createFileItem(folder, filename) {
     const item = document.createElement('div');
     item.className = 'file-item';
     item.dataset.folder = folder;
     item.dataset.file = filename;
 
-    // Get file extension for styling
     const ext = filename.split('.').pop().toLowerCase();
     item.dataset.ext = ext;
 
@@ -587,7 +581,6 @@ function createFileItem(folder, filename) {
         item.classList.add('active');
     }
 
-    // Get file type icon color class
     const iconClass = getFileIconClass(ext);
 
     item.innerHTML = `
@@ -616,7 +609,6 @@ function createFileItem(folder, filename) {
     return item;
 }
 
-// Get appropriate icon class based on file extension
 function getFileIconClass(ext) {
     switch (ext) {
         case 'cpp':
@@ -632,16 +624,14 @@ function getFileIconClass(ext) {
     }
 }
 
-// Download file function - downloads current editor content
+// Download file function
 function downloadFile(folder, filename) {
     let content;
 
-    // If this is the active file, use editor content (includes unsaved changes)
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     if (`${folder}/${filename}` === activeKey && editor) {
         content = editor.getValue();
     } else {
-        // Try to get from cache or localStorage
         const cached = getCachedFileContent(folder, filename);
         if (cached) {
             content = cached.content;
@@ -650,7 +640,6 @@ function downloadFile(folder, filename) {
         }
     }
 
-    // Create blob and download
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
 
@@ -666,13 +655,11 @@ function downloadFile(folder, filename) {
     Logger.info(`Downloaded ${filename}`);
 }
 
-// Open a file with multi-tier caching: memory → localStorage → cloud
+// Open a file with multi-tier caching
 async function openFile(folder, filename, options = {}) {
-    // Cancel pending autosave before switching files
     cancelPendingAutosave();
 
     if (!options.skipSave && isUserLoggedIn) {
-        // Fire-and-forget save of current file (don't block file switch)
         forceSaveActiveFile().catch(e => {
             Logger.warn('Background save during file switch failed: ' + e.message);
         });
@@ -681,7 +668,7 @@ async function openFile(folder, filename, options = {}) {
     const key = getFileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
 
-    // TIER 1: Check memory cache first (fastest)
+    // TIER 1: Check memory cache first
     const cached = getCachedFileContent(folder, filename);
     if (cached) {
         if (editor) {
@@ -705,7 +692,6 @@ async function openFile(folder, filename, options = {}) {
             editor.setValue(draft, -1);
             editor.clearSelection();
         }
-        // Cache in memory for next time
         setCachedFileContent(folder, filename, draft);
         updateSaveIndicator();
         highlightActiveFile();
@@ -713,7 +699,7 @@ async function openFile(folder, filename, options = {}) {
         return;
     }
 
-    // TIER 3: Fetch from cloud (slowest, only if cache miss)
+    // TIER 3: Fetch from cloud
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
@@ -734,7 +720,6 @@ async function openFile(folder, filename, options = {}) {
                         editor.clearSelection();
                     }
 
-                    // Update all cache layers
                     setLocalDraftImmediate(folder, filename, content);
                     setCachedFileContent(folder, filename, content, hash);
 
@@ -778,7 +763,7 @@ function highlightActiveFile() {
     });
 }
 
-// ==================== CREATE FILE/FOLDER (SIMPLIFIED) ====================
+// ==================== CREATE/DELETE FILES ====================
 
 async function createNewFile(filename) {
     const inputName = filename || '';
@@ -786,15 +771,12 @@ async function createNewFile(filename) {
         return;
     }
 
-    // Clean and validate filename
     let cleanName = inputName.trim();
 
-    // Add .cpp extension if no extension provided
     if (!cleanName.includes('.')) {
         cleanName += '.cpp';
     }
 
-    // Remove any invalid characters
     cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
 
     if (!cleanName || cleanName === '.cpp') {
@@ -805,13 +787,11 @@ async function createNewFile(filename) {
     const folder = 'main';
     const key = getFileKey(folder, cleanName);
 
-    // Check if file already exists
     if (CLOUD_STATE.files.has(key)) {
         alert(`File "${cleanName}" already exists.`);
         return;
     }
 
-    // Default content for new file
     const defaultContent = `// ${cleanName}
 // Created on ${new Date().toLocaleDateString()}
 
@@ -830,10 +810,8 @@ int main() {
 }
 `;
 
-    // Save locally first
     setLocalDraft(folder, cleanName, defaultContent);
 
-    // If logged in, save to cloud
     if (isUserLoggedIn && supabaseClient) {
         try {
             const session = await getCachedSessionToken();
@@ -861,7 +839,6 @@ int main() {
         }
     }
 
-    // Update local state and open file
     CLOUD_STATE.files.set(key, { folder, filename: cleanName });
     renderFileExplorer();
     await openFile(folder, cleanName);
@@ -869,14 +846,12 @@ int main() {
 }
 
 async function createNewFolder() {
-    // Show a simple prompt
     const folderName = prompt('Enter folder name:\n(e.g., projects, examples, homework)');
 
     if (!folderName || !folderName.trim()) {
-        return; // User cancelled
+        return;
     }
 
-    // Clean and validate folder name
     let cleanName = folderName.trim().toLowerCase();
     cleanName = cleanName.replace(/[^a-z0-9_-]/g, '');
 
@@ -885,16 +860,13 @@ async function createNewFolder() {
         return;
     }
 
-    // Check if folder already exists
     if (CLOUD_STATE.folders.has(cleanName)) {
         alert(`Folder "${cleanName}" already exists.`);
         return;
     }
 
-    // Add folder to state
     CLOUD_STATE.folders.add(cleanName);
 
-    // Create a default file in the new folder
     const defaultFilename = 'main.cpp';
     const defaultContent = `// ${cleanName}/${defaultFilename}
 // Created on ${new Date().toLocaleDateString()}
@@ -914,10 +886,8 @@ int main() {
 }
 `;
 
-    // Save locally
     setLocalDraft(cleanName, defaultFilename, defaultContent);
 
-    // If logged in, save to cloud
     if (isUserLoggedIn && supabaseClient) {
         try {
             const session = await getCachedSessionToken();
@@ -945,7 +915,6 @@ int main() {
         }
     }
 
-    // Update local state
     const key = getFileKey(cleanName, defaultFilename);
     CLOUD_STATE.files.set(key, { folder: cleanName, filename: defaultFilename });
     renderFileExplorer();
@@ -953,7 +922,6 @@ int main() {
     Logger.success(`Created new folder: ${cleanName}`);
 }
 
-// Delete a file
 async function deleteFile(folder, filename) {
     if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) {
         return;
@@ -961,7 +929,6 @@ async function deleteFile(folder, filename) {
 
     const key = getFileKey(folder, filename);
 
-    // Delete from cloud if logged in
     if (isUserLoggedIn && supabaseClient) {
         try {
             const session = await getCachedSessionToken();
@@ -984,11 +951,9 @@ async function deleteFile(folder, filename) {
         }
     }
 
-    // Remove from local state
     CLOUD_STATE.files.delete(key);
     clearLocalDraft(folder, filename);
 
-    // If we deleted the active file, switch to main.cpp
     if (CLOUD_STATE.activeFileKey === key) {
         CLOUD_STATE.activeFileKey = 'main/main.cpp';
         await openFile('main', 'main.cpp');
@@ -1013,3 +978,195 @@ function updateSaveIndicator() {
         saveText.textContent = 'Unsaved';
     }
 }
+
+
+// ==================== SUPABASE AUTH - OPTIMIZED ====================
+
+// Track last auth event to prevent duplicate processing
+let lastAuthEvent = {
+    type: null,
+    timestamp: 0,
+    userId: null
+};
+
+const AUTH_EVENT_DEBOUNCE_MS = 1000; // Ignore duplicate events within 1 second
+
+async function initSupabaseAuth() {
+    try {
+        const response = await fetch('/api/auth/config');
+        if (!response.ok) {
+            Logger.warn('Auth not configured on server');
+            return;
+        }
+
+        const config = await response.json();
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+
+        script.onload = () => {
+            supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+
+            Logger.info('Checking for existing Supabase session...');
+            checkSession();
+
+            // Listen for auth state changes with intelligent filtering
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                // CRITICAL FIX: Debounce duplicate events
+                const now = Date.now();
+                const isDuplicate = (
+                    lastAuthEvent.type === event &&
+                    lastAuthEvent.userId === session?.user?.id &&
+                    (now - lastAuthEvent.timestamp) < AUTH_EVENT_DEBOUNCE_MS
+                );
+
+                if (isDuplicate) {
+                    return; // Ignore duplicate event spam
+                }
+
+                // Update last event tracker
+                lastAuthEvent = {
+                    type: event,
+                    timestamp: now,
+                    userId: session?.user?.id || null
+                };
+
+                Logger.info(`Auth state changed: ${event}`);
+
+                // Handle different event types
+                if (event === 'SIGNED_IN') {
+                    if (session?.user) {
+                        setCachedSession(session);
+                        updateLoginUI(true, session.user);
+
+                        // Load files ONCE on initial sign-in
+                        refreshCloudFiles().then(() => {
+                            const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                            const [folder, filename] = activeKey.split('/');
+                            return openFile(folder, filename, { skipSave: true });
+                        }).catch(() => { });
+                    }
+                } else if (event === 'TOKEN_REFRESHED') {
+                    // Silent token refresh - just update cache, DON'T reload files
+                    if (session?.user) {
+                        setCachedSession(session);
+                    }
+                } else if (event === 'USER_UPDATED') {
+                    if (session?.user) {
+                        setCachedSession(session);
+                        updateLoginUI(true, session.user);
+                    }
+                } else if (event === 'INITIAL_SESSION') {
+                    if (session?.user) {
+                        setCachedSession(session);
+                        updateLoginUI(true, session.user);
+
+                        // Load files ONCE on page load
+                        refreshCloudFiles().then(() => {
+                            const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                            const [folder, filename] = activeKey.split('/');
+                            return openFile(folder, filename, { skipSave: true });
+                        }).catch(() => { });
+                    }
+                } else if (event === 'SIGNED_OUT') {
+                    clearSessionCache();
+                    updateLoginUI(false);
+                }
+            });
+
+            Logger.info('Supabase auth initialized');
+        };
+
+        script.onerror = () => {
+            Logger.warn('Failed to load Supabase client from CDN');
+        };
+
+        document.head.appendChild(script);
+    } catch (e) {
+        Logger.warn('Auth initialization failed: ' + e.message);
+    }
+}
+
+async function checkSession() {
+    if (!supabaseClient) return;
+
+    try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error) {
+            Logger.warn('Session lookup error: ' + error.message);
+        }
+        if (session?.user) {
+            Logger.info('Active session found');
+            setCachedSession(session);
+            updateLoginUI(true, session.user);
+        } else {
+            Logger.info('No active session');
+            updateLoginUI(false);
+        }
+    } catch (e) {
+        Logger.warn('Session check failed');
+        updateLoginUI(false);
+    }
+}
+
+async function signInWithGoogle() {
+    if (!supabaseClient) {
+        alert('Authentication is not configured. Please try again later.');
+        return;
+    }
+
+    try {
+        const redirectTo = `${window.location.origin}${window.location.pathname}`;
+        Logger.info(`Starting Google sign-in (redirect: ${redirectTo})`);
+
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo
+            }
+        });
+
+        if (error) {
+            Logger.error('Sign in failed: ' + error.message);
+            alert('Sign in failed: ' + error.message);
+        }
+    } catch (e) {
+        Logger.error('Sign in error: ' + e.message);
+        alert('Sign in failed. Please try again.');
+    }
+}
+
+async function signOut() {
+    if (!supabaseClient) return;
+
+    try {
+        Logger.info('Signing out...');
+        await forceSaveActiveFile();
+
+        clearAllFileCache();
+        clearSessionCache();
+
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+            Logger.error('Sign out failed: ' + error.message);
+        } else {
+            updateLoginUI(false);
+            Logger.info('Signed out successfully');
+        }
+    } catch (e) {
+        Logger.error('Sign out error: ' + e.message);
+    }
+}
+
+// Google Sign-In button click handler
+const googleSigninBtn = document.getElementById('google-signin-btn');
+if (googleSigninBtn) {
+    googleSigninBtn.addEventListener('click', async () => {
+        await signInWithGoogle();
+    });
+}
+
+
+// Initialize Cache & Auth
+loadCachedFileList();
+initSupabaseAuth();
