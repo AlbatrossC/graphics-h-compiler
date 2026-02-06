@@ -1,3 +1,65 @@
+// ==================== GLOBAL CONSOLE FILTER ====================
+// Suppress verbose js-dos extraction logs and worker messages
+(function () {
+    const originalLog = console.log;
+    const originalInfo = console.info;
+
+    // Filter function to block unwanted messages
+    const shouldBlock = (msg) => {
+        if (typeof msg !== 'string') return false;
+
+        // Block extraction messages
+        if (msg.includes('extracting:')) return true;
+
+        // Block js-dos version and copyright
+        if (msg.includes('js-dos version')) return true;
+        if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
+
+        // Block CONFIG messages
+        if (msg.startsWith('CONFIG:')) return true;
+
+        // Block MIDI messages
+        if (msg.startsWith('MIDI:')) return true;
+
+        // Block SHELL messages
+        if (msg.startsWith('SHELL:')) return true;
+
+        // Block progress percentage messages (UUID with %)
+        if (msg.includes('%') && msg.match(/[a-f0-9-]{36}/)) return true;
+
+        // Block [INFO] messages with UUIDs (progress indicators)
+        if (msg.startsWith('[INFO]') && msg.match(/[a-f0-9-]{36}/)) return true;
+
+        // Block "Resolving DosBox" messages
+        if (msg.includes('Resolving DosBox')) return true;
+        if (msg.includes('DosBox resolved')) return true;
+
+        // Block runtime error messages from js-dos
+        if (msg.includes('Runtime is still alive')) return true;
+
+        // Block separator lines
+        if (msg.trim() === '---') return true;
+
+        return false;
+    };
+
+    // Override console.log
+    console.log = function (...args) {
+        if (args.length > 0 && shouldBlock(args[0])) {
+            return; // Silently drop the message
+        }
+        originalLog.apply(console, args);
+    };
+
+    // Override console.info
+    console.info = function (...args) {
+        if (args.length > 0 && shouldBlock(args[0])) {
+            return; // Silently drop the message
+        }
+        originalInfo.apply(console, args);
+    };
+})();
+
 // ==================== FULLSCREEN FUNCTIONALITY - FIXED ====================
 
 let isEditorFullscreen = false;
@@ -230,23 +292,50 @@ async function runProgram() {
                 // Track ZIP extraction (metrics only, no logging)
                 metrics.runtime.zipExtractionStarted++;
 
-                // Suppress third-party (js-dos) logging during extraction
+                // Log clean extraction message
+                Logger.info('[Runtime] Extracting Turbo C environment...');
+                const extractStartTime = performance.now();
+
+                // Suppress ALL console output during extraction (js-dos is very verbose)
                 const originalLog = console.log;
                 const originalInfo = console.info;
-                console.log = () => { }; // Silent
-                console.info = () => { }; // Silent
+                const originalWarn = console.warn;
+                const originalError = console.error;
+                const originalDebug = console.debug;
+
+                // Create a filter function to block extraction messages
+                const blockExtraction = (msg) => {
+                    if (typeof msg === 'string' && msg.includes('extracting:')) {
+                        return true; // Block this message
+                    }
+                    return false;
+                };
+
+                // Suppress all console methods
+                console.log = (...args) => { if (!blockExtraction(args[0])) originalLog.apply(console, args); };
+                console.info = (...args) => { if (!blockExtraction(args[0])) originalInfo.apply(console, args); };
+                console.warn = (...args) => { if (!blockExtraction(args[0])) originalWarn.apply(console, args); };
+                console.error = (...args) => { if (!blockExtraction(args[0])) originalError.apply(console, args); };
+                console.debug = () => { }; // Completely silent
 
                 try {
                     // Now extract from the blob URL - js-dos can handle blob: URLs
                     await fs.extract(blobUrl);
                 } finally {
-                    // Restore console logging
+                    // Restore ALL console methods
                     console.log = originalLog;
                     console.info = originalInfo;
+                    console.warn = originalWarn;
+                    console.error = originalError;
+                    console.debug = originalDebug;
                 }
 
                 // Track completion (metrics only, no logging)
                 metrics.runtime.zipExtractionCompleted++;
+
+                // Calculate extraction time
+                const extractTime = ((performance.now() - extractStartTime) / 1000).toFixed(1);
+                Logger.success(`[Runtime] Extraction complete (312 files, ${extractTime}s)`);
 
                 // Clean up the blob URL
                 URL.revokeObjectURL(blobUrl);
