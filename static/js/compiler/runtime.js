@@ -654,8 +654,12 @@ async function initSupabaseAuth() {
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 Logger.info(`Auth state changed: ${event}`);
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') && session?.user) {
+                    // Cache the session in memory on successful auth (Tier 1)
+                    setCachedSession(session);
                     updateLoginUI(true, session.user);
                 } else if (event === 'SIGNED_OUT') {
+                    // Clear session cache on sign-out
+                    clearSessionCache();
                     updateLoginUI(false);
                 }
             });
@@ -681,6 +685,8 @@ async function checkSession() {
         }
         if (session?.user) {
             Logger.info('Active session found');
+            // Cache the session on page load/refresh (Tier 1)
+            setCachedSession(session);
             updateLoginUI(true, session.user);
         } else {
             Logger.info('No active session');
@@ -727,6 +733,7 @@ async function signOut() {
 
         // Clear all caches on logout
         clearAllFileCache();
+        clearSessionCache(); // Clear Tier 1 auth cache
 
         const { error } = await supabaseClient.auth.signOut();
         if (error) {

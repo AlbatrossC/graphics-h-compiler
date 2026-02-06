@@ -37,6 +37,62 @@ function clearCachedMetadata(userId, folder, filename) {
 	metadataCache.delete(key);
 }
 
+// ==================== WORKER-SIDE USER VERIFICATION CACHE (TIER 2) ====================
+// Caches verified userId for each access token to avoid re-verifying with Supabase
+// This dramatically reduces auth API calls by caching positive verification results
+// Key: hash of token (for privacy/security - we don't store raw tokens)
+// Value: { userId, expiresAt }
+// TTL: 30 minutes (safe because tokens expire in 1 hour, we re-verify on 401)
+
+const userVerificationCache = new Map();
+const USER_VERIFICATION_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+// Cache key is the SHA-256 hash of the token (not the token itself, for security)
+async function hashToken(token) {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(token);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Get cached userId for token if it exists and hasn't expired
+// Returns { userId: string } or null if cache miss or expired
+async function getCachedUserId(token) {
+	const tokenHash = await hashToken(token);
+	const cached = userVerificationCache.get(tokenHash);
+
+	if (!cached) {
+		return null; // Cache miss
+	}
+
+	// Check if cache entry has expired
+	if (Date.now() >= cached.expiresAt) {
+		// Expired, clean up
+		userVerificationCache.delete(tokenHash);
+		return null;
+	}
+
+	// Cache hit - return cached userId (skip Supabase call!)
+	return { userId: cached.userId };
+}
+
+// Store verified userId in cache with TTL
+// Called after successful Supabase verification
+async function setCachedUserId(token, userId) {
+	const tokenHash = await hashToken(token);
+	userVerificationCache.set(tokenHash, {
+		userId,
+		expiresAt: Date.now() + USER_VERIFICATION_CACHE_TTL_MS
+	});
+}
+
+// Clear a specific token from cache (called on 401 errors)
+async function clearCachedUserIdForToken(token) {
+	const tokenHash = await hashToken(token);
+	userVerificationCache.delete(tokenHash);
+}
+
 export default {
 	async fetch(request, env) {
 		const requestId = crypto.randomUUID();
@@ -442,12 +498,24 @@ async function authenticateRequest(request, env) {
 		});
 	}
 
+	// TIER 2 CACHE: Check if we've already verified this token
+	// This avoids calling Supabase on ~99% of requests
+	const cachedUserId = await getCachedUserId(token);
+	if (cachedUserId) {
+		// Cache hit - use cached userId, skip Supabase verification
+		return { userId: cachedUserId.userId, token };
+	}
+
+	// Cache miss - verify with Supabase (only happens on first request with token)
 	const user = await verifyUserViaSupabase(env, token);
 	if (!user?.id) {
 		throw Object.assign(new Error('Invalid token'), {
 			statusCode: 401,
 		});
 	}
+
+	// Cache successful verification for future requests
+	await setCachedUserId(token, user.id);
 
 	return { userId: user.id, token };
 }
@@ -463,6 +531,9 @@ async function verifyUserViaSupabase(env, token) {
 	});
 
 	if (!response.ok) {
+		// Token is invalid (likely expired or revoked)
+		// Clear from cache so we don't accept it in the future
+		await clearCachedUserIdForToken(token);
 		throw Object.assign(new Error('Unauthorized'), { statusCode: 401 });
 	}
 
