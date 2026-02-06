@@ -338,18 +338,19 @@ const ResourceLoader = (function () {
         const resource = await getResource('videos', videoId);
         if (!resource) return null;
 
-        // Always prefer API path for videos (served by Flask)
+        // Try online URLs first (R2 service as primary)
+        if (resource.urls && resource.urls.length > 0) {
+            return resource.urls[0];
+        }
+
+        // Fall back to API path (Flask)
         if (resource.apiPath) {
             return resource.apiPath;
         }
 
+        // Fall back to local path
         if (resource.localPath) {
             return resource.localPath;
-        }
-
-        // Try online URLs if available
-        if (resource.urls && resource.urls.length > 0) {
-            return resource.urls[0];
         }
 
         return null;

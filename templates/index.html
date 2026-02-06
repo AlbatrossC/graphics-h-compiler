@@ -48,9 +48,9 @@
         href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
 
-    <!-- Preload videos from Flask server for faster loading -->
-    <link rel="preload" href="/api/video/vscode-demo-v2.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="/api/video/oc-demo.mp4" as="video" type="video/mp4">
+    <!-- Preload videos from R2 CDN for faster loading -->
+    <link rel="preload" href="https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4" as="video" type="video/mp4">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1153,10 +1153,10 @@
                         <div class="video-wrapper">
                             <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline
                                 preload="auto">
-                                <source src="/api/video/vscode-demo-v2.mp4" type="video/mp4">
+                                <source src="https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4" type="video/mp4">
                             </video>
                             <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
-                                <source src="/api/video/oc-demo.mp4" type="video/mp4">
+                                <source src="https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4" type="video/mp4">
                             </video>
                         </div>
                     </div>
