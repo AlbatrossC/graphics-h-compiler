@@ -19,13 +19,15 @@ const CONTENT_TYPES = {
   'mp4': 'video/mp4',
   'txt': 'text/plain; charset=utf-8',
   'pdf': 'application/pdf',
+  'webm': 'video/webm',
+  'mov': 'video/quicktime',
 };
 
-// Cache control by path
+// Aggressive cache control by path
 const CACHE_CONTROL = {
-  '/demo/': 'public, max-age=2592000',        // 1 hour for demo files
-  '/system/': 'public, max-age=31536000',  // 1 year for system files (immutable)
-  '/videos/': 'public, max-age=604800',    // 1 week for videos
+  '/demo/': 'public, max-age=31536000, immutable',      // 1 year for demo files
+  '/system/': 'public, max-age=31536000, immutable',    // 1 year for system files
+  '/videos/': 'public, max-age=31536000, immutable',    // 1 year for videos
 };
 
 export default {
@@ -52,7 +54,7 @@ export default {
     if (url.pathname === '/' || url.pathname === '') {
       return new Response(JSON.stringify({
         service: 'Graphics.h Compiler - R2 Public Assets',
-        version: '1.0.0',
+        version: '1.0.1',
         endpoints: {
           demo: '/demo/*.cpp',
           system: '/system/*.zip',
@@ -68,6 +70,7 @@ export default {
         headers: {
           ...CORS_HEADERS,
           'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=3600',
         },
       });
     }
@@ -113,8 +116,29 @@ export default {
       
       console.log(`Fetching from R2: ${r2Key}`);
       
-      // Fetch from R2
-      const object = await env.ASSETS_BUCKET.get(r2Key);
+      // Handle Range requests - fetch with range from R2
+      const range = request.headers.get('Range');
+      let object;
+      
+      if (range) {
+        // Parse range header
+        const rangeMatch = range.match(/bytes=(\d+)-(\d*)/);
+        if (rangeMatch) {
+          const start = parseInt(rangeMatch[1], 10);
+          const end = rangeMatch[2] ? parseInt(rangeMatch[2], 10) : undefined;
+          
+          // Fetch with range option from R2
+          object = await env.ASSETS_BUCKET.get(r2Key, {
+            range: end !== undefined ? { offset: start, length: end - start + 1 } : { offset: start }
+          });
+        } else {
+          // Invalid range format, fetch full file
+          object = await env.ASSETS_BUCKET.get(r2Key);
+        }
+      } else {
+        // No range request, fetch full file
+        object = await env.ASSETS_BUCKET.get(r2Key);
+      }
       
       if (!object) {
         return new Response(JSON.stringify({
@@ -134,8 +158,8 @@ export default {
       const extension = r2Key.split('.').pop().toLowerCase();
       const contentType = CONTENT_TYPES[extension] || 'application/octet-stream';
       
-      // Determine cache control
-      let cacheControl = 'public, max-age=3600';
+      // Determine cache control - aggressive caching
+      let cacheControl = 'public, max-age=31536000, immutable';
       for (const [prefix, control] of Object.entries(CACHE_CONTROL)) {
         if (path.startsWith(prefix)) {
           cacheControl = control;
@@ -147,20 +171,41 @@ export default {
       const headers = {
         ...CORS_HEADERS,
         'Content-Type': contentType,
-        'Content-Length': object.size,
         'Cache-Control': cacheControl,
-        'ETag': object.httpEtag,
-        'Last-Modified': object.uploaded.toUTCString(),
         'Accept-Ranges': 'bytes',
       };
 
-      // Handle Range requests for video streaming
-      const range = request.headers.get('Range');
-      if (range && extension === 'mp4') {
-        return handleRangeRequest(object, range, headers);
+      // Add ETag if available
+      if (object.httpEtag) {
+        headers['ETag'] = object.httpEtag;
+      }
+
+      // Add Last-Modified if available
+      if (object.uploaded) {
+        headers['Last-Modified'] = object.uploaded.toUTCString();
+      }
+
+      // Handle ranged response
+      if (range && object.range) {
+        const { offset, length } = object.range;
+        const end = offset + length - 1;
+        
+        // Get total size from httpMetadata or use a default approach
+        // R2 doesn't always provide size in ranged requests, but we can get it from the object
+        const size = object.size || (end + 1);
+        
+        headers['Content-Range'] = `bytes ${offset}-${end}/${size}`;
+        headers['Content-Length'] = length;
+        
+        return new Response(object.body, {
+          status: 206,
+          headers,
+        });
       }
 
       // Return full file
+      headers['Content-Length'] = object.size;
+      
       return new Response(object.body, {
         status: 200,
         headers,
@@ -182,52 +227,3 @@ export default {
     }
   },
 };
-
-/**
- * Handle HTTP Range requests for video streaming
- */
-async function handleRangeRequest(object, rangeHeader, baseHeaders) {
-  const ranges = parseRange(rangeHeader, object.size);
-  
-  if (!ranges || ranges.length === 0) {
-    return new Response('Invalid Range', {
-      status: 416,
-      headers: {
-        ...baseHeaders,
-        'Content-Range': `bytes */${object.size}`,
-      },
-    });
-  }
-
-  const { start, end } = ranges[0];
-  const length = end - start + 1;
-
-  // R2 supports range requests via slice
-  const rangedBody = object.body.slice(start, end + 1);
-
-  return new Response(rangedBody, {
-    status: 206,
-    headers: {
-      ...baseHeaders,
-      'Content-Range': `bytes ${start}-${end}/${object.size}`,
-      'Content-Length': length,
-    },
-  });
-}
-
-/**
- * Parse HTTP Range header
- */
-function parseRange(rangeHeader, fileSize) {
-  const match = rangeHeader.match(/bytes=(\d+)-(\d*)/);
-  if (!match) return null;
-
-  const start = parseInt(match[1], 10);
-  const end = match[2] ? parseInt(match[2], 10) : fileSize - 1;
-
-  if (start >= fileSize || end >= fileSize || start > end) {
-    return null;
-  }
-
-  return [{ start, end }];
-}
