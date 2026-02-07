@@ -1115,9 +1115,11 @@ async function verifyJwtLocal(token, secret) {
 - **Remote verification**: 200-500ms
 - **Improvement**: 20-50x faster
 
-**Setup:**
+**Setup (Worker Secrets):**
 ```bash
 cd workers/graphics-compiler-users-worker
+npx wrangler secret put SUPABASE_URL
+npx wrangler secret put SUPABASE_ANON_KEY
 npx wrangler secret put SUPABASE_JWT_SECRET
 # Paste JWT secret from Supabase Dashboard > Settings > API
 npm run deploy

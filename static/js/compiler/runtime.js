@@ -703,14 +703,6 @@ function updateLoginUI(loggedIn, user = null) {
         }
 
         Logger.success(`Signed in as ${displayName}`);
-
-        refreshCloudFiles()
-            .then(() => {
-                const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-                const [folder, filename] = activeKey.split('/');
-                return openFile(folder, filename, { skipSave: true });
-            })
-            .catch(() => { });
     } else {
         // Show promo, hide file explorer
         cloudPromoView.style.display = 'flex';

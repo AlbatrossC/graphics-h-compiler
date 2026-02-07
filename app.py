@@ -2,6 +2,7 @@ from flask import Flask, send_file, send_from_directory, jsonify, request, Respo
 from dotenv import load_dotenv
 import requests as req
 import os
+import uuid
 
 load_dotenv()
 
@@ -9,6 +10,13 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 
 VIDEOS_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'videos')
 os.makedirs(VIDEOS_FOLDER, exist_ok=True)
+
+def get_missing_env(keys):
+    missing = []
+    for key in keys:
+        if not os.getenv(key):
+            missing.append(key)
+    return missing
 
 # Pages
 @app.route('/')
@@ -60,7 +68,11 @@ def auth_config():
     supabase_anon_key = os.getenv('SUPABASE_ANON_KEY')
     
     if not supabase_url or not supabase_anon_key:
-        return jsonify({'error': 'Auth not configured'}), 500
+        missing = get_missing_env(['SUPABASE_URL', 'SUPABASE_ANON_KEY'])
+        return jsonify({
+            'error': 'Auth not configured',
+            'missing': missing
+        }), 500
     
     return jsonify({
         'supabaseUrl': supabase_url,
@@ -70,9 +82,14 @@ def auth_config():
 # Storage Worker Proxy (server-side only)
 @app.route('/files/<path:subpath>', methods=['GET', 'POST', 'DELETE', 'OPTIONS'])
 def proxy_storage_worker(subpath):
+    request_id = str(uuid.uuid4())
     storage_worker_url = os.getenv('STORAGE_WORKER_URL')
     if not storage_worker_url:
-        return jsonify({'error': 'Storage worker not configured'}), 500
+        return jsonify({
+            'error': 'Storage worker not configured',
+            'missing': ['STORAGE_WORKER_URL'],
+            'requestId': request_id
+        }), 500
 
     if request.method == 'OPTIONS':
         response = Response(status=204)
@@ -106,13 +123,20 @@ def proxy_storage_worker(subpath):
             timeout=20
         )
     except Exception as e:
-        return jsonify({'error': 'Storage worker request failed', 'detail': str(e)}), 502
+        return jsonify({
+            'error': 'Storage worker request failed',
+            'detail': str(e),
+            'target': target_url,
+            'requestId': request_id
+        }), 502
 
     response = Response(upstream.content, status=upstream.status_code)
     if upstream.headers.get('Content-Type'):
         response.headers['Content-Type'] = upstream.headers.get('Content-Type')
     if upstream.headers.get('X-Request-Id'):
         response.headers['X-Request-Id'] = upstream.headers.get('X-Request-Id')
+    else:
+        response.headers['X-Request-Id'] = request_id
     return response
 
 # Contact API

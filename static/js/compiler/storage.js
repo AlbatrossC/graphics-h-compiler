@@ -225,6 +225,38 @@ function showStatus(message, isError = false, duration = 3000) {
     }
 }
 
+function formatServerError(errData, status) {
+    try {
+        const base = errData?.error ? String(errData.error) : `HTTP ${status}`;
+        const details = [];
+        if (errData?.code) {
+            details.push(`code: ${errData.code}`);
+        }
+        if (Array.isArray(errData?.missing) && errData.missing.length) {
+            details.push(`missing: ${errData.missing.join(', ')}`);
+        }
+        if (errData?.requestId) {
+            details.push(`requestId: ${errData.requestId}`);
+        }
+        return details.length ? `${base} (${details.join(', ')})` : base;
+    } catch (e) {
+        return `HTTP ${status}`;
+    }
+}
+
+async function readErrorBody(response) {
+    try {
+        const contentType = response.headers.get('Content-Type') || '';
+        if (contentType.includes('application/json')) {
+            return await response.json();
+        }
+        const text = await response.text();
+        return text ? { error: text } : {};
+    } catch (e) {
+        return {};
+    }
+}
+
 // ==================== SAVE FUNCTIONS ====================
 
 // Unified save function - saves BOTH locally and to cloud
@@ -336,9 +368,10 @@ async function saveCloudCode() {
 
             updateSaveIndicator();
         } else {
-            const errData = await response.json().catch(() => ({}));
-            Logger.error(`Cloud save failed: ${errData.error || response.status}`);
-            alert('Failed to save to cloud. Please try again.');
+            const errData = await readErrorBody(response);
+            const message = formatServerError(errData, response.status);
+            Logger.error(`Cloud save failed: ${message}`);
+            alert(`Failed to save to cloud: ${message}`);
         }
     } catch (e) {
         Logger.error('Cloud save error: ' + e.message);
@@ -435,6 +468,10 @@ async function forceSaveActiveFile(trigger = 'idle') {
             }
 
             printAutosaveStats();
+        } else {
+            const errData = await readErrorBody(response);
+            const message = formatServerError(errData, response.status);
+            Logger.warn(`[Autosave] ✗ Failed (trigger: ${trigger}): ${message}`);
         }
     } catch (e) {
         Logger.warn(`[Autosave] ✗ Failed (trigger: ${trigger}): ${e.message}`);
@@ -534,6 +571,11 @@ async function refreshCloudFiles() {
 
             updateCloudStateFiles(data.files);
             Logger.info(`Loaded ${CLOUD_STATE.files.size} files from cloud`);
+        } else {
+            const errData = await readErrorBody(response);
+            const message = formatServerError(errData, response.status);
+            Logger.warn(`Failed to refresh cloud files: ${message}`);
+            showStatus(`Cloud refresh failed: ${message}`, true, 5000);
         }
     } catch (e) {
         Logger.warn('Failed to refresh cloud files: ' + e.message);
@@ -773,6 +815,10 @@ async function openFile(folder, filename, options = {}) {
                     Logger.info(`[Cloud] READ ${filename} | reads=${metrics.storage.cloudReads}`);
                     hideProgress();
                     return;
+                } else {
+                    const errData = await readErrorBody(response);
+                    const message = formatServerError(errData, response.status);
+                    Logger.warn(`Failed to load from cloud: ${message}`);
                 }
             }
         } catch (e) {
@@ -1036,7 +1082,10 @@ async function initSupabaseAuth() {
     try {
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
-            Logger.warn('Auth not configured on server');
+            const errData = await readErrorBody(response);
+            const message = formatServerError(errData, response.status);
+            Logger.warn(`Auth not configured on server: ${message}`);
+            showStatus(`Auth unavailable: ${message}`, true, 6000);
             return;
         }
 
