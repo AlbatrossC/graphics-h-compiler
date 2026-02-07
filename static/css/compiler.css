@@ -797,24 +797,25 @@ header {
     /* Stack workspace vertically on mobile */
     #workspace {
         flex-direction: column;
-        height: calc(100vh - 100px);
+        height: calc(100vh - 90px);
         gap: 10px;
         padding: 10px;
-        /* Account for multi-row header */
+        /* Account for 2-row header */
     }
 
-    /* Multi-row header for mobile */
+    /* Two-row header for mobile */
     .header-content {
         flex-wrap: wrap;
-        padding: 0.5rem;
-        gap: 0.5rem 0.75rem;
-        justify-content: center;
+        padding: 0.4rem 0.5rem;
+        gap: 0.4rem;
+        justify-content: space-between;
     }
 
-    /* First row: Home, Logo, Theme */
+    /* First row: Explorer button, Home, Logo, Theme, Save */
     .header-left {
         order: 1;
         flex: 0 0 auto;
+        gap: 0.4rem;
     }
 
     .header-center {
@@ -828,33 +829,38 @@ header {
     .header-right {
         order: 3;
         flex: 0 0 auto;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
 
-    /* Second row: Demo selector and Run button */
-    .demo-selector {
+    /* Second row: Run button taking full width */
+    #run-btn {
         order: 4;
         flex: 1 1 100%;
         width: 100%;
+        justify-content: center;
+        height: 36px;
+        font-size: 0.875rem;
+        font-weight: 700;
     }
 
-    .demo-dropdown {
-        flex: 1;
-        min-width: 0;
-        font-size: 0.8125rem;
+    /* Show "Compile and Run" text on run button */
+    #run-btn .btn-text {
+        display: inline !important;
     }
 
-    /* Hide text on small buttons */
-    .btn-text {
+    /* Hide demo selector on mobile */
+    .demo-selector {
         display: none;
     }
 
-    #save-indicator,
-    #save-btn,
-    #run-btn,
+    /* Hide status message on mobile */
     #status-message {
-        flex: 1 1 100%;
-        justify-content: center;
+        display: none !important;
+    }
+
+    /* Hide text on small buttons except run button */
+    .btn-text {
+        display: none;
     }
 
     .logo {
@@ -907,21 +913,6 @@ header {
     .btn svg {
         width: 14px;
         height: 14px;
-    }
-
-    .save-split {
-        order: 5;
-        width: 100%;
-    }
-
-    .save-split .btn {
-        flex: 1;
-    }
-
-    /* Make Run button always visible */
-    #run-btn {
-        order: 6;
-        min-width: 50px;
     }
 
     /* Hide save indicator on mobile */
@@ -1061,7 +1052,8 @@ header {
     height: 50%;
     background: var(--vscode-editor);
     border-top: 1px solid var(--border-color);
-    display: flex;
+    display: none;
+    /* Hidden by default */
     flex-direction: column;
     z-index: 20;
     transform: translateY(100%);
@@ -1069,6 +1061,8 @@ header {
 }
 
 #output-panel.visible {
+    display: flex;
+    /* Show when visible */
     transform: translateY(0);
 }
 
@@ -2102,17 +2096,20 @@ header {
     }
 
     .sidebar-container {
-        position: absolute;
+        position: fixed;
         left: 0;
-        top: 0;
-        height: 100%;
+        top: 90px;
+        /* Account for 2-row header height */
+        height: calc(100vh - 90px);
         z-index: 90;
     }
 
     #sidebar {
         width: 280px;
-        box-shadow: var(--shadow);
+        height: 100%;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
         transform: translateX(-100%);
+        transition: transform 0.3s ease;
     }
 
     #sidebar.open {
@@ -2131,11 +2128,13 @@ header {
     /* Overlay when sidebar is open */
     .sidebar-overlay {
         position: fixed;
-        top: 0;
+        top: 90px;
+        /* Start below header */
         left: 0;
         width: 100vw;
-        height: 100vh;
+        height: calc(100vh - 90px);
         background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
         z-index: 80;
         display: none;
         opacity: 0;
