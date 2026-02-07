@@ -7,17 +7,20 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [How Turbo C Compiler Works](#how-turbo-c-compiler-works)
+- [DOS Emulation & Execution](#dos-emulation--execution)
+- [Compilation Workflow](#compilation-workflow)
 - [Architecture](#architecture)
+- [Backend Code Architecture](#backend-code-architecture)
 - [Features](#features)
 - [Technology Stack](#technology-stack)
 - [Caching System](#caching-system)
 - [Editor Integration](#editor-integration)
-- [DOS Emulation](#dos-emulation)
-- [Compilation Workflow](#compilation-workflow)
 - [Demo System](#demo-system)
 - [Theme System](#theme-system)
 - [Error Handling](#error-handling)
 - [Performance Optimizations](#performance-optimizations)
+- [Workers & Cloud Infrastructure](#workers--cloud-infrastructure)
 - [Development Guide](#development-guide)
 
 ---
@@ -35,6 +38,153 @@ The Online Graphics.h Compiler is a web-based development environment that allow
 - Persistent code storage
 - Pre-loaded demo programs
 - Dark/Light theme support
+
+---
+
+## How Turbo C Compiler Works
+
+### Turbo C++ 3.0 Overview
+
+Turbo C++ is a DOS-based C/C++ compiler that was standard for graphics programming in the 1990s. The compiler includes TCC.EXE (the compiler), graphics.lib (graphics library), and GRAPHICS.H (header file). Unlike modern compilers, Turbo C operates entirely within a DOS environment, requiring VGA graphics mode for rendering.
+
+### Compilation Process
+
+**User Code → Turbo C Compiler → Machine Code**
+
+When a user clicks Run, the following compilation steps occur:
+
+1. **Code Injection**: User code is written to USER.CPP in the DOS filesystem (TURBOC3/BIN/ directory)
+
+2. **Compilation Command**: TCC compiler is invoked with specific flags:
+   - Include path points to TURBOC3/INCLUDE (where GRAPHICS.H resides)
+   - Library path points to TURBOC3/LIB (where GRAPHICS.LIB is located)
+   - Output goes to current directory (TURBOC3/BIN/)
+
+3. **Graphics Library Linking**: The graphics.lib is linked with the compiled object code, providing all graphics functions (circle, line, rectangle, etc.)
+
+4. **Executable Generation**: If compilation succeeds (no syntax/semantic errors), USER.EXE is created
+
+5. **Error Capture**: Any compilation errors are written to ERR.TXT for user feedback
+
+### Turbo C Graphics Functions
+
+Graphics programming in Turbo C uses BSP (Borland Screen Package) and VGA mode. Common functions include:
+
+- initgraph() - Initialize graphics mode
+- circle() - Draw circles
+- line() - Draw lines  
+- rectangle() - Draw rectangles
+- setcolor() - Change drawing color
+- getmaxcolor() - Return max color in mode
+
+These functions are part of graphics.lib and map to VGA hardware operations within DOS.
+
+### VGA Mode (640x480)
+
+Turbo C defaults to 640x480 VGA mode with 16-color palette. Graphics operations directly manipulate DOS video memory, which DOSBox/WDOSBOX then translates to WebGL/Canvas2D for browser rendering.
+
+---
+
+## DOS Emulation & Execution
+
+### JS-DOS & WDOSBOX
+
+The project uses JS-DOS 6.22 as the DOS emulator, which runs DOSBox (compiled to WebAssembly via Emscripten) in the browser. WDOSBOX is the graphics rendering layer that converts VGA video memory into browser canvas output.
+
+### DOS Filesystem Architecture
+
+The DOS environment created by JS-DOS contains /TURBOC3/ directory structure extracted from a ZIP file:
+
+- TURBOC3/BIN/ - Compiler executables (TCC.EXE), user code (USER.CPP), and compiled output (USER.EXE)
+- TURBOC3/INCLUDE/ - Header files including GRAPHICS.H
+- TURBOC3/LIB/ - Compiled libraries including GRAPHICS.LIB
+
+User code is dynamically injected into TURBOC3/BIN/USER.CPP before compilation starts.
+
+### DOS Execution Flow
+
+**Step 1: Initialize DOS Instance**
+JS-DOS creates a new DOS environment in the browser. The WDOSBOX component prepares WebAssembly and graphics subsystem.
+
+**Step 2: Extract Compiler ZIP**
+The TC.ZIP file (~50MB) is extracted from cache or downloaded. Contents include the entire Turbo C++ 3.0 environment with compiler, headers, and graphics library.
+
+**Step 3: Setup Filesystem**
+User code is written as USER.CPP, and AUTOEXEC.BAT is created with compilation commands.
+
+**Step 4: Run AUTOEXEC.BAT**
+DOS executes the batch script which:
+- Changes to TURBOC3/BIN directory
+- Runs TCC compiler with appropriate flags
+- Saves compilation errors to ERR.TXT
+- If successful, runs USER.EXE
+
+**Step 5: VGA Output Rendering**
+WDOSBOX monitors VGA video memory updates. Graphics calls in USER.EXE write to video memory, WDOSBOX detects these changes and renders them to the browser canvas in real-time.
+
+**Step 6: Program Termination**
+When USER.EXE finishes or user presses Esc, DOS terminates and the session ends. The DOS instance is cleaned up to allow new compilations.
+
+### Keyboard Input in DOS
+
+DOS programs receive keyboard input through interrupt handlers. When a user presses keys in the canvas area:
+
+- Keys are intercepted by a keyboard blocker to prevent accidental DOS commands
+- Valid input (arrow keys, characters, etc.) is passed to the running program
+- Esc key triggers DOS exit and returns to editor
+
+### Memory & CPU Emulation
+
+WDOSBOX runs with cycles=max for maximum CPU speed. Memory allocation is handled by the Emscripten runtime - programs can use up to available heap size (~256MB in most browsers).
+
+### Graphics Rendering Pipeline
+
+Turbo C graphics calls (circle, line, etc.) → GRAPHICS.LIB functions → VGA video memory writes → WDOSBOX detects writes → Canvas output → GPU rendering
+
+---
+
+## Compilation Workflow
+
+### Step-by-Step Execution
+
+**1. User clicks Run button**
+
+**2. Pre-compilation checks**: Verify editor is ready and code is not empty
+
+**3. UI state updates**: Show loading indicator, disable run button
+
+**4. Clean previous instance**: Exit old DOS session if running
+
+**5. Initialize JS-DOS**: Create new DOS environment with WDOSBOX graphics support
+
+**6. Load Turbo C++ compiler**: Fetch TC.ZIP from IndexedDB cache or Blob Storage (~50MB)
+
+**7. Inject user code**: Write code to USER.CPP in DOS filesystem
+
+**8. Create AUTOEXEC.BAT**: Generate batch script with TCC compiler command
+
+**9. Start DOS**: Execute AUTOEXEC.BAT
+
+**10. Setup keyboard handling**: Activate keyboard blocker, focus canvas
+
+**11. Monitor for errors**: Poll ERR.TXT every 1 second for compilation errors
+
+**12. Detect completion**: Auto-detect when USER.EXE finishes, show results
+
+### Progress Tracking
+
+- 0%: Initializing environment
+- 10-30%: Loading JS-DOS and dependencies
+- 40%: DOS instance created
+- 60%: Determining WDOSBOX availability
+- 70%: Loading TC.ZIP from cache
+- 80%: Extracting compiler files
+- 90%: Writing user code to filesystem
+- 100%: Executing compilation
+
+### Error Handling During Compilation
+
+TCC compiler writes all output (errors and warnings) to ERR.TXT. A 1-second polling interval reads this file and detects if compilation failed. If errors exist, they are parsed and displayed in the output panel below the DOS canvas.
 
 ---
 
@@ -80,6 +230,45 @@ The Online Graphics.h Compiler is a web-based development environment that allow
 - IndexedDB for large files (TC ZIP)
 - LocalStorage for code/demos
 - Blob Storage for assets (Vercel)
+
+---
+
+## Backend Code Architecture
+
+### Overview
+
+The compiler backend consists of four core JavaScript modules in `static/js/compiler/` that handle all client-side operations:
+
+**Module Breakdown:**
+
+| Module | Size | Responsibility |
+|--------|------|-----------------|
+| `core.js` | 300+ lines | Theme, logging, utilities |
+| `editor.js` | 340+ lines | Editor initialization, script loading |
+| `runtime.js` | 830+ lines | DOS execution, keyboard, fullscreen |
+| `storage.js` | 1400+ lines | Auth, caching, cloud save, autosave |
+
+### core.js - Theme & Utilities
+
+Handles dark/light theme switching with localStorage persistence. The Logger provides color-coded console output (info, success, error, warn) for debugging. Themes use CSS variables that dynamically update Ace editor colors and page styling when toggled.
+
+### editor.js - Editor & Resource Loading
+
+Loads external scripts (JS-DOS, Ace Editor) with primary CDN URLs and fallback to local copies in case of network failure. Default timeout is 5 seconds per script. Script loading is sequential with progress updates. Resource manifest from static/manifest.json provides cache control headers and alternate URLs for resilience.
+
+### runtime.js - DOS Execution & Keyboard
+
+Orchestrates the entire compilation and execution flow from user clicking Run to program completion. Manages keyboard input blocking to prevent accidental DOS commands, canvas focus, and Esc key exit handling. Monitors ERR.TXT file every 1 second to detect compilation errors. Toggles editor/terminal fullscreen modes on demand.
+
+### storage.js - Authentication & Cloud Sync
+
+Implements three-tier caching for authentication: client-side token cache (45-minute refresh), Supabase session verification (on demand), and local JWT verification in worker (sub-10ms). Handles file operations with cloud (save/load/list/delete). Implements dual autosave: eager local (every 1s) and lazy cloud (every 2min throttle).
+
+**Performance:** Session cache refresh every 45 minutes instead of standard 15 minutes. Local file list caching provides instant sidebar load (<10ms). Local JWT verification is 20-50x faster than remote.
+
+---
+
+## Features
 
 ---
 
@@ -188,12 +377,7 @@ Selecting the same demo again triggers a force reload with cache bypass.
 4. Ace Themes → 100% progress
 
 **Fallback Mechanism:**
-```javascript
-loadScript(primaryUrl, fallbackUrl, timeout = 5000)
-  ├─ Try primary CDN with 5s timeout
-  ├─ If fails → Try fallback local file
-  └─ If both fail → Show error
-```
+Each script has a 5-second timeout. If primary CDN fails, local fallback is used. If both fail, error is shown.
 
 **Benefits:**
 - Fast loading from CDN (when available)
@@ -208,93 +392,42 @@ loadScript(primaryUrl, fallbackUrl, timeout = 5000)
 
 **TC ZIP Caching:**
 
-```javascript
-Database: GraphicsHCompilerCache
-Version: 1
-Store: files
+Turbo C++ 3.0 compiler (~50MB TC.ZIP) is cached in IndexedDB browser database with 7-day TTL. First run downloads and stores, subsequent runs load instantly from cache.
 
-Schema:
-{
-  key: string,           // 'tc_zip_cache'
-  data: Blob,           // TC.ZIP file (~50MB)
-  timestamp: number     // Cache creation time
-}
-```
+**Cache Details:**
+- Database: GraphicsHCompilerCache
+- Store: files
+- Key: tc_zip_cache
+- TTL: 7 days (604800000 ms)
 
-**Cache Configuration:**
-```javascript
-TC_ZIP_CACHE_KEY: 'tc_zip_cache'
-TC_ZIP_VERSION: 'tc-v1'
-CACHE_TTL: 7 days (604,800,000 ms)
-```
-
-**TC ZIP Details:**
-- **URL:** `https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip`
-- **Size:** ~50 MB
-- **Contents:** Turbo C++ 3.0 compiler + graphics.lib
-- **First Run:** Downloads and caches
-- **Subsequent Runs:** Instant load from IndexedDB
+**TC ZIP File:**
+- URL: https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip
+- Size: ~50 MB
+- Contents: Turbo C++ 3.0 compiler + graphics.lib
+- First Run: Downloads and caches
+- Subsequent Runs: Instant load from IndexedDB
 
 **Cache Workflow:**
-```
-User clicks Run
-    ↓
-Check IndexedDB for 'tc_zip_cache'
-    ↓
-    ├─ Found & Fresh (< 7 days) → Use cached blob
-    │                              ↓
-    │                          Instant load ⚡
-    └─ Not found / Expired
-        ↓
-    Download from Blob Storage
-        ↓
-    Show progress (0-100%)
-        ↓
-    Store in IndexedDB
-        ↓
-    Use for current run
-```
+User clicks Run → Check IndexedDB for cache → If found & fresh, load instantly → If not found/expired, download from Blob Storage → Store in IndexedDB → Use for compilation.
 
 ### LocalStorage for Code & Demos
 
 **User Code Persistence:**
-```javascript
-Key: 'tc_code'
-Value: string (user's C++ code)
-Max Size: ~5-10 MB (browser limit)
-```
+Stores user's C++ code with key 'tc_code'. Max size ~5-10 MB (browser limit). Automatically saves on each edit.
 
 **Demo File Cache:**
-```javascript
-Key Pattern: 'demo_cache_{demoKey}'
-Value: {
-  code: string,
-  timestamp: number
-}
-TTL: 7 days
-```
+Demo files cached with key pattern 'demo_cache_{demoKey}'. Includes code content and timestamp. 7-day TTL enforced.
 
-**Save Indicator Logic:**
-```javascript
-if (savedCode === currentCode && savedCode !== '')
-  → Show "Saved" (green)
-else
-  → Show "Not Saved" (default)
-```
+**Save Indicator:**
+Shows "Saved" status (green) when current code matches saved code. Resets when user makes edits.
 
 ### Cache Invalidation
 
-**Auto-invalidation:**
-- 7-day TTL enforced on every access
-- Expired entries auto-deleted
+**Auto-invalidation:** 7-day TTL enforced on every access. Expired entries auto-deleted.
 
-**Manual invalidation:**
-- Clear browser cache (DevTools)
-- Clear site data (Settings → Storage)
+**Manual invalidation:** Users can clear browser cache via DevTools or Settings → Storage.
 
-**Cache status indicator:**
-- Run button tooltip shows cache status
-- "Run (cached - instant)" vs "Run"
+**Status indicator:** Run button tooltip shows "Run (cached - instant)" if TC ZIP is cached, or just "Run" if fresh download needed.
 
 ---
 
@@ -302,333 +435,33 @@ else
 
 ### Ace Editor Setup
 
-**Initialization:**
-```javascript
-editor = ace.edit("editor");
-editor.setTheme("ace/theme/monokai");
-editor.session.setMode("ace/mode/c_cpp");
-```
-
-**Event Handlers:**
-
-**onChange:**
-```javascript
-editor.on('change', () => {
-  updateEditorInfo();      // Update line/char count
-  updateSaveIndicator();   // Check if saved
-});
-```
-
-**Features:**
-
-**Auto-completion:**
-- Triggered by typing or Ctrl+Space
-- Suggests C++ keywords, functions
-- Context-aware (inside functions, etc.)
-
-**Syntax Validation:**
-- Real-time error detection (visual only)
-- Actual compilation errors shown in DOS
-
-**Line/Character Count:**
-```javascript
-const code = editor.getValue();
-const lines = code.split('\n').length;
-const chars = code.length;
-
-editorInfo.textContent = `Lines: ${lines} | Chars: ${chars}`;
-```
+Creates editor instance with C++ syntax mode (ace/mode/c_cpp). Default theme is Monokai for dark mode, Textmate for light mode. Font: JetBrains Mono with Fira Code and Consolas as fallbacks.
 
 ### Theme Switching
 
-**Dynamic Theme Update:**
-```javascript
-function toggleTheme() {
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  
-  // Update HTML attribute
-  document.documentElement.setAttribute('data-theme', newTheme);
-  
-  // Update Ace theme
-  const aceTheme = newTheme === 'dark' 
-    ? 'ace/theme/monokai' 
-    : 'ace/theme/textmate';
-  editor.setTheme(aceTheme);
-  
-  // Persist choice
-  localStorage.setItem('theme', newTheme);
-}
-```
-
-**CSS Variable System:**
-```css
-:root {
-  --vscode-bg: #0a0a0a;
-  --primary: #00ff88;
-  --text-primary: #fafafa;
-}
-
-[data-theme="light"] {
-  --vscode-bg: #fafafa;
-  --primary: #00cc6a;
-  --text-primary: #0a0a0a;
-}
-```
+Updates HTML data-theme attribute ('dark' or 'light'). Ace editor theme switches between Monokai (dark) and Textmate (light). Theme choice persists to localStorage. CSS variables update page colors dynamically.
 
 ### Fullscreen Mode
 
-**Editor Fullscreen:**
-```javascript
-editorWrapper.classList.add('fullscreen');   // Fixed position, 100vw/vh
-terminalWrapper.classList.add('hidden');     // display: none
+**Editor Fullscreen:** Hides terminal, expands editor to full viewport. Forces editor resize for layout recalculation.
 
-// Force resize after layout change
-setTimeout(() => {
-  editor.resize();
-  editor.renderer.updateFull();
-}, 100);
-```
-
-**Terminal Fullscreen:**
-```javascript
-terminalWrapper.classList.add('fullscreen');
-editorWrapper.classList.add('hidden');
-
-// Trigger canvas resize
-window.dispatchEvent(new Event('resize'));
-```
+**Terminal Fullscreen:** Hides editor, expands DOS canvas to full viewport. Canvas resizes to fill available space.
 
 ---
 
-## DOS Emulation
+## Legacy Notes
 
-### JS-DOS Configuration
+### AUTOEXEC.BAT Compilation
 
-**Initialization:**
-```javascript
-Dos(canvas, {
-  wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js",
-  cycles: "max",        // Maximum CPU speed
-  autolock: false       // Don't lock mouse pointer
-}).ready((fs, main) => {
-  // Setup filesystem and run
-});
-```
+The batch script executed during compilation: changes to TURBOC3/BIN directory, deletes previous USER.EXE and ERR.TXT, executes TCC compiler with INCLUDE and LIB paths, captures output to ERR.TXT, checks compilation success, and runs USER.EXE or displays errors.
 
-**WDOSBOX Selection:**
-- **Online:** Use CDN version (faster updates)
-- **Offline:** Fallback to local copy
-- **Auto-detection:** 3-second network probe
+### Compiler Flags
 
-**Filesystem Setup:**
+TCC uses flags: -I (include path), -L (library path), -n (output directory). Source USER.CPP and library GRAPHICS.LIB are explicitly linked for graphics support.
 
-**Extract TC ZIP:**
-```javascript
-const tcBlob = await getTCZip();         // From cache or download
-const blobUrl = URL.createObjectURL(tcBlob);
-await fs.extract(blobUrl);               // Extract to Emscripten FS
-URL.revokeObjectURL(blobUrl);            // Cleanup
-```
+### Canvas Rendering
 
-**Result:**
-```
-/TURBOC3/
-├── BIN/
-│   ├── TCC.EXE          # Turbo C compiler
-│   ├── USER.CPP         # User's code (injected)
-│   ├── USER.EXE         # Compiled executable
-│   └── ERR.TXT          # Compilation errors
-├── INCLUDE/
-│   ├── GRAPHICS.H
-│   └── ... (standard headers)
-└── LIB/
-    ├── GRAPHICS.LIB
-    └── ... (standard libraries)
-```
-
-### Compilation Process
-
-**AUTOEXEC.BAT Script:**
-```batch
-@ECHO OFF
-CD TURBOC3\BIN
-
-REM Clean previous build
-IF EXIST USER.EXE DEL USER.EXE
-IF EXIST ERR.TXT DEL ERR.TXT
-
-REM Compile user code
-TCC -I..\INCLUDE -L..\LIB -n. USER.CPP ..\LIB\GRAPHICS.LIB > ERR.TXT
-
-REM Check if compilation succeeded
-IF EXIST USER.EXE GOTO SUCCESS
-
-REM Show errors if failed
-CLS
-ECHO ========================================
-ECHO COMPILATION ERRORS:
-ECHO ========================================
-TYPE ERR.TXT
-ECHO.
-PAUSE
-EXIT
-
-:SUCCESS
-REM Run the compiled program
-CLS
-USER.EXE
-PAUSE
-```
-
-**Compiler Flags:**
-- `-I..\INCLUDE` - Include directory for headers
-- `-L..\LIB` - Library directory for linking
-- `-n.` - Output to current directory
-- `USER.CPP` - Source file
-- `..\LIB\GRAPHICS.LIB` - Graphics library
-
-**Error Capture:**
-- Redirect stdout to `ERR.TXT`
-- Parse errors every 1 second
-- Display in output panel if errors found
-
-### Graphics Rendering
-
-**Canvas Setup:**
-```javascript
-<canvas id="dos-canvas" tabindex="-1"></canvas>
-```
-
-**Canvas Styling:**
-```css
-#dos-canvas {
-  width: 100%;
-  height: 100%;
-  background: #000;
-  image-rendering: pixelated;      /* Sharp pixel art */
-  image-rendering: crisp-edges;
-}
-```
-
-**Rendering Pipeline:**
-```
-User code calls graphics.h functions
-    ↓
-Turbo C graphics.lib executes
-    ↓
-DOS video memory writes (VGA mode)
-    ↓
-DOSBox emulates VGA hardware
-    ↓
-WDOSBOX converts to WebGL/Canvas2D
-    ↓
-Browser renders on <canvas>
-```
-
-**Supported Graphics Modes:**
-- CGA, EGA, VGA (up to 640x480)
-- 16-color palette
-- Text mode 80x25
-
----
-
-## Compilation Workflow
-
-### Step-by-Step Execution
-
-**1. User clicks Run button**
-
-**2. Pre-compilation checks:**
-```javascript
-if (!editor) {
-  alert('Editor is still loading');
-  return;
-}
-
-const code = editor.getValue();
-if (!code.trim()) {
-  alert('Please write some code first!');
-  return;
-}
-```
-
-**3. UI state updates:**
-```javascript
-loading.classList.add('active');
-loadingText.textContent = 'Initializing DOS environment...';
-runBtn.disabled = true;
-```
-
-**4. Clean previous instance:**
-```javascript
-if (dosInstance) {
-  dosInstance.exit();      // Terminate previous DOS session
-  dosInstance = null;
-}
-```
-
-**5. Initialize JS-DOS:**
-```javascript
-Dos(canvas, { ... }).ready(async (fs, main) => {
-  // Filesystem operations
-});
-```
-
-**6. Load Turbo C++ compiler:**
-```javascript
-const tcBlob = await getTCZip();     // From cache or download
-await fs.extract(blobUrl);           // ~50MB extraction
-```
-
-**7. Inject user code:**
-```javascript
-fs.createFile("TURBOC3/BIN/USER.CPP", code);
-```
-
-**8. Create batch script:**
-```javascript
-fs.createFile("AUTOEXEC.BAT", batchScript);
-```
-
-**9. Start DOS:**
-```javascript
-dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
-```
-
-**10. Setup keyboard handling:**
-```javascript
-setupKeyboardBlocker();    // Prevent accidental keypresses
-focusTerminal();           // Focus DOS canvas
-```
-
-**11. Monitor for errors:**
-```javascript
-errorUpdateInterval = setInterval(() => {
-  checkCompilationErrors();   // Read ERR.TXT every 1 second
-}, 1000);
-```
-
-### Progress Tracking
-
-**Loading States:**
-
-| Progress | State | Description |
-|----------|-------|-------------|
-| 0% | Initializing | Preparing environment |
-| 10-30% | Loading deps | JS-DOS, Ace Editor |
-| 40% | DOS ready | Dos() instance created |
-| 60% | Determining WDOSBOX | Network check |
-| 70% | Loading compiler | Fetching TC ZIP |
-| 80% | Extracting | Decompressing TC ZIP |
-| 90% | Writing code | Creating USER.CPP |
-| 100% | Starting | Executing AUTOEXEC.BAT |
-
-**Progress Bar Update:**
-```javascript
-function updateLoadingProgress(percent) {
-  loadingProgressBar.style.width = `${percent}%`;
-}
-```
+DOS canvas uses pixelated image rendering for crisp graphics. Black background simulates DOS. WDOSBOX monitors video memory and updates canvas in real-time as graphics functions write data.
 
 ---
 
@@ -636,74 +469,15 @@ function updateLoadingProgress(percent) {
 
 ### Demo File Management
 
-**Demo Configuration:**
-```javascript
-const DEMO_FILES = {
-  'graphics-demo': 'https://.../graphics_demo.cpp',
-  'circle-pattern': 'https://.../circle-pattern.cpp',
-  'bouncing-ball': 'https://.../bouncing-ball.cpp',
-  'shooter-game': 'https://.../shooter-game.cpp'
-};
-```
+Four demo programs available: Graphics Demo (basic shapes), Circle Pattern (animation), Bouncing Ball (physics), and Shooter Game. Loaded from Blob Storage when selected.
 
-**Demo Selector:**
-```html
-<select id="demo-select" class="demo-dropdown">
-  <option value="graphics-demo" selected>Graphics Demo</option>
-  <option value="circle-pattern">Circle Pattern</option>
-  <option value="bouncing-ball">Bouncing Ball</option>
-  <option value="shooter-game">Shooter Game</option>
-</select>
-```
+**Demo Selector:** HTML dropdown with options for each demo. Loads selected demo code into editor.
 
-**Load Logic:**
-```javascript
-demoSelect.addEventListener('change', async (e) => {
-  const selectedDemo = e.target.value;
-  
-  // Force reload if same demo selected
-  if (selectedDemo === lastLoadedDemo) {
-    await loadDemoFile(selectedDemo, true);  // Cache bypass
-  } else {
-    await loadDemoFile(selectedDemo, false);
-  }
-});
-```
+**Load Logic:** Change event listener triggers loadDemoFile(). If same demo selected twice, forces fresh download bypassing cache.
 
-**Demo Caching:**
-```javascript
-async function loadDemoFile(demoKey, forceReload = false) {
-  // 1. Check cache (unless force reload)
-  if (!forceReload) {
-    const cachedCode = DemoCache.get(demoKey);
-    if (cachedCode) {
-      editor.setValue(cachedCode, -1);
-      return;
-    }
-  }
-  
-  // 2. Fetch from Blob Storage
-  const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
-  const response = await fetch(demoUrl + cacheBuster);
-  
-  // 3. Cache for future use
-  const code = await response.text();
-  DemoCache.set(demoKey, code);
-  
-  // 4. Load into editor
-  editor.setValue(code, -1);
-  editor.clearSelection();
-  
-  // 5. Update state
-  lastLoadedDemo = demoKey;
-  localStorage.removeItem("tc_code");  // Clear user save
-}
-```
+**Demo Caching:** Checks LocalStorage cache first. If not cached, fetches from Blob Storage, stores in cache, and loads into editor. Clears user's previous code on demo load.
 
-**Cache Bypass (Force Reload):**
-- Adds timestamp query parameter: `?t=1234567890`
-- Bypasses browser and CDN cache
-- Ensures fresh copy from origin
+**Cache Bypass:** Force reload adds timestamp query parameter to URL, bypassing browser and CDN cache for fresh copy.
 
 ---
 
@@ -711,102 +485,13 @@ async function loadDemoFile(demoKey, forceReload = false) {
 
 ### CSS Variable Architecture
 
-**Theme Definition:**
-```css
-:root {
-  /* Dark Theme (Default) */
-  --vscode-bg: #0a0a0a;
-  --vscode-sidebar: #151515;
-  --primary: #00ff88;
-  --text-primary: #fafafa;
-  --border-color: #262626;
-}
-
-[data-theme="light"] {
-  /* Light Theme */
-  --vscode-bg: #fafafa;
-  --vscode-sidebar: #f5f5f5;
-  --primary: #00cc6a;
-  --text-primary: #0a0a0a;
-  --border-color: #e0e0e0;
-}
-```
-
-**Component Styling:**
-```css
-body {
-  background: var(--vscode-bg);
-  color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: #0a0a0a;
-  border-color: var(--primary);
-}
-```
+Dark theme uses dark gray backgrounds (#0a0a0a), neon green accent (#00ff88), and light text. Light theme uses light gray background (#fafafa), dark green accent (#00cc6a), and dark text. CSS variables apply to all page elements dynamically when theme switches.
 
 ### Theme Toggle Implementation
 
-**Button:**
-```html
-<button id="theme-toggle" class="theme-toggle">
-  <svg id="theme-icon-dark">...</svg>   <!-- Moon icon -->
-  <svg id="theme-icon-light">...</svg>  <!-- Sun icon -->
-</button>
-```
+Toggle function switches data-theme attribute between 'dark' and 'light'. Updates Ace editor theme (Monokai for dark, Textmate for light). Persists choice to localStorage. Updates icon display (moon for dark, sun for light) on every toggle.
 
-**Toggle Function:**
-```javascript
-function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  
-  // 1. Update DOM
-  document.documentElement.setAttribute('data-theme', newTheme);
-  
-  // 2. Update Ace Editor
-  const aceTheme = newTheme === 'dark' 
-    ? 'ace/theme/monokai' 
-    : 'ace/theme/textmate';
-  editor.setTheme(aceTheme);
-  
-  // 3. Persist choice
-  localStorage.setItem('theme', newTheme);
-  
-  // 4. Update icon
-  updateThemeIcon(newTheme);
-}
-```
-
-**Icon Update:**
-```javascript
-function updateThemeIcon(theme) {
-  const darkIcon = document.getElementById('theme-icon-dark');
-  const lightIcon = document.getElementById('theme-icon-light');
-  
-  if (theme === 'dark') {
-    darkIcon.style.display = 'block';    // Show moon
-    lightIcon.style.display = 'none';
-  } else {
-    darkIcon.style.display = 'none';
-    lightIcon.style.display = 'block';   // Show sun
-  }
-}
-```
-
-**Initialization:**
-```javascript
-function initializeTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  updateThemeIcon(savedTheme);
-}
-
-// Run on page load
-initializeTheme();
-```
+Initialization restores saved theme from localStorage on page load, defaulting to dark if no previous choice.
 
 ---
 
@@ -814,112 +499,18 @@ initializeTheme();
 
 ### Compilation Error Detection
 
-**Error File Monitoring:**
-```javascript
-async function checkCompilationErrors() {
-  // Access Emscripten filesystem
-  const FS = dosInstance.em.FS;
-  const filePath = "/TURBOC3/BIN/ERR.TXT";
-  
-  // Check if error file exists
-  try {
-    FS.stat(filePath);
-  } catch {
-    return;  // File doesn't exist yet
-  }
-  
-  // Read error content
-  const content = FS.readFile(filePath, { encoding: 'utf8' });
-  
-  // Only update if content changed
-  if (content && content !== lastErrorContent) {
-    lastErrorContent = content;
-    
-    // Check for actual errors
-    if (content.includes("Error") || content.includes("Fatal")) {
-      displayErrors(content);
-    }
-  }
-}
-```
+Monitors ERR.TXT file in DOS filesystem every 1 second. When file is created/modified (indicating compilation attempt), reads content and checks for error keywords. If errors detected, parses them and displays in output panel.
 
-**Polling Interval:**
-```javascript
-// Start checking every 1 second after DOS starts
-errorUpdateInterval = setInterval(() => {
-  checkCompilationErrors();
-}, 1000);
-```
+**Polling:** Error check interval is 1 second after DOS starts running.
 
 ### Error Display Panel
 
-**Output Panel Structure:**
-```html
-<div id="output-panel">
-  <div class="output-header">
-    <div class="output-title">
-      <svg>...</svg> Compilation Errors
-    </div>
-    <div class="output-actions">
-      <button id="copy-error-btn">Copy</button>
-      <button id="expand-output-btn">Expand</button>
-      <button id="close-output-btn">×</button>
-    </div>
-  </div>
-  <div id="output-content" class="output-content"></div>
-</div>
-```
-
-**Display Function:**
-```javascript
-function displayErrors(content) {
-  outputContent.textContent = content;
-  outputContent.classList.add('output-error');
-  
-  // Show panel
-  outputPanel.classList.add('visible');
-  terminalWrapper.classList.add('has-panel');
-  
-  // Adjust canvas height
-  window.dispatchEvent(new Event('resize'));
-}
-```
+Output panel appears below DOS canvas with buttons for Copy, Expand, and Close. Displays compilation errors in monospace font. Panel can expand to full height for better visibility.
 
 **Panel Features:**
-
-**Copy Errors:**
-```javascript
-copyErrorBtn.addEventListener('click', async () => {
-  await navigator.clipboard.writeText(errorText);
-  
-  // Visual feedback
-  copyBtnText.textContent = 'Copied!';
-  setTimeout(() => {
-    copyBtnText.textContent = 'Copy';
-  }, 2000);
-});
-```
-
-**Expand/Collapse:**
-```javascript
-expandOutputBtn.addEventListener('click', () => {
-  isOutputExpanded = !isOutputExpanded;
-  
-  if (isOutputExpanded) {
-    outputPanel.classList.add('expanded');  // height: 100%
-  } else {
-    outputPanel.classList.remove('expanded'); // height: 50%
-  }
-});
-```
-
-**Close Panel:**
-```javascript
-closeOutputBtn.addEventListener('click', () => {
-  outputPanel.classList.remove('visible');
-  terminalWrapper.classList.remove('has-panel');
-});
-```
+- Copy errors to clipboard with visual feedback
+- Expand/collapse to show more or less output
+- Close button to hide panel and maximize canvas
 
 ---
 
@@ -927,127 +518,27 @@ closeOutputBtn.addEventListener('click', () => {
 
 ### Background Warmup
 
-**Purpose:** Pre-cache TC ZIP for instant subsequent runs
+Pre-caches TC ZIP (~50MB) in background after page load. This ensures subsequent code runs are instant instead of waiting for download.
 
-**Warmup Process:**
-```javascript
-async function warmupJSDOS() {
-  // Wait for JS-DOS to load
-  if (typeof Dos === 'undefined') {
-    await waitForDos();
-  }
-  
-  // Pre-fetch TC ZIP
-  await getTCZip();  // Downloads if not cached
-  
-  // Pre-cache all demo files
-  prefetchDemoFiles();
-  
-  Logger.success('Warmup complete - Run will be instant!');
-}
-```
+**Warmup Steps:** Wait for JS-DOS to load, fetch TC ZIP from cache or download, prefetch all demo files.
 
-**When to Warmup:**
-```javascript
-// After editor is ready, start background warmup
-setTimeout(() => {
-  warmupJSDOS();
-}, 500);
-```
-
-**Benefits:**
-- **First run:** Normal load time (~5-10 seconds)
-- **Subsequent runs:** Instant (~1 second)
+**Benefits:** First run ~5-10 seconds, subsequent runs ~1 second.
 
 ### Shared TC ZIP Promise
 
-**Problem:** Race condition if user clicks Run during warmup
+Single promise shared across warmup and user compile action. If user clicks Run while warmup downloading, reuses same download promise instead of duplicating request.
 
-**Solution:**
-```javascript
-let tcZipPromise = null;
-
-async function getTCZip() {
-  // Reuse existing promise if in progress
-  if (tcZipPromise) return tcZipPromise;
-  
-  tcZipPromise = (async () => {
-    // Try cache
-    let blob = await CacheDB.get('tc_zip_cache');
-    if (blob) return blob;
-    
-    // Download
-    const response = await fetch(TC_ZIP_URL);
-    blob = await response.blob();
-    
-    // Cache async (don't block)
-    CacheDB.set('tc_zip_cache', blob);
-    
-    return blob;
-  })();
-  
-  return tcZipPromise;
-}
-```
-
-**Benefits:**
-- Prevents duplicate downloads
-- Works for both warmup and run
-- Cache-or-download logic in one place
+**Implementation:** Store tcZipPromise globally. If already loading, return existing promise. Prevents race conditions and redundant downloads.
 
 ### Demo Prefetching
 
-**Strategy:**
-```javascript
-async function prefetchDemoFiles() {
-  for (const [key, url] of Object.entries(DEMO_FILES)) {
-    // Skip if already cached
-    if (DemoCache.get(key)) continue;
-    
-    try {
-      const response = await fetch(url);
-      const code = await response.text();
-      DemoCache.set(key, code);
-    } catch {
-      // Silently fail for background prefetch
-    }
-  }
-}
-```
+Background process fetches all four demo files from Blob Storage and caches locally. Skips demo if already cached. Fails silently if network unavailable (background task).
 
-**Benefits:**
-- Instant demo switching (after first load)
-- Reduces network requests
-- Works offline after warmup
+**Result:** Demo switching is instant after first page load.
 
 ### Script Loading Optimization
 
-**Parallel Loading:**
-```javascript
-// Load all scripts concurrently
-await Promise.all([
-  loadScript(jsDosUrl, jsDosF Fallback),
-  loadScript(aceUrl, aceFallback),
-  loadScript(aceModeUrl, aceModeFallback),
-  loadScript(aceThemeUrl, aceThemeFallback)
-]);
-```
-
-**Timeout Protection:**
-```javascript
-function loadScript(url, fallback, timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      reject(new Error('Timeout'));
-    }, timeout);
-    
-    script.onload = () => {
-      clearTimeout(timer);
-      resolve();
-    };
-  });
-}
-```
+Loads all scripts (JS-DOS, Ace Editor, C++ mode, themes) in parallel using Promise.all(). Each script has 5-second timeout. Provides 10-30% progress updates during loading. Falls back to local copies if CDN fails.
 
 ---
 
@@ -1055,344 +546,179 @@ function loadScript(url, fallback, timeout = 5000) {
 
 ### Architecture Overview
 
-**Components:**
-- **Cloudflare Worker**: Secure gateway for file operations
-- **R2 Bucket**: Object storage for user files
-- **Supabase Auth**: Google OAuth authentication
-- **Client-Side Caching**: Multi-tier caching for performance
-
-**File Storage Structure:**
-```
-R2 Bucket: graphics-compiler-users
-├── user_{user_id}/
-│   ├── main/
-│   │   └── main.cpp
-│   ├── projects/
-│   │   └── game.cpp
-│   └── examples/
-│       └── demo.cpp
-```
+Three components work together: Cloudflare Worker provides secure gateway for file operations, R2 Bucket stores user files (organized by user ID), Supabase Auth handles Google OAuth, and client-side caching provides performance.
 
 ### Authentication System
 
 #### Worker-Side Local JWT Verification
 
-**Fast Path (Local Verification):**
-```javascript
-async function verifyJwtLocal(token, secret) {
-  // 1. Parse JWT structure
-  const [headerB64, payloadB64, signatureB64] = token.split('.');
-  
-  // 2. Verify signature using Web Crypto API
-  const key = await crypto.subtle.importKey(
-    'raw', 
-    encoder.encode(secret), 
-    { name: 'HMAC', hash: 'SHA-256' }, 
-    false, 
-    ['verify']
-  );
-  
-  const isValid = await crypto.subtle.verify(
-    'HMAC', 
-    key, 
-    base64UrlToUint8Array(signatureB64),
-    encoder.encode(`${headerB64}.${payloadB64}`)
-  );
-  
-  if (!isValid) return null;
-  
-  // 3. Check token expiry
-  const payload = JSON.parse(atob(payloadB64));
-  const now = Math.floor(Date.now() / 1000);
-  if (payload.exp && now > payload.exp) return null;
-  
-  return { id: payload.sub, email: payload.email };
-}
-```
+JWT tokens verified locally in Cloudflare Worker using Web Crypto API. Parses token, validates HMAC-SHA256 signature, and checks expiry. Local verification <10ms versus 200-500ms remote (20-50x faster).
 
-**Performance:**
-- **Local verification**: <10ms
-- **Remote verification**: 200-500ms
-- **Improvement**: 20-50x faster
+**Setup:** Store SUPABASE_JWT_SECRET in Cloudflare Worker environment via npx wrangler secret put.
 
-**Setup (Worker Secrets):**
-```bash
-cd workers/graphics-compiler-users-worker
-npx wrangler secret put SUPABASE_URL
-npx wrangler secret put SUPABASE_ANON_KEY
-npx wrangler secret put SUPABASE_JWT_SECRET
-# Paste JWT secret from Supabase Dashboard > Settings > API
-npm run deploy
-```
-
-**Fallback Mechanism:**
-```javascript
-async function verifyUser(env, token) {
-  // Try local verification first (if secret available)
-  if (env.SUPABASE_JWT_SECRET) {
-    const localUser = await verifyJwtLocal(token, env.SUPABASE_JWT_SECRET);
-    if (localUser) return localUser;
-  }
-  
-  // Fall back to remote Supabase verification
-  return verifyUserViaSupabase(env, token);
-}
-```
+**Fallback:** If local verification fails, falls back to remote Supabase verification.
 
 #### Client-Side Session Caching
 
-**Session Cache Structure:**
-```javascript
-const sessionCache = {
-  accessToken: null,
-  expiresAt: null,
-  user: null,
-  lastVerified: null
-};
-
-const SESSION_REFRESH_INTERVAL = 45 * 60 * 1000; // 45 minutes
-const SESSION_EXPIRY_BUFFER = 5 * 60 * 1000;     // 5 minutes
+Client caches access token, expiry time, and user info. Session refresh interval 45 minutes (vs standard 15 minutes). Token expired if current time >= (expiry - 5 min safety buffer).
+  loadScript(aceModeUrl, aceModeFallback),
+  loadScript(aceThemeUrl, aceThemeFallback)
+]);
 ```
 
-**Cache Logic:**
-```javascript
-async function getCachedSessionToken() {
-  // Fast path: Use cached token if valid
-  const cachedToken = getCachedToken();
-  if (cachedToken) {
-    metrics.auth.clientCacheHits++;
-    return { access_token: cachedToken };
-  }
-  
-  // Check if we need to verify with Supabase
-  const needsVerification = !sessionCache.lastVerified || 
-    (Date.now() - sessionCache.lastVerified > SESSION_REFRESH_INTERVAL);
-  
-  if (!needsVerification && sessionCache.accessToken) {
-    return { access_token: sessionCache.accessToken };
-  }
-  
-  // Fetch from Supabase (expensive operation)
-  metrics.auth.supabaseVerifications++;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  
-  if (session) {
-    setCachedSession(session);
-    return { access_token: session.access_token };
-  }
-  
-  return null;
-}
-```
+**Timeout Protection:**
+---
 
-**Benefits:**
-- Reduced Supabase API calls (15min → 45min refresh)
+## Cloud Storage & Authentication
+
+### Architecture Overview
+
+Three components work together: Cloudflare Worker provides secure gateway for file operations, R2 Bucket stores user files (organized by user ID), Supabase Auth handles Google OAuth, and client-side caching provides performance.
+
+### Authentication System
+
+#### Worker-Side Local JWT Verification
+
+JWT tokens verified locally in Cloudflare Worker using Web Crypto API. Parses token, validates HMAC-SHA256 signature, and checks expiry. Local verification <10ms versus 200-500ms remote (20-50x faster).
+
+**Setup:** Store SUPABASE_JWT_SECRET in Cloudflare Worker environment via npx wrangler secret put.
+
+**Fallback:** If local verification fails, falls back to remote Supabase verification.
+
+#### Client-Side Session Caching
+
+Client caches access token, expiry time, and user info. Session refresh interval 45 minutes (vs standard 15 minutes). Token expired if current time >= (expiry - 5 min safety buffer).
+
+**Setup:** Store SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_JWT_SECRET in Cloudflare Worker via npx wrangler secret put commands. Deploy with npm run deploy.
+
+**Fallback:** Tries local JWT verification first. If unavailable, falls back to remote Supabase verification.
+
+**Benefits:** 
+- Reduced Supabase API calls (45min refresh vs 15min standard)
 - Faster authentication checks
 - Better UX with fewer interruptions
 
 ### File List Caching
 
-**Instant Explorer Loading:**
-```javascript
-// Load from cache on page load
-function loadCachedFileList() {
-  try {
-    const cached = localStorage.getItem('cached_file_list');
-    if (cached) {
-      const files = JSON.parse(cached);
-      updateCloudStateFiles(files);
-      Logger.info('Loaded file list from local cache');
-      return true;
-    }
-  } catch (e) {
-    // Ignore corrupted cache
-  }
-  return false;
-}
+Loads file list from localStorage on page load, providing instant <10ms sidebar render (vs 500ms-2s blank sidebar). User's file explorer updates immediately while fresh data fetches in background. Cache invalidated when user creates/deletes files.
 
-// Save to cache after fetching
-async function refreshCloudFiles() {
-  const response = await fetch('/files/list', {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  
-  if (response.ok) {
-    const data = await response.json();
-    
-    // Cache for next load
-    localStorage.setItem('cached_file_list', JSON.stringify(data.files));
-    localStorage.setItem('cached_file_list_ts', Date.now().toString());
-    
-    updateCloudStateFiles(data.files);
-  }
-}
-```
-
-**Performance:**
-- **Before**: 500ms-2s blank sidebar
-- **After**: <10ms instant render from cache
-- **Improvement**: 50-200x faster perceived load
+**Performance:** 50-200x faster perceived load time with local cache.
 
 ### Hybrid Autosave System
 
 **Strategy: Lazy Cloud, Eager Local**
 
-**Local Saves (Fast):**
-```javascript
-// Save to localStorage every 1 second
-const LOCAL_SAVE_DEBOUNCE = 1000;
+Local saves to localStorage every 1 second (fast). Cloud saves only every 2 minutes (throttled to reduce API hits). Exit handler guarantees save when user closes tab/window.
 
-function saveLocalCode() {
-  const code = editor.getValue();
-  localStorage.setItem('tc_code', code);
-  setLocalDraftImmediate(folder, filename, code);
-  autosaveMetrics.operations.localWrites++;
-}
-```
+**Triggers:** Manual (user clicks Save), Idle (after 2 min inactivity), CompileRun (before compilation), Exit (tab close/hide).
 
-**Cloud Saves (Lazy):**
-```javascript
-// Save to cloud only once every 2 minutes
-const CLOUD_SAVE_THROTTLE = 120000; // 2 minutes
-
-async function attemptCloudAutosave() {
-  const now = Date.now();
-  const lastSave = CLOUD_STATE.lastSavedAt || 0;
-  
-  // Skip if saved recently
-  if (now - lastSave < CLOUD_SAVE_THROTTLE) {
-    return;
-  }
-  
-  await forceSaveActiveFile('idle');
-}
-```
-
-**Exit Handler (Safety Net):**
-```javascript
-// Guaranteed save on tab close
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden && isUserLoggedIn) {
-    forceSaveActiveFile('exit').catch(() => {});
-  }
-});
-
-window.addEventListener('beforeunload', () => {
-  if (isUserLoggedIn && editor) {
-    // Use keepalive for guaranteed delivery
-    forceSaveActiveFile('exit');
-  }
-});
-```
-
-**Autosave Triggers:**
-
-| Trigger | When | Frequency | Purpose |
-|---------|------|-----------|---------|
-| `manual` | User clicks Save | On demand | Explicit save action |
-| `idle` | User stops typing | 2 min after last edit | Background autosave |
-| `compileRun` | Before compile & run | On demand | Ensure latest code is saved |
-| `exit` | Tab close / hide | On demand | Prevent data loss |
-
-**Benefits:**
-- **Cost Reduction**: 75% fewer cloud write operations
-- **Data Safety**: Local saves every 1s + exit handlers
-- **Performance**: No blocking on autosave
-- **Reliability**: Multiple safety nets
+**Benefits:** 75% reduction in cloud write operations, local saves prevent data loss, non-blocking autosave.
 
 ### Enhanced Logging & Metrics
 
-**Autosave Metrics:**
-```javascript
-const autosaveMetrics = {
-  triggers: {
-    manual: 0,      // User clicked Save
-    idle: 0,        // Idle timer triggered
-    compileRun: 0,  // Before compile & run
-    exit: 0         // Tab close / visibility change
-  },
-  operations: {
-    cloudWrites: 0,
-    cloudSkips: 0,
-    localWrites: 0
-  }
-};
-```
-
-**Detailed Logging:**
-```javascript
-async function forceSaveActiveFile(trigger = 'idle') {
-  const startTime = Date.now();
-  Logger.info(`[Autosave] Starting (trigger: ${trigger}, file: ${filename})`);
-  
-  // ... save logic ...
-  
-  const duration = Date.now() - startTime;
-  if (result.skipped) {
-    Logger.info(`[Autosave] ✓ Skipped by server (${duration}ms, trigger: ${trigger})`);
-  } else {
-    Logger.success(`[Autosave] ✓ Saved to cloud (${duration}ms, trigger: ${trigger})`);
-  }
-  
-  printAutosaveStats();
-}
-```
-
-**Console Output:**
-```
-[Autosave] Starting (trigger: compileRun, file: main.cpp)
-[Autosave] ✓ Saved to cloud (245ms, trigger: compileRun)
-[Stats] Autosave: 12 ops | Writes: 8 | Skips: 4 | Triggers: Manual=3 Idle=5 Run=3 Exit=1
-```
-
-**Stats Display:**
-```javascript
-function printAutosaveStats() {
-  const total = autosaveMetrics.operations.cloudWrites + 
-                autosaveMetrics.operations.cloudSkips;
-  console.log(
-    `%c[Stats] Autosave: ${total} ops | ` +
-    `Writes: ${autosaveMetrics.operations.cloudWrites} | ` +
-    `Skips: ${autosaveMetrics.operations.cloudSkips} | ` +
-    `Triggers: Manual=${autosaveMetrics.triggers.manual} ` +
-    `Idle=${autosaveMetrics.triggers.idle} ` +
-    `Run=${autosaveMetrics.triggers.compileRun} ` +
-    `Exit=${autosaveMetrics.triggers.exit}`,
-    'color: #6ac47b; font-weight: bold;'
-  );
-}
-```
+Tracks autosave triggers (manual, idle, compileRun, exit) and operations (cloudWrites, cloudSkips, localWrites). Console logs detailed metrics on each save including trigger type, file name, and duration.
 
 ### Performance Comparison
 
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
-| **Auth Latency** | 200-500ms | <10ms | **20-50x faster** |
-| **Session Refresh** | Every 15 min | Every 45 min | **3x less aggressive** |
-| **File Explorer Load** | 500ms-2s | <10ms (cached) | **50-200x faster** |
-| **Cloud Write Ops** | ~120/hour | ~30/hour | **75% reduction** |
-| **Data Safety** | Cloud-dependent | Local + Cloud | **Improved** |
+| Auth Latency | 200-500ms | <10ms | 20-50x faster |
+| Session Refresh | Every 15 min | Every 45 min | 3x less aggressive |
+| File Explorer Load | 500ms-2s | <10ms (cached) | 50-200x faster |
+| Cloud Write Ops | ~120/hour | ~30/hour | 75% reduction |
+| Data Safety | Cloud-dependent | Local + Cloud | Improved |
 
 ### Security Considerations
 
-**JWT Verification:**
-- Secret stored securely in Cloudflare Worker environment
-- Never exposed to client
-- Automatic fallback if secret unavailable
+JWT secret stored securely in Cloudflare Worker environment, never exposed to client. File access control ensures users can only access their own files with path traversal protection. CORS headers block unauthorized origins.
 
-**File Access Control:**
-- User can only access their own files
-- Path traversal protection
-- Authorization required for all operations
+---
 
-**CORS Protection:**
-```javascript
-const allowedOrigins = [env.PROD_ORIGIN];
-const origin = request.headers.get('Origin');
+## Workers & Cloud Infrastructure
 
-if (!allowedOrigins.includes(origin)) {
-  return new Response('Forbidden', { status: 403 });
-}
+### Overview
+
+Two Cloudflare Workers serve as serverless backend: graphics-compiler-users-worker (file operations & JWT auth) and r2-public-assets (demo/system file CDN).
+
+### graphics-compiler-users-worker
+
+**Location:** workers/graphics-compiler-users-worker/
+
+**Purpose:** Secure backend gateway for user file operations and authentication
+
+**Key Features:**
+
+**JWT Authentication:** Verifies tokens locally using Web Crypto API. HMAC-SHA256 signature check and expiry validation. <10ms local verification (50x faster than remote Supabase).
+
+**File Operations:** POST /files/save, GET /files/list, GET /files/:path, DELETE /files/:path
+
+**R2 Bucket:** Stores files in graphics-compiler-users bucket, user_{user_id}/main/ directory structure, supports up to 5GB files, globally replicated.
+
+**LRU Cache:** Bounded memory cache with auto-eviction. Maxsize 10000 entries. Reduces R2 round-trips.
+
+**Setup:** Configure secrets via npx wrangler secret put (USER_FILES_BUCKET, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_JWT_SECRET). Deploy with npm run deploy.
+
+### r2-public-assets Worker
+
+**Location:** workers/r2-public-assets/
+
+**Purpose:** Public CDN for demo files, system files, and videos
+
+**Key Features:**
+
+**Asset Serving:** GET /demo/, GET /system/, GET /videos/ endpoints serve files from R2 with CORS headers.
+
+**Aggressive Caching:** 1-year cache (Cache-Control: public, max-age=31536000, immutable) for demo files, system files, and videos.
+
+**Content-Type Detection:** Detects file type and sets appropriate Content-Type header (cpp → text/plain, zip → application/zip, mp4 → video/mp4, etc.).
+
+**CORS Headers:** Allows cross-origin requests from compiler page. Supports OPTIONS preflight for browser CORS check.
+
+**Path Validation:** No path traversal allowed. Only serves files from designated buckets.
+
+**Demo File:** URL format https://r2-assets.graphics-compiler.workers.dev/demo/graphics_demo.cpp. Fetches from R2, caches at Cloudflare Edge for 1 year, compresses with Brotli for bandwidth.
+
+### Architecture Flow
+
+**File Save Flow:** Browser sends POST /files/save with JWT token → Worker verifies JWT locally → Validates path (no path traversal) → Uploads to R2 → Returns success → Client caches in LRU.
+
+**Asset Serve Flow:** Browser requests GET /demo/... → Worker checks edge cache → If 1-year cache hit, return immediately → If cache miss, fetch from R2, cache at edge, return to client.
+
+### Performance Impact
+
+| Component | Benefit | Impact |
+|-----------|---------|--------|
+| **JWT Local Verification** | No Supabase round-trip | <10ms (vs 200-500ms remote) |
+| **LRU Cache** | Reduces R2 calls | ~20-30% fewer requests |
+| **Public Assets Cache** | 1-year immutable cache | Instant CDN serves @ edge |
+| **Cloudflare Edge** | Geographically distributed | <100ms response globally |
+| **CORS Headers** | Browser direct requests | No CORS-induced delays |
+
+### Deployment
+
+**Deploy Both Workers:**
+
+```bash
+# User files worker
+cd workers/graphics-compiler-users-worker
+npx wrangler deploy
+
+# Assets worker
+cd ../r2-public-assets
+npx wrangler deploy
+
+# Verify deployment
+curl https://graphics-compiler-users-worker.username.workers.dev/health
+curl https://r2-assets.graphics-compiler.workers.dev/demo/graphics_demo.cpp
+```
+
+**Environment Variables (graphics-compiler-users-worker):**
+```bash
+USER_FILES_BUCKET            # R2 bucket name
+SUPABASE_URL                 # Supabase project URL
+SUPABASE_ANON_KEY            # Public API key
+SUPABASE_JWT_SECRET          # JWT signing secret (for local verification)
+PROD_ORIGIN                  # https://graphics-h-compiler.vercel.app
 ```
 
 ---
@@ -1423,103 +749,37 @@ graphics-h-compiler/
 
 **Start Local Server:**
 
-**Python:**
-```bash
-# Python 3
-python -m http.server 8000
+**Python:** python -m http.server 8000. Access at http://localhost:8000/compiler.html
 
-# Access at http://localhost:8000/compiler.html
-```
+**Node.js:** npx serve. Access at http://localhost:3000/compiler.html
 
-**Node.js:**
-```bash
-npx serve
-
-# Access at http://localhost:3000/compiler.html
-```
-
-**VS Code:**
-- Install "Live Server" extension
-- Right-click compiler.html → "Open with Live Server"
+**VS Code:** Install "Live Server" extension, right-click compiler.html → "Open with Live Server"
 
 ### Testing Checklist
 
-**Browser Compatibility:**
-- [ ] Chrome/Edge (latest)
-- [ ] Firefox (latest)
-- [ ] Safari (iOS/macOS)
-- [ ] Mobile browsers
+**Browser Compatibility:** Chrome/Edge, Firefox, Safari, Mobile browsers
 
-**Features to Test:**
-- [ ] Code editing (typing, selection)
-- [ ] Syntax highlighting
-- [ ] Auto-completion
-- [ ] Theme switching
-- [ ] Demo loading
-- [ ] Code save/load
-- [ ] Run button (compilation)
-- [ ] Graphics rendering
-- [ ] Error display
-- [ ] Keyboard shortcuts
-- [ ] Fullscreen modes
-- [ ] Responsive layout (mobile)
+**Features to Test:** Code editing, syntax highlighting, auto-completion, theme switching, demo loading, code save/load, Run button, graphics rendering, error display, keyboard shortcuts, fullscreen modes, responsive layout.
 
-**Cache Testing:**
-- [ ] First run (download TC ZIP)
-- [ ] Second run (cached TC ZIP)
-- [ ] Demo caching
-- [ ] LocalStorage persistence
-- [ ] IndexedDB cleanup (7-day TTL)
+**Cache Testing:** First run (download TC ZIP), second run (cached), demo caching, LocalStorage persistence, IndexedDB cleanup (7-day TTL).
 
 ### Debugging
 
-**Console Logging:**
-```javascript
-const Logger = {
-  info(msg) { console.log(`[Graphics.h Compiler] ${msg}`); },
-  success(msg) { console.log(`[Graphics.h Compiler] ✓ ${msg}`); },
-  error(msg, err) { console.error(`[Graphics.h Compiler] ✗ ${msg}`, err); },
-  warn(msg) { console.warn(`[Graphics.h Compiler] ⚠ ${msg}`); }
-};
-```
+**Console Logging:** Logger object provides info(), success(), error(), warn() methods with colored output prefixed with [Graphics.h Compiler].
 
-**Useful Breakpoints:**
-- `runProgram()` - Compilation start
-- `checkCompilationErrors()` - Error detection
-- `loadDemoFile()` - Demo loading
-- `getTCZip()` - Cache/download logic
+**Useful Breakpoints:** runProgram() (compilation start), checkCompilationErrors() (error detection), loadDemoFile() (demo loading), getTCZip() (cache/download logic).
 
-**Browser DevTools:**
-- **Console:** View Logger output
-- **Network:** Check CDN/Blob Storage requests
-- **Application → IndexedDB:** Inspect cached TC ZIP
-- **Application → LocalStorage:** View saved code/demos
-- **Performance:** Profile JS-DOS overhead
+**Browser DevTools:** Console (Logger output), Network tab (CDN/Blob requests), ApplicationIndexedDB (cached TC ZIP), Application→LocalStorage (saved code/demos), Performance (JS-DOS profiling).
 
 ### Common Issues
 
-**Issue: TC ZIP download fails**
-- Check Blob Storage URL is accessible
-- Verify CORS headers (should allow cross-origin)
-- Try disabling ad blockers
-- Check browser console for errors
+**TC ZIP download fails:** Check Blob Storage URL accessible, verify CORS headers, disable ad blockers, check console for errors.
 
-**Issue: Editor not loading**
-- Verify Ace scripts loaded (check Network tab)
-- Check for JavaScript errors in console
-- Ensure `ace` global variable exists
+**Editor not loading:** Verify Ace scripts in Network tab, check console for JS errors, ensure ace global variable exists.
 
-**Issue: DOS not starting**
-- Check JS-DOS scripts loaded
-- Verify `Dos` global variable exists
-- Check console for WebAssembly errors
-- Try different browser (Safari has limits)
+**DOS not starting:** Check JS-DOS loaded, verify Dos global exists, check console for WebAssembly errors, try different browser (Safari has limits).
 
-**Issue: Graphics not rendering**
-- Check canvas element exists
-- Verify VGA mode initialized
-- Check console for rendering errors
-- Try simpler graphics program first
+**Graphics not rendering:** Check canvas exists, verify VGA mode initialized, check console errors, try simpler program.
 
 ---
 
@@ -1527,51 +787,23 @@ const Logger = {
 
 ### Global Functions
 
-**runProgram()**
-```javascript
-async function runProgram()
-```
-Compiles and runs the current code in the editor.
+**runProgram():** async function runProgram() - Compiles and runs current editor code.
 
-**saveCode()**
-```javascript
-function saveCode()
-```
-Saves editor content to LocalStorage.
+**saveCode():** function saveCode() - Saves editor content to LocalStorage.
 
-**toggleTheme()**
-```javascript
-function toggleTheme()
-```
-Switches between dark and light themes.
+**toggleTheme():** function toggleTheme() - Switches between dark and light themes.
 
-**loadDemoFile(demoKey, forceReload)**
-```javascript
-async function loadDemoFile(demoKey: string, forceReload: boolean = false)
-```
-Loads a demo file into the editor.
+**loadDemoFile():** async function loadDemoFile(demoKey: string, forceReload: boolean = false) - Loads demo file into editor.
 
 ### Global State
 
-**dosInstance**
-```javascript
-let dosInstance: DosInstance | null = null;
-```
-Current JS-DOS instance (if running).
+**dosInstance:** let dosInstance: DosInstance | null = null - Current JS-DOS instance (if running).
 
-**editor**
-```javascript
-let editor: AceEditor | null = null;
-```
-Ace Editor instance.
+**editor:** let editor: AceEditor | null = null - Ace Editor instance.
 
-**terminalFocused**
-```javascript
-let terminalFocused: boolean = false;
-```
-Whether DOS terminal has keyboard focus.
+**terminalFocused:** let terminalFocused: boolean = false - Whether DOS terminal has keyboard focus.
 
-**currentDemo**
+**currentDemo:**
 ```javascript
 let currentDemo: string = 'graphics-demo';
 ```
