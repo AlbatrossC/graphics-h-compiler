@@ -225,8 +225,6 @@ async function initializeEditor() {
 
     editor.setShowPrintMargin(false);
     editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
         fontSize: "16px",
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
         highlightActiveLine: true,
@@ -246,7 +244,7 @@ async function initializeEditor() {
         // Track editor changes (metrics only, no behavior change)
         metrics.editor.changeCount++;
         metrics.editor.lastChangeAt = Date.now();
-        
+
         // Log periodically (not on every keystroke) to avoid spam
         if (metrics.editor.changeCount % metrics.editor.changeLogInterval === 0) {
             const elapsed = ((Date.now() - metrics.editor.lastChangeAt) / 1000).toFixed(1);
