@@ -250,6 +250,27 @@ function clearAllFileCache() {
     fileContentCache.clear();
 }
 
+// CRITICAL FIX #5: Add periodic cache cleanup every 5 minutes
+const FILE_CACHE_CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+function initializeCacheCleanup() {
+    setInterval(() => {
+        let expiredCount = 0;
+        const now = Date.now();
+
+        for (const [key, value] of fileContentCache.entries()) {
+            if (now - value.timestamp > FILE_CACHE_TTL_MS) {
+                fileContentCache.delete(key);
+                expiredCount++;
+            }
+        }
+
+        if (expiredCount > 0) {
+            Logger.debug(`[Cache] Cleaned ${expiredCount} expired entries, ${fileContentCache.size} remaining`);
+        }
+    }, FILE_CACHE_CLEANUP_INTERVAL_MS);
+}
+
 // Demo files configuration - loaded dynamically from manifest.json
 let DEMO_FILES = {};
 

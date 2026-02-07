@@ -140,13 +140,20 @@ function getFileKey(folder, filename) {
 }
 
 // ==================== DEBOUNCED LOCAL DRAFT MANAGEMENT ====================
+// CRITICAL FIX #6: Include userId in localStorage keys to prevent guest/auth collision
 const draftSaveTimers = new Map();
 const DRAFT_SAVE_DEBOUNCE_MS = 100;
+
+// Helper to build draft storage key with userId namespace
+function getDraftKey(folder, filename) {
+    const userId = sessionCache.user?.id || 'guest';
+    return `draft_${userId}_${folder}_${filename}`;
+}
 
 // Immediate local draft save (for critical saves)
 function setLocalDraftImmediate(folder, filename, content) {
     try {
-        localStorage.setItem(`draft_${folder}_${filename}`, content);
+        localStorage.setItem(getDraftKey(folder, filename), content);
         metrics.storage.localDraftWrites++;
     } catch (e) {
         Logger.warn('Failed to save local draft');
@@ -176,7 +183,7 @@ function flushPendingDrafts() {
 
 function getLocalDraft(folder, filename) {
     try {
-        return localStorage.getItem(`draft_${folder}_${filename}`);
+        return localStorage.getItem(getDraftKey(folder, filename));
     } catch (e) {
         return null;
     }
@@ -184,7 +191,7 @@ function getLocalDraft(folder, filename) {
 
 function clearLocalDraft(folder, filename) {
     try {
-        localStorage.removeItem(`draft_${folder}_${filename}`);
+        localStorage.removeItem(getDraftKey(folder, filename));
     } catch (e) {
         // Ignore
     }
@@ -280,7 +287,7 @@ async function saveCode() {
             if (session?.access_token) {
                 const hash = await computeSha256(code);
 
-                if (CLOUD_STATE.lastSavedHash === hash && lastCloudSaveHash === hash) {
+                if (SAVE_STATE.authoritativeHash === hash) {
                     showStatus('✓ Already saved');
                     hideProgress();
                     updateSaveIndicator();
@@ -361,7 +368,9 @@ async function saveCloudCode() {
                 Logger.success('Code saved to cloud');
             }
             CLOUD_STATE.lastSavedAt = Date.now();
-            CLOUD_STATE.lastSavedHash = hash;
+            // CRITICAL FIX #1: Update unified SAVE_STATE instead of CLOUD_STATE.lastSavedHash
+            SAVE_STATE.authoritativeHash = hash;
+            SAVE_STATE.lastSaveTime = Date.now();
 
             localStorage.setItem('tc_code', code);
             setLocalDraft(folder, filename, code);
@@ -379,12 +388,75 @@ async function saveCloudCode() {
     }
 }
 
+// ==================== FILE SWITCH DATA LOSS PREVENTION ====================
+// CRITICAL FIX #3: Ensure save completes with retries before switching files
+async function forceSaveActiveFileWithRetry(maxRetries = 3) {
+    if (!editor || !isUserLoggedIn || !supabaseClient) return;
+
+    const code = editor.getValue();
+    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    const [folder, filename] = activeKey.split('/');
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const session = await getCachedSessionToken();
+            if (!session?.access_token) return;
+
+            const hash = await computeSha256(code);
+
+            // Skip if already saved
+            if (SAVE_STATE.authoritativeHash === hash) {
+                return;
+            }
+
+            isSaving = true;
+            const response = await fetch('/files/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ folder, filename, content: code, hash })
+            });
+
+            if (response.ok) {
+                SAVE_STATE.authoritativeHash = hash;
+                SAVE_STATE.lastSaveTime = Date.now();
+                isSaving = false;
+                return; // Success
+            }
+
+            // Retry on failure
+            if (attempt < maxRetries) {
+                const backoffMs = Math.pow(2, attempt - 1) * 500; // Exponential backoff
+                await new Promise(resolve => setTimeout(resolve, backoffMs));
+            }
+        } catch (e) {
+            if (attempt === maxRetries) {
+                isSaving = false;
+                throw e;
+            }
+            const backoffMs = Math.pow(2, attempt - 1) * 500;
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
+        }
+    }
+
+    isSaving = false;
+    throw new Error('Failed to save after retries');
+}
+
 // ==================== OPTIMIZED AUTOSAVE SYSTEM ====================
-let pendingSaveHash = null;
+// CRITICAL FIX #1: Unified save state to prevent race conditions
+// Single source of truth for content hash tracking
+const SAVE_STATE = {
+    authoritativeHash: null,  // Server-confirmed content hash
+    pendingHash: null,         // Hash of content pending save
+    lastSaveTime: 0,           // When server last confirmed the hash
+};
+
 let isSaving = false;
 let typingDebounceTimer = null;
 let lastAutosaveTime = 0;
-let lastCloudSaveHash = null;
 
 // Enhanced metrics for autosave tracking
 const autosaveMetrics = {
@@ -414,13 +486,14 @@ async function forceSaveActiveFile(trigger = 'idle') {
     const [folder, filename] = activeKey.split('/');
     const hash = await computeSha256(code);
 
-    if (CLOUD_STATE.lastSavedHash === hash || pendingSaveHash === hash || lastCloudSaveHash === hash) {
+    // CRITICAL FIX #1: Use unified SAVE_STATE.authoritativeHash
+    if (SAVE_STATE.authoritativeHash === hash || SAVE_STATE.pendingHash === hash) {
         metrics.autosave.skippedClean++;
         Logger.debug(`[Autosave] Content unchanged, skipped (trigger: ${trigger})`);
         return;
     }
 
-    pendingSaveHash = hash;
+    SAVE_STATE.pendingHash = hash;
     isSaving = true;
     autosaveMetrics.triggers[trigger]++;
 
@@ -431,7 +504,7 @@ async function forceSaveActiveFile(trigger = 'idle') {
         const session = await getCachedSessionToken();
         if (!session?.access_token) {
             isSaving = false;
-            pendingSaveHash = null;
+            SAVE_STATE.pendingHash = null;
             return;
         }
 
@@ -449,8 +522,9 @@ async function forceSaveActiveFile(trigger = 'idle') {
             const duration = Date.now() - startTime;
 
             CLOUD_STATE.lastSavedAt = Date.now();
-            CLOUD_STATE.lastSavedHash = hash;
-            lastCloudSaveHash = hash;
+            // CRITICAL FIX #1: Only update authoritativeHash after confirmed server response
+            SAVE_STATE.authoritativeHash = hash;
+            SAVE_STATE.lastSaveTime = Date.now();
             lastAutosaveTime = Date.now();
 
             setLocalDraftImmediate(folder, filename, code);
@@ -477,7 +551,7 @@ async function forceSaveActiveFile(trigger = 'idle') {
         Logger.warn(`[Autosave] ✗ Failed (trigger: ${trigger}): ${e.message}`);
     } finally {
         isSaving = false;
-        pendingSaveHash = null;
+        SAVE_STATE.pendingHash = null;
     }
 }
 
@@ -742,10 +816,17 @@ function downloadFile(folder, filename) {
 async function openFile(folder, filename, options = {}) {
     cancelPendingAutosave();
 
+    // CRITICAL FIX #3: Ensure save completion with retries before switching files
     if (!options.skipSave && isUserLoggedIn) {
-        forceSaveActiveFile().catch(e => {
-            Logger.warn('Background save during file switch failed: ' + e.message);
-        });
+        try {
+            await forceSaveActiveFileWithRetry(3);
+        } catch (e) {
+            Logger.warn('Failed to save before file switch: ' + e.message);
+            // Ask user if they want to continue without saving
+            if (!confirm('Failed to save current file. Continue anyway?')) {
+                return; // User cancelled file switch
+            }
+        }
     }
 
     const key = getFileKey(folder, filename);
@@ -759,8 +840,7 @@ async function openFile(folder, filename, options = {}) {
             editor.clearSelection();
         }
         if (cached.hash) {
-            CLOUD_STATE.lastSavedHash = cached.hash;
-            lastCloudSaveHash = cached.hash;
+            SAVE_STATE.authoritativeHash = cached.hash;
         }
         updateSaveIndicator();
         highlightActiveFile();
@@ -806,8 +886,9 @@ async function openFile(folder, filename, options = {}) {
                     setLocalDraftImmediate(folder, filename, content);
                     setCachedFileContent(folder, filename, content, hash);
 
-                    CLOUD_STATE.lastSavedHash = hash;
-                    lastCloudSaveHash = hash;
+                    // CRITICAL FIX #1: Update unified SAVE_STATE after cloud read
+                    SAVE_STATE.authoritativeHash = hash;
+                    SAVE_STATE.lastSaveTime = Date.now();
 
                     metrics.storage.cloudReads++;
                     updateSaveIndicator();
@@ -1050,20 +1131,46 @@ async function deleteFile(folder, filename) {
 }
 
 // ==================== SAVE INDICATOR ====================
+// CRITICAL FIX #4: Compare against authoritative cloud hash instead of localStorage
 
 function updateSaveIndicator() {
     if (!saveIndicator || !saveText) return;
 
     const code = editor?.getValue() || '';
-    const savedCode = localStorage.getItem('tc_code') || '';
-
-    if (code === savedCode) {
-        saveIndicator.classList.add('saved');
-        saveText.textContent = 'Saved';
-    } else {
-        saveIndicator.classList.remove('saved');
-        saveText.textContent = 'Unsaved';
-    }
+    
+    // Compute hash of current editor content
+    computeSha256(code).then(currentHash => {
+        if (isUserLoggedIn && SAVE_STATE.authoritativeHash) {
+            // For logged-in users: compare against server-confirmed hash
+            if (currentHash === SAVE_STATE.authoritativeHash) {
+                saveIndicator.classList.add('saved');
+                saveText.textContent = 'Saved to cloud';
+            } else {
+                saveIndicator.classList.remove('saved');
+                saveText.textContent = 'Unsaved changes';
+            }
+        } else {
+            // For guests: check localStorage
+            const savedCode = localStorage.getItem('tc_code') || '';
+            if (code === savedCode) {
+                saveIndicator.classList.add('saved');
+                saveText.textContent = 'Saved locally';
+            } else {
+                saveIndicator.classList.remove('saved');
+                saveText.textContent = 'Unsaved changes';
+            }
+        }
+    }).catch(() => {
+        // Fallback to synchronous comparison if hash fails
+        const savedCode = localStorage.getItem('tc_code') || '';
+        if (code === savedCode) {
+            saveIndicator.classList.add('saved');
+            saveText.textContent = 'Saved';
+        } else {
+            saveIndicator.classList.remove('saved');
+            saveText.textContent = 'Unsaved';
+        }
+    });
 }
 
 
@@ -1256,7 +1363,42 @@ if (googleSigninBtn) {
     });
 }
 
+// CRITICAL FIX #6: Migrate existing drafts to new userId-namespaced format
+function migrateDraftsToUserNamespace() {
+    try {
+        const oldDrafts = [];
+        // Scan localStorage for old draft format (draft_folder_filename)
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('draft_') && !key.includes('draft_guest_') && !key.includes('draft_')) {
+                // This looks like an old format draft (single word prefix)
+                oldDrafts.push(key);
+            }
+        }
+        
+        // Migrate old drafts to guest namespace (user not logged in yet)
+        oldDrafts.forEach(oldKey => {
+            const content = localStorage.getItem(oldKey);
+            const parts = oldKey.replace('draft_', '').split('_');
+            if (parts.length >= 2) {
+                const filename = parts.pop();
+                const folder = parts.join('_');
+                const newKey = `draft_guest_${folder}_${filename}`;
+                localStorage.setItem(newKey, content);
+                localStorage.removeItem(oldKey);
+            }
+        });
+        
+        if (oldDrafts.length > 0) {
+            Logger.info(`Migrated ${oldDrafts.length} drafts to new namespace format`);
+        }
+    } catch (e) {
+        Logger.warn('Draft migration failed: ' + e.message);
+    }
+}
 
 // Initialize Cache & Auth
 loadCachedFileList();
 initSupabaseAuth();
+migrateDraftsToUserNamespace();
+initializeCacheCleanup(); // CRITICAL FIX #5: Start periodic cache cleanup

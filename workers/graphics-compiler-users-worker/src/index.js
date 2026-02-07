@@ -1,8 +1,60 @@
 const MAX_SEGMENT_LENGTH = 200;
 const REQUIRED_ENV_VARS = ['USER_FILES_BUCKET', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
 
+// ==================== LRU CACHE CLASS ====================
+// CRITICAL FIX #2: Bounded memory cache with automatic eviction
+class LRUCache {
+    constructor(maxSize = 10000) {
+        this.maxSize = maxSize;
+        this.cache = new Map();
+    }
+
+    get(key) {
+        if (!this.cache.has(key)) {
+            return undefined;
+        }
+        // Move to end (most recently used)
+        const value = this.cache.get(key);
+        this.cache.delete(key);
+        this.cache.set(key, value);
+        return value;
+    }
+
+    set(key, value) {
+        // Remove if exists to re-add at end
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
+        }
+
+        this.cache.set(key, value);
+
+        // Evict oldest entry if exceeded max size
+        if (this.cache.size > this.maxSize) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+            console.log(`[LRU] Evicted oldest entry, cache size: ${this.cache.size}`);
+        }
+    }
+
+    delete(key) {
+        return this.cache.delete(key);
+    }
+
+    clear() {
+        this.cache.clear();
+    }
+
+    has(key) {
+        return this.cache.has(key);
+    }
+
+    get size() {
+        return this.cache.size;
+    }
+}
+
 // ==================== WORKER-SIDE METADATA CACHE ====================
-const metadataCache = new Map();
+const metadataCache = new LRUCache(10000);
 const METADATA_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
 function getMetadataCacheKey(userId, folder, filename) {
@@ -45,7 +97,8 @@ function getMissingConfig(env) {
 }
 
 // ==================== WORKER-SIDE USER VERIFICATION CACHE (TIER 2) ====================
-const userVerificationCache = new Map();
+// CRITICAL FIX #2: Use LRU cache to bound memory growth
+const userVerificationCache = new LRUCache(10000);
 const USER_VERIFICATION_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 async function hashToken(token) {
@@ -504,8 +557,16 @@ function buildCorsHeaders(request, env) {
 		allowOrigin = origin;
 	} else if (allowedOrigins.has(origin)) {
 		allowOrigin = origin;
-	} else if (origin.startsWith('https://') && origin.endsWith('.vercel.app')) {
-		allowOrigin = origin;
+	} else if (env.ALLOWED_VERCEL_URLS) {
+		// CRITICAL FIX #7: Tighten Vercel origin checks with explicit whitelist
+		// Instead of wildcard *.vercel.app, use explicit whitelist
+		const vercelWhitelist = env.ALLOWED_VERCEL_URLS.split(',')
+			.map(url => url.trim())
+			.filter(Boolean);
+		
+		if (vercelWhitelist.includes(origin)) {
+			allowOrigin = origin;
+		}
 	}
 
 	return {

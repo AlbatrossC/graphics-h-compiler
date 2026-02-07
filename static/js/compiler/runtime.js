@@ -466,11 +466,28 @@ window.addEventListener('beforeunload', (event) => {
             }
 
             if (token) {
+                // CRITICAL FIX #8: Token in request body - Security consideration documented
+                // Why token is in body instead of Authorization header:
+                // - navigator.sendBeacon() does NOT support custom headers
+                // - This is a trade-off for UX: guarantees save on tab close
+                // 
+                // SECURITY: This is an ACCEPTED RISK because:
+                // 1. Server ALWAYS re-verifies token locally (verifyJwtLocal)
+                // 2. Server recomputes content hash - prevents token swapping attacks
+                // 3. Token is short-lived (1 hour expiry)
+                // 4. HTTPS-only transmission prevents interception
+                //
+                // Alternatives considered (rejected):
+                // - Skip save on tab close: User data loss (unacceptable)
+                // - Use fetch() without keepalive: Not guaranteed after tab closes
+                // - Store token elsewhere: Would require separate token endpoint (complexity)
+                //
+                // The risk of token exposure is FAR lower than data loss from missing saves
                 const payload = JSON.stringify({
                     folder,
                     filename,
                     content: code,
-                    token: token // Include token in body since sendBeacon can't set headers
+                    token: token // Token included to enable sendBeacon usage
                 });
 
                 // sendBeacon is fire-and-forget, will complete even after tab closes
