@@ -10,18 +10,9 @@
 	"observability": {
 		"enabled": true
 	},
-	/**
-	 * Environment Variables
-	 * Sensitive credentials (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_JWT_SECRET) 
-	 * should be set using wrangler secrets for security:
-	 * 
-	 * wrangler secret put SUPABASE_URL
-	 * wrangler secret put SUPABASE_ANON_KEY
-	 * wrangler secret put SUPABASE_JWT_SECRET
-	 * 
-	 * Only non-sensitive configuration is stored here.
-	 */
 	"vars": {
+		"SUPABASE_URL": "https://hlwnrfrdpablmlpoiahf.supabase.co",
+		"SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhsd25yZnJkcGFibG1scG9pYWhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxMzQ2NjEsImV4cCI6MjA4NTcxMDY2MX0.ozph_h5aKwY2cyKZ4xW9e3h0B0ldKXaak3akA-4TaeM",
 		"PROD_ORIGIN": "https://graphics-h-compiler.vercel.app"
 	},
 	"r2_buckets": [
