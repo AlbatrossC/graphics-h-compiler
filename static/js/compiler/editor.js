@@ -236,41 +236,46 @@ async function initializeEditor() {
 
     await loadDefaultCode();
 
-    // Debounced UI update timer for smoother typing
+    // CRITICAL FIX #1: Separate fast and slow operations, use dirty flag
     let uiUpdateTimer = null;
     const UI_UPDATE_DEBOUNCE_MS = 150;
+    let lastEditorValue = '';
 
     editor.on('change', () => {
-        // Track editor changes (metrics only, no behavior change)
+        const currentValue = editor.getValue();
+
+        // Track editor changes (metrics only)
         metrics.editor.changeCount++;
         metrics.editor.lastChangeAt = Date.now();
 
-        // Log periodically (not on every keystroke) to avoid spam
-        if (metrics.editor.changeCount % metrics.editor.changeLogInterval === 0) {
-            const elapsed = ((Date.now() - metrics.editor.lastChangeAt) / 1000).toFixed(1);
-            Logger.info(`[Editor] Changes: ${metrics.editor.changeCount}`);
-        }
+        // Set dirty flag immediately (synchronous, no blocking)
+        // BUGFIX #1: Fixed dirty flag logic - always mark as dirty on ANY keystroke
+        DIRTY_FLAG.isDirty = true;
 
-        // Debounce UI updates for smooth typing
-        if (uiUpdateTimer) {
-            clearTimeout(uiUpdateTimer);
-        }
-        uiUpdateTimer = setTimeout(() => {
-            updateEditorInfo();
-            updateSaveIndicator();
-            uiUpdateTimer = null;
-        }, UI_UPDATE_DEBOUNCE_MS);
-
-        // Schedule cloud autosave (already debounced)
+        // FAST PATH: Save locally immediately (non-blocking, small operation)
         if (isUserLoggedIn) {
             const activeKey = CLOUD_STATE.activeFileKey;
             if (activeKey) {
                 const [folder, filename] = activeKey.split('/');
-                setLocalDraft(folder, filename, editor.getValue());
+                // Use debounced local draft save (already 100ms debounced internally)
+                setLocalDraft(folder, filename, currentValue);
             }
-            CLOUD_STATE.lastSavedHash = null;
+            // Schedule cloud autosave (debounced at 3000ms)
             scheduleAutosave();
         }
+
+        // SLOW PATH: Debounce UI updates (updateEditorInfo + updateSaveIndicator)
+        // These use dirty flag now, so they're much faster but still debounced for smoothness
+        if (uiUpdateTimer) {
+            clearTimeout(uiUpdateTimer);
+        }
+        uiUpdateTimer = setTimeout(() => {
+            updateEditorInfo();  // Fast now (just counts lines/chars)
+            updateSaveIndicator();  // Fast now (uses dirty flag, no hash)
+            uiUpdateTimer = null;
+        }, UI_UPDATE_DEBOUNCE_MS);
+
+        lastEditorValue = currentValue;
     });
 
     setTimeout(() => {
@@ -305,6 +310,9 @@ async function loadDefaultCode() {
         const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [folder, filename] = activeKey.split('/');
         await openFile(folder, filename, { skipSave: true });
+        // CRITICAL FIX #7: Set dirty flag after loading
+        DIRTY_FLAG.isDirty = false;
+        updateSaveIndicator();
         return;
     }
 
@@ -312,6 +320,8 @@ async function loadDefaultCode() {
     if (savedCode) {
         editor.setValue(savedCode, -1);
         updateEditorInfo();
+        // CRITICAL FIX #7: Content loaded = not dirty
+        DIRTY_FLAG.isDirty = false;
         updateSaveIndicator();
 
         Logger.info('Restored saved code');
@@ -320,6 +330,9 @@ async function loadDefaultCode() {
 
     // Load default demo (graphics-demo)
     await loadDemoFile('graphics-demo', false);
+    // CRITICAL FIX #7: Demo loaded = not dirty
+    DIRTY_FLAG.isDirty = false;
+    updateSaveIndicator();
 }
 
 // Clear button functionality
