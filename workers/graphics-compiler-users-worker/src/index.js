@@ -2,6 +2,7 @@ const MAX_SEGMENT_LENGTH = 200;
 const REQUIRED_ENV_VARS = ['USER_FILES_BUCKET', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
 
 // ==================== LRU CACHE CLASS ====================
+// CRITICAL FIX #2: Bounded memory cache with automatic eviction
 class LRUCache {
     constructor(maxSize = 10000) {
         this.maxSize = maxSize;
@@ -12,6 +13,7 @@ class LRUCache {
         if (!this.cache.has(key)) {
             return undefined;
         }
+        // Move to end (most recently used)
         const value = this.cache.get(key);
         this.cache.delete(key);
         this.cache.set(key, value);
@@ -19,10 +21,14 @@ class LRUCache {
     }
 
     set(key, value) {
+        // Remove if exists to re-add at end
         if (this.cache.has(key)) {
             this.cache.delete(key);
         }
+
         this.cache.set(key, value);
+
+        // Evict oldest entry if exceeded max size
         if (this.cache.size > this.maxSize) {
             const firstKey = this.cache.keys().next().value;
             this.cache.delete(firstKey);
@@ -49,7 +55,7 @@ class LRUCache {
 
 // ==================== WORKER-SIDE METADATA CACHE ====================
 const metadataCache = new LRUCache(10000);
-const METADATA_CACHE_TTL_MS = 60 * 1000;
+const METADATA_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
 function getMetadataCacheKey(userId, folder, filename) {
 	return `${userId}/${folder}/${filename}`;
@@ -58,9 +64,11 @@ function getMetadataCacheKey(userId, folder, filename) {
 function getCachedMetadata(userId, folder, filename) {
 	const key = getMetadataCacheKey(userId, folder, filename);
 	const cached = metadataCache.get(key);
+
 	if (cached && (Date.now() - cached.timestamp < METADATA_CACHE_TTL_MS)) {
 		return cached.data;
 	}
+
 	if (cached) {
 		metadataCache.delete(key);
 	}
@@ -88,9 +96,10 @@ function getMissingConfig(env) {
 	return missing;
 }
 
-// ==================== WORKER-SIDE USER VERIFICATION CACHE ====================
+// ==================== WORKER-SIDE USER VERIFICATION CACHE (TIER 2) ====================
+// CRITICAL FIX #2: Use LRU cache to bound memory growth
 const userVerificationCache = new LRUCache(10000);
-const USER_VERIFICATION_CACHE_TTL_MS = 30 * 60 * 1000;
+const USER_VERIFICATION_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 async function hashToken(token) {
 	const encoder = new TextEncoder();
@@ -104,27 +113,28 @@ async function getCachedUserId(token) {
 	try {
 		const tokenHash = await hashToken(token);
 		const cached = userVerificationCache.get(tokenHash);
+
 		if (!cached) {
 			return null;
 		}
+
 		if (Date.now() >= cached.expiresAt) {
 			userVerificationCache.delete(tokenHash);
 			return null;
 		}
-		return { userId: cached.userId, userName: cached.userName, email: cached.email };
+
+		return { userId: cached.userId };
 	} catch (e) {
 		console.error('Cache lookup error:', e);
 		return null;
 	}
 }
 
-async function setCachedUserId(token, userId, userName, email) {
+async function setCachedUserId(token, userId) {
 	try {
 		const tokenHash = await hashToken(token);
 		userVerificationCache.set(tokenHash, {
 			userId,
-			userName,
-			email,
 			expiresAt: Date.now() + USER_VERIFICATION_CACHE_TTL_MS
 		});
 	} catch (e) {
@@ -141,7 +151,7 @@ async function clearCachedUserIdForToken(token) {
 	}
 }
 
-// ==================== FAST JWT VERIFICATION ====================
+// ==================== FAST JWT VERIFICATION (LOCAL) ====================
 function base64UrlToUint8Array(base64Url) {
 	const padding = '='.repeat((4 - base64Url.length % 4) % 4);
 	const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -153,12 +163,16 @@ function base64UrlToUint8Array(base64Url) {
 	return outputArray;
 }
 
+// Verify JWT signature locally using Web Crypto API (no external calls)
+// REQUIRES: env.SUPABASE_JWT_SECRET to be set
 async function verifyJwtLocal(token, secret) {
 	try {
 		const parts = token.split('.');
 		if (parts.length !== 3) throw new Error('Invalid token structure');
+
 		const [headerB64, payloadB64, signatureB64] = parts;
-		
+
+		// 1. Verify Signature
 		const encoder = new TextEncoder();
 		const keyData = encoder.encode(secret);
 		const key = await crypto.subtle.importKey(
@@ -168,24 +182,24 @@ async function verifyJwtLocal(token, secret) {
 			false,
 			['verify']
 		);
-		
+
 		const data = encoder.encode(`${headerB64}.${payloadB64}`);
 		const signature = base64UrlToUint8Array(signatureB64);
+
 		const isValid = await crypto.subtle.verify('HMAC', key, signature, data);
 		if (!isValid) return null;
-		
+
+		// 2. Decode payload and check expiry
 		const payloadJson = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
 		const payload = JSON.parse(payloadJson);
+
 		const now = Math.floor(Date.now() / 1000);
 		if (payload.exp && now > payload.exp) {
 			console.log('[Auth] Token expired');
 			return null;
 		}
-		return { 
-			id: payload.sub, 
-			email: payload.email,
-			user_metadata: payload.user_metadata || {}
-		};
+
+		return { id: payload.sub, email: payload.email };
 	} catch (e) {
 		console.error('[Auth] Local verification failed:', e);
 		return null;
@@ -212,6 +226,7 @@ function withTimeout(promise, ms, errorMessage) {
 export default {
 	async fetch(request, env) {
 		const requestId = crypto.randomUUID();
+
 		const corsHeaders = buildCorsHeaders(request, env);
 		const responseHeaders = { ...corsHeaders, 'X-Request-Id': requestId };
 
@@ -226,7 +241,13 @@ export default {
 		const missingConfig = getMissingConfig(env);
 		if (missingConfig.length > 0) {
 			console.error('[Config] Missing worker configuration:', missingConfig);
-			return jsonError('config_missing', 'Server configuration error', 500, responseHeaders, { missing: missingConfig });
+			return jsonError(
+				'config_missing',
+				'Server configuration error',
+				500,
+				responseHeaders,
+				{ missing: missingConfig }
+			);
 		}
 
 		const url = new URL(request.url);
@@ -241,18 +262,19 @@ export default {
 				10000,
 				'Authentication timeout'
 			);
-			const { userId, token, userName, email } = authResult;
+
+			const { userId, token } = authResult;
 
 			if (request.method === 'POST' && url.pathname === '/files/save') {
-				return await handleSave(request, env, responseHeaders, userId, token, userName, email);
+				return await handleSave(request, env, responseHeaders, userId, token);
 			}
 
 			if (request.method === 'POST' && url.pathname === '/files/batch-save') {
-				return await handleBatchSave(request, env, responseHeaders, userId, token, userName, email, requestId);
+				return await handleBatchSave(request, env, responseHeaders, userId, token, requestId);
 			}
 
 			if (request.method === 'GET' && url.pathname === '/files/read') {
-				return await handleRead(request, env, responseHeaders, userId, token, userName, email);
+				return await handleRead(request, env, responseHeaders, userId);
 			}
 
 			if (request.method === 'GET' && url.pathname === '/files/list') {
@@ -278,8 +300,6 @@ export default {
 	},
 };
 
-// ==================== HANDLERS ====================
-
 async function handleBeaconSave(request, env, responseHeaders, requestId) {
 	const body = await readJsonBody(request);
 	const token = body?.token;
@@ -294,9 +314,6 @@ async function handleBeaconSave(request, env, responseHeaders, requestId) {
 	}
 
 	const userId = user.id;
-	const userName = user.user_metadata?.full_name || null;
-	const email = user.email || null;
-	
 	const folder = normalizeSegment(body.folder, 'folder');
 	const filename = normalizeSegment(body.filename, 'filename');
 	const content = typeof body.content === 'string' ? body.content : null;
@@ -306,8 +323,8 @@ async function handleBeaconSave(request, env, responseHeaders, requestId) {
 	}
 
 	const hash = await computeContentHash(content);
+
 	const cachedMeta = getCachedMetadata(userId, folder, filename);
-	
 	if (cachedMeta && cachedMeta.file_hash === hash) {
 		return jsonResponse({ success: true, hash, skipped: true, cached: true }, 200, responseHeaders);
 	}
@@ -319,30 +336,25 @@ async function handleBeaconSave(request, env, responseHeaders, requestId) {
 	}
 
 	const r2Key = `${userId}/${folder}/${filename}`;
-	
-	// Parallel execution: R2 upload + Database update
-	await Promise.all([
-		env.USER_FILES_BUCKET.put(r2Key, content, {
-			httpMetadata: { contentType: 'text/plain; charset=utf-8' },
-		}),
-		saveFileAndUpdateMetrics(env, token, {
-			user_id: userId,
-			folder,
-			filename,
-			file_hash: hash,
-			file_id: existing?.id || null,
-			user_name: userName,
-			email: email,
-		})
-	]);
+	await env.USER_FILES_BUCKET.put(r2Key, content, {
+		httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+	});
+
+	await upsertFileMetadata(env, token, {
+		id: existing?.id,
+		user_id: userId,
+		folder,
+		filename,
+		file_hash: hash,
+	});
 
 	setCachedMetadata(userId, folder, filename, { id: existing?.id, file_hash: hash });
+
 	console.log(`[${requestId}] Beacon save: ${folder}/${filename}`);
-	
 	return jsonResponse({ success: true, hash }, 200, responseHeaders);
 }
 
-async function handleSave(request, env, responseHeaders, userId, token, userName, email) {
+async function handleSave(request, env, responseHeaders, userId, token) {
 	const body = await readJsonBody(request);
 	const folder = normalizeSegment(body.folder, 'folder');
 	const filename = normalizeSegment(body.filename, 'filename');
@@ -365,28 +377,24 @@ async function handleSave(request, env, responseHeaders, userId, token, userName
 	}
 
 	const r2Key = `${userId}/${folder}/${filename}`;
-	
-	// Parallel execution: R2 upload + Database update
-	await Promise.all([
-		env.USER_FILES_BUCKET.put(r2Key, content, {
-			httpMetadata: { contentType: 'text/plain; charset=utf-8' },
-		}),
-		saveFileAndUpdateMetrics(env, token, {
-			user_id: userId,
-			folder,
-			filename,
-			file_hash: hash,
-			file_id: existing?.id || null,
-			user_name: userName,
-			email: email,
-		})
-	]);
+	await env.USER_FILES_BUCKET.put(r2Key, content, {
+		httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+	});
+
+	await upsertFileMetadata(env, token, {
+		id: existing?.id,
+		user_id: userId,
+		folder,
+		filename,
+		file_hash: hash,
+	});
 
 	setCachedMetadata(userId, folder, filename, { id: existing?.id, file_hash: hash });
+
 	return jsonResponse({ success: true, hash }, 200, responseHeaders);
 }
 
-async function handleBatchSave(request, env, responseHeaders, userId, token, userName, email, requestId) {
+async function handleBatchSave(request, env, responseHeaders, userId, token, requestId) {
 	const body = await readJsonBody(request);
 	const files = body.files;
 
@@ -419,7 +427,6 @@ async function handleBatchSave(request, env, responseHeaders, userId, token, use
 		}
 	}
 
-	// Filter out files that haven't changed (check cache + database)
 	const filesWithMetadata = await Promise.all(validatedFiles.map(async f => {
 		const cachedMeta = getCachedMetadata(userId, f.folder, f.filename);
 		if (cachedMeta) {
@@ -447,71 +454,52 @@ async function handleBatchSave(request, env, responseHeaders, userId, token, use
 		}
 	}
 
-	if (toSave.length === 0) {
-		return jsonResponse({
-			success: true,
-			results: [...errors, ...skipped],
-			summary: { saved: 0, skipped: skipped.length, failed: errors.length }
-		}, 200, responseHeaders);
-	}
+	const savePromises = toSave.map(async (file) => {
+		try {
+			const r2Key = `${userId}/${file.folder}/${file.filename}`;
 
-	// Parallel R2 uploads
-	const r2Uploads = toSave.map(file => {
-		const r2Key = `${userId}/${file.folder}/${file.filename}`;
-		return env.USER_FILES_BUCKET.put(r2Key, file.content, {
-			httpMetadata: { contentType: 'text/plain; charset=utf-8' },
-		});
+			await Promise.all([
+				env.USER_FILES_BUCKET.put(r2Key, file.content, {
+					httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+				}),
+				upsertFileMetadata(env, token, {
+					id: file.existing?.id,
+					user_id: userId,
+					folder: file.folder,
+					filename: file.filename,
+					file_hash: file.hash,
+				})
+			]);
+
+			setCachedMetadata(userId, file.folder, file.filename, { id: file.existing?.id, file_hash: file.hash });
+
+			return { folder: file.folder, filename: file.filename, success: true, hash: file.hash };
+		} catch (e) {
+			console.error(`[${requestId}] Batch save error for ${file.folder}/${file.filename}:`, e);
+			return { folder: file.folder, filename: file.filename, error: e.message };
+		}
 	});
 
-	// Build JSONB array for batch RPC call
-	const filesJsonb = toSave.map(f => ({
-		folder: f.folder,
-		filename: f.filename,
-		hash: f.hash
-	}));
+	const saveResults = await Promise.all(savePromises);
 
-	// Execute in parallel: All R2 uploads + Single batch RPC call
-	try {
-		await Promise.all([
-			...r2Uploads,
-			batchSaveFiles(env, token, userId, filesJsonb, userName, email)
-		]);
+	const results = [...errors, ...skipped, ...saveResults];
+	const savedCount = saveResults.filter(r => r.success).length;
+	const failedCount = errors.length + saveResults.filter(r => r.error).length;
 
-		// Update cache for all saved files
-		toSave.forEach(file => {
-			setCachedMetadata(userId, file.folder, file.filename, { file_hash: file.hash });
-		});
-
-		const results = [
-			...errors,
-			...skipped,
-			...toSave.map(f => ({ folder: f.folder, filename: f.filename, success: true, hash: f.hash }))
-		];
-
-		return jsonResponse({
-			success: true,
-			results,
-			summary: { saved: toSave.length, skipped: skipped.length, failed: errors.length }
-		}, 200, responseHeaders);
-	} catch (e) {
-		console.error(`[${requestId}] Batch save error:`, e);
-		return jsonError('batch_save_failed', 'Batch save failed', 500, responseHeaders, { detail: e.message });
-	}
+	return jsonResponse({
+		success: true,
+		results,
+		summary: { saved: savedCount, skipped: skipped.length, failed: failedCount }
+	}, 200, responseHeaders);
 }
 
-async function handleRead(request, env, responseHeaders, userId, token, userName, email) {
+async function handleRead(request, env, responseHeaders, userId) {
 	const url = new URL(request.url);
 	const folder = normalizeSegment(url.searchParams.get('folder'), 'folder');
 	const filename = normalizeSegment(url.searchParams.get('filename'), 'filename');
 	const r2Key = `${userId}/${folder}/${filename}`;
 
-	// Parallel execution: Fetch from R2 + Track read metric
-	const [object] = await Promise.all([
-		env.USER_FILES_BUCKET.get(r2Key),
-		trackFileRead(env, token, userId, userName, email).catch(e => {
-			console.warn('[Read] Failed to track read metric:', e.message);
-		})
-	]);
+	const object = await env.USER_FILES_BUCKET.get(r2Key);
 
 	if (!object) {
 		return jsonError('not_found', 'File not found', 404, responseHeaders);
@@ -545,68 +533,12 @@ async function handleDelete(request, env, responseHeaders, userId, token, url) {
 	);
 	const r2Key = `${userId}/${folder}/${filename}`;
 
-	// Parallel execution: R2 delete + Database delete with metrics update
-	await Promise.all([
-		env.USER_FILES_BUCKET.delete(r2Key),
-		deleteFileAndUpdateMetrics(env, token, userId, folder, filename)
-	]);
-
+	await env.USER_FILES_BUCKET.delete(r2Key);
+	await deleteFileMetadata(env, token, folder, filename);
 	clearCachedMetadata(userId, folder, filename);
+
 	return jsonResponse({ success: true }, 200, responseHeaders);
 }
-
-// ==================== DATABASE RPC HELPERS ====================
-
-async function saveFileAndUpdateMetrics(env, token, params) {
-	return supabaseRequest(env, token, 'rpc/save_file_and_update_metrics', {
-		method: 'POST',
-		body: JSON.stringify({
-			p_user_id: params.user_id,
-			p_folder: params.folder,
-			p_filename: params.filename,
-			p_file_hash: params.file_hash,
-			p_file_id: params.file_id || null,
-			p_user_name: params.user_name || null,
-			p_email: params.email || null,
-		}),
-	});
-}
-
-async function trackFileRead(env, token, userId, userName, email) {
-	return supabaseRequest(env, token, 'rpc/track_file_read', {
-		method: 'POST',
-		body: JSON.stringify({
-			p_user_id: userId,
-			p_user_name: userName || null,
-			p_email: email || null,
-		}),
-	});
-}
-
-async function deleteFileAndUpdateMetrics(env, token, userId, folder, filename) {
-	return supabaseRequest(env, token, 'rpc/delete_file_and_update_metrics', {
-		method: 'POST',
-		body: JSON.stringify({
-			p_user_id: userId,
-			p_folder: folder,
-			p_filename: filename,
-		}),
-	});
-}
-
-async function batchSaveFiles(env, token, userId, filesArray, userName, email) {
-	return supabaseRequest(env, token, 'rpc/batch_save_files', {
-		method: 'POST',
-		body: JSON.stringify({
-			p_user_id: userId,
-			p_files: JSON.stringify(filesArray),
-			p_user_name: userName || null,
-			p_email: email || null,
-		}),
-	});
-}
-
-// ==================== UTILITIES ====================
 
 function buildCorsHeaders(request, env) {
 	const origin = request.headers.get('Origin') || '';
@@ -626,9 +558,12 @@ function buildCorsHeaders(request, env) {
 	} else if (allowedOrigins.has(origin)) {
 		allowOrigin = origin;
 	} else if (env.ALLOWED_VERCEL_URLS) {
+		// CRITICAL FIX #7: Tighten Vercel origin checks with explicit whitelist
+		// Instead of wildcard *.vercel.app, use explicit whitelist
 		const vercelWhitelist = env.ALLOWED_VERCEL_URLS.split(',')
 			.map(url => url.trim())
 			.filter(Boolean);
+		
 		if (vercelWhitelist.includes(origin)) {
 			allowOrigin = origin;
 		}
@@ -654,41 +589,43 @@ async function authenticateRequest(request, env) {
 		throw Object.assign(new Error('Missing bearer token'), { statusCode: 401 });
 	}
 
-	const cachedUser = await getCachedUserId(token);
-	if (cachedUser) {
-		return { 
-			userId: cachedUser.userId, 
-			token,
-			userName: cachedUser.userName,
-			email: cachedUser.email
-		};
+	// Check cache first
+	const cachedUserId = await getCachedUserId(token);
+	if (cachedUserId) {
+		return { userId: cachedUserId.userId, token };
 	}
 
+	// Verify user
 	const user = await verifyUser(env, token);
 	if (!user?.id) {
 		throw Object.assign(new Error('Invalid token'), { statusCode: 401 });
 	}
 
-	const userName = user.user_metadata?.full_name || null;
-	const email = user.email || null;
+	// Cache successful verification
+	await setCachedUserId(token, user.id);
 
-	await setCachedUserId(token, user.id, userName, email);
-	return { userId: user.id, token, userName, email };
+	return { userId: user.id, token };
 }
 
+// Unified user verification (Local -> Remote Fallback)
 async function verifyUser(env, token) {
+	// FAST Local Verification (if secret is available)
 	if (env.SUPABASE_JWT_SECRET) {
 		const localUser = await verifyJwtLocal(token, env.SUPABASE_JWT_SECRET);
 		if (localUser) {
 			return localUser;
 		}
+		// If local fails (e.g. key mismatch), fall back to remote
 		console.warn('[Auth] Local verification failed, falling back to remote');
 	}
+
+	// SLOW Remote Verification
 	return verifyUserViaSupabase(env, token);
 }
 
 async function verifyUserViaSupabase(env, token) {
 	const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`;
+
 	const response = await fetch(url, {
 		method: 'GET',
 		headers: {
@@ -709,10 +646,12 @@ function normalizeSegment(value, label) {
 	if (typeof value !== 'string') {
 		throw Object.assign(new Error(`${label} is required`), { statusCode: 400 });
 	}
+
 	const trimmed = value.trim();
 	if (!trimmed) {
 		throw Object.assign(new Error(`${label} is required`), { statusCode: 400 });
 	}
+
 	if (
 		trimmed.length > MAX_SEGMENT_LENGTH ||
 		trimmed.includes('/') ||
@@ -721,6 +660,7 @@ function normalizeSegment(value, label) {
 	) {
 		throw Object.assign(new Error(`Invalid ${label}`), { statusCode: 400 });
 	}
+
 	return trimmed;
 }
 
@@ -730,6 +670,7 @@ async function readJsonBody(request, allowEmpty = false) {
 		if (allowEmpty) return null;
 		throw Object.assign(new Error('Expected JSON body'), { statusCode: 400 });
 	}
+
 	try {
 		return await request.json();
 	} catch (error) {
@@ -780,6 +721,36 @@ async function getFileMetadata(env, token, folder, filename) {
 	return Array.isArray(data) && data.length ? data[0] : null;
 }
 
+async function upsertFileMetadata(env, token, record) {
+	const now = new Date().toISOString();
+	if (record.id) {
+		await supabaseRequest(
+			env,
+			token,
+			`user_files?id=eq.${record.id}`,
+			{
+				method: 'PATCH',
+				body: JSON.stringify({
+					file_hash: record.file_hash,
+					updated_at: now,
+				}),
+			}
+		);
+		return;
+	}
+
+	await supabaseRequest(env, token, 'user_files', {
+		method: 'POST',
+		body: JSON.stringify({
+			user_id: record.user_id,
+			folder: record.folder,
+			filename: record.filename,
+			file_hash: record.file_hash,
+			updated_at: now,
+		}),
+	});
+}
+
 async function listFiles(env, token) {
 	const params = new URLSearchParams({
 		select: 'id,folder,filename,file_hash,updated_at',
@@ -787,6 +758,16 @@ async function listFiles(env, token) {
 	});
 	return supabaseRequest(env, token, `user_files?${params.toString()}`, {
 		method: 'GET',
+	});
+}
+
+async function deleteFileMetadata(env, token, folder, filename) {
+	const params = new URLSearchParams({
+		folder: `eq.${folder}`,
+		filename: `eq.${filename}`,
+	});
+	await supabaseRequest(env, token, `user_files?${params.toString()}`, {
+		method: 'DELETE',
 	});
 }
 
