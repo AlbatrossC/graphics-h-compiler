@@ -108,7 +108,7 @@ function getDraftKey(folder, filename) {
 function setLocalDraftImmediate(folder, filename, content) {
     try {
         localStorage.setItem(getDraftKey(folder, filename), content);
-        localStorage.setItem('tc_code', content); // Also save to tc_code
+        localStorage.setItem('tc_code', content);
         metrics.storage.localDraftWrites++;
     } catch (e) {
         Logger.warn('Failed to save local draft');
@@ -201,8 +201,8 @@ async function readErrorBody(response) {
 
 // ==================== UNIFIED SAVE STATE ====================
 const SAVE_STATE = {
-    cloudHash: null,      // Hash confirmed by cloud
-    pendingHash: null,    // Hash being saved
+    cloudHash: null,
+    pendingHash: null,
     lastSaveTime: 0
 };
 
@@ -228,7 +228,6 @@ async function saveCode() {
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
 
-    // Always save locally first
     setLocalDraftImmediate(folder, filename, code);
 
     if (isUserLoggedIn && supabaseClient) {
@@ -258,7 +257,6 @@ async function forceSaveActiveFile(trigger = 'idle') {
     const [folder, filename] = activeKey.split('/');
     const hash = await computeSha256(code);
 
-    // Skip if unchanged
     if (SAVE_STATE.cloudHash === hash || SAVE_STATE.pendingHash === hash) {
         metrics.autosave.skippedClean++;
         return;
@@ -279,7 +277,7 @@ async function forceSaveActiveFile(trigger = 'idle') {
             return;
         }
 
-        const response = await fetch('/files/save', {
+        const response = await fetch(`${CLOUD_STATE.storageBaseUrl}/files/save`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -292,7 +290,6 @@ async function forceSaveActiveFile(trigger = 'idle') {
             const result = await response.json();
             const duration = Date.now() - startTime;
 
-            // Update state
             SAVE_STATE.cloudHash = hash;
             SAVE_STATE.lastSaveTime = Date.now();
             CLOUD_STATE.lastSavedAt = Date.now();
@@ -381,7 +378,7 @@ async function refreshCloudFiles(force = false) {
     if (!isUserLoggedIn || !supabaseClient) return;
 
     const lastRefresh = CLOUD_STATE.lastRefresh || 0;
-    const MIN_REFRESH_INTERVAL = 5000; // 5 seconds
+    const MIN_REFRESH_INTERVAL = 5000;
 
     if (!force && (Date.now() - lastRefresh < MIN_REFRESH_INTERVAL)) {
         Logger.debug('Refresh skipped (too soon)');
@@ -398,7 +395,7 @@ async function refreshCloudFiles(force = false) {
             return;
         }
 
-        const response = await fetch('/files/list', {
+        const response = await fetch(`${CLOUD_STATE.storageBaseUrl}/files/list`, {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
@@ -552,14 +549,12 @@ function downloadFile(folder, filename) {
 async function openFile(folder, filename, options = {}) {
     cancelPendingAutosave();
 
-    // Save current file before switching
     if (!options.skipSave && isUserLoggedIn && editor) {
         const currentCode = editor.getValue();
         const currentKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [currentFolder, currentFilename] = currentKey.split('/');
         setLocalDraftImmediate(currentFolder, currentFilename, currentCode);
         
-        // Fire-and-forget background save
         forceSaveActiveFile('fileSwitch').catch(e => {
             Logger.warn('Background save failed: ' + e.message);
         });
@@ -568,20 +563,18 @@ async function openFile(folder, filename, options = {}) {
     const key = getFileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
 
-    // CRITICAL FIX: Clear all caches to force fresh fetch from cloud
     clearCachedFileContent(folder, filename);
     
-    // Always fetch from cloud if logged in
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
                 const response = await fetch(
-                    `/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`,
+                    `${CLOUD_STATE.storageBaseUrl}/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`,
                     {
                         headers: { 'Authorization': `Bearer ${session.access_token}` },
-                        cache: 'no-store' // CRITICAL: Force fresh fetch
+                        cache: 'no-store'
                     }
                 );
 
@@ -607,7 +600,6 @@ async function openFile(folder, filename, options = {}) {
                     hideProgress();
                     return;
                 } else if (response.status === 404) {
-                    // File doesn't exist in cloud yet - create it
                     if (editor) {
                         editor.setValue('', -1);
                     }
@@ -628,7 +620,6 @@ async function openFile(folder, filename, options = {}) {
         }
     }
 
-    // Fallback to local draft
     const draft = getLocalDraft(folder, filename);
     if (draft !== null) {
         if (editor) {
@@ -641,7 +632,6 @@ async function openFile(folder, filename, options = {}) {
         return;
     }
 
-    // Default: empty file
     if (editor) {
         editor.setValue('', -1);
     }
@@ -694,7 +684,7 @@ async function createNewFile(filename) {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
                 const hash = await computeSha256(defaultContent);
-                const response = await fetch('/files/save', {
+                const response = await fetch(`${CLOUD_STATE.storageBaseUrl}/files/save`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -729,7 +719,7 @@ async function deleteFile(folder, filename) {
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                await fetch('/files/delete', {
+                await fetch(`${CLOUD_STATE.storageBaseUrl}/files/delete`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -797,6 +787,7 @@ const AUTH_EVENT_DEBOUNCE_MS = 1000;
 
 async function initSupabaseAuth() {
     try {
+        // CRITICAL: Get storage URL from config
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
             Logger.warn('Auth not configured');
@@ -804,6 +795,10 @@ async function initSupabaseAuth() {
         }
 
         const config = await response.json();
+        
+        // Set storage base URL
+        CLOUD_STATE.storageBaseUrl = config.storageUrl || '';
+        
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 
@@ -823,13 +818,10 @@ async function initSupabaseAuth() {
 
                 lastAuthEvent = { type: event, timestamp: now, userId: session?.user?.id || null };
 
-                if (event === 'SIGNED_IN') {
+                if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                     if (session?.user) {
                         setCachedSession(session);
                         updateLoginUI(true, session.user);
-                        
-                        // CRITICAL FIX: Pass display name to server
-                        updateLastLogin(session.user).catch(() => {});
                         
                         refreshCloudFiles(true).then(() => {
                             const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
@@ -842,20 +834,6 @@ async function initSupabaseAuth() {
                         setCachedSession(session);
                     }
                     return;
-                } else if (event === 'INITIAL_SESSION') {
-                    if (session?.user) {
-                        setCachedSession(session);
-                        updateLoginUI(true, session.user);
-                        
-                        // CRITICAL FIX: Pass display name to server
-                        updateLastLogin(session.user).catch(() => {});
-                        
-                        refreshCloudFiles(true).then(() => {
-                            const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-                            const [folder, filename] = activeKey.split('/');
-                            return openFile(folder, filename, { skipSave: true });
-                        });
-                    }
                 } else if (event === 'SIGNED_OUT') {
                     clearSessionCache();
                     updateLoginUI(false);
@@ -869,40 +847,6 @@ async function initSupabaseAuth() {
     }
 }
 
-// CRITICAL FIX: Update last login with display name
-async function updateLastLogin(user) {
-    if (!user || !isUserLoggedIn || !supabaseClient) return;
-    
-    try {
-        const session = await getCachedSessionToken();
-        if (!session?.access_token) return;
-
-        // Extract display name from user metadata
-        const displayName = user.user_metadata?.full_name || 
-                           user.user_metadata?.name || 
-                           user.email?.split('@')[0] || 
-                           null;
-
-        const response = await fetch('/rest/v1/rpc/update_last_login', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                p_user_id: user.id,
-                p_display_name: displayName 
-            })
-        });
-
-        if (response.ok) {
-            Logger.info('Last login updated with display name');
-        }
-    } catch (e) {
-        Logger.warn('Update last login failed: ' + e.message);
-    }
-}
-
 async function checkSession() {
     if (!supabaseClient) return;
 
@@ -911,9 +855,6 @@ async function checkSession() {
         if (session?.user) {
             setCachedSession(session);
             updateLoginUI(true, session.user);
-            
-            // CRITICAL FIX: Update display name on session check
-            updateLastLogin(session.user).catch(() => {});
         } else {
             updateLoginUI(false);
         }
