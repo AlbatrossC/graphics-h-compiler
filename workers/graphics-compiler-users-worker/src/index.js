@@ -31,6 +31,41 @@ class LRUCache {
   }
 }
 
+// Authentication Cache - 5 minute TTL
+class AuthCache {
+  constructor(ttlMs = 5 * 60 * 1000) {
+    this.cache = new Map();
+    this.ttlMs = ttlMs;
+  }
+
+  get(token) {
+    const entry = this.cache.get(token);
+    if (!entry) return null;
+    
+    if (Date.now() - entry.timestamp > this.ttlMs) {
+      this.cache.delete(token);
+      return null;
+    }
+    
+    return entry.userId;
+  }
+
+  set(token, userId) {
+    this.cache.set(token, { userId, timestamp: Date.now() });
+    
+    // Cleanup: keep cache size under 1000 entries
+    if (this.cache.size > 1000) {
+      const oldestKey = this.cache.keys().next().value;
+      this.cache.delete(oldestKey);
+    }
+  }
+
+  delete(token) {
+    this.cache.delete(token);
+  }
+}
+
+const authCache = new AuthCache(5 * 60 * 1000); // 5-minute TTL
 const metadataCache = new LRUCache(10000);
 const METADATA_CACHE_TTL_MS = 60 * 1000;
 
@@ -121,7 +156,7 @@ export default {
         return jsonResponse({ status: 'ok' }, 200, responseHeaders);
       }
 
-      // *** NEW: Auth configuration endpoint ***
+      // Auth configuration endpoint
       if (request.method === 'GET' && url.pathname === '/api/auth/config') {
         return jsonResponse({
           supabaseUrl: env.SUPABASE_URL,
@@ -165,7 +200,7 @@ export default {
         return await handleUserInfo(request, env, responseHeaders, userId, token);
       }
 
-      // *** NEW: sendBeacon save endpoint for tab close ***
+      // Beacon save endpoint for tab close
       if (request.method === 'POST' && url.pathname === '/files/beacon-save') {
         return await handleBeaconSave(request, env, responseHeaders);
       }
@@ -191,12 +226,13 @@ async function handleSave(request, env, responseHeaders, userId, token) {
   const folder = normalizeSegment(body.folder, 'folder');
   const filename = normalizeSegment(body.filename, 'filename');
   const content = typeof body.content === 'string' ? body.content : null;
-  const hash = typeof body.hash === 'string' ? body.hash : null;
 
-  if (content === null || hash === null) {
-    return jsonError('bad_request', 'content and hash required', 400, responseHeaders);
+  if (content === null) {
+    return jsonError('bad_request', 'content required', 400, responseHeaders);
   }
 
+  // Worker computes hash authoritatively
+  const hash = await computeSha256(content);
   const fileSize = new TextEncoder().encode(content).length;
 
   // Check cache
@@ -232,26 +268,40 @@ async function handleSave(request, env, responseHeaders, userId, token) {
   return jsonResponse({ success: true, hash }, 200, responseHeaders);
 }
 
-// *** NEW: Beacon save handler for tab close ***
+// Beacon save handler for tab close
 async function handleBeaconSave(request, env, responseHeaders) {
   try {
+    // Use standard authentication
+    const auth = request.headers.get('Authorization') || '';
+    if (!auth.startsWith('Bearer ')) {
+      return jsonResponse({ success: false }, 401, responseHeaders);
+    }
+
+    const token = auth.slice(7).trim();
+    if (!token) {
+      return jsonResponse({ success: false }, 401, responseHeaders);
+    }
+
+    // Check auth cache first
+    let userId = authCache.get(token);
+    if (!userId) {
+      const user = await verifyUser(env, token);
+      if (!user?.id) {
+        return jsonResponse({ success: false }, 401, responseHeaders);
+      }
+      userId = user.id;
+      authCache.set(token, userId);
+    }
+
     const body = await readJsonBody(request);
     const folder = normalizeSegment(body.folder, 'folder');
     const filename = normalizeSegment(body.filename, 'filename');
     const content = typeof body.content === 'string' ? body.content : null;
-    const token = typeof body.token === 'string' ? body.token : null;
 
-    if (!content || !token) {
+    if (!content) {
       return jsonResponse({ success: false }, 400, responseHeaders);
     }
 
-    // Verify token and get userId
-    const user = await verifyUser(env, token);
-    if (!user?.id) {
-      return jsonResponse({ success: false }, 401, responseHeaders);
-    }
-
-    const userId = user.id;
     const hash = await computeSha256(content);
     const fileSize = new TextEncoder().encode(content).length;
 
@@ -304,13 +354,13 @@ async function handleBatchSave(request, env, responseHeaders, userId, token, req
       const folder = normalizeSegment(file.folder, 'folder');
       const filename = normalizeSegment(file.filename, 'filename');
       const content = typeof file.content === 'string' ? file.content : null;
-      const hash = typeof file.hash === 'string' ? file.hash : null;
 
-      if (content === null || hash === null) {
-        errors.push({ folder: file.folder, filename: file.filename, error: 'content and hash required' });
+      if (content === null) {
+        errors.push({ folder: file.folder, filename: file.filename, error: 'content required' });
         continue;
       }
 
+      const hash = await computeSha256(content);
       const fileSize = new TextEncoder().encode(content).length;
       validatedFiles.push({ folder, filename, content, hash, fileSize });
     } catch (e) {
@@ -404,12 +454,16 @@ async function handleRead(request, env, responseHeaders, userId, token) {
   incrementReadCounter(env, token, userId).catch(() => {});
 
   const text = await object.text();
+  
+  // Compute hash for ETag
+  const hash = await computeSha256(text);
+  
   return new Response(text, {
     status: 200,
     headers: {
       ...responseHeaders,
       'Content-Type': 'text/plain; charset=utf-8',
-      ETag: object.etag || '',
+      'ETag': hash,
     },
   });
 }
@@ -450,10 +504,20 @@ async function authenticateRequest(request, env) {
     throw Object.assign(new Error('Missing bearer token'), { statusCode: 401 });
   }
 
+  // Check cache first
+  const cachedUserId = authCache.get(token);
+  if (cachedUserId) {
+    return { userId: cachedUserId, token, userMetadata: null };
+  }
+
+  // Cache miss - verify with Supabase
   const user = await verifyUser(env, token);
   if (!user?.id) {
     throw Object.assign(new Error('Invalid token'), { statusCode: 401 });
   }
+
+  // Cache the result
+  authCache.set(token, user.id);
 
   return { userId: user.id, token, userMetadata: user.user_metadata };
 }

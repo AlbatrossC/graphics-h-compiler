@@ -2077,7 +2077,7 @@ async function saveCode() {
             await forceSaveActiveFile('manual');
             showStatus('✓ Saved to cloud!');
         } catch (e) {
-            showStatus('Save failed', true);
+            showStatus('Save failed: ' + e.message, true);
             Logger.warn('Cloud save error: ' + e.message);
         } finally {
             hideProgress();
@@ -2100,6 +2100,7 @@ async function forceSaveActiveFile(trigger = 'idle') {
 
     if (SAVE_STATE.cloudHash === hash || SAVE_STATE.pendingHash === hash) {
         metrics.autosave.skippedClean++;
+        Logger.debug(`[Autosave] Skipped - already saved (trigger: ${trigger})`);
         return;
     }
 
@@ -2113,12 +2114,14 @@ async function forceSaveActiveFile(trigger = 'idle') {
     try {
         const session = await getCachedSessionToken();
         if (!session?.access_token) {
+            Logger.warn('[Autosave] No valid session');
             isSaving = false;
             SAVE_STATE.pendingHash = null;
             return;
         }
 
-        const response = await fetch(`${CLOUD_STATE.storageBaseUrl}/files/save`, {
+        const saveUrl = `${CLOUD_STATE.storageBaseUrl}/files/save`;
+        const response = await fetch(saveUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2153,6 +2156,12 @@ async function forceSaveActiveFile(trigger = 'idle') {
             const errData = await readErrorBody(response);
             const message = formatServerError(errData, response.status);
             Logger.warn(`[Autosave] ✗ Failed: ${message}`);
+            
+            if (response.status === 401) {
+                // Session expired, clear cache and trigger re-auth
+                clearSessionCache();
+                showStatus('Session expired. Please sign in again.', true, 5000);
+            }
         }
     } catch (e) {
         Logger.warn(`[Autosave] ✗ Failed: ${e.message}`);
@@ -2216,13 +2225,16 @@ function scheduleFileExplorerRender() {
 }
 
 async function refreshCloudFiles(force = false) {
-    if (!isUserLoggedIn || !supabaseClient) return;
+    if (!isUserLoggedIn || !supabaseClient) {
+        Logger.debug('[Refresh] Not logged in');
+        return;
+    }
 
     const lastRefresh = CLOUD_STATE.lastRefresh || 0;
     const MIN_REFRESH_INTERVAL = 5000;
 
     if (!force && (Date.now() - lastRefresh < MIN_REFRESH_INTERVAL)) {
-        Logger.debug('Refresh skipped (too soon)');
+        Logger.debug('[Refresh] Skipped (too soon)');
         return;
     }
 
@@ -2232,25 +2244,31 @@ async function refreshCloudFiles(force = false) {
     try {
         const session = await getCachedSessionToken();
         if (!session?.access_token) {
+            Logger.warn('[Refresh] No valid session');
             hideProgress();
             return;
         }
 
-        const response = await fetch(`${CLOUD_STATE.storageBaseUrl}/files/list`, {
+        const listUrl = `${CLOUD_STATE.storageBaseUrl}/files/list`;
+        const response = await fetch(listUrl, {
             headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
         if (response.ok) {
             const data = await response.json();
             updateCloudStateFiles(data.files);
-            Logger.info(`Loaded ${CLOUD_STATE.files.size} files from cloud`);
+            Logger.info(`[Refresh] Loaded ${CLOUD_STATE.files.size} files from cloud`);
         } else {
             const errData = await readErrorBody(response);
             const message = formatServerError(errData, response.status);
-            Logger.warn(`Failed to refresh: ${message}`);
+            Logger.warn(`[Refresh] Failed: ${message}`);
+            
+            if (response.status === 401) {
+                clearSessionCache();
+            }
         }
     } catch (e) {
-        Logger.warn('Failed to refresh: ' + e.message);
+        Logger.warn('[Refresh] Error: ' + e.message);
     } finally {
         hideProgress();
     }
@@ -2386,7 +2404,7 @@ function downloadFile(folder, filename) {
     Logger.info(`Downloaded ${filename}`);
 }
 
-// ==================== OPEN FILE - FIXED SYNC ====================
+// ==================== OPEN FILE ====================
 async function openFile(folder, filename, options = {}) {
     cancelPendingAutosave();
 
@@ -2397,7 +2415,7 @@ async function openFile(folder, filename, options = {}) {
         setLocalDraftImmediate(currentFolder, currentFilename, currentCode);
         
         forceSaveActiveFile('fileSwitch').catch(e => {
-            Logger.warn('Background save failed: ' + e.message);
+            Logger.warn('[FileSwitch] Background save failed: ' + e.message);
         });
     }
 
@@ -2411,13 +2429,11 @@ async function openFile(folder, filename, options = {}) {
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                const response = await fetch(
-                    `${CLOUD_STATE.storageBaseUrl}/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`,
-                    {
-                        headers: { 'Authorization': `Bearer ${session.access_token}` },
-                        cache: 'no-store'
-                    }
-                );
+                const readUrl = `${CLOUD_STATE.storageBaseUrl}/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`;
+                const response = await fetch(readUrl, {
+                    headers: { 'Authorization': `Bearer ${session.access_token}` },
+                    cache: 'no-store'
+                });
 
                 if (response.ok) {
                     const content = await response.text();
@@ -2441,6 +2457,7 @@ async function openFile(folder, filename, options = {}) {
                     hideProgress();
                     return;
                 } else if (response.status === 404) {
+                    // New file - start with empty content
                     if (editor) {
                         editor.setValue('', -1);
                     }
@@ -2448,19 +2465,21 @@ async function openFile(folder, filename, options = {}) {
                     DIRTY_FLAG.isDirty = false;
                     highlightActiveFile();
                     hideProgress();
+                    Logger.info(`New file: ${filename}`);
                     return;
                 } else {
                     const errData = await readErrorBody(response);
-                    Logger.warn(`Cloud read failed: ${formatServerError(errData, response.status)}`);
+                    Logger.warn(`[OpenFile] Cloud read failed: ${formatServerError(errData, response.status)}`);
                 }
             }
         } catch (e) {
-            Logger.warn('Cloud read error: ' + e.message);
+            Logger.warn('[OpenFile] Error: ' + e.message);
         } finally {
             hideProgress();
         }
     }
 
+    // Fallback to local draft
     const draft = getLocalDraft(folder, filename);
     if (draft !== null) {
         if (editor) {
@@ -2473,11 +2492,13 @@ async function openFile(folder, filename, options = {}) {
         return;
     }
 
+    // Empty file
     if (editor) {
         editor.setValue('', -1);
     }
     DIRTY_FLAG.isDirty = false;
     highlightActiveFile();
+    Logger.info(`Opened empty file: ${filename}`);
 }
 
 function highlightActiveFile() {
@@ -2525,7 +2546,8 @@ async function createNewFile(filename) {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
                 const hash = await computeSha256(defaultContent);
-                const response = await fetch(`${CLOUD_STATE.storageBaseUrl}/files/save`, {
+                const saveUrl = `${CLOUD_STATE.storageBaseUrl}/files/save`;
+                const response = await fetch(saveUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2539,10 +2561,13 @@ async function createNewFile(filename) {
                     await openFile(folder, cleanName);
                     Logger.success(`Created ${cleanName}`);
                     return;
+                } else {
+                    const errData = await readErrorBody(response);
+                    Logger.warn(`[CreateFile] Failed: ${formatServerError(errData, response.status)}`);
                 }
             }
         } catch (e) {
-            Logger.warn('Cloud create failed: ' + e.message);
+            Logger.warn('[CreateFile] Error: ' + e.message);
         }
     }
 
@@ -2560,7 +2585,8 @@ async function deleteFile(folder, filename) {
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                await fetch(`${CLOUD_STATE.storageBaseUrl}/files/delete`, {
+                const deleteUrl = `${CLOUD_STATE.storageBaseUrl}/files/delete`;
+                await fetch(deleteUrl, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -2570,7 +2596,7 @@ async function deleteFile(folder, filename) {
                 });
             }
         } catch (e) {
-            Logger.warn('Cloud delete failed: ' + e.message);
+            Logger.warn('[DeleteFile] Error: ' + e.message);
         }
     }
 
@@ -2583,6 +2609,7 @@ async function deleteFile(folder, filename) {
     }
 
     renderFileExplorer();
+    Logger.success(`Deleted ${filename}`);
 }
 
 // ==================== SAVE INDICATOR ====================
@@ -2628,22 +2655,29 @@ const AUTH_EVENT_DEBOUNCE_MS = 1000;
 
 async function initSupabaseAuth() {
     try {
-        // CRITICAL: Get storage URL from config
+        Logger.info('[Auth] Initializing...');
+        
+        // Fetch auth configuration
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
-            Logger.warn('Auth not configured');
+            Logger.warn('[Auth] Configuration not available');
+            updateLoginUI(false);
             return;
         }
 
         const config = await response.json();
+        Logger.success(`[Auth] Config loaded - ${config.supabaseUrl}`);
         
         // Set storage base URL
         CLOUD_STATE.storageBaseUrl = config.storageUrl || '';
         
+        // Load Supabase client library
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 
         script.onload = () => {
+            Logger.success('[Auth] Supabase library loaded');
+            
             supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
             checkSession();
 
@@ -2658,6 +2692,7 @@ async function initSupabaseAuth() {
                 if (isDuplicate) return;
 
                 lastAuthEvent = { type: event, timestamp: now, userId: session?.user?.id || null };
+                Logger.info(`[Auth] Event: ${event}`);
 
                 if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
                     if (session?.user) {
@@ -2673,18 +2708,26 @@ async function initSupabaseAuth() {
                 } else if (event === 'TOKEN_REFRESHED') {
                     if (session?.user) {
                         setCachedSession(session);
+                        Logger.success('[Auth] Token refreshed');
                     }
                     return;
                 } else if (event === 'SIGNED_OUT') {
                     clearSessionCache();
                     updateLoginUI(false);
+                    Logger.info('[Auth] Signed out');
                 }
             });
         };
 
+        script.onerror = () => {
+            Logger.error('[Auth] Failed to load Supabase library');
+            updateLoginUI(false);
+        };
+
         document.head.appendChild(script);
     } catch (e) {
-        Logger.warn('Auth init failed: ' + e.message);
+        Logger.error('[Auth] Initialization failed: ' + e.message);
+        updateLoginUI(false);
     }
 }
 
@@ -2696,17 +2739,20 @@ async function checkSession() {
         if (session?.user) {
             setCachedSession(session);
             updateLoginUI(true, session.user);
+            Logger.success('[Auth] Session restored');
         } else {
             updateLoginUI(false);
+            Logger.info('[Auth] No existing session');
         }
     } catch (e) {
+        Logger.warn('[Auth] Session check failed: ' + e.message);
         updateLoginUI(false);
     }
 }
 
 async function signInWithGoogle() {
     if (!supabaseClient) {
-        alert('Authentication not configured');
+        alert('Authentication not configured. Please check your server configuration.');
         return;
     }
 
@@ -2719,9 +2765,11 @@ async function signInWithGoogle() {
 
         if (error) {
             alert('Sign in failed: ' + error.message);
+            Logger.error('[Auth] Sign in error: ' + error.message);
         }
     } catch (e) {
-        alert('Sign in failed');
+        alert('Sign in failed: ' + e.message);
+        Logger.error('[Auth] Sign in exception: ' + e.message);
     }
 }
 
@@ -2736,9 +2784,12 @@ async function signOut() {
         const { error } = await supabaseClient.auth.signOut();
         if (!error) {
             updateLoginUI(false);
+            Logger.success('[Auth] Signed out successfully');
+        } else {
+            Logger.error('[Auth] Sign out error: ' + error.message);
         }
     } catch (e) {
-        Logger.error('Sign out error: ' + e.message);
+        Logger.error('[Auth] Sign out exception: ' + e.message);
     }
 }
 
@@ -2747,5 +2798,6 @@ if (googleSigninBtn) {
     googleSigninBtn.addEventListener('click', signInWithGoogle);
 }
 
+// Initialize auth on load
 initSupabaseAuth();
 

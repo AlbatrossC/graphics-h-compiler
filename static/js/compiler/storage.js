@@ -286,20 +286,22 @@ async function forceSaveActiveFile(trigger = 'idle') {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.access_token}`
             },
-            body: JSON.stringify({ folder, filename, content: code, hash })
+            body: JSON.stringify({ folder, filename, content: code })
         });
 
         if (response.ok) {
             const result = await response.json();
             const duration = Date.now() - startTime;
 
-            SAVE_STATE.cloudHash = hash;
+            // Trust backend hash
+            const backendHash = result.hash || hash;
+            SAVE_STATE.cloudHash = backendHash;
             SAVE_STATE.lastSaveTime = Date.now();
             CLOUD_STATE.lastSavedAt = Date.now();
             DIRTY_FLAG.isDirty = false;
 
             setLocalDraftImmediate(folder, filename, code);
-            setCachedFileContent(folder, filename, code, hash);
+            setCachedFileContent(folder, filename, code, backendHash);
             updateSaveIndicator();
 
             metrics.autosave.executed++;
@@ -317,7 +319,6 @@ async function forceSaveActiveFile(trigger = 'idle') {
             Logger.warn(`[Autosave] ✗ Failed: ${message}`);
             
             if (response.status === 401) {
-                // Session expired, clear cache and trigger re-auth
                 clearSessionCache();
                 showStatus('Session expired. Please sign in again.', true, 5000);
             }
@@ -330,7 +331,26 @@ async function forceSaveActiveFile(trigger = 'idle') {
     }
 }
 
+// Tab visibility tracking
+let isTabVisible = !document.hidden;
+
+document.addEventListener('visibilitychange', () => {
+    isTabVisible = !document.hidden;
+    
+    if (!isTabVisible) {
+        cancelPendingAutosave();
+        Logger.debug('[Autosave] Paused - tab hidden');
+    } else {
+        if (DIRTY_FLAG.isDirty && isUserLoggedIn) {
+            scheduleAutosave();
+            Logger.debug('[Autosave] Resumed - tab visible');
+        }
+    }
+});
+
 function scheduleAutosave() {
+    if (!isTabVisible) return; // Don't schedule if tab is hidden
+    
     if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
     if (CLOUD_STATE.autosaveTimer) clearTimeout(CLOUD_STATE.autosaveTimer);
 
@@ -581,7 +601,21 @@ async function openFile(folder, filename, options = {}) {
     const key = getFileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
 
-    clearCachedFileContent(folder, filename);
+    // Check content cache first
+    const cached = getCachedFileContent(folder, filename);
+    if (cached) {
+        if (editor) {
+            editor.setValue(cached.content, -1);
+            editor.clearSelection();
+        }
+        SAVE_STATE.cloudHash = cached.hash;
+        SAVE_STATE.lastSaveTime = Date.now();
+        DIRTY_FLAG.isDirty = false;
+        updateSaveIndicator();
+        highlightActiveFile();
+        Logger.info(`Loaded ${filename} from cache`);
+        return;
+    }
     
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
@@ -596,7 +630,9 @@ async function openFile(folder, filename, options = {}) {
 
                 if (response.ok) {
                     const content = await response.text();
-                    const hash = await computeSha256(content);
+                    // Trust backend hash from ETag if available
+                    const etag = response.headers.get('ETag');
+                    const hash = etag || (await computeSha256(content));
 
                     if (editor) {
                         editor.setValue(content, -1);
@@ -616,7 +652,6 @@ async function openFile(folder, filename, options = {}) {
                     hideProgress();
                     return;
                 } else if (response.status === 404) {
-                    // New file - start with empty content
                     if (editor) {
                         editor.setValue('', -1);
                     }
@@ -704,7 +739,6 @@ async function createNewFile(filename) {
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                const hash = await computeSha256(defaultContent);
                 const saveUrl = `${CLOUD_STATE.storageBaseUrl}/files/save`;
                 const response = await fetch(saveUrl, {
                     method: 'POST',
@@ -712,7 +746,7 @@ async function createNewFile(filename) {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${session.access_token}`
                     },
-                    body: JSON.stringify({ folder, filename: cleanName, content: defaultContent, hash })
+                    body: JSON.stringify({ folder, filename: cleanName, content: defaultContent })
                 });
 
                 if (response.ok) {
@@ -761,6 +795,7 @@ async function deleteFile(folder, filename) {
 
     CLOUD_STATE.files.delete(key);
     clearLocalDraft(folder, filename);
+    clearCachedFileContent(folder, filename);
 
     if (CLOUD_STATE.activeFileKey === key) {
         CLOUD_STATE.activeFileKey = 'main/main.cpp';
@@ -816,7 +851,6 @@ async function initSupabaseAuth() {
     try {
         Logger.info('[Auth] Initializing...');
         
-        // Fetch auth configuration
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
             Logger.warn('[Auth] Configuration not available');
@@ -827,10 +861,8 @@ async function initSupabaseAuth() {
         const config = await response.json();
         Logger.success(`[Auth] Config loaded - ${config.supabaseUrl}`);
         
-        // Set storage base URL
         CLOUD_STATE.storageBaseUrl = config.storageUrl || '';
         
-        // Load Supabase client library
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 
@@ -957,5 +989,4 @@ if (googleSigninBtn) {
     googleSigninBtn.addEventListener('click', signInWithGoogle);
 }
 
-// Initialize auth on load
 initSupabaseAuth();

@@ -442,72 +442,42 @@ window.addEventListener('beforeunload', (event) => {
         // localStorage might be full, ignore
     }
 
-    // Check if content has changed since last cloud save
-    const currentContent = code;
-    const lastSavedContent = localStorage.getItem(`lastCloudSave_${folder}_${filename}`);
-
-    // If content is the same, no need to save
-    if (currentContent === lastSavedContent) {
-        return;
-    }
-
     // Try sendBeacon for guaranteed background save
-    if (navigator.sendBeacon && supabaseClient) {
+    if (navigator.sendBeacon && supabaseClient && sessionCache.accessToken) {
         try {
-            // Get session synchronously from localStorage cache if available
-            const sessionData = localStorage.getItem('sb-session');
-            let token = null;
+            const payload = JSON.stringify({
+                folder,
+                filename,
+                content: code
+            });
 
-            if (sessionData) {
-                try {
-                    const parsed = JSON.parse(sessionData);
-                    token = parsed?.access_token;
-                } catch (e) { }
-            }
-
+            // Create blob with JSON content type
+            const blob = new Blob([payload], { type: 'application/json' });
+            
+            // Get token for Authorization header simulation
+            // Note: sendBeacon doesn't support custom headers, so we use fetch with keepalive
+            const token = sessionCache.accessToken;
+            
             if (token) {
-                // CRITICAL FIX #8: Token in request body - Security consideration documented
-                // Why token is in body instead of Authorization header:
-                // - navigator.sendBeacon() does NOT support custom headers
-                // - This is a trade-off for UX: guarantees save on tab close
-                // 
-                // SECURITY: This is an ACCEPTED RISK because:
-                // 1. Server ALWAYS re-verifies token locally (verifyJwtLocal)
-                // 2. Server recomputes content hash - prevents token swapping attacks
-                // 3. Token is short-lived (1 hour expiry)
-                // 4. HTTPS-only transmission prevents interception
-                //
-                // Alternatives considered (rejected):
-                // - Skip save on tab close: User data loss (unacceptable)
-                // - Use fetch() without keepalive: Not guaranteed after tab closes
-                // - Store token elsewhere: Would require separate token endpoint (complexity)
-                //
-                // The risk of token exposure is FAR lower than data loss from missing saves
-                const payload = JSON.stringify({
-                    folder,
-                    filename,
-                    content: code,
-                    token: token // Token included to enable sendBeacon usage
+                // Use fetch with keepalive instead of sendBeacon for Authorization header support
+                fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: payload,
+                    keepalive: true // Ensures request completes even after tab closes
+                }).catch(() => {
+                    // Silently fail - localStorage save already happened
                 });
-
-                // sendBeacon is fire-and-forget, will complete even after tab closes
-                const sent = navigator.sendBeacon('/files/beacon-save', payload);
-                if (sent) {
-                    Logger.info('Tab close: sendBeacon fired for background save');
-                }
+                
+                Logger.info('Tab close: Background save initiated');
             }
         } catch (e) {
-            // sendBeacon failed, but localStorage save already happened
+            // Beacon failed, but localStorage save already happened
         }
     }
-
-    // Only show warning if there are significant unsaved changes AND last save was long ago
-    const lastSaveTime = CLOUD_STATE.lastSavedAt || 0;
-    const timeSinceLastSave = Date.now() - lastSaveTime;
-    const significantDelay = 5 * 60 * 1000; // 5 minutes
-
-    // Don't show warning - rely on localStorage + sendBeacon protection
-    // This provides smooth UX while still protecting user's work
 });
 
 // ==================== RESPONSIVE HANDLING ====================
