@@ -1,120 +1,79 @@
-// ==================== AUTHENTICATION CACHING (TIER 1: CLIENT-SIDE) ====================
-// CRITICAL: This cache prevents redundant auth checks on EVERY operation
-// Without this, we'd be calling Supabase 100+ times per minute!
-
+// ==================== AUTHENTICATION CACHING ====================
 const sessionCache = {
     accessToken: null,
     expiresAt: null,
     user: null,
-    lastVerified: null // Track when we last verified with Supabase
+    lastVerified: null
 };
 
-const SESSION_REFRESH_INTERVAL = 45 * 60 * 1000; // Only refresh every 45 minutes
-const SESSION_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minute safety buffer
+const SESSION_REFRESH_INTERVAL = 45 * 60 * 1000;
+const SESSION_EXPIRY_BUFFER = 5 * 60 * 1000;
 
-// Get cached access token WITHOUT hitting Supabase
 function getCachedToken() {
     if (!sessionCache.accessToken || !sessionCache.expiresAt) {
         return null;
     }
-
-    // Check if token has expired
     if (Date.now() >= (sessionCache.expiresAt - SESSION_EXPIRY_BUFFER)) {
-        sessionCache.accessToken = null;
-        sessionCache.expiresAt = null;
-        sessionCache.user = null;
-        sessionCache.lastVerified = null;
+        clearSessionCache();
         return null;
     }
-
     return sessionCache.accessToken;
 }
 
-// Store session in cache when user authenticates
 function setCachedSession(session) {
     if (!session || !session.access_token) {
-        sessionCache.accessToken = null;
-        sessionCache.expiresAt = null;
-        sessionCache.user = null;
-        sessionCache.lastVerified = null;
+        clearSessionCache();
         return;
     }
-
-    // Supabase tokens expire in 1 hour by default
-    const expiresIn = session.expires_in || 3600; // seconds
-
+    const expiresIn = session.expires_in || 3600;
     sessionCache.accessToken = session.access_token;
     sessionCache.expiresAt = Date.now() + (expiresIn * 1000);
     sessionCache.user = session.user || null;
     sessionCache.lastVerified = Date.now();
-
-    Logger.info('Session cached in memory');
 }
 
-// Clear all cached session data
 function clearSessionCache() {
     sessionCache.accessToken = null;
     sessionCache.expiresAt = null;
     sessionCache.user = null;
     sessionCache.lastVerified = null;
-    Logger.info('Session cache cleared');
 }
 
-// Get session token with intelligent caching
 async function getCachedSessionToken() {
-    // FAST PATH: Use cached token if valid
     const cachedToken = getCachedToken();
     if (cachedToken) {
         metrics.auth.clientCacheHits++;
         return { access_token: cachedToken };
     }
 
-    // SLOW PATH: Token expired or not cached, need to refresh
-    if (!supabaseClient) {
-        return null;
-    }
-
+    if (!supabaseClient) return null;
     metrics.auth.clientCacheMisses++;
 
     try {
-        // Check if we need to verify with Supabase
-        // Only verify if: (1) no cache OR (2) cache is old (>15 min)
         const needsVerification = !sessionCache.lastVerified ||
             (Date.now() - sessionCache.lastVerified > SESSION_REFRESH_INTERVAL);
 
         if (!needsVerification && sessionCache.accessToken) {
-            // Cache is recent enough, reuse it
             return { access_token: sessionCache.accessToken };
         }
 
         metrics.auth.supabaseVerifications++;
-
-        // Actually fetch from Supabase (expensive operation)
         const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        if (error) {
-            Logger.warn('Session refresh error: ' + error.message);
+        if (error || !session) {
             clearSessionCache();
             return null;
         }
 
-        if (session) {
-            setCachedSession(session);
-            return session;
-        }
-
-        clearSessionCache();
-        return null;
+        setCachedSession(session);
+        return session;
     } catch (e) {
-        Logger.warn('Failed to get fresh session: ' + e.message);
         clearSessionCache();
         return null;
     }
 }
 
-// ==================== CLOUD STORAGE FUNCTIONS ====================
-
-// Compute SHA-256 hash of content
+// ==================== HASH COMPUTATION ====================
 async function computeSha256(content) {
     try {
         const encoder = new TextEncoder();
@@ -123,7 +82,6 @@ async function computeSha256(content) {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     } catch (e) {
-        // Fallback for older browsers
         let hash = 0;
         for (let i = 0; i < content.length; i++) {
             const char = content.charCodeAt(i);
@@ -134,51 +92,38 @@ async function computeSha256(content) {
     }
 }
 
-// File key helper
 function getFileKey(folder, filename) {
     return `${folder}/${filename}`;
 }
 
-// ==================== DEBOUNCED LOCAL DRAFT MANAGEMENT ====================
-// CRITICAL FIX #6: Include userId in localStorage keys to prevent guest/auth collision
+// ==================== LOCAL DRAFT MANAGEMENT ====================
 const draftSaveTimers = new Map();
 const DRAFT_SAVE_DEBOUNCE_MS = 100;
 
-// Helper to build draft storage key with userId namespace
 function getDraftKey(folder, filename) {
     const userId = sessionCache.user?.id || 'guest';
     return `draft_${userId}_${folder}_${filename}`;
 }
 
-// Immediate local draft save (for critical saves)
 function setLocalDraftImmediate(folder, filename, content) {
     try {
         localStorage.setItem(getDraftKey(folder, filename), content);
+        localStorage.setItem('tc_code', content); // Also save to tc_code
         metrics.storage.localDraftWrites++;
     } catch (e) {
         Logger.warn('Failed to save local draft');
     }
 }
 
-// Debounced local draft save (for typing - reduces write operations)
 function setLocalDraft(folder, filename, content) {
     const key = getFileKey(folder, filename);
-
     if (draftSaveTimers.has(key)) {
         clearTimeout(draftSaveTimers.get(key));
     }
-
     draftSaveTimers.set(key, setTimeout(() => {
         setLocalDraftImmediate(folder, filename, content);
         draftSaveTimers.delete(key);
     }, DRAFT_SAVE_DEBOUNCE_MS));
-}
-
-function flushPendingDrafts() {
-    draftSaveTimers.forEach((timer, key) => {
-        clearTimeout(timer);
-        draftSaveTimers.delete(key);
-    });
 }
 
 function getLocalDraft(folder, filename) {
@@ -197,8 +142,7 @@ function clearLocalDraft(folder, filename) {
     }
 }
 
-// ==================== PROGRESS BAR & STATUS ====================
-
+// ==================== PROGRESS & STATUS ====================
 const progressBar = document.getElementById('progress-bar');
 const progressFill = document.getElementById('progress-fill');
 const statusMessage = document.getElementById('status-message');
@@ -222,13 +166,8 @@ function showStatus(message, isError = false, duration = 3000) {
     if (statusMessage && statusText) {
         statusText.textContent = message;
         statusMessage.classList.remove('hidden', 'error');
-        if (isError) {
-            statusMessage.classList.add('error');
-        }
-
-        setTimeout(() => {
-            statusMessage.classList.add('hidden');
-        }, duration);
+        if (isError) statusMessage.classList.add('error');
+        setTimeout(() => statusMessage.classList.add('hidden'), duration);
     }
 }
 
@@ -236,15 +175,11 @@ function formatServerError(errData, status) {
     try {
         const base = errData?.error ? String(errData.error) : `HTTP ${status}`;
         const details = [];
-        if (errData?.code) {
-            details.push(`code: ${errData.code}`);
-        }
+        if (errData?.code) details.push(`code: ${errData.code}`);
         if (Array.isArray(errData?.missing) && errData.missing.length) {
             details.push(`missing: ${errData.missing.join(', ')}`);
         }
-        if (errData?.requestId) {
-            details.push(`requestId: ${errData.requestId}`);
-        }
+        if (errData?.requestId) details.push(`requestId: ${errData.requestId}`);
         return details.length ? `${base} (${details.join(', ')})` : base;
     } catch (e) {
         return `HTTP ${status}`;
@@ -264,43 +199,43 @@ async function readErrorBody(response) {
     }
 }
 
-// ==================== SAVE FUNCTIONS ====================
+// ==================== UNIFIED SAVE STATE ====================
+const SAVE_STATE = {
+    cloudHash: null,      // Hash confirmed by cloud
+    pendingHash: null,    // Hash being saved
+    lastSaveTime: 0
+};
 
-// Unified save function - saves BOTH locally and to cloud
+const DIRTY_FLAG = {
+    isDirty: false,
+    lastDisplayedState: null
+};
+
+let isSaving = false;
+let typingDebounceTimer = null;
+
+const autosaveMetrics = {
+    triggers: { manual: 0, idle: 0, compileRun: 0, exit: 0 },
+    operations: { cloudWrites: 0, cloudSkips: 0, localWrites: 0 }
+};
+
+// ==================== SAVE FUNCTIONS ====================
 async function saveCode() {
     if (!editor) return;
 
     cancelPendingAutosave();
-
     const code = editor.getValue();
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
 
-    localStorage.setItem('tc_code', code);
+    // Always save locally first
     setLocalDraftImmediate(folder, filename, code);
-    autosaveMetrics.operations.localWrites++;
 
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
-            const session = await getCachedSessionToken();
-            if (session?.access_token) {
-                const hash = await computeSha256(code);
-
-                if (SAVE_STATE.authoritativeHash === hash) {
-                    // BUGFIX #5a: Clear dirty flag when code already saved
-                    DIRTY_FLAG.isDirty = false;
-                    showStatus('✓ Already saved');
-                    hideProgress();
-                    updateSaveIndicator();
-                    return;
-                }
-
-                await forceSaveActiveFile('manual');
-                // BUGFIX #5b: Clear dirty flag after successful cloud save
-                DIRTY_FLAG.isDirty = false;
-                showStatus('✓ Saved to cloud!');
-            }
+            await forceSaveActiveFile('manual');
+            showStatus('✓ Saved to cloud!');
         } catch (e) {
             showStatus('Save failed', true);
             Logger.warn('Cloud save error: ' + e.message);
@@ -308,7 +243,6 @@ async function saveCode() {
             hideProgress();
         }
     } else {
-        // BUGFIX #5c: Clear dirty flag when saving locally (guest mode)
         DIRTY_FLAG.isDirty = false;
         showStatus('✓ Saved locally');
     }
@@ -316,144 +250,17 @@ async function saveCode() {
     updateSaveIndicator();
 }
 
-// Save code locally only (internal helper)
-function saveLocalCode() {
-    if (!editor) return;
-
-    const code = editor.getValue();
-    localStorage.setItem('tc_code', code);
-
-    if (isUserLoggedIn) {
-        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-        const [folder, filename] = activeKey.split('/');
-        setLocalDraft(folder, filename, code);
-    }
-
-    Logger.success('Code saved locally');
-    updateSaveIndicator();
-}
-
-// Save code to cloud
-async function saveCloudCode() {
-    if (!editor) return;
-
-    if (!isUserLoggedIn || !supabaseClient) {
-        alert('Please sign in to save to cloud');
-        return;
-    }
-
-    const code = editor.getValue();
-
-    try {
-        const session = await getCachedSessionToken();
-        if (!session?.access_token) {
-            alert('Session expired. Please sign in again.');
-            return;
-        }
-
-        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-        const [folder, filename] = activeKey.split('/');
-        const hash = await computeSha256(code);
-
-        Logger.info(`Saving to cloud: ${folder}/${filename}`);
-
-        const response = await fetch('/files/save', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({ folder, filename, content: code, hash })
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (result.skipped) {
-                Logger.info('Cloud save skipped (unchanged)');
-            } else {
-                Logger.success('Code saved to cloud');
-            }
-            CLOUD_STATE.lastSavedAt = Date.now();
-            // CRITICAL FIX #1: Update unified SAVE_STATE instead of CLOUD_STATE.lastSavedHash
-            SAVE_STATE.authoritativeHash = hash;
-            SAVE_STATE.lastSaveTime = Date.now();
-
-            localStorage.setItem('tc_code', code);
-            setLocalDraft(folder, filename, code);
-
-            updateSaveIndicator();
-        } else {
-            const errData = await readErrorBody(response);
-            const message = formatServerError(errData, response.status);
-            Logger.error(`Cloud save failed: ${message}`);
-            alert(`Failed to save to cloud: ${message}`);
-        }
-    } catch (e) {
-        Logger.error('Cloud save error: ' + e.message);
-        alert('Failed to save to cloud: ' + e.message);
-    }
-}
-
-// ==================== FILE SWITCH DATA LOSS PREVENTION ====================
-// CRITICAL FIX #3: Ensure save completes with retries before switching files
-
-// ==================== OPTIMIZED AUTOSAVE SYSTEM ====================
-// CRITICAL FIX #1: Unified save state to prevent race conditions
-// Single source of truth for content hash tracking
-const SAVE_STATE = {
-    authoritativeHash: null,  // Server-confirmed content hash
-    pendingHash: null,         // Hash of content pending save
-    lastSaveTime: 0,           // When server last confirmed the hash
-};
-
-// CRITICAL FIX #1: Add dirty flag system to eliminate SHA256 on every keystroke
-const DIRTY_FLAG = {
-    isDirty: false,
-    lastDisplayedState: null  // Track what we last showed to user
-};
-
-let isSaving = false;
-let typingDebounceTimer = null;
-let lastAutosaveTime = 0;
-
-// Enhanced metrics for autosave tracking
-const autosaveMetrics = {
-    triggers: {
-        manual: 0,      // User clicked Save
-        idle: 0,        // Idle timer triggered
-        compileRun: 0,  // Before compile & run
-        exit: 0         // Tab close / visibility change
-    },
-    operations: {
-        cloudWrites: 0,
-        cloudSkips: 0,
-        localWrites: 0
-    }
-};
-
 async function forceSaveActiveFile(trigger = 'idle') {
-    if (!editor || !isUserLoggedIn || !supabaseClient) return;
-
-    if (isSaving) {
-        Logger.debug(`[Autosave] Save in progress, skipping (trigger: ${trigger})`);
-        return;
-    }
-
-    // BUGFIX #3: Skip save if content is already clean (no dirty flag)
-    if (!DIRTY_FLAG.isDirty && SAVE_STATE.authoritativeHash) {
-        Logger.debug(`[Autosave] Content clean, skipped (trigger: ${trigger})`);
-        return;
-    }
+    if (!editor || !isUserLoggedIn || !supabaseClient || isSaving) return;
 
     const code = editor.getValue();
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
     const hash = await computeSha256(code);
 
-    // CRITICAL FIX #1: Use unified SAVE_STATE.authoritativeHash
-    if (SAVE_STATE.authoritativeHash === hash || SAVE_STATE.pendingHash === hash) {
+    // Skip if unchanged
+    if (SAVE_STATE.cloudHash === hash || SAVE_STATE.pendingHash === hash) {
         metrics.autosave.skippedClean++;
-        Logger.debug(`[Autosave] Content unchanged, skipped (trigger: ${trigger})`);
         return;
     }
 
@@ -462,7 +269,7 @@ async function forceSaveActiveFile(trigger = 'idle') {
     autosaveMetrics.triggers[trigger]++;
 
     const startTime = Date.now();
-    Logger.info(`[Autosave] Starting (trigger: ${trigger}, file: ${filename})`);
+    Logger.info(`[Autosave] Starting (trigger: ${trigger})`);
 
     try {
         const session = await getCachedSessionToken();
@@ -485,12 +292,10 @@ async function forceSaveActiveFile(trigger = 'idle') {
             const result = await response.json();
             const duration = Date.now() - startTime;
 
-            CLOUD_STATE.lastSavedAt = Date.now();
-            // CRITICAL FIX #1: Only update authoritativeHash after confirmed server response
-            SAVE_STATE.authoritativeHash = hash;
+            // Update state
+            SAVE_STATE.cloudHash = hash;
             SAVE_STATE.lastSaveTime = Date.now();
-            lastAutosaveTime = Date.now();
-            // BUGFIX #2: Clear dirty flag after successful save to cloud
+            CLOUD_STATE.lastSavedAt = Date.now();
             DIRTY_FLAG.isDirty = false;
 
             setLocalDraftImmediate(folder, filename, code);
@@ -501,20 +306,18 @@ async function forceSaveActiveFile(trigger = 'idle') {
 
             if (result.skipped) {
                 autosaveMetrics.operations.cloudSkips++;
-                Logger.info(`[Autosave] ✓ Skipped by server (${duration}ms, trigger: ${trigger})`);
+                Logger.info(`[Autosave] ✓ Skipped (${duration}ms, trigger: ${trigger})`);
             } else {
                 autosaveMetrics.operations.cloudWrites++;
-                Logger.success(`[Autosave] ✓ Saved to cloud (${duration}ms, trigger: ${trigger})`);
+                Logger.success(`[Autosave] ✓ Saved (${duration}ms, trigger: ${trigger})`);
             }
-
-            printAutosaveStats();
         } else {
             const errData = await readErrorBody(response);
             const message = formatServerError(errData, response.status);
-            Logger.warn(`[Autosave] ✗ Failed (trigger: ${trigger}): ${message}`);
+            Logger.warn(`[Autosave] ✗ Failed: ${message}`);
         }
     } catch (e) {
-        Logger.warn(`[Autosave] ✗ Failed (trigger: ${trigger}): ${e.message}`);
+        Logger.warn(`[Autosave] ✗ Failed: ${e.message}`);
     } finally {
         isSaving = false;
         SAVE_STATE.pendingHash = null;
@@ -522,23 +325,16 @@ async function forceSaveActiveFile(trigger = 'idle') {
 }
 
 function scheduleAutosave() {
-    if (typingDebounceTimer) {
-        clearTimeout(typingDebounceTimer);
-    }
-
-    if (CLOUD_STATE.autosaveTimer) {
-        clearTimeout(CLOUD_STATE.autosaveTimer);
-    }
+    if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
+    if (CLOUD_STATE.autosaveTimer) clearTimeout(CLOUD_STATE.autosaveTimer);
 
     typingDebounceTimer = setTimeout(() => {
         typingDebounceTimer = null;
-
         CLOUD_STATE.autosaveTimer = setTimeout(async () => {
             CLOUD_STATE.autosaveTimer = null;
             metrics.autosave.scheduled++;
             await forceSaveActiveFile('idle');
         }, AUTOSAVE_DELAY_MS);
-
     }, TYPING_DEBOUNCE_MS);
 }
 
@@ -553,27 +349,39 @@ function cancelPendingAutosave() {
     }
 }
 
-function printAutosaveStats() {
-    const total = autosaveMetrics.operations.cloudWrites + autosaveMetrics.operations.cloudSkips;
-    console.log(
-        `%c[Stats] Autosave: ${total} ops | ` +
-        `Writes: ${autosaveMetrics.operations.cloudWrites} | ` +
-        `Skips: ${autosaveMetrics.operations.cloudSkips} | ` +
-        `Triggers: Manual=${autosaveMetrics.triggers.manual} Idle=${autosaveMetrics.triggers.idle} ` +
-        `Run=${autosaveMetrics.triggers.compileRun} Exit=${autosaveMetrics.triggers.exit}`,
-        'color: #6ac47b; font-weight: bold;'
-    );
+// ==================== FILE EXPLORER ====================
+const FILE_EXPLORER_RENDER = {
+    renderTimer: null,
+    lastRenderTime: 0,
+    MIN_RENDER_INTERVAL_MS: 500
+};
+
+function scheduleFileExplorerRender() {
+    const now = Date.now();
+    const timeSinceLastRender = now - FILE_EXPLORER_RENDER.lastRenderTime;
+
+    if (FILE_EXPLORER_RENDER.renderTimer) {
+        clearTimeout(FILE_EXPLORER_RENDER.renderTimer);
+    }
+
+    if (timeSinceLastRender >= FILE_EXPLORER_RENDER.MIN_RENDER_INTERVAL_MS) {
+        renderFileExplorer();
+        FILE_EXPLORER_RENDER.lastRenderTime = now;
+    } else {
+        const delayMs = FILE_EXPLORER_RENDER.MIN_RENDER_INTERVAL_MS - timeSinceLastRender;
+        FILE_EXPLORER_RENDER.renderTimer = setTimeout(() => {
+            renderFileExplorer();
+            FILE_EXPLORER_RENDER.lastRenderTime = Date.now();
+            FILE_EXPLORER_RENDER.renderTimer = null;
+        }, delayMs);
+    }
 }
 
-// ==================== FILE EXPLORER FUNCTIONS ====================
-
-// CRITICAL FIX: Only refresh when absolutely necessary
 async function refreshCloudFiles(force = false) {
     if (!isUserLoggedIn || !supabaseClient) return;
 
-    // Prevent excessive refreshes
     const lastRefresh = CLOUD_STATE.lastRefresh || 0;
-    const MIN_REFRESH_INTERVAL = 60000; // CRITICAL FIX #4: 60 seconds minimum (was 5s)
+    const MIN_REFRESH_INTERVAL = 5000; // 5 seconds
 
     if (!force && (Date.now() - lastRefresh < MIN_REFRESH_INTERVAL)) {
         Logger.debug('Refresh skipped (too soon)');
@@ -581,8 +389,6 @@ async function refreshCloudFiles(force = false) {
     }
 
     CLOUD_STATE.lastRefresh = Date.now();
-
-    // Optimistic: Don't show progress bar for background refreshes unless empty
     if (CLOUD_STATE.files.size === 0) showProgress();
 
     try {
@@ -593,70 +399,25 @@ async function refreshCloudFiles(force = false) {
         }
 
         const response = await fetch('/files/list', {
-            headers: {
-                'Authorization': `Bearer ${session.access_token}`
-            }
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
 
         if (response.ok) {
             const data = await response.json();
-
-            // CACHE: Save list to local storage for instant load next time
-            try {
-                localStorage.setItem('cached_file_list', JSON.stringify(data.files));
-                localStorage.setItem('cached_file_list_ts', Date.now().toString());
-            } catch (e) {
-                // Ignore quota errors
-            }
-
             updateCloudStateFiles(data.files);
             Logger.info(`Loaded ${CLOUD_STATE.files.size} files from cloud`);
         } else {
             const errData = await readErrorBody(response);
             const message = formatServerError(errData, response.status);
-            Logger.warn(`Failed to refresh cloud files: ${message}`);
-            showStatus(`Cloud refresh failed: ${message}`, true, 5000);
+            Logger.warn(`Failed to refresh: ${message}`);
         }
     } catch (e) {
-        Logger.warn('Failed to refresh cloud files: ' + e.message);
+        Logger.warn('Failed to refresh: ' + e.message);
     } finally {
         hideProgress();
     }
 }
 
-// CRITICAL FIX #3: Add debouncing system for file explorer rendering (add before updateCloudStateFiles)
-const FILE_EXPLORER_RENDER = {
-    renderTimer: null,
-    lastRenderTime: 0,
-    MIN_RENDER_INTERVAL_MS: 500,  // Max 2 renders per second
-    snapshot: null  // Prevent disappearing files during render
-};
-
-function scheduleFileExplorerRender() {
-    const now = Date.now();
-    const timeSinceLastRender = now - FILE_EXPLORER_RENDER.lastRenderTime;
-
-    // Clear pending timer if exists
-    if (FILE_EXPLORER_RENDER.renderTimer) {
-        clearTimeout(FILE_EXPLORER_RENDER.renderTimer);
-    }
-
-    if (timeSinceLastRender >= FILE_EXPLORER_RENDER.MIN_RENDER_INTERVAL_MS) {
-        // Enough time has passed, render immediately
-        renderFileExplorer();
-        FILE_EXPLORER_RENDER.lastRenderTime = now;
-    } else {
-        // Too soon, schedule render for later
-        const delayMs = FILE_EXPLORER_RENDER.MIN_RENDER_INTERVAL_MS - timeSinceLastRender;
-        FILE_EXPLORER_RENDER.renderTimer = setTimeout(() => {
-            renderFileExplorer();
-            FILE_EXPLORER_RENDER.lastRenderTime = Date.now();
-            FILE_EXPLORER_RENDER.renderTimer = null;
-        }, delayMs);
-    }
-}
-
-// Helper to update state from file list (used by cache and fetch)
 function updateCloudStateFiles(filesList) {
     if (!Array.isArray(filesList)) return;
 
@@ -669,43 +430,19 @@ function updateCloudStateFiles(filesList) {
         CLOUD_STATE.folders.add(file.folder);
     });
 
-    // CRITICAL FIX #3: Debounce rendering to prevent thrashing
     scheduleFileExplorerRender();
 }
 
-// Load file list from local cache (Instant Startup)
-function loadCachedFileList() {
-    try {
-        const cached = localStorage.getItem('cached_file_list');
-        if (cached) {
-            const files = JSON.parse(cached);
-            updateCloudStateFiles(files);
-            Logger.info('Loaded file list from local cache');
-            return true;
-        }
-    } catch (e) {
-        // Ignore corrupted cache
-    }
-    return false;
-}
-
-// Render file explorer UI
 function renderFileExplorer() {
     const mainFolderFiles = document.getElementById('main-folder-files');
     const filesCount = document.getElementById('files-count');
     if (!mainFolderFiles) return;
 
-    // CRITICAL FIX #6: Use requestAnimationFrame for smooth DOM updates
     requestAnimationFrame(() => {
-        // Create snapshot of files BEFORE DOM changes
         const allFiles = [];
-        CLOUD_STATE.files.forEach((file, key) => {
-            allFiles.push(file);
-        });
+        CLOUD_STATE.files.forEach(file => allFiles.push(file));
         allFiles.sort((a, b) => a.filename.localeCompare(b.filename));
-        FILE_EXPLORER_RENDER.snapshot = allFiles;  // Store snapshot
 
-        // Batch DOM operations
         const fragment = document.createDocumentFragment();
 
         if (allFiles.length === 0) {
@@ -722,13 +459,11 @@ function renderFileExplorer() {
             }
         }
 
-        // Single DOM mutation (clear and insert batched fragment)
         mainFolderFiles.innerHTML = '';
         mainFolderFiles.appendChild(fragment);
     });
 }
 
-// Create file item element
 function createFileItem(folder, filename) {
     const item = document.createElement('div');
     item.className = 'file-item';
@@ -786,11 +521,10 @@ function getFileIconClass(ext) {
     }
 }
 
-// Download file function
 function downloadFile(folder, filename) {
     let content;
-
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+    
     if (`${folder}/${filename}` === activeKey && editor) {
         content = editor.getValue();
     } else {
@@ -804,81 +538,52 @@ function downloadFile(folder, filename) {
 
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-
     URL.revokeObjectURL(url);
-
     Logger.info(`Downloaded ${filename}`);
 }
 
-// Open a file with multi-tier caching
+// ==================== OPEN FILE - FIXED SYNC ====================
 async function openFile(folder, filename, options = {}) {
     cancelPendingAutosave();
 
-    // CRITICAL FIX #2: Fire-and-forget save (don't block file switch)
-    // Save happens in background, file switch is instant
-    if (!options.skipSave && isUserLoggedIn) {
-        // Start save in background WITHOUT awaiting
+    // Save current file before switching
+    if (!options.skipSave && isUserLoggedIn && editor) {
+        const currentCode = editor.getValue();
+        const currentKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const [currentFolder, currentFilename] = currentKey.split('/');
+        setLocalDraftImmediate(currentFolder, currentFilename, currentCode);
+        
+        // Fire-and-forget background save
         forceSaveActiveFile('fileSwitch').catch(e => {
-            Logger.warn('Background save during file switch failed: ' + e.message);
+            Logger.warn('Background save failed: ' + e.message);
         });
-        // Continue immediately to file switch - don't wait for save
     }
 
     const key = getFileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
 
-    // TIER 1: Check memory cache first
-    const cached = getCachedFileContent(folder, filename);
-    if (cached) {
-        if (editor) {
-            editor.setValue(cached.content, -1);
-            editor.clearSelection();
-        }
-        if (cached.hash) {
-            SAVE_STATE.authoritativeHash = cached.hash;
-        }
-        // BUGFIX #4a: Reset dirty flag when opening file from memory cache
-        DIRTY_FLAG.isDirty = false;
-        updateSaveIndicator();
-        highlightActiveFile();
-        Logger.info(`Opened ${filename} from memory cache (instant)`);
-        return;
-    }
-
-    // TIER 2: Try localStorage draft
-    const draft = getLocalDraft(folder, filename);
-    if (draft !== null) {
-        if (editor) {
-            editor.setValue(draft, -1);
-            editor.clearSelection();
-        }
-        setCachedFileContent(folder, filename, draft);
-        // BUGFIX #4b: Reset dirty flag when opening file from local draft
-        DIRTY_FLAG.isDirty = false;
-        updateSaveIndicator();
-        highlightActiveFile();
-        Logger.info(`Opened ${filename} from local draft`);
-        return;
-    }
-
-    // TIER 3: Fetch from cloud
+    // CRITICAL FIX: Clear all caches to force fresh fetch from cloud
+    clearCachedFileContent(folder, filename);
+    
+    // Always fetch from cloud if logged in
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                const response = await fetch(`/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`, {
-                    headers: {
-                        'Authorization': `Bearer ${session.access_token}`
+                const response = await fetch(
+                    `/files/read?folder=${encodeURIComponent(folder)}&filename=${encodeURIComponent(filename)}`,
+                    {
+                        headers: { 'Authorization': `Bearer ${session.access_token}` },
+                        cache: 'no-store' // CRITICAL: Force fresh fetch
                     }
-                });
+                );
 
                 if (response.ok) {
                     const content = await response.text();
@@ -891,37 +596,55 @@ async function openFile(folder, filename, options = {}) {
 
                     setLocalDraftImmediate(folder, filename, content);
                     setCachedFileContent(folder, filename, content, hash);
-
-                    // CRITICAL FIX #1: Update unified SAVE_STATE after cloud read
-                    SAVE_STATE.authoritativeHash = hash;
+                    SAVE_STATE.cloudHash = hash;
                     SAVE_STATE.lastSaveTime = Date.now();
-                    // BUGFIX #4c: Reset dirty flag when opening file from cloud
                     DIRTY_FLAG.isDirty = false;
 
                     metrics.storage.cloudReads++;
                     updateSaveIndicator();
                     highlightActiveFile();
-                    Logger.info(`[Cloud] READ ${filename} | reads=${metrics.storage.cloudReads}`);
+                    Logger.success(`Loaded ${filename} from cloud`);
+                    hideProgress();
+                    return;
+                } else if (response.status === 404) {
+                    // File doesn't exist in cloud yet - create it
+                    if (editor) {
+                        editor.setValue('', -1);
+                    }
+                    SAVE_STATE.cloudHash = null;
+                    DIRTY_FLAG.isDirty = false;
+                    highlightActiveFile();
                     hideProgress();
                     return;
                 } else {
                     const errData = await readErrorBody(response);
-                    const message = formatServerError(errData, response.status);
-                    Logger.warn(`Failed to load from cloud: ${message}`);
+                    Logger.warn(`Cloud read failed: ${formatServerError(errData, response.status)}`);
                 }
             }
         } catch (e) {
-            Logger.warn('Failed to load from cloud: ' + e.message);
+            Logger.warn('Cloud read error: ' + e.message);
         } finally {
             hideProgress();
         }
+    }
+
+    // Fallback to local draft
+    const draft = getLocalDraft(folder, filename);
+    if (draft !== null) {
+        if (editor) {
+            editor.setValue(draft, -1);
+            editor.clearSelection();
+        }
+        DIRTY_FLAG.isDirty = false;
+        highlightActiveFile();
+        Logger.info(`Opened ${filename} from local draft`);
+        return;
     }
 
     // Default: empty file
     if (editor) {
         editor.setValue('', -1);
     }
-    // BUGFIX #4d: Reset dirty flag when opening empty file
     DIRTY_FLAG.isDirty = false;
     highlightActiveFile();
 }
@@ -929,13 +652,9 @@ async function openFile(folder, filename, options = {}) {
 function highlightActiveFile() {
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
     const [folder, filename] = activeKey.split('/');
-
-    // Batch the DOM queries together for better performance
     const items = document.querySelectorAll('.file-item');
-    
     items.forEach(item => {
         const isActive = item.dataset.folder === folder && item.dataset.file === filename;
-        
         if (isActive) {
             item.classList.add('active');
         } else {
@@ -945,23 +664,16 @@ function highlightActiveFile() {
 }
 
 // ==================== CREATE/DELETE FILES ====================
-
 async function createNewFile(filename) {
     const inputName = filename || '';
-    if (!inputName || !inputName.trim()) {
-        return;
-    }
+    if (!inputName || !inputName.trim()) return;
 
     let cleanName = inputName.trim();
-
-    if (!cleanName.includes('.')) {
-        cleanName += '.cpp';
-    }
-
+    if (!cleanName.includes('.')) cleanName += '.cpp';
     cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
 
     if (!cleanName || cleanName === '.cpp') {
-        alert('Invalid file name. Please use letters, numbers, and underscores.');
+        alert('Invalid file name');
         return;
     }
 
@@ -969,27 +681,11 @@ async function createNewFile(filename) {
     const key = getFileKey(folder, cleanName);
 
     if (CLOUD_STATE.files.has(key)) {
-        alert(`File "${cleanName}" already exists.`);
+        alert(`File "${cleanName}" already exists`);
         return;
     }
 
-    const defaultContent = `// ${cleanName}
-// Created on ${new Date().toLocaleDateString()}
-
-#include <graphics.h>
-#include <conio.h>
-
-int main() {
-    int gd = DETECT, gm;
-    initgraph(&gd, &gm, "");
-    
-    // Your code here
-    
-    getch();
-    closegraph();
-    return 0;
-}
-`;
+    const defaultContent = `// ${cleanName}\n#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n    \n    // Your code here\n    \n    getch();\n    closegraph();\n    return 0;\n}\n`;
 
     setLocalDraft(folder, cleanName, defaultContent);
 
@@ -998,7 +694,6 @@ int main() {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
                 const hash = await computeSha256(defaultContent);
-
                 const response = await fetch('/files/save', {
                     method: 'POST',
                     headers: {
@@ -1009,104 +704,24 @@ int main() {
                 });
 
                 if (response.ok) {
-                    Logger.success(`Created new file: ${cleanName}`);
-                    await refreshCloudFiles();
+                    await refreshCloudFiles(true);
                     await openFile(folder, cleanName);
+                    Logger.success(`Created ${cleanName}`);
                     return;
                 }
             }
         } catch (e) {
-            Logger.warn('Failed to save new file to cloud: ' + e.message);
+            Logger.warn('Cloud create failed: ' + e.message);
         }
     }
 
     CLOUD_STATE.files.set(key, { folder, filename: cleanName });
     renderFileExplorer();
     await openFile(folder, cleanName);
-    Logger.success(`Created new file: ${cleanName}`);
-}
-
-async function createNewFolder() {
-    const folderName = prompt('Enter folder name:\n(e.g., projects, examples, homework)');
-
-    if (!folderName || !folderName.trim()) {
-        return;
-    }
-
-    let cleanName = folderName.trim().toLowerCase();
-    cleanName = cleanName.replace(/[^a-z0-9_-]/g, '');
-
-    if (!cleanName) {
-        alert('Invalid folder name. Please use letters, numbers, and underscores.');
-        return;
-    }
-
-    if (CLOUD_STATE.folders.has(cleanName)) {
-        alert(`Folder "${cleanName}" already exists.`);
-        return;
-    }
-
-    CLOUD_STATE.folders.add(cleanName);
-
-    const defaultFilename = 'main.cpp';
-    const defaultContent = `// ${cleanName}/${defaultFilename}
-// Created on ${new Date().toLocaleDateString()}
-
-#include <graphics.h>
-#include <conio.h>
-
-int main() {
-    int gd = DETECT, gm;
-    initgraph(&gd, &gm, "");
-    
-    // Your code here
-    
-    getch();
-    closegraph();
-    return 0;
-}
-`;
-
-    setLocalDraft(cleanName, defaultFilename, defaultContent);
-
-    if (isUserLoggedIn && supabaseClient) {
-        try {
-            const session = await getCachedSessionToken();
-            if (session?.access_token) {
-                const hash = await computeSha256(defaultContent);
-
-                const response = await fetch('/files/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                    },
-                    body: JSON.stringify({ folder: cleanName, filename: defaultFilename, content: defaultContent, hash })
-                });
-
-                if (response.ok) {
-                    Logger.success(`Created new folder: ${cleanName}`);
-                    await refreshCloudFiles();
-                    await openFile(cleanName, defaultFilename);
-                    return;
-                }
-            }
-        } catch (e) {
-            Logger.warn('Failed to create folder in cloud: ' + e.message);
-        }
-    }
-
-    const key = getFileKey(cleanName, defaultFilename);
-    CLOUD_STATE.files.set(key, { folder: cleanName, filename: defaultFilename });
-    renderFileExplorer();
-    await openFile(cleanName, defaultFilename);
-    Logger.success(`Created new folder: ${cleanName}`);
 }
 
 async function deleteFile(folder, filename) {
-    if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) {
-        return;
-    }
+    if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) return;
 
     const key = getFileKey(folder, filename);
 
@@ -1114,7 +729,7 @@ async function deleteFile(folder, filename) {
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                const response = await fetch('/files/delete', {
+                await fetch('/files/delete', {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1122,13 +737,9 @@ async function deleteFile(folder, filename) {
                     },
                     body: JSON.stringify({ folder, filename })
                 });
-
-                if (response.ok) {
-                    Logger.success(`Deleted ${filename}`);
-                }
             }
         } catch (e) {
-            Logger.warn('Failed to delete from cloud: ' + e.message);
+            Logger.warn('Cloud delete failed: ' + e.message);
         }
     }
 
@@ -1144,27 +755,19 @@ async function deleteFile(folder, filename) {
 }
 
 // ==================== SAVE INDICATOR ====================
-// CRITICAL FIX #4: Compare against authoritative cloud hash instead of localStorage
-
 function updateSaveIndicator() {
     if (!saveIndicator || !saveText) return;
 
-    const code = editor?.getValue() || '';
-    
-    // CRITICAL FIX #1: Use dirty flag (no hash computation on every keystroke)
-    // Fast path: check if code matches last confirmed server save using dirty flag
-    if (isUserLoggedIn && SAVE_STATE.authoritativeHash) {
-        const isDirty = DIRTY_FLAG.isDirty;
-        
+    const isDirty = DIRTY_FLAG.isDirty;
+
+    if (isUserLoggedIn && SAVE_STATE.cloudHash) {
         if (!isDirty) {
-            // Content hasn't changed since last save
             if (DIRTY_FLAG.lastDisplayedState !== 'saved') {
                 saveIndicator.classList.add('saved');
                 saveText.textContent = 'Saved to cloud';
                 DIRTY_FLAG.lastDisplayedState = 'saved';
             }
         } else {
-            // Content has changed
             if (DIRTY_FLAG.lastDisplayedState !== 'unsaved') {
                 saveIndicator.classList.remove('saved');
                 saveText.textContent = 'Unsaved changes';
@@ -1172,10 +775,10 @@ function updateSaveIndicator() {
             }
         }
     } else {
-        // For guests: check localStorage (synchronous, no blocking)
+        const code = editor?.getValue() || '';
         const savedCode = localStorage.getItem('tc_code') || '';
         const isSaved = code === savedCode;
-        
+
         if (isSaved && DIRTY_FLAG.lastDisplayedState !== 'saved-local') {
             saveIndicator.classList.add('saved');
             saveText.textContent = 'Saved locally';
@@ -1188,43 +791,27 @@ function updateSaveIndicator() {
     }
 }
 
-
-// ==================== SUPABASE AUTH - OPTIMIZED ====================
-
-// Track last auth event to prevent duplicate processing
-let lastAuthEvent = {
-    type: null,
-    timestamp: 0,
-    userId: null
-};
-
-const AUTH_EVENT_DEBOUNCE_MS = 1000; // Ignore duplicate events within 1 second
+// ==================== SUPABASE AUTH ====================
+let lastAuthEvent = { type: null, timestamp: 0, userId: null };
+const AUTH_EVENT_DEBOUNCE_MS = 1000;
 
 async function initSupabaseAuth() {
     try {
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
-            const errData = await readErrorBody(response);
-            const message = formatServerError(errData, response.status);
-            Logger.warn(`Auth not configured on server: ${message}`);
-            showStatus(`Auth unavailable: ${message}`, true, 6000);
+            Logger.warn('Auth not configured');
             return;
         }
 
         const config = await response.json();
-
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 
         script.onload = () => {
             supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-
-            Logger.info('Checking for existing Supabase session...');
             checkSession();
 
-            // Listen for auth state changes with intelligent filtering
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                // CRITICAL FIX #5: Improved auth event debouncing
                 const now = Date.now();
                 const isDuplicate = (
                     lastAuthEvent.type === event &&
@@ -1232,71 +819,87 @@ async function initSupabaseAuth() {
                     (now - lastAuthEvent.timestamp) < AUTH_EVENT_DEBOUNCE_MS
                 );
 
-                if (isDuplicate) {
-                    return; // Ignore duplicate event spam
-                }
+                if (isDuplicate) return;
 
-                lastAuthEvent = {
-                    type: event,
-                    timestamp: now,
-                    userId: session?.user?.id || null
-                };
-
-                Logger.debug(`Auth event: ${event}`);
+                lastAuthEvent = { type: event, timestamp: now, userId: session?.user?.id || null };
 
                 if (event === 'SIGNED_IN') {
                     if (session?.user) {
                         setCachedSession(session);
                         updateLoginUI(true, session.user);
-
-                        // Refresh files on initial sign-in
-                        refreshCloudFiles(true).then(() => {  // force=true for initial load
+                        
+                        // CRITICAL FIX: Pass display name to server
+                        updateLastLogin(session.user).catch(() => {});
+                        
+                        refreshCloudFiles(true).then(() => {
                             const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
                             const [folder, filename] = activeKey.split('/');
                             return openFile(folder, filename, { skipSave: true });
-                        }).catch(() => { });
+                        });
                     }
                 } else if (event === 'TOKEN_REFRESHED') {
-                    // CRITICAL FIX #5: IGNORE token refreshes (don't trigger file refresh)
-                    // Token refresh doesn't change file list, just update cache silently
                     if (session?.user) {
                         setCachedSession(session);
-                        Logger.debug('Token refreshed silently');
                     }
-                    return; // EXIT early - no file refresh needed
-                } else if (event === 'USER_UPDATED') {
-                    if (session?.user) {
-                        setCachedSession(session);
-                        updateLoginUI(true, session.user);
-                    }
+                    return;
                 } else if (event === 'INITIAL_SESSION') {
                     if (session?.user) {
                         setCachedSession(session);
                         updateLoginUI(true, session.user);
-
-                        // Load files on initial session
-                        refreshCloudFiles(true).then(() => {  // force=true for initial load
+                        
+                        // CRITICAL FIX: Pass display name to server
+                        updateLastLogin(session.user).catch(() => {});
+                        
+                        refreshCloudFiles(true).then(() => {
                             const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
                             const [folder, filename] = activeKey.split('/');
                             return openFile(folder, filename, { skipSave: true });
-                        }).catch(() => { });
+                        });
                     }
                 } else if (event === 'SIGNED_OUT') {
                     clearSessionCache();
                     updateLoginUI(false);
                 }
             });
-
-            Logger.info('Supabase auth initialized');
-        };
-
-        script.onerror = () => {
-            Logger.warn('Failed to load Supabase client from CDN');
         };
 
         document.head.appendChild(script);
     } catch (e) {
-        Logger.warn('Auth initialization failed: ' + e.message);
+        Logger.warn('Auth init failed: ' + e.message);
+    }
+}
+
+// CRITICAL FIX: Update last login with display name
+async function updateLastLogin(user) {
+    if (!user || !isUserLoggedIn || !supabaseClient) return;
+    
+    try {
+        const session = await getCachedSessionToken();
+        if (!session?.access_token) return;
+
+        // Extract display name from user metadata
+        const displayName = user.user_metadata?.full_name || 
+                           user.user_metadata?.name || 
+                           user.email?.split('@')[0] || 
+                           null;
+
+        const response = await fetch('/rest/v1/rpc/update_last_login', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                p_user_id: user.id,
+                p_display_name: displayName 
+            })
+        });
+
+        if (response.ok) {
+            Logger.info('Last login updated with display name');
+        }
+    } catch (e) {
+        Logger.warn('Update last login failed: ' + e.message);
     }
 }
 
@@ -1305,47 +908,38 @@ async function checkSession() {
 
     try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
-        if (error) {
-            Logger.warn('Session lookup error: ' + error.message);
-        }
         if (session?.user) {
-            Logger.info('Active session found');
             setCachedSession(session);
             updateLoginUI(true, session.user);
+            
+            // CRITICAL FIX: Update display name on session check
+            updateLastLogin(session.user).catch(() => {});
         } else {
-            Logger.info('No active session');
             updateLoginUI(false);
         }
     } catch (e) {
-        Logger.warn('Session check failed');
         updateLoginUI(false);
     }
 }
 
 async function signInWithGoogle() {
     if (!supabaseClient) {
-        alert('Authentication is not configured. Please try again later.');
+        alert('Authentication not configured');
         return;
     }
 
     try {
         const redirectTo = `${window.location.origin}${window.location.pathname}`;
-        Logger.info(`Starting Google sign-in (redirect: ${redirectTo})`);
-
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
-            options: {
-                redirectTo
-            }
+            options: { redirectTo }
         });
 
         if (error) {
-            Logger.error('Sign in failed: ' + error.message);
             alert('Sign in failed: ' + error.message);
         }
     } catch (e) {
-        Logger.error('Sign in error: ' + e.message);
-        alert('Sign in failed. Please try again.');
+        alert('Sign in failed');
     }
 }
 
@@ -1353,68 +947,22 @@ async function signOut() {
     if (!supabaseClient) return;
 
     try {
-        Logger.info('Signing out...');
-        await forceSaveActiveFile();
-
+        await forceSaveActiveFile('exit');
         clearAllFileCache();
         clearSessionCache();
 
         const { error } = await supabaseClient.auth.signOut();
-        if (error) {
-            Logger.error('Sign out failed: ' + error.message);
-        } else {
+        if (!error) {
             updateLoginUI(false);
-            Logger.info('Signed out successfully');
         }
     } catch (e) {
         Logger.error('Sign out error: ' + e.message);
     }
 }
 
-// Google Sign-In button click handler
 const googleSigninBtn = document.getElementById('google-signin-btn');
 if (googleSigninBtn) {
-    googleSigninBtn.addEventListener('click', async () => {
-        await signInWithGoogle();
-    });
+    googleSigninBtn.addEventListener('click', signInWithGoogle);
 }
 
-// CRITICAL FIX #6: Migrate existing drafts to new userId-namespaced format
-function migrateDraftsToUserNamespace() {
-    try {
-        const oldDrafts = [];
-        // Scan localStorage for old draft format (draft_folder_filename)
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('draft_') && !key.includes('draft_guest_') && !key.includes('draft_')) {
-                // This looks like an old format draft (single word prefix)
-                oldDrafts.push(key);
-            }
-        }
-        
-        // Migrate old drafts to guest namespace (user not logged in yet)
-        oldDrafts.forEach(oldKey => {
-            const content = localStorage.getItem(oldKey);
-            const parts = oldKey.replace('draft_', '').split('_');
-            if (parts.length >= 2) {
-                const filename = parts.pop();
-                const folder = parts.join('_');
-                const newKey = `draft_guest_${folder}_${filename}`;
-                localStorage.setItem(newKey, content);
-                localStorage.removeItem(oldKey);
-            }
-        });
-        
-        if (oldDrafts.length > 0) {
-            Logger.info(`Migrated ${oldDrafts.length} drafts to new namespace format`);
-        }
-    } catch (e) {
-        Logger.warn('Draft migration failed: ' + e.message);
-    }
-}
-
-// Initialize Cache & Auth
-loadCachedFileList();
 initSupabaseAuth();
-migrateDraftsToUserNamespace();
-initializeCacheCleanup(); // CRITICAL FIX #5: Start periodic cache cleanup
