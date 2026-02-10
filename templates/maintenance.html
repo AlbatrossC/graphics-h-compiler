@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance - Graphics.H OC</title>
+    <script src="static/analytics.js" async></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .icon {
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #666666;
+            margin-bottom: 2.5rem;
+        }
+
+        .timer {
+            background-color: #f8f8f8;
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .timer-label {
+            font-size: 0.8rem;
+            color: #888888;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .message-section {
+            text-align: left;
+        }
+
+        .message-section h2 {
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.875rem;
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            color: #1a1a1a;
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        textarea::placeholder {
+            color: #999999;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.875rem;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2a2a2a;
+        }
+
+        button:active {
+            background-color: #0a0a0a;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            text-align: center;
+            display: none;
+        }
+
+        .status-message.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-message.error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .status-message.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="38" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="4 4"/>
+                <path d="M40 20V40L52 46" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="40" cy="40" r="3" fill="#1a1a1a"/>
+                <path d="M25 52L28 49M52 28L55 25M55 52L52 49M28 28L25 25" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <h1>We'll be back soon</h1>
+        <p class="subtitle">The website is temporarily down for maintenance</p>
+
+        <div class="timer">
+            <div class="timer-label">Estimated Fix Time</div>
+            <div class="timer-display" id="timer">12:00:00</div>
+        </div>
+
+        <div class="message-section">
+            <h2>Send us a message</h2>
+            <textarea 
+                id="messageInput" 
+                placeholder="Let us know if you need anything urgent..."
+                maxlength="1000"
+            ></textarea>
+            <button id="sendButton" onclick="sendMessage()">Send Message</button>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Timer countdown (constant 12 hours)
+        const TWELVE_HOURS = 12 * 60 * 60;
+        let remainingSeconds = TWELVE_HOURS;
+
+        function updateTimer() {
+            const hours = Math.floor(remainingSeconds / 3600);
+            const minutes = Math.floor((remainingSeconds % 3600) / 60);
+            const seconds = remainingSeconds % 60;
+
+            const display = 
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+
+            document.getElementById('timer').textContent = display;
+
+            if (remainingSeconds > 0) {
+                remainingSeconds--;
+            } else {
+                remainingSeconds = TWELVE_HOURS;
+            }
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const statusMessage = document.getElementById('statusMessage');
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                showStatus('Please enter a message', 'error');
+                return;
+            }
+
+            sendButton.disabled = true;
+            sendButton.textContent = 'Sending...';
+
+            try {
+                const response = await fetch('/api/maintenance/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus('Message sent successfully!', 'success');
+                    messageInput.value = '';
+                } else {
+                    showStatus(data.error || 'Failed to send message', 'error');
+                }
+            } catch (error) {
+                showStatus('Failed to send message. Please try again.', 'error');
+            } finally {
+                sendButton.disabled = false;
+                sendButton.textContent = 'Send Message';
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type + ' visible';
+
+            setTimeout(() => {
+                statusMessage.classList.remove('visible');
+            }, 5000);
+        }
+
+        document.getElementById('messageInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+
+    
+</body>
+</html>

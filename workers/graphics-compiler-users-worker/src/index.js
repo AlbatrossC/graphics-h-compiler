@@ -241,6 +241,11 @@ export default {
         const url = new URL(request.url);
 
         try {
+            // Debug endpoint for troubleshooting auth
+            if (request.method === 'GET' && url.pathname === '/debug/auth') {
+                return await handleDebugAuth(request, env, responseHeaders);
+            }
+
             // Beacon save (no auth required - token in body)
             if (request.method === 'POST' && url.pathname === '/files/beacon-save') {
                 return await handleBeaconSave(request, env, responseHeaders, requestId);
@@ -290,6 +295,106 @@ export default {
         }
     },
 };
+
+// ==================== DEBUG HANDLER ====================
+async function handleDebugAuth(request, env, responseHeaders) {
+    const diagnostics = {
+        timestamp: new Date().toISOString(),
+        config: {
+            hasSupabaseUrl: !!env.SUPABASE_URL,
+            hasSupabaseAnonKey: !!env.SUPABASE_ANON_KEY,
+            hasJwtSecret: !!env.SUPABASE_JWT_SECRET,
+            supabaseUrlPreview: env.SUPABASE_URL ? env.SUPABASE_URL.substring(0, 30) + '...' : 'MISSING',
+            anonKeyPreview: env.SUPABASE_ANON_KEY ? env.SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'MISSING',
+        },
+        request: {
+            hasAuthHeader: request.headers.has('Authorization'),
+            authHeaderPreview: null,
+        }
+    };
+
+    const auth = request.headers.get('Authorization') || '';
+    if (auth.startsWith('Bearer ')) {
+        const token = auth.slice(7).trim();
+        diagnostics.request.authHeaderPreview = token.substring(0, 30) + '...';
+        
+        try {
+            const parts = token.split('.');
+            if (parts.length === 3) {
+                const payloadB64 = parts[1];
+                const payloadJson = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+                const payload = JSON.parse(payloadJson);
+                
+                diagnostics.tokenPayload = {
+                    sub: payload.sub ? payload.sub.substring(0, 20) + '...' : null,
+                    email: payload.email,
+                    exp: payload.exp,
+                    iat: payload.iat,
+                    expiresAt: new Date(payload.exp * 1000).toISOString(),
+                    issuedAt: new Date(payload.iat * 1000).toISOString(),
+                    isExpired: payload.exp ? (Math.floor(Date.now() / 1000) > payload.exp) : null,
+                };
+            }
+        } catch (e) {
+            diagnostics.tokenParseError = e.message;
+        }
+
+        if (env.SUPABASE_JWT_SECRET) {
+            try {
+                const localUser = await verifyJwtLocal(token, env.SUPABASE_JWT_SECRET);
+                diagnostics.localVerification = {
+                    success: !!localUser,
+                    userId: localUser?.id ? localUser.id.substring(0, 20) + '...' : null,
+                };
+            } catch (e) {
+                diagnostics.localVerification = {
+                    success: false,
+                    error: e.message,
+                };
+            }
+        } else {
+            diagnostics.localVerification = {
+                skipped: true,
+                reason: 'No JWT secret configured',
+            };
+        }
+
+        try {
+            const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1/user`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    apikey: env.SUPABASE_ANON_KEY,
+                },
+            });
+
+            diagnostics.remoteVerification = {
+                success: response.ok,
+                status: response.status,
+                statusText: response.statusText,
+            };
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                diagnostics.remoteVerification.error = errorText.substring(0, 200);
+            } else {
+                const user = await response.json();
+                diagnostics.remoteVerification.userId = user.id ? user.id.substring(0, 20) + '...' : null;
+                diagnostics.remoteVerification.email = user.email;
+            }
+        } catch (e) {
+            diagnostics.remoteVerification = {
+                success: false,
+                error: e.message,
+            };
+        }
+    } else {
+        diagnostics.request.authHeaderPreview = 'Not a Bearer token';
+    }
+
+    return jsonResponse(diagnostics, 200, responseHeaders);
+}
 
 // ==================== HANDLERS ====================
 async function handleBeaconSave(request, env, responseHeaders, requestId) {

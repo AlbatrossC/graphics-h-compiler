@@ -11,6 +11,15 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 VIDEOS_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'videos')
 os.makedirs(VIDEOS_FOLDER, exist_ok=True)
 
+# Maintenance mode check
+def is_maintenance_mode():
+    return os.getenv('MAINTENANCE_MODE', 'false').lower() == 'true'
+
+@app.before_request
+def check_maintenance():
+    if is_maintenance_mode() and request.path != '/maintenance.html' and not request.path.startswith('/api/maintenance'):
+        return send_from_directory('templates', 'maintenance.html')
+
 def get_missing_env(keys):
     missing = []
     for key in keys:
@@ -28,6 +37,10 @@ def index():
 @app.route('/compiler.html')
 def compiler():
     return send_from_directory('templates', 'compiler.html')
+
+@app.route('/maintenance.html')
+def maintenance():
+    return send_from_directory('templates', 'maintenance.html')
 
 # Static assets
 @app.route('/static/<path:path>')
@@ -186,6 +199,48 @@ def contact():
         
     except Exception as e:
         print(f'Contact error: {e}')
+        return jsonify({'error': 'Failed to send message'}), 500
+
+# Maintenance Message API
+@app.route('/api/maintenance/message', methods=['POST', 'OPTIONS'])
+def maintenance_message():
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response, 200
+
+    discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
+    if not discord_webhook_url:
+        return jsonify({'error': 'Server configuration error'}), 500
+
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        payload = {
+            'content': '🔧 Message from Maintenance Page',
+            'embeds': [{
+                'color': 0xff9900,
+                'fields': [
+                    {'name': 'Message', 'value': message[:1021] + '...' if len(message) > 1024 else message, 'inline': False}
+                ]
+            }]
+        }
+        
+        try:
+            req.post(discord_webhook_url, json=payload, timeout=5)
+        except:
+            pass
+        
+        return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
+        
+    except Exception as e:
+        print(f'Maintenance message error: {e}')
         return jsonify({'error': 'Failed to send message'}), 500
 
 # Error handlers
