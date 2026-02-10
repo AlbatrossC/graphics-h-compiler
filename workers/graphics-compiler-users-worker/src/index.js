@@ -121,6 +121,15 @@ export default {
         return jsonResponse({ status: 'ok' }, 200, responseHeaders);
       }
 
+      // *** NEW: Auth configuration endpoint ***
+      if (request.method === 'GET' && url.pathname === '/api/auth/config') {
+        return jsonResponse({
+          supabaseUrl: env.SUPABASE_URL,
+          supabaseAnonKey: env.SUPABASE_ANON_KEY,
+          storageUrl: '' // Empty string means same-origin
+        }, 200, responseHeaders);
+      }
+
       // Auth required for all other endpoints
       const { userId, token, userMetadata } = await withTimeout(
         authenticateRequest(request, env),
@@ -154,6 +163,11 @@ export default {
 
       if (request.method === 'GET' && url.pathname === '/user/info') {
         return await handleUserInfo(request, env, responseHeaders, userId, token);
+      }
+
+      // *** NEW: sendBeacon save endpoint for tab close ***
+      if (request.method === 'POST' && url.pathname === '/files/beacon-save') {
+        return await handleBeaconSave(request, env, responseHeaders);
       }
 
       return jsonError('not_found', 'Not found', 404, responseHeaders);
@@ -216,6 +230,58 @@ async function handleSave(request, env, responseHeaders, userId, token) {
 
   setCachedMetadata(userId, folder, filename, { id: existing?.id, file_hash: hash });
   return jsonResponse({ success: true, hash }, 200, responseHeaders);
+}
+
+// *** NEW: Beacon save handler for tab close ***
+async function handleBeaconSave(request, env, responseHeaders) {
+  try {
+    const body = await readJsonBody(request);
+    const folder = normalizeSegment(body.folder, 'folder');
+    const filename = normalizeSegment(body.filename, 'filename');
+    const content = typeof body.content === 'string' ? body.content : null;
+    const token = typeof body.token === 'string' ? body.token : null;
+
+    if (!content || !token) {
+      return jsonResponse({ success: false }, 400, responseHeaders);
+    }
+
+    // Verify token and get userId
+    const user = await verifyUser(env, token);
+    if (!user?.id) {
+      return jsonResponse({ success: false }, 401, responseHeaders);
+    }
+
+    const userId = user.id;
+    const hash = await computeSha256(content);
+    const fileSize = new TextEncoder().encode(content).length;
+
+    // Check if already saved
+    const existing = await getFileMetadata(env, token, folder, filename);
+    if (existing && existing.file_hash === hash) {
+      return jsonResponse({ success: true, skipped: true }, 200, responseHeaders);
+    }
+
+    // Save to R2
+    const r2Key = `${userId}/${folder}/${filename}`;
+    await env.USER_FILES_BUCKET.put(r2Key, content, {
+      httpMetadata: { contentType: 'text/plain; charset=utf-8' },
+    });
+
+    // Save to database
+    await upsertFileMetadata(env, token, {
+      id: existing?.id,
+      user_id: userId,
+      folder,
+      filename,
+      file_hash: hash,
+      file_size: fileSize,
+    });
+
+    return jsonResponse({ success: true }, 200, responseHeaders);
+  } catch (e) {
+    console.error('[BeaconSave] Error:', e);
+    return jsonResponse({ success: false }, 500, responseHeaders);
+  }
 }
 
 async function handleBatchSave(request, env, responseHeaders, userId, token, requestId) {
@@ -417,12 +483,13 @@ async function trackUserLogin(env, token, userId, userMetadata) {
     const email = userMetadata?.email || null;
     
     const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/track_user_login`;
-    await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         apikey: env.SUPABASE_ANON_KEY,
         'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ 
         p_user_id: userId,
@@ -430,6 +497,11 @@ async function trackUserLogin(env, token, userId, userMetadata) {
         p_email: email
       }),
     });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.log('[Tracking] Login tracking failed:', response.status, text);
+    }
   } catch (e) {
     console.log('[Tracking] Failed to track login:', e.message);
   }
@@ -438,15 +510,21 @@ async function trackUserLogin(env, token, userId, userMetadata) {
 async function incrementReadCounter(env, token, userId) {
   try {
     const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/rpc/increment_reads`;
-    await fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         apikey: env.SUPABASE_ANON_KEY,
         'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({ p_user_id: userId }),
     });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.log('[Tracking] Read increment failed:', response.status, text);
+    }
   } catch (e) {
     console.log('[Tracking] Failed to increment reads:', e.message);
   }
@@ -507,6 +585,9 @@ async function upsertFileMetadata(env, token, record) {
 
   await supabaseRequest(env, token, 'user_files', {
     method: 'POST',
+    headers: {
+      'Prefer': 'resolution=merge-duplicates'
+    },
     body: JSON.stringify({
       user_id: record.user_id,
       folder: record.folder,
@@ -552,6 +633,26 @@ async function getUserInfo(env, token, userId) {
   });
 
   return Array.isArray(data) && data.length ? data[0] : null;
+}
+
+// === SHA-256 HASH COMPUTATION ===
+async function computeSha256(content) {
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    // Fallback to simple hash
+    let hash = 0;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16);
+  }
 }
 
 // === UTILITIES ===
