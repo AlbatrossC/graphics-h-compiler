@@ -317,7 +317,7 @@ async function forceSaveActiveFile(trigger = 'idle') {
             const errData = await readErrorBody(response);
             const message = formatServerError(errData, response.status);
             Logger.warn(`[Autosave] ✗ Failed: ${message}`);
-            
+
             if (response.status === 401) {
                 clearSessionCache();
                 showStatus('Session expired. Please sign in again.', true, 5000);
@@ -336,7 +336,7 @@ let isTabVisible = !document.hidden;
 
 document.addEventListener('visibilitychange', () => {
     isTabVisible = !document.hidden;
-    
+
     if (!isTabVisible) {
         cancelPendingAutosave();
         Logger.debug('[Autosave] Paused - tab hidden');
@@ -350,7 +350,7 @@ document.addEventListener('visibilitychange', () => {
 
 function scheduleAutosave() {
     if (!isTabVisible) return; // Don't schedule if tab is hidden
-    
+
     if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
     if (CLOUD_STATE.autosaveTimer) clearTimeout(CLOUD_STATE.autosaveTimer);
 
@@ -441,7 +441,7 @@ async function refreshCloudFiles(force = false) {
             const errData = await readErrorBody(response);
             const message = formatServerError(errData, response.status);
             Logger.warn(`[Refresh] Failed: ${message}`);
-            
+
             if (response.status === 401) {
                 clearSessionCache();
             }
@@ -530,8 +530,8 @@ function createFileItem(folder, filename) {
                 </svg>
             </button>
             <button class="file-action-btn file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"></path>
                 </svg>
             </button>
         </div>
@@ -559,7 +559,7 @@ function getFileIconClass(ext) {
 function downloadFile(folder, filename) {
     let content;
     const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-    
+
     if (`${folder}/${filename}` === activeKey && editor) {
         content = editor.getValue();
     } else {
@@ -592,7 +592,7 @@ async function openFile(folder, filename, options = {}) {
         const currentKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [currentFolder, currentFilename] = currentKey.split('/');
         setLocalDraftImmediate(currentFolder, currentFilename, currentCode);
-        
+
         forceSaveActiveFile('fileSwitch').catch(e => {
             Logger.warn('[FileSwitch] Background save failed: ' + e.message);
         });
@@ -616,7 +616,7 @@ async function openFile(folder, filename, options = {}) {
         Logger.info(`Loaded ${filename} from cache`);
         return;
     }
-    
+
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
@@ -850,7 +850,7 @@ const AUTH_EVENT_DEBOUNCE_MS = 1000;
 async function initSupabaseAuth() {
     try {
         Logger.info('[Auth] Initializing...');
-        
+
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
             Logger.warn('[Auth] Configuration not available');
@@ -860,15 +860,15 @@ async function initSupabaseAuth() {
 
         const config = await response.json();
         Logger.success(`[Auth] Config loaded - ${config.supabaseUrl}`);
-        
+
         CLOUD_STATE.storageBaseUrl = config.storageUrl || '';
-        
+
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 
         script.onload = () => {
             Logger.success('[Auth] Supabase library loaded');
-            
+
             supabaseClient = supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
             checkSession();
 
@@ -889,7 +889,7 @@ async function initSupabaseAuth() {
                     if (session?.user) {
                         setCachedSession(session);
                         updateLoginUI(true, session.user);
-                        
+
                         refreshCloudFiles(true).then(() => {
                             const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
                             const [folder, filename] = activeKey.split('/');

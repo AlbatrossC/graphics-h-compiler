@@ -31,7 +31,7 @@
     --header-height: 56px;
     --layout-gap: 10px;
     --panel-radius: 8px;
-    
+
     /* Performance optimization */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.2s ease;
@@ -588,9 +588,12 @@ header {
 }
 
 @keyframes bounce {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-6px);
     }
@@ -849,6 +852,7 @@ header {
     0% {
         transform: translateX(-100%);
     }
+
     100% {
         transform: translateX(400%);
     }
@@ -882,6 +886,7 @@ header {
         opacity: 0;
         transform: translateY(-3px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -996,48 +1001,52 @@ header {
     gap: 8px;
 }
 
-.sidebar-header-left > span {
+.sidebar-header-left>span {
     color: var(--primary);
 }
 
+/* Sidebar Header Buttons */
 .sidebar-collapse-btn,
 .sidebar-action-btn {
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     color: var(--text-muted);
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
+    flex-shrink: 0;
     transition: all var(--transition-fast);
 }
 
 .sidebar-collapse-btn:hover,
 .sidebar-action-btn:hover {
     background: var(--vscode-line-bg);
+    border-color: var(--border-color);
     color: var(--primary);
+    transform: translateY(-1px);
 }
 
 .sidebar-collapse-btn svg,
 .sidebar-action-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
 }
 
 .sidebar-actions {
     display: flex;
-    gap: 3px;
+    gap: 6px;
     align-items: center;
 }
 
-/* Explorer Actions */
+/* Explorer Actions (New File) */
 .explorer-actions {
     display: flex;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -1046,28 +1055,21 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 8px 10px;
+    gap: 8px;
+    padding: 10px 12px;
     background: var(--vscode-line-bg);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-secondary);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
-.explorer-action-btn:hover {
-    background: var(--vscode-sidebar);
-    border-color: var(--primary);
-    color: var(--primary);
-    transform: translateY(-1px);
-}
-
 .explorer-action-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 }
 
 /* File Explorer */
@@ -1191,28 +1193,29 @@ header {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.8125rem;
     letter-spacing: -0.01em;
+    min-width: 0;
+    /* Ensure text truncation works in flex item */
 }
 
 .file-item.active .file-name {
     font-weight: 500;
 }
 
-/* File Actions */
+
+/* File Actions - Always Visible */
 .file-actions {
     display: flex;
     align-items: center;
-    gap: 3px;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-}
-
-.file-item:hover .file-actions {
+    gap: 4px;
     opacity: 1;
+    /* Always visible */
+    margin-left: auto;
+    padding-left: 8px;
 }
 
 .file-action-btn {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1223,6 +1226,7 @@ header {
     cursor: pointer;
     transition: all var(--transition-fast);
     padding: 0;
+    flex-shrink: 0;
 }
 
 .file-action-btn svg {
@@ -1696,7 +1700,8 @@ header {
 /* Mobile Responsive - Phones */
 @media (max-width: 768px) {
     :root {
-        --header-height: 90px; /* Two-row header */
+        --header-height: 90px;
+        /* Two-row header */
     }
 
     /* Two-row header layout */
@@ -1935,6 +1940,7 @@ header {
 
 /* Performance optimizations */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -1946,6 +1952,7 @@ header {
 
 /* Print styles */
 @media print {
+
     header,
     .sidebar-container,
     #terminal-wrapper {

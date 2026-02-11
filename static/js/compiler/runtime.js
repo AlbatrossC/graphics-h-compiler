@@ -85,15 +85,30 @@ document.getElementById('fullscreen-editor-btn').addEventListener('click', () =>
     }, 100);
 });
 
+const downloadTerminalBtn = document.getElementById('download-terminal-btn');
+const terminalZoomControls = document.getElementById('terminal-zoom-controls');
+
 document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
     isTerminalFullscreen = !isTerminalFullscreen;
 
     if (isTerminalFullscreen) {
         terminalWrapper.classList.add('fullscreen');
         editorWrapper.classList.add('hidden');
+        // Show zoom buttons in fullscreen
+        if (terminalZoomControls) {
+            terminalZoomControls.classList.remove('hidden');
+            terminalZoomControls.style.display = 'flex';
+        }
     } else {
         terminalWrapper.classList.remove('fullscreen');
         editorWrapper.classList.remove('hidden');
+        // Hide zoom buttons when not in fullscreen
+        if (terminalZoomControls) {
+            terminalZoomControls.classList.add('hidden');
+            terminalZoomControls.style.display = 'none';
+        }
+        // Reset zoom when exiting fullscreen
+        resetTerminalZoom();
     }
 
     // Force canvas resize after fullscreen toggle
@@ -104,6 +119,74 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
         }
     }, 100);
 });
+
+// ==================== TERMINAL ACTIONS: DOWNLOAD & ZOOM ====================
+
+document.getElementById('download-terminal-btn')?.addEventListener('click', () => {
+    const canvas = document.getElementById('dos-canvas');
+    if (!canvas) {
+        alert('Terminal is not active.');
+        return;
+    }
+
+    try {
+        // Create a high-quality capture
+        const dataUrl = canvas.toDataURL('image/png');
+
+        // Create timestamp for filename
+        const now = new Date();
+        const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+
+        const link = document.createElement('a');
+        link.download = `turbo-c-output-${timestamp}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (e) {
+        console.error('Failed to download image:', e);
+        alert('Failed to save image. The terminal might be empty or restricted.');
+    }
+});
+
+let currentTerminalZoom = 1.0;
+
+function updateTerminalZoom(change) {
+    const canvas = document.getElementById('dos-canvas');
+
+    if (!canvas) return;
+
+    // Calculate new zoom value
+    let newZoom = currentTerminalZoom + change;
+
+    // Limits: Min 0.5 (50%), Max 3.0 (300%)
+    if (newZoom < 0.5) newZoom = 0.5;
+    if (newZoom > 3.0) newZoom = 3.0;
+
+    currentTerminalZoom = newZoom;
+
+    // Apply zoom
+    canvas.style.transform = `scale(${currentTerminalZoom})`;
+    canvas.style.transformOrigin = 'center center';
+    canvas.style.transition = 'transform 0.2s ease';
+}
+
+function resetTerminalZoom() {
+    currentTerminalZoom = 1.0;
+    const canvas = document.getElementById('dos-canvas');
+    if (canvas) {
+        canvas.style.transform = 'scale(1)';
+    }
+}
+
+document.getElementById('increase-terminal-btn')?.addEventListener('click', () => {
+    updateTerminalZoom(0.1);
+});
+
+document.getElementById('decrease-terminal-btn')?.addEventListener('click', () => {
+    updateTerminalZoom(-0.1);
+});
+
 
 // ==================== KEYBOARD INPUT ISOLATION ====================
 
@@ -239,9 +322,12 @@ async function runProgram() {
         errorUpdateInterval = null;
     }
 
-    // Hide panel initially
+    // Hide panels and buttons initially
     outputPanel.classList.remove('visible');
     terminalWrapper.classList.remove('has-panel');
+    if (downloadTerminalBtn) {
+        downloadTerminalBtn.classList.add('hidden');
+    }
     lastErrorContent = '';
     outputContent.textContent = '';
 
@@ -384,6 +470,11 @@ PAUSE
             runBtn.disabled = false;
             runBtn.classList.remove('loading');
 
+            // Show download button
+            if (downloadTerminalBtn) {
+                downloadTerminalBtn.classList.remove('hidden');
+            }
+
             Logger.success('Program started successfully');
 
             setTimeout(() => {
@@ -453,11 +544,11 @@ window.addEventListener('beforeunload', (event) => {
 
             // Create blob with JSON content type
             const blob = new Blob([payload], { type: 'application/json' });
-            
+
             // Get token for Authorization header simulation
             // Note: sendBeacon doesn't support custom headers, so we use fetch with keepalive
             const token = sessionCache.accessToken;
-            
+
             if (token) {
                 // Use fetch with keepalive instead of sendBeacon for Authorization header support
                 fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
@@ -471,7 +562,7 @@ window.addEventListener('beforeunload', (event) => {
                 }).catch(() => {
                     // Silently fail - localStorage save already happened
                 });
-                
+
                 Logger.info('Tab close: Background save initiated');
             }
         } catch (e) {
@@ -530,7 +621,7 @@ if (sidebarToggle) {
         // Check if mobile (no activity bar visible)
         const activityBar = document.querySelector('.activity-bar');
         const isMobile = activityBar && window.getComputedStyle(activityBar).display === 'none';
-        
+
         if (isMobile) {
             // Mobile: toggle open class and overlay
             sidebar.classList.toggle('open');
@@ -643,7 +734,7 @@ if (newFileModal) {
             closeNewFileModal();
         }
     });
-    
+
     // Prevent modal content clicks from closing the modal
     const modalContent = newFileModal.querySelector('.modal');
     if (modalContent) {

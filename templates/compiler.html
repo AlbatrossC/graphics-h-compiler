@@ -181,9 +181,9 @@
                     </div>
                     <div class="sidebar-actions">
                         <button id="refresh-btn" class="sidebar-action-btn" title="Refresh Files">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
                             </svg>
                         </button>
                         <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Collapse Sidebar">
@@ -364,6 +364,26 @@
                     DOS Output
                 </div>
                 <div class="panel-actions">
+                    <button id="download-terminal-btn" class="panel-action-btn hidden" title="Download Screenshot">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                        <span>Save Image</span>
+                    </button>
+                    <div id="terminal-zoom-controls" class="resize-controls hidden" style="display: flex; gap: 2px;">
+                        <button id="decrease-terminal-btn" class="panel-action-btn" title="Zoom Out"
+                            style="padding: 0 8px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13H5v-2h14v2z" />
+                            </svg>
+                        </button>
+                        <button id="increase-terminal-btn" class="panel-action-btn" title="Zoom In"
+                            style="padding: 0 8px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                        </button>
+                    </div>
                     <button id="fullscreen-terminal-btn" class="panel-action-btn" title="Toggle Fullscreen">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
