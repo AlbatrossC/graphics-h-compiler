@@ -1447,72 +1447,42 @@ window.addEventListener('beforeunload', (event) => {
         // localStorage might be full, ignore
     }
 
-    // Check if content has changed since last cloud save
-    const currentContent = code;
-    const lastSavedContent = localStorage.getItem(`lastCloudSave_${folder}_${filename}`);
-
-    // If content is the same, no need to save
-    if (currentContent === lastSavedContent) {
-        return;
-    }
-
     // Try sendBeacon for guaranteed background save
-    if (navigator.sendBeacon && supabaseClient) {
+    if (navigator.sendBeacon && supabaseClient && sessionCache.accessToken) {
         try {
-            // Get session synchronously from localStorage cache if available
-            const sessionData = localStorage.getItem('sb-session');
-            let token = null;
+            const payload = JSON.stringify({
+                folder,
+                filename,
+                content: code
+            });
 
-            if (sessionData) {
-                try {
-                    const parsed = JSON.parse(sessionData);
-                    token = parsed?.access_token;
-                } catch (e) { }
-            }
-
+            // Create blob with JSON content type
+            const blob = new Blob([payload], { type: 'application/json' });
+            
+            // Get token for Authorization header simulation
+            // Note: sendBeacon doesn't support custom headers, so we use fetch with keepalive
+            const token = sessionCache.accessToken;
+            
             if (token) {
-                // CRITICAL FIX #8: Token in request body - Security consideration documented
-                // Why token is in body instead of Authorization header:
-                // - navigator.sendBeacon() does NOT support custom headers
-                // - This is a trade-off for UX: guarantees save on tab close
-                // 
-                // SECURITY: This is an ACCEPTED RISK because:
-                // 1. Server ALWAYS re-verifies token locally (verifyJwtLocal)
-                // 2. Server recomputes content hash - prevents token swapping attacks
-                // 3. Token is short-lived (1 hour expiry)
-                // 4. HTTPS-only transmission prevents interception
-                //
-                // Alternatives considered (rejected):
-                // - Skip save on tab close: User data loss (unacceptable)
-                // - Use fetch() without keepalive: Not guaranteed after tab closes
-                // - Store token elsewhere: Would require separate token endpoint (complexity)
-                //
-                // The risk of token exposure is FAR lower than data loss from missing saves
-                const payload = JSON.stringify({
-                    folder,
-                    filename,
-                    content: code,
-                    token: token // Token included to enable sendBeacon usage
+                // Use fetch with keepalive instead of sendBeacon for Authorization header support
+                fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: payload,
+                    keepalive: true // Ensures request completes even after tab closes
+                }).catch(() => {
+                    // Silently fail - localStorage save already happened
                 });
-
-                // sendBeacon is fire-and-forget, will complete even after tab closes
-                const sent = navigator.sendBeacon('/files/beacon-save', payload);
-                if (sent) {
-                    Logger.info('Tab close: sendBeacon fired for background save');
-                }
+                
+                Logger.info('Tab close: Background save initiated');
             }
         } catch (e) {
-            // sendBeacon failed, but localStorage save already happened
+            // Beacon failed, but localStorage save already happened
         }
     }
-
-    // Only show warning if there are significant unsaved changes AND last save was long ago
-    const lastSaveTime = CLOUD_STATE.lastSavedAt || 0;
-    const timeSinceLastSave = Date.now() - lastSaveTime;
-    const significantDelay = 5 * 60 * 1000; // 5 minutes
-
-    // Don't show warning - rely on localStorage + sendBeacon protection
-    // This provides smooth UX while still protecting user's work
 });
 
 // ==================== RESPONSIVE HANDLING ====================
@@ -2127,20 +2097,22 @@ async function forceSaveActiveFile(trigger = 'idle') {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${session.access_token}`
             },
-            body: JSON.stringify({ folder, filename, content: code, hash })
+            body: JSON.stringify({ folder, filename, content: code })
         });
 
         if (response.ok) {
             const result = await response.json();
             const duration = Date.now() - startTime;
 
-            SAVE_STATE.cloudHash = hash;
+            // Trust backend hash
+            const backendHash = result.hash || hash;
+            SAVE_STATE.cloudHash = backendHash;
             SAVE_STATE.lastSaveTime = Date.now();
             CLOUD_STATE.lastSavedAt = Date.now();
             DIRTY_FLAG.isDirty = false;
 
             setLocalDraftImmediate(folder, filename, code);
-            setCachedFileContent(folder, filename, code, hash);
+            setCachedFileContent(folder, filename, code, backendHash);
             updateSaveIndicator();
 
             metrics.autosave.executed++;
@@ -2158,7 +2130,6 @@ async function forceSaveActiveFile(trigger = 'idle') {
             Logger.warn(`[Autosave] ✗ Failed: ${message}`);
             
             if (response.status === 401) {
-                // Session expired, clear cache and trigger re-auth
                 clearSessionCache();
                 showStatus('Session expired. Please sign in again.', true, 5000);
             }
@@ -2171,7 +2142,26 @@ async function forceSaveActiveFile(trigger = 'idle') {
     }
 }
 
+// Tab visibility tracking
+let isTabVisible = !document.hidden;
+
+document.addEventListener('visibilitychange', () => {
+    isTabVisible = !document.hidden;
+    
+    if (!isTabVisible) {
+        cancelPendingAutosave();
+        Logger.debug('[Autosave] Paused - tab hidden');
+    } else {
+        if (DIRTY_FLAG.isDirty && isUserLoggedIn) {
+            scheduleAutosave();
+            Logger.debug('[Autosave] Resumed - tab visible');
+        }
+    }
+});
+
 function scheduleAutosave() {
+    if (!isTabVisible) return; // Don't schedule if tab is hidden
+    
     if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
     if (CLOUD_STATE.autosaveTimer) clearTimeout(CLOUD_STATE.autosaveTimer);
 
@@ -2422,7 +2412,21 @@ async function openFile(folder, filename, options = {}) {
     const key = getFileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
 
-    clearCachedFileContent(folder, filename);
+    // Check content cache first
+    const cached = getCachedFileContent(folder, filename);
+    if (cached) {
+        if (editor) {
+            editor.setValue(cached.content, -1);
+            editor.clearSelection();
+        }
+        SAVE_STATE.cloudHash = cached.hash;
+        SAVE_STATE.lastSaveTime = Date.now();
+        DIRTY_FLAG.isDirty = false;
+        updateSaveIndicator();
+        highlightActiveFile();
+        Logger.info(`Loaded ${filename} from cache`);
+        return;
+    }
     
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
@@ -2437,7 +2441,9 @@ async function openFile(folder, filename, options = {}) {
 
                 if (response.ok) {
                     const content = await response.text();
-                    const hash = await computeSha256(content);
+                    // Trust backend hash from ETag if available
+                    const etag = response.headers.get('ETag');
+                    const hash = etag || (await computeSha256(content));
 
                     if (editor) {
                         editor.setValue(content, -1);
@@ -2457,7 +2463,6 @@ async function openFile(folder, filename, options = {}) {
                     hideProgress();
                     return;
                 } else if (response.status === 404) {
-                    // New file - start with empty content
                     if (editor) {
                         editor.setValue('', -1);
                     }
@@ -2545,7 +2550,6 @@ async function createNewFile(filename) {
         try {
             const session = await getCachedSessionToken();
             if (session?.access_token) {
-                const hash = await computeSha256(defaultContent);
                 const saveUrl = `${CLOUD_STATE.storageBaseUrl}/files/save`;
                 const response = await fetch(saveUrl, {
                     method: 'POST',
@@ -2553,7 +2557,7 @@ async function createNewFile(filename) {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${session.access_token}`
                     },
-                    body: JSON.stringify({ folder, filename: cleanName, content: defaultContent, hash })
+                    body: JSON.stringify({ folder, filename: cleanName, content: defaultContent })
                 });
 
                 if (response.ok) {
@@ -2602,6 +2606,7 @@ async function deleteFile(folder, filename) {
 
     CLOUD_STATE.files.delete(key);
     clearLocalDraft(folder, filename);
+    clearCachedFileContent(folder, filename);
 
     if (CLOUD_STATE.activeFileKey === key) {
         CLOUD_STATE.activeFileKey = 'main/main.cpp';
@@ -2657,7 +2662,6 @@ async function initSupabaseAuth() {
     try {
         Logger.info('[Auth] Initializing...');
         
-        // Fetch auth configuration
         const response = await fetch('/api/auth/config');
         if (!response.ok) {
             Logger.warn('[Auth] Configuration not available');
@@ -2668,10 +2672,8 @@ async function initSupabaseAuth() {
         const config = await response.json();
         Logger.success(`[Auth] Config loaded - ${config.supabaseUrl}`);
         
-        // Set storage base URL
         CLOUD_STATE.storageBaseUrl = config.storageUrl || '';
         
-        // Load Supabase client library
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
 
@@ -2798,6 +2800,5 @@ if (googleSigninBtn) {
     googleSigninBtn.addEventListener('click', signInWithGoogle);
 }
 
-// Initialize auth on load
 initSupabaseAuth();
 

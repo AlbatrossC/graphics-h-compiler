@@ -494,7 +494,7 @@ window.addEventListener('orientationchange', () => {
     setTimeout(handleResize, 300);
 });
 
-// ==================== SIDEBAR FUNCTIONALITY ====================
+// ==================== SIDEBAR FUNCTIONALITY - FIXED ====================
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
 const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -524,11 +524,28 @@ let isUserLoggedIn = false;
 let currentUser = null;
 let supabaseClient = null;
 
-// Mobile toggle
+// FIXED: Mobile AND desktop toggle
 if (sidebarToggle) {
     sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        sidebarOverlay.classList.toggle('active');
+        // Check if mobile (no activity bar visible)
+        const activityBar = document.querySelector('.activity-bar');
+        const isMobile = activityBar && window.getComputedStyle(activityBar).display === 'none';
+        
+        if (isMobile) {
+            // Mobile: toggle open class and overlay
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        } else {
+            // Desktop: toggle collapsed class
+            sidebar.classList.toggle('collapsed');
+            // Resize editor after collapse animation
+            setTimeout(() => {
+                if (editor) {
+                    editor.resize();
+                    editor.renderer.updateFull();
+                }
+            }, 350);
+        }
     });
 }
 
@@ -587,7 +604,10 @@ function openNewFileModal() {
     if (!newFileModal || !newFileInput) return;
     newFileModal.classList.remove('hidden');
     newFileInput.value = '';
-    newFileInput.focus();
+    // Add small delay before focus to ensure modal is visible
+    setTimeout(() => {
+        newFileInput.focus();
+    }, 100);
 }
 
 function closeNewFileModal() {
@@ -615,12 +635,22 @@ if (newFileClose) {
     });
 }
 
+// FIXED: Modal click handler to allow typing
 if (newFileModal) {
     newFileModal.addEventListener('click', (e) => {
+        // Only close if clicking the overlay background, not the modal content
         if (e.target === newFileModal) {
             closeNewFileModal();
         }
     });
+    
+    // Prevent modal content clicks from closing the modal
+    const modalContent = newFileModal.querySelector('.modal');
+    if (modalContent) {
+        modalContent.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
 }
 
 if (newFileInput) {
