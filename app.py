@@ -1,14 +1,13 @@
-from flask import Flask, send_file, send_from_directory, jsonify, request
-from dotenv import load_dotenv
-import requests as req
+from flask import Flask, send_from_directory, jsonify
 import os
-
-load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-VIDEOS_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'videos')
-os.makedirs(VIDEOS_FOLDER, exist_ok=True)
+
+os.makedirs('static', exist_ok=True)
+os.makedirs('templates', exist_ok=True)
+os.makedirs('compiler-assets/libs', exist_ok=True)
+os.makedirs('compiler-assets/Demo_files', exist_ok=True)
 
 # Pages
 @app.route('/')
@@ -21,88 +20,36 @@ def index():
 def compiler():
     return send_from_directory('templates', 'compiler.html')
 
-# Static assets
+@app.route('/docs')
+@app.route('/docs.html')
+def docs():
+    return send_from_directory('templates', 'docs.html')
+
+
 @app.route('/static/<path:path>')
 def serve_static(path):
     return send_from_directory('static', path)
 
-@app.route('/libs/<path:filename>')
+
+@app.route('/compiler-assets/libs/<path:filename>')
 def serve_libs(filename):
     return send_from_directory('compiler-assets/libs', filename)
 
-# Serve compiler assets (demos, zip files) for offline mode
-@app.route('/compiler-assets/<path:filepath>')
-def serve_compiler_assets(filepath):
-    return send_from_directory('compiler-assets', filepath)
+
+@app.route('/compiler-assets/Demo_files/<path:filename>')
+def serve_demos(filename):
+    return send_from_directory('compiler-assets/Demo_files', filename)
 
 
-# Video API
-@app.route('/api/video/<path:filename>')
-def get_video(filename):
-    video_path = os.path.join(VIDEOS_FOLDER, filename)
-    
-    if not os.path.abspath(video_path).startswith(os.path.abspath(VIDEOS_FOLDER)):
-        return jsonify({'error': 'File not found'}), 404
-    
-    if not os.path.exists(video_path):
-        return jsonify({'error': 'Video not found'}), 404
-    
-    mime_types = {'.webm': 'video/webm', '.mkv': 'video/x-matroska'}
-    ext = os.path.splitext(filename)[1]
-    mime_type = mime_types.get(ext, 'video/mp4')
-    
-    return send_file(video_path, mimetype=mime_type)
+@app.route('/tc-zip')
+def serve_tc_zip():
+    zip_path = os.path.join('compiler-assets', 'zip-files', 'tc-v1.zip')
+    if os.path.exists(zip_path):
+        return send_from_directory('compiler-assets/zip-files', 'tc-v1.zip', 
+                                    mimetype='application/zip')
+    return jsonify({'error': 'TC ZIP not found'}), 404
 
-# Contact API
-@app.route('/api/contact', methods=['POST', 'OPTIONS'])
-def contact():
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-        return response, 200
 
-    discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
-    if not discord_webhook_url:
-        return jsonify({'error': 'Server configuration error'}), 500
-
-    try:
-        data = request.get_json()
-        email = data.get('email', '').strip()
-        message = data.get('message', '').strip()
-        name = data.get('name', '').strip() or 'Anonymous'
-        
-        if not email or not message:
-            return jsonify({'error': 'Email and message are required'}), 400
-        
-        if '@' not in email or '.' not in email:
-            return jsonify({'error': 'Invalid email format'}), 400
-        
-        payload = {
-            'content': 'New contact query for Graphics.H OC',
-            'embeds': [{
-                'color': 0x00ff88,
-                'fields': [
-                    {'name': 'Name', 'value': name, 'inline': False},
-                    {'name': 'Email', 'value': email, 'inline': False},
-                    {'name': 'Message', 'value': message[:1021] + '...' if len(message) > 1024 else message, 'inline': False}
-                ]
-            }]
-        }
-        
-        try:
-            req.post(discord_webhook_url, json=payload, timeout=5)
-        except:
-            pass
-        
-        return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
-        
-    except Exception as e:
-        print(f'Contact error: {e}')
-        return jsonify({'error': 'Failed to send message'}), 500
-
-# Error handlers
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Not found'}), 404

@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - graphics.h Compiler</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-light: #fafafa;
+            --text-dark: #0a0a0a;
+            --text-light: #fafafa;
+            --accent: #00ff88;
+            --accent-dark: #00cc6a;
+            --border-light: #e5e5e5;
+            --border-dark: #1a1a1a;
+            --code-bg-dark: #151515;
+            --code-bg-light: #f5f5f5;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.7;
+            transition: var(--transition)
+        }
+
+        body.light {
+            background: var(--bg-light);
+            color: var(--text-dark)
+        }
+
+        .mono {
+            font-family: 'Space Mono', monospace
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: var(--bg-dark);
+            border-bottom: 2px solid var(--border-dark);
+            transition: var(--transition)
+        }
+
+        body.light header {
+            background: var(--bg-light);
+            border-bottom: 2px solid var(--border-light)
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0.7rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: inherit
+        }
+
+        .logo .bracket {
+            color: var(--accent);
+            font-size: 1.2rem
+        }
+
+        nav {
+            display: flex;
+            gap: 1rem;
+            align-items: center
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid transparent;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit
+        }
+
+        .btn:hover {
+            transform: translateY(-2px)
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: 2px solid transparent
+        }
+
+        body.light .btn-icon {
+            border-color: var(--border-light)
+        }
+
+        body:not(.light) .btn-icon {
+            border-color: var(--border-dark)
+        }
+
+        .docs-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 5rem 2rem 4rem;
+            display: flex;
+            gap: 3rem
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 5rem;
+            width: 260px;
+            flex-shrink: 0;
+            max-height: calc(100vh - 6rem);
+            overflow-y: auto;
+            padding-right: 1rem
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-dark);
+            border-radius: 2px
+        }
+
+        body.light .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-light)
+        }
+
+        .sidebar-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-dark)
+        }
+
+        body.light .sidebar-title {
+            border-bottom-color: var(--border-light)
+        }
+
+        .toc-list {
+            list-style: none;
+            padding: 0
+        }
+
+        .toc-list li {
+            margin-bottom: 0.25rem
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            border-left: 2px solid transparent;
+            transition: var(--transition);
+            border-radius: 0 4px 4px 0
+        }
+
+        body.light .toc-list a {
+            color: rgba(0, 0, 0, 0.6)
+        }
+
+        .toc-list a:hover,
+        .toc-list a.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+            background: rgba(0, 255, 136, 0.05)
+        }
+
+        .toc-list .toc-sub {
+            padding-left: 1rem
+        }
+
+        .toc-list .toc-sub a {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.75rem
+        }
+
+        .doc-content {
+            flex: 1;
+            min-width: 0
+        }
+
+        .doc-content h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            line-height: 1.2
+        }
+
+        .doc-content .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.7;
+            margin-bottom: 3rem
+        }
+
+        .doc-content h2 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.6rem;
+            margin-top: 3.5rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-dark);
+            scroll-margin-top: 5rem
+        }
+
+        body.light .doc-content h2 {
+            border-bottom-color: var(--border-light)
+        }
+
+        .doc-content h3 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.2rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            scroll-margin-top: 5rem
+        }
+
+        .doc-content p {
+            margin-bottom: 1.25rem;
+            font-size: 1rem;
+            opacity: 0.85
+        }
+
+        .doc-content ul,
+        .doc-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem
+        }
+
+        .doc-content li {
+            margin-bottom: 0.5rem;
+            position: relative
+        }
+
+        .doc-content ul {
+            list-style: none;
+            padding-left: 1rem
+        }
+
+        .doc-content ul>li {
+            padding-left: 1.5rem
+        }
+
+        .doc-content ul>li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-weight: bold
+        }
+
+        .doc-content ol {
+            list-style: decimal
+        }
+
+        .doc-content ol>li {
+            padding-left: 0.5rem
+        }
+
+        .doc-content ol>li::marker {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-weight: bold
+        }
+
+        code {
+            font-family: 'Space Mono', monospace;
+            background: var(--code-bg-dark);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: var(--accent)
+        }
+
+        body.light code {
+            background: var(--code-bg-light);
+            color: #008f4c
+        }
+
+        pre {
+            background: var(--code-bg-dark);
+            border: 1px solid var(--border-dark);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8
+        }
+
+        body.light pre {
+            background: var(--code-bg-light);
+            border-color: var(--border-light)
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit
+        }
+
+        .info-box {
+            border: 2px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+            background: rgba(0, 255, 136, 0.04);
+            border-radius: 8px
+        }
+
+        .info-box strong {
+            color: var(--accent)
+        }
+
+        .warn-box {
+            border-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.04)
+        }
+
+        .warn-box strong {
+            color: #ffaa00
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem
+        }
+
+        th,
+        td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border: 1px solid var(--border-dark)
+        }
+
+        body.light th,
+        body.light td {
+            border-color: var(--border-light)
+        }
+
+        th {
+            background: var(--code-bg-dark);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent)
+        }
+
+        body.light th {
+            background: var(--code-bg-light)
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.04;
+            z-index: -1
+        }
+
+        body.light .bg-pattern {
+            opacity: 0.025
+        }
+
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, currentColor 2px, currentColor 3px), repeating-linear-gradient(90deg, transparent, transparent 2px, currentColor 2px, currentColor 3px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite
+        }
+
+        @keyframes gridMove {
+            to {
+                transform: translate(50px, 50px)
+            }
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")
+        }
+
+        @media(max-width:900px) {
+            .docs-layout {
+                flex-direction: column;
+                padding-top: 5rem
+            }
+
+            .sidebar {
+                position: relative;
+                top: 0;
+                width: 100%;
+                max-height: none;
+                border-bottom: 1px solid var(--border-dark);
+                padding-bottom: 1.5rem;
+                margin-bottom: 1.5rem
+            }
+
+            body.light .sidebar {
+                border-bottom-color: var(--border-light)
+            }
+
+            .doc-content h1 {
+                font-size: 2rem
+            }
+
+            .doc-content h2 {
+                font-size: 1.3rem
+            }
+        }
+
+        @media(max-width:768px) {
+            .header-content {
+                padding: 0.7rem 1rem
+            }
+
+            .docs-layout {
+                padding: 4.5rem 1rem 3rem
+            }
+
+            .btn-text {
+                display: none
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-pattern"></div>
+    <div class="noise-overlay"></div>
+
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo"><span class="bracket">&lt;</span><span>graphics.h</span><span
+                    class="bracket">/&gt;</span></a>
+            <nav>
+                <button class="btn btn-icon" onclick="toggleTheme()" title="Toggle theme">
+                    <svg class="theme-icon-light" style="display:none;width:20px;height:20px" viewBox="0 0 24 24"
+                        fill="currentColor">
+                        <path
+                            d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
+                    </svg>
+                    <svg class="theme-icon-dark" style="width:20px;height:20px" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+                <a href="/compiler.html" class="btn"><span class="btn-text">Open Compiler</span><svg
+                        style="width:16px;height:16px" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                    </svg></a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="docs-layout">
+        <aside class="sidebar">
+            <div class="sidebar-title">Table of Contents</div>
+            <ul class="toc-list">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a>
+                    <ul class="toc-sub">
+                        <li><a href="#tech-stack">Technology Stack</a></li>
+                        <li><a href="#file-structure">File Structure</a></li>
+                    </ul>
+                </li>
+                <li><a href="#interface">The Interface</a>
+                    <ul class="toc-sub">
+                        <li><a href="#header-bar">Header Bar</a></li>
+                        <li><a href="#code-editor">Code Editor</a></li>
+                        <li><a href="#dos-output">DOS Output</a></li>
+                        <li><a href="#error-panel">Error Panel</a></li>
+                    </ul>
+                </li>
+                <li><a href="#compilation">Compilation Workflow</a>
+                    <ul class="toc-sub">
+                        <li><a href="#compile-command">The Compile Command</a></li>
+                        <li><a href="#batch-script">The Batch Script</a></li>
+                        <li><a href="#progress-stages">Progress Stages</a></li>
+                    </ul>
+                </li>
+                <li><a href="#features">Features</a>
+                    <ul class="toc-sub">
+                        <li><a href="#demos">Demo Programs</a></li>
+                        <li><a href="#themes">Themes</a></li>
+                        <li><a href="#saving">Saving Code</a></li>
+                        <li><a href="#fullscreen">Fullscreen Mode</a></li>
+                    </ul>
+                </li>
+                <li><a href="#keyboard">Keyboard Shortcuts</a></li>
+                <li><a href="#caching">Caching System</a></li>
+                <li><a href="#offline">Offline Support</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+                <li><a href="#browser-support">Browser Support</a></li>
+            </ul>
+        </aside>
+
+        <main class="doc-content">
+            <h1>Compiler Documentation</h1>
+            <p class="subtitle">A comprehensive guide to the Online graphics.h Compiler.</p>
+
+            <!-- OVERVIEW -->
+            <h2 id="overview">Overview</h2>
+            <p>The Online graphics.h Compiler is a browser-based development environment that lets you write, compile,
+                and execute <code>graphics.h</code> C/C++ programs without any local installation. It emulates a full
+                Turbo C++ 3.0 environment using WebAssembly-powered DOS emulation, so the entire compilation and
+                execution pipeline runs client-side inside your browser.</p>
+            <div class="info-box">
+                <p><strong>Key Fact:</strong> There is no backend compilation server. Your code never leaves your
+                    browser. Everything -- from the text editor to the Turbo C++ compiler to the DOS graphics renderer
+                    -- runs 100% locally within the page.</p>
+            </div>
+
+            <!-- ARCHITECTURE -->
+            <h2 id="architecture">Architecture</h2>
+            <p>The compiler page is split into two main panels: the <strong>Ace Code Editor</strong> on the left and the
+                <strong>DOS Canvas</strong> (powered by JS-DOS) on the right. These are orchestrated by
+                <code>compiler.js</code>, which manages script loading, caching, compilation, keyboard focus, theme
+                toggling, and error detection.</p>
+            <pre><code>+--------------------------------------------------------------+
+|  Header: Home | Logo | Theme | Demo | Save | Compile & Run  |
++---------------------------+----------------------------------+
+|                           |                                  |
+|   Ace Code Editor         |   DOS Canvas (JS-DOS / DOSBox)   |
+|   - C++ syntax highlight  |   - Turbo C++ 3.0 execution      |
+|   - Autocompletion        |   - VGA graphics rendering       |
+|   - Line/char count       |   - Keyboard input capture       |
+|                           |   - Compilation error panel      |
++---------------------------+----------------------------------+</code></pre>
+
+            <h3 id="tech-stack">Technology Stack</h3>
+            <table>
+                <tr>
+                    <th>Layer</th>
+                    <th>Technology</th>
+                    <th>Purpose</th>
+                </tr>
+                <tr>
+                    <td>Code Editor</td>
+                    <td>Ace Editor v1.32.6</td>
+                    <td>Syntax highlighting, autocompletion, themes</td>
+                </tr>
+                <tr>
+                    <td>DOS Emulation</td>
+                    <td>JS-DOS 6.22 (DOSBox via Emscripten)</td>
+                    <td>WebAssembly-based DOSBox to run TCC.EXE</td>
+                </tr>
+                <tr>
+                    <td>Compiler</td>
+                    <td>Turbo C++ 3.0 (TCC.EXE)</td>
+                    <td>Compiles C/C++ code with graphics.lib</td>
+                </tr>
+                <tr>
+                    <td>Caching</td>
+                    <td>IndexedDB + localStorage</td>
+                    <td>Persists TC ZIP, code, and demo files</td>
+                </tr>
+                <tr>
+                    <td>Server</td>
+                    <td>Flask (Python)</td>
+                    <td>Serves static files and compiler assets</td>
+                </tr>
+                <tr>
+                    <td>Fonts</td>
+                    <td>JetBrains Mono (Google Fonts)</td>
+                    <td>Monospace font for the editor</td>
+                </tr>
+            </table>
+
+            <h3 id="file-structure">File Structure</h3>
+            <pre><code>graphics-h-compiler/
+  app.py                        # Flask server (routes, static files)
+  templates/
+    index.html                  # Landing page
+    compiler.html               # The compiler page (editor + DOS canvas)
+    docs.html                   # This documentation page
+  static/
+    compiler.css                # All compiler page styles
+    compiler.js                 # All compiler logic (1000+ lines)
+    favicon.ico
+  compiler-assets/
+    libs/                       # Local fallback JS libraries
+      js-dos.js, wdosbox.js, ace.js, mode-c_cpp.js, ...
+    Demo_files/                 # Demo C++ source files
+      graphics_demo.cpp, circle_pattern.cpp, ...
+    zip-files/
+      tc-v1.zip                 # Turbo C++ 3.0 compiler package</code></pre>
+
+            <!-- INTERFACE -->
+            <h2 id="interface">The Interface</h2>
+
+            <h3 id="header-bar">Header Bar</h3>
+            <p>The header bar contains all the primary controls, arranged left-to-right:</p>
+            <ul>
+                <li><strong>Home Button:</strong> Navigates back to the landing page (<code>index.html</code>).</li>
+                <li><strong>Logo:</strong> "Online graphics.h Compiler" -- centered. On mobile, it shortens to
+                    "graphics.h Compiler".</li>
+                <li><strong>Theme Toggle:</strong> Switches between Dark (Monokai) and Light (Textmate) themes. Saved to
+                    <code>localStorage</code>.</li>
+                <li><strong>Demo Selector:</strong> A dropdown labeled "Demo:" with four pre-loaded example programs.
+                    Selecting a demo replaces the editor content. Re-selecting the same demo forces a fresh reload from
+                    the server.</li>
+                <li><strong>Save Indicator:</strong> Shows "Saved" (green) or "Not Saved" (default). Updates in
+                    real-time as you type.</li>
+                <li><strong>Save Button:</strong> Manually saves the current code to <code>localStorage</code> under the
+                    key <code>tc_code</code>.</li>
+                <li><strong>Compile and Run Button:</strong> The primary action button. Initiates the full compilation
+                    and execution pipeline described below.</li>
+            </ul>
+
+            <h3 id="code-editor">Code Editor (Left Panel)</h3>
+            <p>The editor is powered by <strong>Ace Editor</strong> with C++ language mode. It includes:</p>
+            <ul>
+                <li><strong>Syntax Highlighting:</strong> C/C++ keywords, strings, comments, preprocessor directives are
+                    color-coded.</li>
+                <li><strong>Autocompletion:</strong> Triggered by typing or <code>Ctrl+Space</code>. Requires the
+                    <code>ext-language_tools</code> extension.</li>
+                <li><strong>Line Numbers:</strong> Visible gutter on the left with active line highlighting.</li>
+                <li><strong>Code Wrapping:</strong> Long lines wrap to fit the visible area.</li>
+                <li><strong>Editor Footer:</strong> Displays a live count of lines and characters in the current file.
+                </li>
+                <li><strong>Fullscreen Toggle:</strong> Expands the editor to fill the entire screen, hiding the DOS
+                    output panel. Toggle it again to return.</li>
+                <li><strong>Clear Button:</strong> Clears the entire editor content after a confirmation dialog.</li>
+            </ul>
+
+            <h3 id="dos-output">DOS Output (Right Panel)</h3>
+            <p>The right panel contains an HTML <code>&lt;canvas&gt;</code> element where DOSBox renders its output.
+                This is where you see the Turbo C++ compilation process, text output, and graphical output from
+                <code>graphics.h</code> programs.</p>
+            <ul>
+                <li><strong>Click to Interact:</strong> After compilation, a blocker overlay appears prompting you to
+                    click the canvas. This transfers keyboard focus from the editor to the DOS terminal so your key
+                    presses go to the running program.</li>
+                <li><strong>Escape to Return:</strong> Press <code>Escape</code> at any time to return keyboard focus to
+                    the code editor.</li>
+                <li><strong>Pixel-Perfect Rendering:</strong> The canvas uses <code>image-rendering: pixelated</code> to
+                    preserve the sharp pixel-art look of DOS graphics.</li>
+                <li><strong>Aspect Ratio:</strong> In fullscreen mode, <code>object-fit: contain</code> ensures the
+                    canvas scales proportionally without stretching.</li>
+            </ul>
+
+            <h3 id="error-panel">Compilation Error Panel</h3>
+            <p>If the Turbo C++ compiler detects errors, a panel slides up from the bottom of the DOS output area with
+                the full error text from <code>ERR.TXT</code>. The panel polls the virtual filesystem every 1 second
+                after a run starts.</p>
+            <ul>
+                <li><strong>Copy Errors:</strong> Copies the error text to your clipboard.</li>
+                <li><strong>Expand/Collapse:</strong> Toggles the panel between 50% and 100% height.</li>
+                <li><strong>Close:</strong> Dismisses the error panel entirely.</li>
+            </ul>
+
+            <!-- COMPILATION -->
+            <h2 id="compilation">Compilation Workflow</h2>
+            <p>When you click <strong>"Compile and Run"</strong>, the following sequence happens:</p>
+            <ol>
+                <li><strong>Validation:</strong> The editor content is checked. If it's empty, you get an alert.</li>
+                <li><strong>Cleanup:</strong> Any previous DOS instance is terminated. The error panel is hidden and
+                    reset.</li>
+                <li><strong>Initialize DOS:</strong> A new JS-DOS instance is created on the canvas. The
+                    <code>wdosbox.js</code> WebAssembly module is loaded (CDN first, local fallback).</li>
+                <li><strong>Load Compiler:</strong> The <code>tc-v1.zip</code> file (containing Turbo C++ 3.0) is
+                    fetched from cache (IndexedDB) or downloaded from <code>/tc-zip</code>. It is then extracted into
+                    the virtual DOS filesystem.</li>
+                <li><strong>Write Source Code:</strong> Your code from the editor is written to
+                    <code>/TURBOC3/BIN/USER.CPP</code> inside the virtual filesystem.</li>
+                <li><strong>Generate Batch Script:</strong> An <code>AUTOEXEC.BAT</code> is created to automate the
+                    compilation and execution.</li>
+                <li><strong>Execute:</strong> DOSBox boots and runs the batch script automatically.</li>
+                <li><strong>Monitor Errors:</strong> A 1-second interval begins polling
+                    <code>/TURBOC3/BIN/ERR.TXT</code> for compilation errors.</li>
+            </ol>
+
+            <h3 id="compile-command">The Compile Command</h3>
+            <p>The actual command that compiles your code inside DOS is:</p>
+            <pre><code>TCC -I..\INCLUDE -L..\LIB -n. USER.CPP ..\LIB\GRAPHICS.LIB > ERR.TXT</code></pre>
+            <table>
+                <tr>
+                    <th>Flag</th>
+                    <th>Meaning</th>
+                </tr>
+                <tr>
+                    <td><code>TCC</code></td>
+                    <td>Turbo C Compiler executable</td>
+                </tr>
+                <tr>
+                    <td><code>-I..\INCLUDE</code></td>
+                    <td>Path to header files (graphics.h, conio.h, etc.)</td>
+                </tr>
+                <tr>
+                    <td><code>-L..\LIB</code></td>
+                    <td>Path to library files for linking</td>
+                </tr>
+                <tr>
+                    <td><code>-n.</code></td>
+                    <td>Output the compiled .EXE to the current directory</td>
+                </tr>
+                <tr>
+                    <td><code>USER.CPP</code></td>
+                    <td>Your source code file</td>
+                </tr>
+                <tr>
+                    <td><code>..\LIB\GRAPHICS.LIB</code></td>
+                    <td>The BGI graphics library, linked explicitly</td>
+                </tr>
+                <tr>
+                    <td><code>&gt; ERR.TXT</code></td>
+                    <td>Redirect compiler output (errors/warnings) to a text file</td>
+                </tr>
+            </table>
+
+            <h3 id="batch-script">The AUTOEXEC.BAT Script</h3>
+            <p>This is the full batch file generated and injected into DOSBox on every compile:</p>
+            <pre><code>@ECHO OFF
+CD TURBOC3\BIN
+IF EXIST USER.EXE DEL USER.EXE
+IF EXIST ERR.TXT DEL ERR.TXT
+TCC -I..\INCLUDE -L..\LIB -n. USER.CPP ..\LIB\GRAPHICS.LIB > ERR.TXT
+IF EXIST USER.EXE GOTO SUCCESS
+CLS
+ECHO ========================================
+ECHO COMPILATION ERRORS:
+ECHO ========================================
+TYPE ERR.TXT
+ECHO.
+PAUSE
+EXIT
+:SUCCESS
+CLS
+USER.EXE
+PAUSE</code></pre>
+            <p>It first cleans up any previous build artifacts, then compiles. If <code>USER.EXE</code> is produced, it
+                runs it. Otherwise, it displays the error log.</p>
+
+            <h3 id="progress-stages">Progress Stages</h3>
+            <table>
+                <tr>
+                    <th>Progress</th>
+                    <th>State</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>0%</td>
+                    <td>Initializing</td>
+                    <td>Prepare the loading UI</td>
+                </tr>
+                <tr>
+                    <td>10-50%</td>
+                    <td>Loading Dependencies</td>
+                    <td>JS-DOS, Ace Editor, extensions, themes</td>
+                </tr>
+                <tr>
+                    <td>60%</td>
+                    <td>WDOSBOX</td>
+                    <td>CDN/local probe for DOSBox WebAssembly</td>
+                </tr>
+                <tr>
+                    <td>70%</td>
+                    <td>Loading Compiler</td>
+                    <td>Fetching tc-v1.zip from cache or server</td>
+                </tr>
+                <tr>
+                    <td>80%</td>
+                    <td>Writing Source</td>
+                    <td>Injecting USER.CPP into DOS filesystem</td>
+                </tr>
+                <tr>
+                    <td>90%</td>
+                    <td>Starting</td>
+                    <td>Launching AUTOEXEC.BAT in DOSBox</td>
+                </tr>
+                <tr>
+                    <td>100%</td>
+                    <td>Running</td>
+                    <td>Program is executing, loading overlay removed</td>
+                </tr>
+            </table>
+
+            <!-- FEATURES -->
+            <h2 id="features">Features</h2>
+
+            <h3 id="demos">Demo Programs</h3>
+            <p>Four pre-loaded demo programs are available from the dropdown in the header:</p>
+            <table>
+                <tr>
+                    <th>Demo</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>Graphics Demo</td>
+                    <td>Basic shapes (circle, rectangle), text output. Good first test.</td>
+                </tr>
+                <tr>
+                    <td>Circle Pattern</td>
+                    <td>Concentric circle pattern using loops.</td>
+                </tr>
+                <tr>
+                    <td>Bouncing Ball</td>
+                    <td>Animated ball with physics simulation using <code>delay()</code> and <code>cleardevice()</code>.
+                    </td>
+                </tr>
+                <tr>
+                    <td>Shooter Game</td>
+                    <td>A simple interactive shooting game demonstrating keyboard input.</td>
+                </tr>
+            </table>
+            <p>Demo files are cached in <code>localStorage</code> with a 7-day TTL. Selecting the same demo twice
+                triggers a force-reload that bypasses the cache.</p>
+
+            <h3 id="themes">Themes</h3>
+            <p>Click the moon/sun icon in the header to toggle between <strong>Dark</strong> and <strong>Light</strong>
+                mode. The preference persists across sessions via <code>localStorage</code>. The Ace Editor theme
+                changes in sync: Monokai for dark, Textmate for light.</p>
+
+            <h3 id="saving">Saving Code</h3>
+            <p>Your code is saved to <code>localStorage</code> under the key <code>tc_code</code>. You can save manually
+                with the Save button or <code>Ctrl+S</code>. When you revisit the page, if saved code exists, it is
+                automatically restored into the editor. Loading a demo clears the saved code.</p>
+
+            <h3 id="fullscreen">Fullscreen Mode</h3>
+            <p>Both the editor and the DOS output panel have a fullscreen toggle button (the expand icon in the panel
+                header). Activating fullscreen on one panel hides the other. Click the button again to exit fullscreen.
+            </p>
+
+            <!-- KEYBOARD SHORTCUTS -->
+            <h2 id="keyboard">Keyboard Shortcuts</h2>
+            <table>
+                <tr>
+                    <th>Shortcut</th>
+                    <th>Action</th>
+                    <th>Context</th>
+                </tr>
+                <tr>
+                    <td><code>Ctrl+Enter</code></td>
+                    <td>Compile and Run</td>
+                    <td>When editor is focused</td>
+                </tr>
+                <tr>
+                    <td><code>Ctrl+S</code></td>
+                    <td>Save code to browser</td>
+                    <td>When editor is focused</td>
+                </tr>
+                <tr>
+                    <td><code>Ctrl+F</code></td>
+                    <td>Find in editor</td>
+                    <td>Ace Editor built-in</td>
+                </tr>
+                <tr>
+                    <td><code>Ctrl+H</code></td>
+                    <td>Find and Replace</td>
+                    <td>Ace Editor built-in</td>
+                </tr>
+                <tr>
+                    <td><code>Escape</code></td>
+                    <td>Return focus to editor</td>
+                    <td>When DOS terminal is focused</td>
+                </tr>
+                <tr>
+                    <td>Click canvas</td>
+                    <td>Focus DOS terminal</td>
+                    <td>After compilation starts</td>
+                </tr>
+            </table>
+
+            <!-- CACHING -->
+            <h2 id="caching">Caching System</h2>
+            <p>The compiler uses a two-tier caching strategy to minimize downloads and enable offline support:</p>
+            <ul>
+                <li><strong>IndexedDB</strong> (<code>GraphicsHCompilerCacheLegacy</code> database): Stores the large
+                    <code>tc-v1.zip</code> compiler package (~50MB) as a Blob. Has a 7-day TTL. After the first
+                    download, subsequent "Compile and Run" actions load instantly from this cache.</li>
+                <li><strong>localStorage:</strong> Stores user code (<code>tc_code</code> key), demo file source code
+                    (prefixed <code>demo_cache_legacy_</code>), and theme preference (<code>theme</code> key).</li>
+            </ul>
+            <div class="info-box">
+                <p><strong>Performance Impact:</strong> First run: ~5-15 seconds (downloads compiler). Subsequent runs:
+                    ~1-3 seconds (loaded from cache).</p>
+            </div>
+
+            <!-- OFFLINE -->
+            <h2 id="offline">Offline Support</h2>
+            <p>Every external dependency (JS-DOS, Ace Editor, themes, language mode) has a CDN primary URL and a local
+                fallback in <code>/compiler-assets/libs/</code>. The script loader tries CDN first with a 5-second
+                timeout. If CDN fails, it automatically loads the local copy. This means the compiler works completely
+                offline after you've loaded the page at least once (provided the TC ZIP is cached in IndexedDB).</p>
+
+            <!-- TROUBLESHOOTING -->
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>"Graphics Error: BGI Error"</h3>
+            <p>Ensure your code initializes the graphics driver correctly with <code>initgraph()</code>. The environment
+                is pre-configured with BGI drivers in the standard Turbo C path. Use
+                <code>int gd = DETECT, gm; initgraph(&gd, &gm, "");</code> with an empty string for the driver path.</p>
+
+            <h3>Compilation Takes Too Long</h3>
+            <p>The first run after clearing your browser cache requires downloading the ~50MB compiler package.
+                Subsequent runs use the IndexedDB cache and should be fast. Ensure your internet connection is stable
+                for the initial download.</p>
+
+            <h3>Nothing Happens After Clicking Run</h3>
+            <p>Open the browser DevTools console (<code>F12</code>) and look for error messages prefixed with
+                <code>[Graphics.h Compiler]</code>. Common causes: ad blockers interfering with CDN script loading,
+                IndexedDB disabled in privacy settings, or WebAssembly not supported.</p>
+
+            <h3>Keyboard Not Working in DOS</h3>
+            <p>Click directly on the DOS canvas to transfer keyboard focus. A "Click to interact" overlay should appear.
+                After clicking, your key presses go to the DOS program. Press <code>Escape</code> to return focus to the
+                editor.</p>
+
+            <div class="warn-box">
+                <p><strong>Safari Users:</strong> Safari has limited WebAssembly memory (512MB max) and may fail for
+                    very large programs. Desktop Chrome or Firefox is recommended for the best experience.</p>
+            </div>
+
+            <!-- BROWSER SUPPORT -->
+            <h2 id="browser-support">Browser Support</h2>
+            <table>
+                <tr>
+                    <th>Browser</th>
+                    <th>Minimum Version</th>
+                    <th>Notes</th>
+                </tr>
+                <tr>
+                    <td>Chrome / Edge</td>
+                    <td>80+</td>
+                    <td>Recommended. Best performance.</td>
+                </tr>
+                <tr>
+                    <td>Firefox</td>
+                    <td>75+</td>
+                    <td>Recommended. Full support.</td>
+                </tr>
+                <tr>
+                    <td>Safari</td>
+                    <td>13.1+</td>
+                    <td>Works, but limited WebAssembly memory.</td>
+                </tr>
+                <tr>
+                    <td>Chrome Android</td>
+                    <td>80+</td>
+                    <td>Works. Smaller screen may limit usability.</td>
+                </tr>
+                <tr>
+                    <td>Mobile Safari</td>
+                    <td>13.4+</td>
+                    <td>Works. Performance may vary.</td>
+                </tr>
+            </table>
+            <p>Required browser features: <strong>WebAssembly</strong>, <strong>IndexedDB</strong>,
+                <strong>localStorage</strong>, <strong>Canvas API</strong>, <strong>Fetch API</strong>, and <strong>ES6+
+                    JavaScript</strong>.</p>
+        </main>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const b = document.body, isL = b.classList.toggle('light');
+            localStorage.setItem('theme', isL ? 'light' : 'dark');
+            document.querySelectorAll('.theme-icon-light').forEach(i => i.style.display = isL ? 'block' : 'none');
+            document.querySelectorAll('.theme-icon-dark').forEach(i => i.style.display = isL ? 'none' : 'block');
+        }
+        const st = localStorage.getItem('theme');
+        if (st === 'light') { document.body.classList.add('light'); document.querySelectorAll('.theme-icon-light').forEach(i => i.style.display = 'block'); document.querySelectorAll('.theme-icon-dark').forEach(i => i.style.display = 'none') }
+
+        // Active TOC highlight on scroll
+        const sections = document.querySelectorAll('h2[id],h3[id]');
+        const tocLinks = document.querySelectorAll('.toc-list a');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id });
+            tocLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current) });
+        });
+    </script>
+</body>
+
+</html>
