@@ -11,35 +11,42 @@ const CONFIG = {
     SCRIPTS: {
         'jsdos': {
             cdn: 'https://js-dos.com/6.22/current/js-dos.js',
-            local: '/compiler-assets/libs/js-dos.js'
+            local: ['/compiler-assets/libs/js-dos.js', '../compiler-assets/libs/js-dos.js']
         },
         'ace': {
             cdn: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.min.js',
-            local: '/compiler-assets/libs/ace.js'
+            local: ['/compiler-assets/libs/ace.js', '../compiler-assets/libs/ace.js']
         },
         'ace-mode': {
             cdn: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/mode-c_cpp.min.js',
-            local: '/compiler-assets/libs/mode-c_cpp.js'
+            local: ['/compiler-assets/libs/mode-c_cpp.js', '../compiler-assets/libs/mode-c_cpp.js']
         },
         'ace-theme-monokai': {
             cdn: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-monokai.min.js',
-            local: '/compiler-assets/libs/theme-monokai.js'
+            local: ['/compiler-assets/libs/theme-monokai.js', '../compiler-assets/libs/theme-monokai.js']
         },
         'ace-ext-language_tools': {
             cdn: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ext-language_tools.min.js',
-            local: '/compiler-assets/libs/ext-language_tools.js'
+            local: [
+                '/compiler-assets/libs/ext-language_tools.js',
+                '/compiler-assets/libs/ext-language_tools.min.js',
+                '/compiler-assets/libs/ext-language-tools.js',
+                '../compiler-assets/libs/ext-language_tools.js'
+            ]
         },
         'ace-theme-textmate': {
             cdn: 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/theme-textmate.min.js',
-            local: '/compiler-assets/libs/theme-textmate.js'
+            local: ['/compiler-assets/libs/theme-textmate.js', '../compiler-assets/libs/theme-textmate.js']
         }
     },
     WDOSBOX: {
         cdn: 'https://js-dos.com/6.22/current/wdosbox.js',
-        local: '/compiler-assets/libs/wdosbox.js'
+        local: ['/compiler-assets/libs/wdosbox.js', '../compiler-assets/libs/wdosbox.js']
     },
     CACHE_TTL: 7 * 24 * 60 * 60 * 1000
 };
+
+const OFFLINE_MODE = location.protocol === 'file:' || navigator.onLine === false;
 
 // ==================== LOGGER ====================
 
@@ -105,14 +112,31 @@ function loadScript(name, timeout = 5000) {
             });
         };
 
-        tryLoad(scriptConfig.cdn)
-            .then(resolve)
-            .catch(() => {
-                Logger.warn(`${name}: CDN failed, trying local...`);
-                tryLoad(scriptConfig.local, true)
-                    .then(resolve)
-                    .catch(reject);
-            });
+        const toArray = (value) => Array.isArray(value) ? value : [value];
+        const localSources = toArray(scriptConfig.local).filter(Boolean);
+        const sources = OFFLINE_MODE
+            ? localSources.map(src => ({ src, isFallback: true }))
+            : [{ src: scriptConfig.cdn, isFallback: false }, ...localSources.map(src => ({ src, isFallback: true }))];
+
+        let index = 0;
+        const tryNext = () => {
+            if (index >= sources.length) {
+                reject(new Error(`Failed to load ${name} from all sources`));
+                return;
+            }
+
+            const { src, isFallback } = sources[index++];
+
+            if (isFallback) {
+                Logger.warn(`${name}: Trying local source ${src}`);
+            }
+
+            tryLoad(src, isFallback)
+                .then(resolve)
+                .catch(() => tryNext());
+        };
+
+        tryNext();
     });
 }
 
@@ -131,8 +155,20 @@ async function loadAllScripts() {
 
         await waitForAce();
 
-        // Load Language Tools
-        await loadScript('ace-ext-language_tools');
+        // Load Language Tools if compatible with this Ace build
+        try {
+            const eventModule = ace && ace.require ? ace.require('ace/lib/event') : null;
+            if (eventModule && typeof eventModule.preventParentScroll === 'function') {
+                await loadScript('ace-ext-language_tools');
+                languageToolsAvailable = true;
+            } else {
+                Logger.warn('Ace language tools not compatible with this Ace build; skipping autocomplete');
+                languageToolsAvailable = false;
+            }
+        } catch (e) {
+            Logger.warn('Ace language tools failed to load; autocomplete disabled');
+            languageToolsAvailable = false;
+        }
 
         // Load Ace C++ Mode
         await loadScript('ace-mode');
@@ -177,6 +213,7 @@ let isEditorFullscreen = false;
 let isTerminalFullscreen = false;
 let isOutputExpanded = false;
 let keyboardEventBlocker = null;
+let languageToolsAvailable = false;
 
 // ==================== CACHING SYSTEM ====================
 
@@ -536,9 +573,7 @@ async function initializeEditor() {
     editor.session.setMode('ace/mode/c_cpp');
 
     editor.setShowPrintMargin(false);
-    editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
+    const editorOptions = {
         fontSize: '16px',
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
         highlightActiveLine: true,
@@ -546,7 +581,15 @@ async function initializeEditor() {
         tabSize: 4,
         useSoftTabs: true,
         wrap: true
-    });
+    };
+
+    if (languageToolsAvailable) {
+        editorOptions.enableBasicAutocompletion = true;
+        editorOptions.enableLiveAutocompletion = true;
+        editorOptions.enableSnippets = true;
+    }
+
+    editor.setOptions(editorOptions);
 
     await loadDefaultCode();
 
@@ -747,14 +790,24 @@ async function runProgram() {
         }
 
 
-        let wdosboxUrl = CONFIG.WDOSBOX.cdn;
-        try {
-            await fetch(wdosboxUrl, { method: 'HEAD' });
-            Logger.info('Using CDN WDOSBOX');
-        } catch (e) {
-            wdosboxUrl = CONFIG.WDOSBOX.local;
-            Logger.info('Using local WDOSBOX (offline mode)');
+        const wdosboxSources = OFFLINE_MODE
+            ? CONFIG.WDOSBOX.local
+            : [CONFIG.WDOSBOX.cdn, ...CONFIG.WDOSBOX.local];
+        const wdosboxCandidates = Array.isArray(wdosboxSources) ? wdosboxSources : [wdosboxSources];
+
+        let wdosboxUrl = wdosboxCandidates[0];
+        for (let i = 0; i < wdosboxCandidates.length; i++) {
+            const candidate = wdosboxCandidates[i];
+            try {
+                await fetch(candidate, { method: 'HEAD' });
+                wdosboxUrl = candidate;
+                break;
+            } catch (e) {
+                // Try next candidate
+            }
         }
+
+        Logger.info(`Using WDOSBOX source: ${wdosboxUrl}`);
 
         updateLoadingProgress(60);
 
