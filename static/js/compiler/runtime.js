@@ -194,6 +194,12 @@ let keyboardEventBlocker = null;
 
 function setupKeyboardBlocker() {
     keyboardEventBlocker = function (e) {
+        // Allow keyboard events through for input elements, textareas, and contenteditable
+        const tag = e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) {
+            return;
+        }
+
         if (!terminalFocused) {
             e.stopPropagation();
             e.stopImmediatePropagation();
@@ -220,15 +226,19 @@ function focusTerminal() {
 }
 
 function focusEditor() {
-    if (!editor) return;
-
     terminalFocused = false;
-    canvas.tabIndex = -1;
-    canvas.blur();
-    editor.focus();
+    if (canvas) {
+        canvas.tabIndex = -1;
+        canvas.blur();
+    }
+    if (editor) {
+        editor.focus();
+    }
     terminalWrapper.classList.remove('terminal-active');
     editorWrapper.classList.add('active');
-    keyboardBlocker.classList.add('active');
+    if (dosInstance) {
+        keyboardBlocker.classList.add('active');
+    }
 }
 
 keyboardBlocker.addEventListener('click', () => {
@@ -246,6 +256,20 @@ terminalWrapper.addEventListener('click', (e) => {
 editorWrapper.addEventListener('click', () => {
     focusEditor();
 });
+
+// CRITICAL FIX: Release terminal focus when clicking ANYWHERE outside the terminal
+// This prevents the DOS canvas from permanently capturing keyboard/mouse input
+document.addEventListener('click', (e) => {
+    if (!terminalFocused || !dosInstance) return;
+
+    // Check if the click is inside the terminal wrapper
+    const isInsideTerminal = terminalWrapper.contains(e.target);
+
+    // If clicking outside terminal, release focus
+    if (!isInsideTerminal) {
+        focusEditor();
+    }
+}, true);
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -681,76 +705,16 @@ if (refreshBtn) {
     });
 }
 
-// New File button
+// New File button - Uses native prompt() to bypass js-dos keyboard capture
 if (newFileBtn) {
     newFileBtn.addEventListener('click', () => {
         if (!isUserLoggedIn) {
             return;
         }
-        openNewFileModal();
-    });
-}
-
-function openNewFileModal() {
-    if (!newFileModal || !newFileInput) return;
-    newFileModal.classList.remove('hidden');
-    newFileInput.value = '';
-    // Add small delay before focus to ensure modal is visible
-    setTimeout(() => {
-        newFileInput.focus();
-    }, 100);
-}
-
-function closeNewFileModal() {
-    if (!newFileModal) return;
-    newFileModal.classList.add('hidden');
-}
-
-if (newFileCreate) {
-    newFileCreate.addEventListener('click', () => {
-        const filename = newFileInput ? newFileInput.value : '';
-        closeNewFileModal();
-        createNewFile(filename);
-    });
-}
-
-if (newFileCancel) {
-    newFileCancel.addEventListener('click', () => {
-        closeNewFileModal();
-    });
-}
-
-if (newFileClose) {
-    newFileClose.addEventListener('click', () => {
-        closeNewFileModal();
-    });
-}
-
-// FIXED: Modal click handler to allow typing
-if (newFileModal) {
-    newFileModal.addEventListener('click', (e) => {
-        // Only close if clicking the overlay background, not the modal content
-        if (e.target === newFileModal) {
-            closeNewFileModal();
-        }
-    });
-
-    // Prevent modal content clicks from closing the modal
-    const modalContent = newFileModal.querySelector('.modal');
-    if (modalContent) {
-        modalContent.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-    }
-}
-
-if (newFileInput) {
-    newFileInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            newFileCreate?.click();
-        } else if (e.key === 'Escape') {
-            closeNewFileModal();
+        // Use native browser prompt() - immune to js-dos keyboard capture
+        const filename = prompt('Enter a file name (e.g., mycode.cpp):\nOnly letters, numbers, dots, underscores, and dashes are allowed.');
+        if (filename && filename.trim()) {
+            createNewFile(filename.trim());
         }
     });
 }

@@ -473,11 +473,13 @@ header {
 .font-controls .panel-action-btn:last-child {
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
-    border-left: 1px solid var(--border-color); /* Ensure border separation */
+    border-left: 1px solid var(--border-color);
+    /* Ensure border separation */
 }
 
 .font-controls .panel-action-btn:hover {
-    z-index: 1; /* Bring border to front on hover */
+    z-index: 1;
+    /* Bring border to front on hover */
     border-color: var(--primary);
 }
 

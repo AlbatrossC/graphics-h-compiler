@@ -729,6 +729,16 @@ function highlightActiveFile() {
             item.classList.remove('active');
         }
     });
+
+    // Update the editor tab name to reflect the active file
+    const fileTab = document.getElementById('current-file-tab');
+    const fileTabName = document.getElementById('current-file-name');
+    if (fileTab) {
+        fileTab.dataset.file = filename;
+    }
+    if (fileTabName) {
+        fileTabName.textContent = filename;
+    }
 }
 
 // ==================== CREATE/DELETE FILES ====================
