@@ -24,10 +24,6 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
-    <!-- Preload critical JS resources -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.min.js" as="script" crossorigin>
-    <link rel="preload" href="https://js-dos.com/6.22/current/js-dos.js" as="script" crossorigin>
-
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation">
@@ -147,10 +143,7 @@
                 <span id="save-text">Not Saved</span>
             </div>
 
-            <!-- Status Message -->
-            <div id="status-message" class="status-message hidden">
-                <span id="status-text"></span>
-            </div>
+            <!-- Status Message Removed -->
 
             <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -333,6 +326,18 @@
                         </svg>
                         <span>Clear</span>
                     </button>
+                    <div class="font-controls">
+                        <button id="decrease-font-btn" class="panel-action-btn" title="Decrease Font Size">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13H5v-2h14v2z" />
+                            </svg>
+                        </button>
+                        <button id="increase-font-btn" class="panel-action-btn" title="Increase Font Size">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                        </button>
+                    </div>
                     <button id="fullscreen-editor-btn" class="panel-action-btn" title="Toggle Fullscreen">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />

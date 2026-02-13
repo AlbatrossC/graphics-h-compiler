@@ -307,11 +307,9 @@ async function runProgram() {
 
     if (dosInstance) {
         try {
-            metrics.runtime.runtimeReuseErrors++;
-            Logger.warn('[Run] Runtime already alive – reuse prevented');
             dosInstance.exit();
         } catch (e) {
-            Logger.warn('Error closing previous DOS instance');
+            // Ignore error when closing previous instance
         }
         dosInstance = null;
     }
@@ -356,9 +354,11 @@ async function runProgram() {
         updateLoadingProgress(60);
 
 
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
         Dos(canvas, {
             wdosboxUrl: wdosboxUrl,
-            cycles: "max",
+            cycles: isMobile ? "auto" : "max",
             autolock: false,
         }).ready(async (fs, main) => {
 

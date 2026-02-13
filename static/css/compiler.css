@@ -451,6 +451,36 @@ header {
     color: var(--danger);
 }
 
+.font-controls {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 0 4px;
+}
+
+.font-controls .panel-action-btn {
+    border-radius: 0;
+    padding: 0 8px;
+    width: 28px;
+}
+
+.font-controls .panel-action-btn:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-right: none;
+}
+
+.font-controls .panel-action-btn:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-left: 1px solid var(--border-color); /* Ensure border separation */
+}
+
+.font-controls .panel-action-btn:hover {
+    z-index: 1; /* Bring border to front on hover */
+    border-color: var(--primary);
+}
+
 #fullscreen-editor-btn:hover,
 #fullscreen-terminal-btn:hover {
     background: rgba(0, 255, 136, 0.1);

@@ -223,16 +223,50 @@ async function initializeEditor() {
 
     editor.session.setMode("ace/mode/c_cpp");
 
+    // Mobile detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
     editor.setShowPrintMargin(false);
+
+    // Default Font Size
+    let currentFontSize = parseInt(localStorage.getItem('editor_font_size')) || (isMobile ? 14 : 16);
+
+    // Apply basic settings
     editor.setOptions({
-        fontSize: "16px",
+        fontSize: `${currentFontSize}px`,
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        highlightActiveLine: true,
+        highlightActiveLine: !isMobile, // Disable on mobile for performance
         showGutter: true,
         tabSize: 4,
         useSoftTabs: true,
-        wrap: true
+        wrap: true,
+        behavioursEnabled: !isMobile, // Disable auto-pairing on mobile (can be annoying/slow)
+        animatedScroll: !isMobile,    // Disable smooth scrolling on mobile
+        displayIndentGuides: !isMobile, // Disable indent guides on mobile
+        showFoldWidgets: !isMobile    // Disable code folding widgets on mobile
     });
+
+    // Font Size Controls
+    const increaseFontBtn = document.getElementById('increase-font-btn');
+    const decreaseFontBtn = document.getElementById('decrease-font-btn');
+
+    if (increaseFontBtn && decreaseFontBtn) {
+        increaseFontBtn.addEventListener('click', () => {
+            currentFontSize += 1;
+            if (currentFontSize > 32) currentFontSize = 32;
+            editor.setFontSize(`${currentFontSize}px`);
+            localStorage.setItem('editor_font_size', currentFontSize);
+            Logger.info(`Font size increased to ${currentFontSize}px`);
+        });
+
+        decreaseFontBtn.addEventListener('click', () => {
+            currentFontSize -= 1;
+            if (currentFontSize < 10) currentFontSize = 10;
+            editor.setFontSize(`${currentFontSize}px`);
+            localStorage.setItem('editor_font_size', currentFontSize);
+            Logger.info(`Font size decreased to ${currentFontSize}px`);
+        });
+    }
 
     await loadDefaultCode();
 

@@ -44,7 +44,7 @@ initializeTheme();
 // ==================== LOGGER ====================
 const Logger = {
     prefix: '[Graphics.h Compiler]',
-    
+
     // Color codes for console output (using console.log %c formatting)
     colors: {
         info: '#7c8df0',      // Blue
@@ -208,8 +208,11 @@ const CLOUD_STATE = {
 };
 
 // ==================== AUTOSAVE CONFIG ====================
-const AUTOSAVE_DELAY_MS = 30000;           // 30 seconds cloud autosave interval
-const TYPING_DEBOUNCE_MS = 3000;           // Wait 3 seconds after typing stops before autosave timer
+// Global mobile detection
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+const AUTOSAVE_DELAY_MS = isMobile ? 60000 : 30000;           // 60s/30s cloud autosave interval
+const TYPING_DEBOUNCE_MS = isMobile ? 5000 : 3000;            // Wait 5s/3s after typing stops before autosave timer
 
 // ==================== FILE CONTENT CACHE ====================
 // Multi-tier caching: memory → localStorage draft → cloud (R2)

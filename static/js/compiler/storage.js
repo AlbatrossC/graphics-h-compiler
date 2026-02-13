@@ -98,7 +98,7 @@ function getFileKey(folder, filename) {
 
 // ==================== LOCAL DRAFT MANAGEMENT ====================
 const draftSaveTimers = new Map();
-const DRAFT_SAVE_DEBOUNCE_MS = 100;
+const DRAFT_SAVE_DEBOUNCE_MS = (typeof isMobile !== 'undefined' && isMobile) ? 500 : 100;
 
 function getDraftKey(folder, filename) {
     const userId = sessionCache.user?.id || 'guest';
@@ -162,12 +162,16 @@ function hideProgress() {
     }
 }
 
+// Status updates redirected to console/alert since UI element removed
 function showStatus(message, isError = false, duration = 3000) {
-    if (statusMessage && statusText) {
-        statusText.textContent = message;
-        statusMessage.classList.remove('hidden', 'error');
-        if (isError) statusMessage.classList.add('error');
-        setTimeout(() => statusMessage.classList.add('hidden'), duration);
+    if (isError) {
+        Logger.error(message);
+        // Only alert for session expiry or critical errors if needed
+        if (message.includes('Session expired')) {
+            alert(message);
+        }
+    } else {
+        Logger.info(message);
     }
 }
 
@@ -220,6 +224,7 @@ const autosaveMetrics = {
 };
 
 // ==================== SAVE FUNCTIONS ====================
+// ==================== SAVE FUNCTIONS ====================
 async function saveCode() {
     if (!editor) return;
 
@@ -230,20 +235,37 @@ async function saveCode() {
 
     setLocalDraftImmediate(folder, filename, code);
 
+    // Feedback on button
+    const saveBtn = document.getElementById('save-btn');
+    const originalText = saveBtn ? saveBtn.querySelector('.btn-text').textContent : 'Save';
+
+    function setButtonFeedback(text, isError = false) {
+        if (!saveBtn) return;
+        const btnText = saveBtn.querySelector('.btn-text');
+        if (btnText) btnText.textContent = text;
+
+        // Optional: change color? User didn't ask for color change, just message.
+        // But removing tick means text is the only indicator.
+
+        setTimeout(() => {
+            if (btnText) btnText.textContent = originalText;
+        }, 2000);
+    }
+
     if (isUserLoggedIn && supabaseClient) {
         showProgress();
         try {
             await forceSaveActiveFile('manual');
-            showStatus('✓ Saved to cloud!');
+            setButtonFeedback('Saved');
         } catch (e) {
-            showStatus('Save failed: ' + e.message, true);
+            setButtonFeedback('Error', true);
             Logger.warn('Cloud save error: ' + e.message);
         } finally {
             hideProgress();
         }
     } else {
         DIRTY_FLAG.isDirty = false;
-        showStatus('✓ Saved locally');
+        setButtonFeedback('Saved');
     }
 
     updateSaveIndicator();
