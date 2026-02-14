@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DOS Runner</title>
     <style>
-        html, body {
+        html,
+        body {
             margin: 0;
             width: 100%;
             height: 100%;
@@ -26,6 +28,7 @@
         }
     </style>
 </head>
+
 <body>
     <canvas id="dos-canvas" tabindex="0"></canvas>
     <script>
@@ -35,6 +38,7 @@
             let jsdosReady = false;
             let dosInstance = null;
             let errorPollTimer = null;
+            let errorPollDelayTimer = null;
             let lastErrorContent = '';
             let compileErrorSent = false;
 
@@ -43,6 +47,10 @@
             }
 
             function clearRuntimeState() {
+                if (errorPollDelayTimer) {
+                    clearTimeout(errorPollDelayTimer);
+                    errorPollDelayTimer = null;
+                }
                 if (errorPollTimer) {
                     clearInterval(errorPollTimer);
                     errorPollTimer = null;
@@ -110,68 +118,77 @@
                 }
             }
 
-            function startErrorPolling(fs) {
+            function startErrorPolling() {
                 clearRuntimeState();
-                const probe = () => {
-                    try {
-                        const errPath = firstExistingPath(fs, [
-                            '/TURBOC3/BIN/ERR.TXT',
-                            'TURBOC3/BIN/ERR.TXT',
-                            '/ERR.TXT',
-                            'ERR.TXT',
-                            '/home/web_user/ERR.TXT',
-                            'home/web_user/ERR.TXT',
-                            '/turboc3/bin/err.txt',
-                            'turboc3/bin/err.txt'
-                        ]);
-                        const failPath = firstExistingPath(fs, [
-                            '/TURBOC3/BIN/FAIL.TXT',
-                            'TURBOC3/BIN/FAIL.TXT',
-                            '/FAIL.TXT',
-                            'FAIL.TXT',
-                            '/home/web_user/FAIL.TXT',
-                            'home/web_user/FAIL.TXT',
-                            '/turboc3/bin/fail.txt',
-                            'turboc3/bin/fail.txt'
-                        ]);
-                        const userExePath = firstExistingPath(fs, [
-                            '/TURBOC3/BIN/USER.EXE',
-                            'TURBOC3/BIN/USER.EXE',
-                            '/USER.EXE',
-                            'USER.EXE',
-                            '/turboc3/bin/user.exe',
-                            'turboc3/bin/user.exe'
-                        ]);
 
-                        const hasFailMarker = !!failPath;
-                        const hasUserExe = !!userExePath;
-                        const content = errPath ? readTextFile(fs, errPath) : '';
-                        const trimmed = content.trim();
+                // Wait a moment for compilation to begin, then start polling
+                errorPollDelayTimer = setTimeout(() => {
+                    const probe = () => {
+                        try {
+                            // Use Emscripten FS from dosInstance (not the js-dos fs wrapper)
+                            if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) return;
+                            const FS = dosInstance.em.FS;
 
-                        if (!hasFailMarker && !trimmed) return;
-                        if (content === lastErrorContent && !hasFailMarker) return;
-                        lastErrorContent = content;
+                            const errPath = firstExistingPath(FS, [
+                                '/TURBOC3/BIN/ERR.TXT',
+                                'TURBOC3/BIN/ERR.TXT',
+                                '/ERR.TXT',
+                                'ERR.TXT',
+                                '/home/web_user/ERR.TXT',
+                                'home/web_user/ERR.TXT',
+                                '/turboc3/bin/err.txt',
+                                'turboc3/bin/err.txt'
+                            ]);
+                            const failPath = firstExistingPath(FS, [
+                                '/TURBOC3/BIN/FAIL.TXT',
+                                'TURBOC3/BIN/FAIL.TXT',
+                                '/FAIL.TXT',
+                                'FAIL.TXT',
+                                '/home/web_user/FAIL.TXT',
+                                'home/web_user/FAIL.TXT',
+                                '/turboc3/bin/fail.txt',
+                                'turboc3/bin/fail.txt'
+                            ]);
+                            const userExePath = firstExistingPath(FS, [
+                                '/TURBOC3/BIN/USER.EXE',
+                                'TURBOC3/BIN/USER.EXE',
+                                '/USER.EXE',
+                                'USER.EXE',
+                                '/turboc3/bin/user.exe',
+                                'turboc3/bin/user.exe'
+                            ]);
 
-                        const lower = trimmed.toLowerCase();
-                        const looksLikeError =
-                            hasFailMarker ||
-                            /(^|\b)(error|fatal|undefined|unable|unresolved|not found)(\b|:)/i.test(trimmed) ||
-                            (!hasUserExe && lower.length > 0);
+                            const hasFailMarker = !!failPath;
+                            const hasUserExe = !!userExePath;
+                            const content = errPath ? readTextFile(FS, errPath) : '';
+                            const trimmed = content.trim();
 
-                        if (looksLikeError && !compileErrorSent) {
-                            compileErrorSent = true;
-                            post({
-                                type: 'COMPILATION_ERROR',
-                                content: trimmed || 'Compilation failed. Check your code and try again.'
-                            });
+                            if (!hasFailMarker && !trimmed) return;
+                            if (content === lastErrorContent && !hasFailMarker) return;
+                            lastErrorContent = content;
+
+                            const lower = trimmed.toLowerCase();
+                            const looksLikeError =
+                                hasFailMarker ||
+                                /(^|\b)(error|fatal|undefined|unable|unresolved|not found)(\b|:)/i.test(trimmed) ||
+                                (!hasUserExe && lower.length > 0);
+
+                            if (looksLikeError && !compileErrorSent) {
+                                compileErrorSent = true;
+                                console.log('[DOS Runner] Compilation error detected, sending to parent');
+                                post({
+                                    type: 'COMPILATION_ERROR',
+                                    content: trimmed || 'Compilation failed. Check your code and try again.'
+                                });
+                            }
+                        } catch (e) {
+                            // Ignore polling errors
                         }
-                    } catch (e) {
-                        // Ignore polling errors
-                    }
-                };
+                    };
 
-                probe();
-                errorPollTimer = setInterval(probe, 400);
+                    probe();
+                    errorPollTimer = setInterval(probe, 400);
+                }, 1500); // Delay to let compilation begin
             }
 
             async function startDos(payload) {
@@ -195,7 +212,7 @@
                     fs.createFile('AUTOEXEC.BAT', payload.batchScript || '');
 
                     dosInstance = await main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT']);
-                    startErrorPolling(fs);
+                    startErrorPolling();
                     post({ type: 'STATUS', status: 'RUNNING' });
                 });
             }
@@ -227,4 +244,5 @@
         })();
     </script>
 </body>
+
 </html>

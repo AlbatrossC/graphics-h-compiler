@@ -39,8 +39,12 @@
 let isEditorFullscreen = false;
 let isTerminalFullscreen = false;
 
-document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
-    isEditorFullscreen = !isEditorFullscreen;
+function toggleEditorFullscreen(forceState) {
+    if (typeof forceState === 'boolean') {
+        isEditorFullscreen = forceState;
+    } else {
+        isEditorFullscreen = !isEditorFullscreen;
+    }
 
     if (isEditorFullscreen) {
         editorWrapper.classList.add('fullscreen');
@@ -56,7 +60,36 @@ document.getElementById('fullscreen-editor-btn').addEventListener('click', () =>
             editor.renderer.updateFull();
         }
     }, 100);
+}
+
+document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
+    toggleEditorFullscreen();
 });
+
+// Mobile: auto-fullscreen editor when tapped (fixes freeze issue after compile)
+(function setupMobileEditorAutoFullscreen() {
+    const isMobile = () => window.innerWidth <= 768;
+    const editorEl = document.getElementById('editor');
+
+    if (!editorEl) return;
+
+    editorEl.addEventListener('click', (e) => {
+        if (isMobile() && !isEditorFullscreen) {
+            e.stopPropagation();
+            toggleEditorFullscreen(true);
+        }
+    }, { capture: true });
+
+    // Also make the panel header area clickable on mobile
+    const editorPanelHeader = editorWrapper.querySelector('.panel-header');
+    if (editorPanelHeader) {
+        editorPanelHeader.addEventListener('click', (e) => {
+            if (isMobile() && !isEditorFullscreen && !e.target.closest('button') && !e.target.closest('.file-tab')) {
+                toggleEditorFullscreen(true);
+            }
+        });
+    }
+})();
 
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
@@ -226,6 +259,8 @@ window.addEventListener('message', (event) => {
             Logger.success('Program started successfully');
         }
     } else if (data.type === 'COMPILATION_ERROR') {
+        Logger.info('[Error Panel] Received COMPILATION_ERROR from iframe');
+        Logger.info('[Error Panel] Content: ' + (data.content || '').substring(0, 200));
         outputContent.textContent = data.content || '';
         outputContent.classList.remove('output-success');
         outputContent.classList.add('output-error');
@@ -238,6 +273,7 @@ window.addEventListener('message', (event) => {
             outputPanel.classList.add('visible');
             terminalWrapper.classList.add('has-panel');
             setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+            Logger.success('[Error Panel] Panel made visible');
         }
         focusEditor();
     } else if (data.type === 'ERROR') {

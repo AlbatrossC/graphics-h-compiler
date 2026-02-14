@@ -713,19 +713,24 @@ header {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 58%;
-    background: var(--vscode-editor);
+    height: 50%;
+    background: var(--vscode-bg);
     border-top: 1px solid var(--border-color);
-    display: none;
+    display: flex;
     flex-direction: column;
     z-index: 20;
     transform: translateY(100%);
-    transition: transform var(--transition-normal);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
 }
 
 #output-panel.visible {
-    display: flex;
     transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 #output-panel.expanded {
@@ -736,21 +741,26 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
+    padding: 8px 14px;
     background: var(--vscode-sidebar);
     border-bottom: 1px solid var(--border-color);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--text-secondary);
     flex-shrink: 0;
+    gap: 10px;
 }
 
 .output-title {
     display: flex;
     align-items: center;
     gap: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--danger);
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.output-title svg {
+    flex-shrink: 0;
 }
 
 .output-actions {
@@ -759,47 +769,57 @@ header {
     gap: 6px;
 }
 
+/* Copy Error Button - Matches Compile & Run button style, solid red */
 .copy-error-btn {
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    padding: 5px 12px;
-    height: 28px;
-    font-size: 0.7rem;
+    gap: 6px;
+    padding: 0 14px;
+    font-size: 0.8125rem;
     font-weight: 700;
     background: var(--danger);
-    color: white;
-    border: none;
-    border-radius: 5px;
+    color: #fff;
+    border: 1px solid var(--danger);
+    border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .copy-error-btn:hover {
-    background: #ff3333;
+    background: #e03b3b;
+    border-color: #e03b3b;
     transform: translateY(-1px);
 }
 
+.copy-error-btn:active {
+    transform: translateY(0);
+}
+
 .copy-error-btn.copied {
-    background: #4caf50;
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #0a0a0a;
 }
 
 .copy-error-btn svg {
-    width: 13px;
-    height: 13px;
+    width: 14px;
+    height: 14px;
 }
 
 .expand-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -822,23 +842,23 @@ header {
 
 .output-content {
     flex: 1;
-    padding: 14px 16px;
+    padding: 12px 16px;
     font-family: 'JetBrains Mono', 'Consolas', monospace;
-    font-size: 0.875rem;
-    line-height: 1.6;
+    font-size: 0.8125rem;
+    line-height: 1.7;
     overflow-y: auto;
     white-space: pre-wrap;
     word-break: break-word;
     color: var(--text-primary);
-    background: var(--vscode-editor);
+    background: var(--vscode-bg);
 }
 
 .output-content::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
 }
 
 .output-content::-webkit-scrollbar-track {
-    background: var(--vscode-sidebar);
+    background: transparent;
 }
 
 .output-content::-webkit-scrollbar-thumb {
@@ -847,7 +867,7 @@ header {
 }
 
 .output-content::-webkit-scrollbar-thumb:hover {
-    background: var(--primary);
+    background: var(--text-muted);
 }
 
 .output-error {
@@ -860,8 +880,8 @@ header {
 }
 
 #terminal-wrapper.has-panel .terminal-canvas-wrap {
-    height: 42%;
-    flex: 0 0 42%;
+    height: 50%;
+    flex: 0 0 50%;
 }
 
 /* Progress Bar */
@@ -1012,6 +1032,7 @@ header {
     transition: width var(--transition-normal), min-width var(--transition-normal), opacity var(--transition-normal);
     z-index: 90;
     overflow: hidden;
+    overflow-y: auto;
     min-height: 0;
 }
 
@@ -1828,7 +1849,7 @@ header {
         display: none;
     }
 
-    /* Mobile sidebar */
+    /* Mobile sidebar - scrollable so sign-in button is reachable */
     .sidebar-container {
         position: fixed;
         left: 0;
@@ -1843,6 +1864,8 @@ header {
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
         transform: translateX(-100%);
         transition: transform var(--transition-normal);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #sidebar.open {
@@ -1878,6 +1901,17 @@ header {
         opacity: 1;
     }
 
+    /* Auth section - ensure it's always visible */
+    .auth-section {
+        padding: 12px;
+        flex-shrink: 0;
+    }
+
+    .google-btn {
+        padding: 12px 16px;
+        font-size: 0.875rem;
+    }
+
     /* Adjust panels */
     .panel-header {
         padding: 8px 10px;
@@ -1905,6 +1939,36 @@ header {
     .panel-action-btn svg {
         width: 16px;
         height: 16px;
+    }
+
+    /* Highlight fullscreen editor button on mobile */
+    #fullscreen-editor-btn {
+        background: rgba(0, 255, 136, 0.1);
+        border-color: var(--primary);
+        color: var(--primary);
+        position: relative;
+    }
+
+    #fullscreen-editor-btn::after {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        border: 1px solid var(--primary);
+        border-radius: 8px;
+        animation: mobile-pulse 2s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes mobile-pulse {
+
+        0%,
+        100% {
+            opacity: 0.4;
+        }
+
+        50% {
+            opacity: 1;
+        }
     }
 
     /* Editor footer */
@@ -1943,6 +2007,40 @@ header {
         width: 13px;
         height: 13px;
     }
+
+    /* Error panel mobile */
+    #output-panel {
+        height: 60%;
+    }
+
+    .output-header {
+        padding: 8px 10px;
+    }
+
+    .output-title {
+        font-size: 0.75rem;
+    }
+
+    .copy-error-btn {
+        height: 28px;
+        padding: 0 10px;
+        font-size: 0.75rem;
+    }
+
+    #copy-btn-text {
+        display: none;
+    }
+
+    .expand-btn {
+        width: 28px;
+        height: 28px;
+    }
+
+    .output-content {
+        padding: 10px 12px;
+        font-size: 0.75rem;
+        line-height: 1.6;
+    }
 }
 
 /* Very small screens */
@@ -1970,6 +2068,11 @@ header {
         height: calc(100vh - 92px);
         gap: 6px;
         padding: 6px;
+    }
+
+    /* Error panel small screen */
+    #output-panel {
+        height: 65%;
     }
 }
 
