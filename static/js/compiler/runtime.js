@@ -94,6 +94,8 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     if (isTerminalFullscreen) {
         terminalWrapper.classList.add('fullscreen');
         editorWrapper.classList.add('hidden');
+        // Start fullscreen at neutral scale to prevent carry-over zoom.
+        resetTerminalZoom();
         // Show zoom buttons in fullscreen
         if (terminalZoomControls) {
             terminalZoomControls.classList.remove('hidden');
@@ -111,10 +113,9 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
         resetTerminalZoom();
     }
 
-    // Force canvas resize after fullscreen toggle
+    // Force terminal resize after fullscreen toggle
     setTimeout(() => {
-        if (dosInstance) {
-            // Trigger canvas resize
+        if (document.getElementById('dos-iframe')) {
             window.dispatchEvent(new Event('resize'));
         }
     }, 100);
@@ -122,39 +123,15 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
 
 // ==================== TERMINAL ACTIONS: DOWNLOAD & ZOOM ====================
 
-document.getElementById('download-terminal-btn')?.addEventListener('click', () => {
-    const canvas = document.getElementById('dos-canvas');
-    if (!canvas) {
-        alert('Terminal is not active.');
-        return;
-    }
-
-    try {
-        // Create a high-quality capture
-        const dataUrl = canvas.toDataURL('image/png');
-
-        // Create timestamp for filename
-        const now = new Date();
-        const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
-
-        const link = document.createElement('a');
-        link.download = `turbo-c-output-${timestamp}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } catch (e) {
-        console.error('Failed to download image:', e);
-        alert('Failed to save image. The terminal might be empty or restricted.');
-    }
-});
+// Disabled in iframe mode; screenshot export can be implemented with message passing later.
+document.getElementById('download-terminal-btn')?.classList.add('hidden');
 
 let currentTerminalZoom = 1.0;
 
 function updateTerminalZoom(change) {
-    const canvas = document.getElementById('dos-canvas');
+    const iframe = document.getElementById('dos-iframe');
 
-    if (!canvas) return;
+    if (!iframe) return;
 
     // Calculate new zoom value
     let newZoom = currentTerminalZoom + change;
@@ -166,16 +143,16 @@ function updateTerminalZoom(change) {
     currentTerminalZoom = newZoom;
 
     // Apply zoom
-    canvas.style.transform = `scale(${currentTerminalZoom})`;
-    canvas.style.transformOrigin = 'center center';
-    canvas.style.transition = 'transform 0.2s ease';
+    iframe.style.transform = `scale(${currentTerminalZoom})`;
+    iframe.style.transformOrigin = 'center center';
+    iframe.style.transition = 'transform 0.2s ease';
 }
 
 function resetTerminalZoom() {
     currentTerminalZoom = 1.0;
-    const canvas = document.getElementById('dos-canvas');
-    if (canvas) {
-        canvas.style.transform = 'scale(1)';
+    const iframe = document.getElementById('dos-iframe');
+    if (iframe) {
+        iframe.style.transform = 'scale(1)';
     }
 }
 
@@ -188,38 +165,17 @@ document.getElementById('decrease-terminal-btn')?.addEventListener('click', () =
 });
 
 
-// ==================== KEYBOARD INPUT ISOLATION ====================
-
-let keyboardEventBlocker = null;
-
-function setupKeyboardBlocker() {
-    keyboardEventBlocker = function (e) {
-        // Allow keyboard events through for input elements, textareas, and contenteditable
-        const tag = e.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) {
-            return;
-        }
-
-        if (!terminalFocused) {
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
-    };
-
-    window.addEventListener('keydown', keyboardEventBlocker, true);
-    window.addEventListener('keyup', keyboardEventBlocker, true);
-    window.addEventListener('keypress', keyboardEventBlocker, true);
-}
-
 // ==================== FOCUS MANAGEMENT ====================
 
 function focusTerminal() {
-    if (!dosInstance) return;
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe) return;
 
     terminalFocused = true;
-    canvas.focus();
-    canvas.tabIndex = 1;
+    iframe.focus();
+    if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'FOCUS' }, '*');
+    }
     terminalWrapper.classList.add('terminal-active');
     editorWrapper.classList.remove('active');
     keyboardBlocker.classList.remove('active');
@@ -227,16 +183,15 @@ function focusTerminal() {
 
 function focusEditor() {
     terminalFocused = false;
-    if (canvas) {
-        canvas.tabIndex = -1;
-        canvas.blur();
+    if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+        document.activeElement.blur();
     }
     if (editor) {
         editor.focus();
     }
     terminalWrapper.classList.remove('terminal-active');
     editorWrapper.classList.add('active');
-    if (dosInstance) {
+    if (document.getElementById('dos-iframe')) {
         keyboardBlocker.classList.add('active');
     }
 }
@@ -246,8 +201,9 @@ keyboardBlocker.addEventListener('click', () => {
 });
 
 terminalWrapper.addEventListener('click', (e) => {
-    if (e.target === terminalWrapper || e.target === canvas) {
-        if (dosInstance && !terminalFocused) {
+    const iframe = document.getElementById('dos-iframe');
+    if (e.target === terminalWrapper || e.target === iframe) {
+        if (!terminalFocused) {
             focusTerminal();
         }
     }
@@ -260,7 +216,7 @@ editorWrapper.addEventListener('click', () => {
 // CRITICAL FIX: Release terminal focus when clicking ANYWHERE outside the terminal
 // This prevents the DOS canvas from permanently capturing keyboard/mouse input
 document.addEventListener('click', (e) => {
-    if (!terminalFocused || !dosInstance) return;
+    if (!terminalFocused) return;
 
     // Check if the click is inside the terminal wrapper
     const isInsideTerminal = terminalWrapper.contains(e.target);
@@ -280,6 +236,65 @@ document.addEventListener('keydown', (e) => {
         return false;
     }
 }, true);
+
+let currentTcZipObjectUrl = null;
+
+window.addEventListener('message', (event) => {
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe || event.source !== iframe.contentWindow) return;
+
+    const data = event.data || {};
+    if (data.type === 'STATUS') {
+        if (data.status === 'STARTING') {
+            loadingText.textContent = 'Initializing DOS environment...';
+            updateLoadingProgress(40);
+        } else if (data.status === 'EXTRACTING') {
+            loadingText.textContent = 'Extracting compiler files...';
+            updateLoadingProgress(60);
+            metrics.runtime.zipExtractionStarted++;
+        } else if (data.status === 'WRITING_CODE') {
+            loadingText.textContent = 'Writing source code...';
+            updateLoadingProgress(80);
+        } else if (data.status === 'RUNNING') {
+            loadingText.textContent = 'Starting program...';
+            updateLoadingProgress(100);
+            loading.classList.remove('active');
+            runBtn.disabled = false;
+            runBtn.classList.remove('loading');
+            metrics.runtime.zipExtractionCompleted++;
+
+            if (currentTcZipObjectUrl) {
+                URL.revokeObjectURL(currentTcZipObjectUrl);
+                currentTcZipObjectUrl = null;
+            }
+
+            setTimeout(focusTerminal, 500);
+            Logger.success('Program started successfully');
+        }
+    } else if (data.type === 'COMPILATION_ERROR') {
+        outputContent.textContent = data.content || '';
+        outputContent.classList.remove('output-success');
+        outputContent.classList.add('output-error');
+
+        if (!outputPanel.classList.contains('visible')) {
+            outputPanel.classList.add('visible');
+            terminalWrapper.classList.add('has-panel');
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+        }
+    } else if (data.type === 'ERROR') {
+        const message = data.message || 'Unknown DOS error';
+        Logger.error('DOS Error', message);
+        alert('DOS Error: ' + message);
+        loading.classList.remove('active');
+        runBtn.disabled = false;
+        runBtn.classList.remove('loading');
+        updateLoadingProgress(0);
+        if (currentTcZipObjectUrl) {
+            URL.revokeObjectURL(currentTcZipObjectUrl);
+            currentTcZipObjectUrl = null;
+        }
+    }
+});
 
 // ==================== RUN PROGRAM ====================
 
@@ -329,19 +344,13 @@ async function runProgram() {
     runBtn.disabled = true;
     runBtn.classList.add('loading');
 
-    if (dosInstance) {
-        try {
-            dosInstance.exit();
-        } catch (e) {
-            // Ignore error when closing previous instance
-        }
-        dosInstance = null;
-    }
-
-    // Clear existing error interval
-    if (errorUpdateInterval) {
-        clearInterval(errorUpdateInterval);
-        errorUpdateInterval = null;
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe || !iframe.contentWindow) {
+        alert('DOS terminal is not available.');
+        loading.classList.remove('active');
+        runBtn.disabled = false;
+        runBtn.classList.remove('loading');
+        return;
     }
 
     // Hide panels and buttons initially
@@ -354,118 +363,25 @@ async function runProgram() {
     outputContent.textContent = '';
 
     try {
-        // Wait for Dos to be available
-        if (!scriptsLoaded.jsdos || typeof Dos === 'undefined') {
-            loadingText.textContent = 'Waiting for JS-DOS...';
-            updateLoadingProgress(20);
-            await new Promise((resolve) => {
-                const checkDos = setInterval(() => {
-                    if (typeof Dos !== 'undefined') {
-                        clearInterval(checkDos);
-                        resolve();
-                    }
-                }, 100);
-            });
-        }
-
-        updateLoadingProgress(40);
+        updateLoadingProgress(20);
 
         // Determine wdosbox URL using ResourceLoader with automatic fallback
         let wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
         const usingOnline = !ResourceLoader.isOffline() && wdosboxUrl && !wdosboxUrl.startsWith('/');
 
         Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
-        updateLoadingProgress(60);
-
+        updateLoadingProgress(40);
 
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
-        Dos(canvas, {
-            wdosboxUrl: wdosboxUrl,
-            cycles: isMobile ? "auto" : "max",
-            autolock: false,
-        }).ready(async (fs, main) => {
-
-            loadingText.textContent = 'Loading Turbo C++...';
-            updateLoadingProgress(70);
-
-            try {
-                // Use shared getTCZip to prevent race condition with warmup
-                loadingText.textContent = 'Loading compiler...';
-                const tcBlob = await getTCZip();
-
-                // Create a temporary URL for the blob
-                const blobUrl = URL.createObjectURL(tcBlob);
-
-                loadingText.textContent = 'Extracting compiler files...';
-
-                // Track ZIP extraction (metrics only, no logging)
-                metrics.runtime.zipExtractionStarted++;
-
-                // Log clean extraction message
-                Logger.info('[Runtime] Extracting Turbo C environment...');
-                const extractStartTime = performance.now();
-
-                // Suppress ALL console output during extraction (js-dos is very verbose)
-                const originalLog = console.log;
-                const originalInfo = console.info;
-                const originalWarn = console.warn;
-                const originalError = console.error;
-                const originalDebug = console.debug;
-
-                // Create a filter function to block extraction messages
-                const blockExtraction = (msg) => {
-                    if (typeof msg === 'string' && msg.includes('extracting:')) {
-                        return true; // Block this message
-                    }
-                    return false;
-                };
-
-                // Suppress all console methods
-                console.log = (...args) => { if (!blockExtraction(args[0])) originalLog.apply(console, args); };
-                console.info = (...args) => { if (!blockExtraction(args[0])) originalInfo.apply(console, args); };
-                console.warn = (...args) => { if (!blockExtraction(args[0])) originalWarn.apply(console, args); };
-                console.error = (...args) => { if (!blockExtraction(args[0])) originalError.apply(console, args); };
-                console.debug = () => { }; // Completely silent
-
-                try {
-                    // Now extract from the blob URL - js-dos can handle blob: URLs
-                    await fs.extract(blobUrl);
-                } finally {
-                    // Restore ALL console methods
-                    console.log = originalLog;
-                    console.info = originalInfo;
-                    console.warn = originalWarn;
-                    console.error = originalError;
-                    console.debug = originalDebug;
-                }
-
-                // Track completion (metrics only, no logging)
-                metrics.runtime.zipExtractionCompleted++;
-
-                // Calculate extraction time
-                const extractTime = ((performance.now() - extractStartTime) / 1000).toFixed(1);
-                Logger.success(`[Runtime] Extraction complete (312 files, ${extractTime}s)`);
-
-                // Clean up the blob URL
-                URL.revokeObjectURL(blobUrl);
-
-                Logger.success('Turbo C compiler loaded');
-            } catch (e) {
-                Logger.error('Compiler extraction failed', e);
-                throw new Error('Failed to load compiler: ' + e.message);
-            }
-
-            loadingText.textContent = 'Writing source code...';
-            updateLoadingProgress(80);
-            fs.createFile("TURBOC3/BIN/USER.CPP", code);
-
-            const batchScript = `@ECHO OFF
+        const batchScript = `@ECHO OFF
 CD TURBOC3\\BIN
 IF EXIST USER.EXE DEL USER.EXE
 IF EXIST ERR.TXT DEL ERR.TXT
+IF EXIST FAIL.TXT DEL FAIL.TXT
 TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
 IF EXIST USER.EXE GOTO SUCCESS
+ECHO COMPILE_FAILED > FAIL.TXT
 CLS
 ECHO ========================================
 ECHO COMPILATION ERRORS:
@@ -480,34 +396,26 @@ USER.EXE
 PAUSE
 `;
 
-            fs.createFile("AUTOEXEC.BAT", batchScript);
+        loadingText.textContent = 'Loading compiler...';
+        const tcBlob = await getTCZip();
 
-            loadingText.textContent = 'Starting program...';
-            updateLoadingProgress(90);
+        if (currentTcZipObjectUrl) {
+            URL.revokeObjectURL(currentTcZipObjectUrl);
+            currentTcZipObjectUrl = null;
+        }
+        currentTcZipObjectUrl = URL.createObjectURL(tcBlob);
 
-            dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
-
-            setupKeyboardBlocker();
-
-            updateLoadingProgress(100);
-            loading.classList.remove('active');
-            runBtn.disabled = false;
-            runBtn.classList.remove('loading');
-
-            // Show download button
-            if (downloadTerminalBtn) {
-                downloadTerminalBtn.classList.remove('hidden');
+        iframe.contentWindow.postMessage({ type: 'STOP_DOS' }, '*');
+        iframe.contentWindow.postMessage({
+            type: 'INIT_DOS',
+            payload: {
+                wdosboxUrl: wdosboxUrl,
+                zipUrl: currentTcZipObjectUrl,
+                code: code,
+                batchScript: batchScript,
+                cycles: isMobile ? 'auto' : 'max'
             }
-
-            Logger.success('Program started successfully');
-
-            setTimeout(() => {
-                focusTerminal();
-            }, 500);
-
-            // Start checking for compilation errors
-            errorUpdateInterval = setInterval(() => checkCompilationErrors(), 1000);
-        });
+        }, '*');
 
     } catch (error) {
         Logger.error('Failed to start DOS environment', error);
@@ -516,6 +424,10 @@ PAUSE
         runBtn.disabled = false;
         runBtn.classList.remove('loading');
         updateLoadingProgress(0);
+        if (currentTcZipObjectUrl) {
+            URL.revokeObjectURL(currentTcZipObjectUrl);
+            currentTcZipObjectUrl = null;
+        }
     }
 }
 

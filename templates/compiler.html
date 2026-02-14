@@ -417,7 +417,11 @@
             </div>
 
             <div class="terminal-canvas-wrap">
-                <canvas id="dos-canvas" tabindex="-1"></canvas>
+                <iframe id="dos-iframe"
+                    src="{{ url_for('static', filename='dos-runner.html') }}"
+                    title="DOS Terminal"
+                    sandbox="allow-scripts allow-same-origin"
+                    tabindex="-1"></iframe>
             </div>
 
             <div id="output-panel">

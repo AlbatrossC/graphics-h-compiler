@@ -1,4 +1,4 @@
-from flask import Flask, send_file, send_from_directory, jsonify, request, Response
+from flask import Flask, send_file, send_from_directory, jsonify, request, Response, render_template
 from dotenv import load_dotenv
 import requests as req
 import os
@@ -18,7 +18,7 @@ def is_maintenance_mode():
 @app.before_request
 def check_maintenance():
     if is_maintenance_mode() and request.path != '/maintenance.html' and not request.path.startswith('/api/maintenance'):
-        return send_from_directory('templates', 'maintenance.html')
+        return render_template('maintenance.html')
 
 def get_missing_env(keys):
     missing = []
@@ -31,16 +31,16 @@ def get_missing_env(keys):
 @app.route('/')
 @app.route('/index.html')
 def index():
-    return send_from_directory('templates', 'index.html')
+    return render_template('index.html')
 
 @app.route('/compiler')
 @app.route('/compiler.html')
 def compiler():
-    return send_from_directory('templates', 'compiler.html')
+    return render_template('compiler.html')
 
 @app.route('/maintenance.html')
 def maintenance():
-    return send_from_directory('templates', 'maintenance.html')
+    return render_template('maintenance.html')
 
 # Static assets
 @app.route('/static/<path:path>')
