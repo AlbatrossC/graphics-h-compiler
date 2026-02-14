@@ -327,7 +327,7 @@ header {
 /* Panels */
 #editor-wrapper,
 #terminal-wrapper {
-    flex: 1;
+    flex: 1 1 0;
     display: flex;
     flex-direction: column;
     background: var(--vscode-editor);
@@ -341,6 +341,14 @@ header {
     min-height: 0;
     /* Performance */
     will-change: border-color;
+}
+
+#editor-wrapper {
+    flex-grow: 1.2;
+}
+
+#terminal-wrapper {
+    flex-grow: 1.25;
 }
 
 #editor-wrapper.active {
@@ -560,7 +568,7 @@ header {
 }
 
 .terminal-canvas-wrap {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -705,7 +713,7 @@ header {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 50%;
+    height: 58%;
     background: var(--vscode-editor);
     border-top: 1px solid var(--border-color);
     display: none;
@@ -852,8 +860,8 @@ header {
 }
 
 #terminal-wrapper.has-panel .terminal-canvas-wrap {
-    height: 70%;
-    flex: 0 0 70%;
+    height: 42%;
+    flex: 0 0 42%;
 }
 
 /* Progress Bar */
@@ -993,8 +1001,8 @@ header {
 
 /* Sidebar */
 #sidebar {
-    width: 270px;
-    min-width: 270px;
+    width: 232px;
+    min-width: 232px;
     background: var(--vscode-sidebar);
     border: 1px solid var(--border-color);
     border-radius: var(--panel-radius);

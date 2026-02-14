@@ -157,7 +157,6 @@
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
     <div id="workspace">
         <div class="sidebar-container">
-            <!-- Activity Bar (VS Code style) -->
             <div class="activity-bar">
                 <button id="explorer-activity-btn" class="activity-bar-btn active" title="Explorer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -166,7 +165,6 @@
                 </button>
             </div>
 
-            <!-- Sidebar Panel -->
             <div id="sidebar">
                 <div class="sidebar-header">
                     <div class="sidebar-header-left">
@@ -187,7 +185,6 @@
                     </div>
                 </div>
 
-                <!-- Large Action Buttons -->
                 <div class="explorer-actions">
                     <button id="new-file-btn" class="explorer-action-btn" style="display: none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -200,7 +197,6 @@
                     </button>
                 </div>
 
-                <!-- Cloud Storage Promo (Shown when NOT logged in) -->
                 <div id="cloud-promo-view" class="cloud-promo">
                     <svg class="cloud-promo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="1.5">
@@ -236,15 +232,12 @@
                     </ul>
                 </div>
 
-                <!-- File Explorer (Shown when logged in) - Flat File List -->
                 <div id="file-explorer-view" class="file-explorer" style="display: none;">
-                    <!-- Files Header -->
                     <div class="files-header">
                         <span class="files-title">Project Files</span>
                         <span class="files-count" id="files-count">0 files</span>
                     </div>
 
-                    <!-- Flat File List (no folder structure shown) -->
                     <div class="file-list-flat" id="main-folder-files">
                         <div class="file-item active" data-file="main.cpp" data-folder="main">
                             <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -347,7 +340,6 @@
                 </div>
             </div>
 
-            <!-- Initial Editor Loading Overlay -->
             <div id="editor-loading-overlay" class="editor-loading-overlay">
                 <div class="editor-loading-spinner"></div>
                 <div class="editor-loading-text">Loading editor...</div>

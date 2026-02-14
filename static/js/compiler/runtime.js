@@ -1,66 +1,40 @@
-// ==================== GLOBAL CONSOLE FILTER ====================
-// Suppress verbose js-dos extraction logs and worker messages
 (function () {
     const originalLog = console.log;
     const originalInfo = console.info;
 
-    // Filter function to block unwanted messages
     const shouldBlock = (msg) => {
         if (typeof msg !== 'string') return false;
 
-        // Block extraction messages
         if (msg.includes('extracting:')) return true;
-
-        // Block js-dos version and copyright
         if (msg.includes('js-dos version')) return true;
         if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
-
-        // Block CONFIG messages
         if (msg.startsWith('CONFIG:')) return true;
-
-        // Block MIDI messages
         if (msg.startsWith('MIDI:')) return true;
-
-        // Block SHELL messages
         if (msg.startsWith('SHELL:')) return true;
-
-        // Block progress percentage messages (UUID with %)
         if (msg.includes('%') && msg.match(/[a-f0-9-]{36}/)) return true;
-
-        // Block [INFO] messages with UUIDs (progress indicators)
         if (msg.startsWith('[INFO]') && msg.match(/[a-f0-9-]{36}/)) return true;
-
-        // Block "Resolving DosBox" messages
         if (msg.includes('Resolving DosBox')) return true;
         if (msg.includes('DosBox resolved')) return true;
-
-        // Block runtime error messages from js-dos
         if (msg.includes('Runtime is still alive')) return true;
-
-        // Block separator lines
         if (msg.trim() === '---') return true;
 
         return false;
     };
 
-    // Override console.log
     console.log = function (...args) {
         if (args.length > 0 && shouldBlock(args[0])) {
-            return; // Silently drop the message
+            return;
         }
         originalLog.apply(console, args);
     };
 
-    // Override console.info
     console.info = function (...args) {
         if (args.length > 0 && shouldBlock(args[0])) {
-            return; // Silently drop the message
+            return;
         }
         originalInfo.apply(console, args);
     };
 })();
-
-// ==================== FULLSCREEN FUNCTIONALITY - FIXED ====================
 
 let isEditorFullscreen = false;
 let isTerminalFullscreen = false;
@@ -76,7 +50,6 @@ document.getElementById('fullscreen-editor-btn').addEventListener('click', () =>
         terminalWrapper.classList.remove('hidden');
     }
 
-    // Force editor resize after fullscreen toggle
     setTimeout(() => {
         if (editor) {
             editor.resize();
@@ -94,9 +67,7 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     if (isTerminalFullscreen) {
         terminalWrapper.classList.add('fullscreen');
         editorWrapper.classList.add('hidden');
-        // Start fullscreen at neutral scale to prevent carry-over zoom.
         resetTerminalZoom();
-        // Show zoom buttons in fullscreen
         if (terminalZoomControls) {
             terminalZoomControls.classList.remove('hidden');
             terminalZoomControls.style.display = 'flex';
@@ -104,16 +75,13 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     } else {
         terminalWrapper.classList.remove('fullscreen');
         editorWrapper.classList.remove('hidden');
-        // Hide zoom buttons when not in fullscreen
         if (terminalZoomControls) {
             terminalZoomControls.classList.add('hidden');
             terminalZoomControls.style.display = 'none';
         }
-        // Reset zoom when exiting fullscreen
         resetTerminalZoom();
     }
 
-    // Force terminal resize after fullscreen toggle
     setTimeout(() => {
         if (document.getElementById('dos-iframe')) {
             window.dispatchEvent(new Event('resize'));
@@ -121,9 +89,6 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     }, 100);
 });
 
-// ==================== TERMINAL ACTIONS: DOWNLOAD & ZOOM ====================
-
-// Disabled in iframe mode; screenshot export can be implemented with message passing later.
 document.getElementById('download-terminal-btn')?.classList.add('hidden');
 
 let currentTerminalZoom = 1.0;
@@ -133,16 +98,13 @@ function updateTerminalZoom(change) {
 
     if (!iframe) return;
 
-    // Calculate new zoom value
     let newZoom = currentTerminalZoom + change;
 
-    // Limits: Min 0.5 (50%), Max 3.0 (300%)
     if (newZoom < 0.5) newZoom = 0.5;
     if (newZoom > 3.0) newZoom = 3.0;
 
     currentTerminalZoom = newZoom;
 
-    // Apply zoom
     iframe.style.transform = `scale(${currentTerminalZoom})`;
     iframe.style.transformOrigin = 'center center';
     iframe.style.transition = 'transform 0.2s ease';
@@ -164,8 +126,6 @@ document.getElementById('decrease-terminal-btn')?.addEventListener('click', () =
     updateTerminalZoom(-0.1);
 });
 
-
-// ==================== FOCUS MANAGEMENT ====================
 
 function focusTerminal() {
     const iframe = document.getElementById('dos-iframe');
@@ -213,15 +173,9 @@ editorWrapper.addEventListener('click', () => {
     focusEditor();
 });
 
-// CRITICAL FIX: Release terminal focus when clicking ANYWHERE outside the terminal
-// This prevents the DOS canvas from permanently capturing keyboard/mouse input
 document.addEventListener('click', (e) => {
     if (!terminalFocused) return;
-
-    // Check if the click is inside the terminal wrapper
     const isInsideTerminal = terminalWrapper.contains(e.target);
-
-    // If clicking outside terminal, release focus
     if (!isInsideTerminal) {
         focusEditor();
     }
@@ -275,12 +229,17 @@ window.addEventListener('message', (event) => {
         outputContent.textContent = data.content || '';
         outputContent.classList.remove('output-success');
         outputContent.classList.add('output-error');
+        outputPanel.classList.remove('expanded');
+        expandOutputBtn.classList.remove('expanded');
+        expandOutputBtn.title = 'Expand panel';
+        isOutputExpanded = false;
 
         if (!outputPanel.classList.contains('visible')) {
             outputPanel.classList.add('visible');
             terminalWrapper.classList.add('has-panel');
             setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
         }
+        focusEditor();
     } else if (data.type === 'ERROR') {
         const message = data.message || 'Unknown DOS error';
         Logger.error('DOS Error', message);
@@ -296,8 +255,6 @@ window.addEventListener('message', (event) => {
     }
 });
 
-// ==================== RUN PROGRAM ====================
-
 async function runProgram() {
     if (!editor) {
         alert('Editor is still loading. Please wait...');
@@ -311,7 +268,6 @@ async function runProgram() {
         return;
     }
 
-    // Track run execution
     metrics.runtime.runCount++;
     Logger.info(`[Run] Triggered | count=${metrics.runtime.runCount}`);
 
@@ -353,8 +309,11 @@ async function runProgram() {
         return;
     }
 
-    // Hide panels and buttons initially
     outputPanel.classList.remove('visible');
+    outputPanel.classList.remove('expanded');
+    expandOutputBtn.classList.remove('expanded');
+    expandOutputBtn.title = 'Expand panel';
+    isOutputExpanded = false;
     terminalWrapper.classList.remove('has-panel');
     if (downloadTerminalBtn) {
         downloadTerminalBtn.classList.add('hidden');
@@ -382,6 +341,8 @@ IF EXIST FAIL.TXT DEL FAIL.TXT
 TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
 IF EXIST USER.EXE GOTO SUCCESS
 ECHO COMPILE_FAILED > FAIL.TXT
+COPY ERR.TXT C:\\ERR.TXT >NUL
+COPY FAIL.TXT C:\\FAIL.TXT >NUL
 CLS
 ECHO ========================================
 ECHO COMPILATION ERRORS:

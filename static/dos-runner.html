@@ -17,10 +17,8 @@
         }
 
         #dos-canvas {
-            width: auto !important;
-            height: auto !important;
-            max-width: 100% !important;
-            max-height: 100% !important;
+            width: 100% !important;
+            height: 100% !important;
             display: block;
             background: #000;
             image-rendering: pixelated;
@@ -121,6 +119,8 @@
                             'TURBOC3/BIN/ERR.TXT',
                             '/ERR.TXT',
                             'ERR.TXT',
+                            '/home/web_user/ERR.TXT',
+                            'home/web_user/ERR.TXT',
                             '/turboc3/bin/err.txt',
                             'turboc3/bin/err.txt'
                         ]);
@@ -129,6 +129,8 @@
                             'TURBOC3/BIN/FAIL.TXT',
                             '/FAIL.TXT',
                             'FAIL.TXT',
+                            '/home/web_user/FAIL.TXT',
+                            'home/web_user/FAIL.TXT',
                             '/turboc3/bin/fail.txt',
                             'turboc3/bin/fail.txt'
                         ]);
@@ -168,7 +170,6 @@
                     }
                 };
 
-                // Run immediately and then poll frequently to avoid missed early failures.
                 probe();
                 errorPollTimer = setInterval(probe, 400);
             }
