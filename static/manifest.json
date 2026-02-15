@@ -65,7 +65,7 @@
         "tc-zip": {
             "name": "Turbo C++ Compiler",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/system/tc-v1.zip",
+                "https://r2-public-assets.albatrossc.workers.dev/system/tc-v1.zip",
                 "https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip"
             ],
             "localPath": "/compiler-assets/zip-files/tc-v1.zip"
@@ -75,7 +75,7 @@
         "graphics-demo": {
             "name": "Graphics Demo",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/demo/graphics_demo.cpp",
+                "https://r2-public-assets.albatrossc.workers.dev/demo/graphics_demo.cpp",
                 "https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/graphics_demo.cpp"
             ],
             "localPath": "/compiler-assets/Demo_files/graphics_demo.cpp"
@@ -83,7 +83,7 @@
         "circle-pattern": {
             "name": "Circle Pattern",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/demo/circle_pattern.cpp",
+                "https://r2-public-assets.albatrossc.workers.dev/demo/circle_pattern.cpp",
                 "https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/circle-pattern.cpp"
             ],
             "localPath": "/compiler-assets/Demo_files/circle_pattern.cpp"
@@ -91,7 +91,7 @@
         "bouncing-ball": {
             "name": "Bouncing Ball",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/demo/bouncing_ball.cpp",
+                "https://r2-public-assets.albatrossc.workers.dev/demo/bouncing_ball.cpp",
                 "https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/bouncing-ball.cpp"
             ],
             "localPath": "/compiler-assets/Demo_files/bouncing_ball.cpp"
@@ -99,7 +99,7 @@
         "shooter-game": {
             "name": "Shooter Game",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/demo/shooter_game.cpp",
+                "https://r2-public-assets.albatrossc.workers.dev/demo/shooter_game.cpp",
                 "https://ltjlklxc9homgiye.public.blob.vercel-storage.com/demo/shooter-game.cpp"
             ],
             "localPath": "/compiler-assets/Demo_files/shooter_game.cpp"
@@ -109,7 +109,7 @@
         "vscode-demo": {
             "name": "VS Code Demo",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4"
+                "https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
             ],
             "localPath": "/static/videos/vscode-demo-v2.mp4",
             "apiPath": "/api/video/vscode-demo-v2.mp4"
@@ -117,7 +117,7 @@
         "oc-demo": {
             "name": "Online Compiler Demo",
             "urls": [
-                "https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4"
+                "https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4"
             ],
             "localPath": "/static/videos/oc-demo.mp4",
             "apiPath": "/api/video/oc-demo.mp4"

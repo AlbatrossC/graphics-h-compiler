@@ -48,9 +48,9 @@
         rel="stylesheet">
 
     <!-- Preload videos from R2 CDN for faster loading -->
-    <link rel="preload" href="https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4" as="video"
+    <link rel="preload" href="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4" as="video"
         type="video/mp4">
-    <link rel="preload" href="https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4" as="video"
+    <link rel="preload" href="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4" as="video"
         type="video/mp4">
 
     <!-- Tailwind CSS -->
@@ -390,10 +390,14 @@
         }
 
         @keyframes blink {
-            0%, 50% {
+
+            0%,
+            50% {
                 opacity: 1;
             }
-            51%, 100% {
+
+            51%,
+            100% {
                 opacity: 0;
             }
         }
@@ -434,10 +438,13 @@
         }
 
         @keyframes pulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 1;
                 transform: scale(1);
             }
+
             50% {
                 opacity: 0.5;
                 transform: scale(0.9);
@@ -558,7 +565,8 @@
         .video-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 52.91%; /* For vscode video: 1080/1856 * 100 ≈ 58.19% */
+            padding-bottom: 52.91%;
+            /* For vscode video: 1080/1856 * 100 ≈ 58.19% */
             height: 0;
             overflow: hidden;
         }
@@ -789,6 +797,7 @@
             0% {
                 transform: translate(0, 0);
             }
+
             100% {
                 transform: translate(50px, 50px);
             }
@@ -838,9 +847,12 @@
         }
 
         @keyframes float {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translate(0, 0) scale(1);
             }
+
             50% {
                 transform: translate(25px, -25px) scale(1.08);
             }
@@ -852,6 +864,7 @@
                 opacity: 0;
                 transform: translateY(25px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -898,7 +911,8 @@
             }
 
             .video-wrapper {
-                padding-bottom: 56%; /* Slightly smaller on mobile */
+                padding-bottom: 56%;
+                /* Slightly smaller on mobile */
             }
 
             .features-list {
@@ -1070,12 +1084,11 @@
                         <div class="video-wrapper">
                             <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline
                                 preload="auto">
-                                <source
-                                    src="https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4"
+                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
                                     type="video/mp4">
                             </video>
                             <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
-                                <source src="https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4"
+                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4"
                                     type="video/mp4">
                             </video>
                         </div>
