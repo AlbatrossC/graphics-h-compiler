@@ -585,61 +585,71 @@ header {
     max-height: none;
 }
 
-/* Keyboard Blocker */
+/* Keyboard Blocker - Toast Mode */
 .keyboard-blocker {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(6px);
+    background: transparent;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    /* Align to top */
     justify-content: center;
+    /* Center horizontally */
     z-index: 10;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--transition-normal);
+    padding-top: 30px;
+    /* Space from top */
 }
 
 .keyboard-blocker.active {
     opacity: 1;
     pointer-events: all;
+    cursor: pointer;
+    /* Show pointer to indicate clickable */
 }
 
 .blocker-message {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 20px;
-    background: var(--vscode-sidebar);
-    border: 2px solid var(--primary);
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--text-primary);
-    box-shadow: var(--shadow);
-    animation: bounce 2s infinite;
-    transition: background-color var(--transition-slow);
+    padding: 10px 20px;
+    /* Larger padding */
+    background: rgba(21, 21, 21, 0.9);
+    /* Semi-transparent dark bg */
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    /* Larger pill shape */
+    font-weight: 500;
+    font-size: 0.95rem;
+    /* Larger text */
+    color: var(--text-secondary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-normal);
+    transform: translateY(-10px);
+    /* Initial slide from top */
+}
+
+.keyboard-blocker.active .blocker-message {
+    transform: translateY(0);
+}
+
+.blocker-message:hover {
+    background: var(--vscode-line-bg);
+    border-color: var(--primary);
+    color: var(--primary);
 }
 
 .blocker-message svg {
     width: 20px;
+    /* Larger icon */
     height: 20px;
     color: var(--primary);
-}
-
-@keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-6px);
-    }
 }
 
 /* Loading Overlay */
