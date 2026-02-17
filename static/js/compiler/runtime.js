@@ -562,6 +562,12 @@ if (sidebarToggle) {
         } else {
             // Desktop: toggle collapsed class
             sidebar.classList.toggle('collapsed');
+
+            // Toggle activity bar
+            if (activityBar) {
+                activityBar.classList.toggle('active');
+            }
+
             // Resize editor after collapse animation
             setTimeout(() => {
                 if (editor) {
@@ -585,6 +591,13 @@ if (sidebarOverlay) {
 if (sidebarCollapseBtn) {
     sidebarCollapseBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
+
+        // Toggle activity bar
+        const activityBar = document.querySelector('.activity-bar');
+        if (activityBar) {
+            activityBar.classList.toggle('active');
+        }
+
         // Resize editor after collapse animation
         setTimeout(() => {
             if (editor) {
@@ -599,6 +612,13 @@ if (sidebarCollapseBtn) {
 if (explorerActivityBtn) {
     explorerActivityBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
+
+        // Toggle activity bar
+        const activityBar = document.querySelector('.activity-bar');
+        if (activityBar) {
+            activityBar.classList.toggle('active');
+        }
+
         setTimeout(() => {
             if (editor) {
                 editor.resize();

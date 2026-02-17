@@ -250,12 +250,24 @@ async function initializeEditor() {
     const increaseFontBtn = document.getElementById('increase-font-btn');
     const decreaseFontBtn = document.getElementById('decrease-font-btn');
 
+    const fontSizeDisplay = document.getElementById('font-size-display');
+
+    function updateFontSizeDisplay(size) {
+        if (fontSizeDisplay) {
+            fontSizeDisplay.textContent = size;
+        }
+    }
+
+    // Set initial display
+    updateFontSizeDisplay(currentFontSize);
+
     if (increaseFontBtn && decreaseFontBtn) {
         increaseFontBtn.addEventListener('click', () => {
             currentFontSize += 1;
             if (currentFontSize > 32) currentFontSize = 32;
             editor.setFontSize(`${currentFontSize}px`);
             localStorage.setItem('editor_font_size', currentFontSize);
+            updateFontSizeDisplay(currentFontSize);
             Logger.info(`Font size increased to ${currentFontSize}px`);
         });
 
@@ -264,7 +276,39 @@ async function initializeEditor() {
             if (currentFontSize < 10) currentFontSize = 10;
             editor.setFontSize(`${currentFontSize}px`);
             localStorage.setItem('editor_font_size', currentFontSize);
+            updateFontSizeDisplay(currentFontSize);
             Logger.info(`Font size decreased to ${currentFontSize}px`);
+        });
+    }
+
+    // Copy Code Button
+    const copyCodeBtn = document.getElementById('copy-code-btn');
+    if (copyCodeBtn) {
+        copyCodeBtn.addEventListener('click', async () => {
+            const code = editor.getValue();
+            if (!code) return;
+
+            try {
+                await navigator.clipboard.writeText(code);
+
+                // Visual feedback
+                const originalTitle = copyCodeBtn.title;
+                const originalHTML = copyCodeBtn.innerHTML;
+
+                copyCodeBtn.classList.add('success');
+                copyCodeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                copyCodeBtn.title = 'Copied!';
+
+                setTimeout(() => {
+                    copyCodeBtn.classList.remove('success');
+                    copyCodeBtn.innerHTML = originalHTML;
+                    copyCodeBtn.title = originalTitle;
+                }, 2000);
+
+                Logger.info('Code copied to clipboard');
+            } catch (err) {
+                Logger.error('Failed to copy code', err);
+            }
         });
     }
 
