@@ -17,7 +17,10 @@ def is_maintenance_mode():
 
 @app.before_request
 def check_maintenance():
-    if is_maintenance_mode() and request.path != '/maintenance.html' and not request.path.startswith('/api/maintenance'):
+    if is_maintenance_mode() \
+            and request.path != '/maintenance.html' \
+            and not request.path.startswith('/api/maintenance') \
+            and not request.path.startswith('/static/'):
         return render_template('maintenance.html')
 
 def get_missing_env(keys):
