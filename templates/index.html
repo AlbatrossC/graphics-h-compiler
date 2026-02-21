@@ -6,35 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>graphics.h Compiler - Run Graphics Programs Online | Modern C Graphics Development</title>
+    <title>graphics.h Online Compiler — Run C Graphics in Browser</title>
     <meta name="description"
-        content="Run graphics.h programs instantly in your browser or VS Code. Zero setup, no legacy tools needed. Perfect for students learning computer graphics programming with modern IntelliSense support.">
+        content="Run graphics.h programs in your browser or VS Code. Zero setup needed. A modern Turbo C alternative for SPPU students.">
     <meta name="keywords"
-        content="graphics.h, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative, SPPU graphics, graphics programming, C compiler">
-    <meta name="author" content="graphics.h compiler">
+        content="graphics.h, graphics.h online compiler, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative, SPPU graphics, graphics programming, C compiler">
+    <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow">
-    <meta name="language" content="English">
+    <meta name="language" content="en">
 
     <meta name="google-adsense-account" content="ca-pub-6918638598461716">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://graphics-h-compiler.vercel.app/">
-    <meta property="og:title" content="graphics.h Compiler - Run Graphics Programs Anywhere">
+    <meta property="og:url" content="https://graphics-h-online-compiler.vercel.app/">
+    <meta property="og:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
     <meta property="og:description"
-        content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution. Say goodbye to Turbo C and DOSBox.">
-    <meta property="og:image" content="https://graphics-h-compiler.vercel.app/og-image.png">
+        content="Run graphics.h programs in your browser or VS Code. Zero setup, no Turbo C needed.">
+    <meta property="og:image" content="https://graphics-h-online-compiler.vercel.app/static/og-image.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://graphics-h-compiler.vercel.app/">
-    <meta property="twitter:title" content="graphics.h Compiler - Run Graphics Programs Anywhere">
+    <meta property="twitter:url" content="https://graphics-h-online-compiler.vercel.app/">
+    <meta property="twitter:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
     <meta property="twitter:description"
-        content="Modern graphics.h compiler for browser and VS Code. Zero setup, instant execution.">
-    <meta property="twitter:image" content="https://graphics-h-compiler.vercel.app/og-image.png">
+        content="Run graphics.h programs in your browser or VS Code. Zero setup, no Turbo C needed.">
+    <meta property="twitter:image" content="https://graphics-h-online-compiler.vercel.app/static/og-image.png">
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://graphics-h-compiler.vercel.app/">
+    <link rel="canonical" href="https://graphics-h-online-compiler.vercel.app/">
 
     <!-- Favicon -->
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
@@ -43,20 +43,22 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preconnect to CDN origins -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+        rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+            rel="stylesheet">
+    </noscript>
 
-    <!-- Preload videos from R2 CDN for faster loading -->
-    <link rel="preload" href="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4" as="video"
-        type="video/mp4">
-    <link rel="preload" href="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4" as="video"
-        type="video/mp4">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tailwind CSS (deferred) -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <!-- Lucide Icons (deferred) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
 
     <style>
         * {
@@ -1215,344 +1217,413 @@
     <div class="accent-corner top-right"></div>
     <div class="accent-corner bottom-left"></div>
 
-    <!-- Header -->
-    <header>
-        <div class="header-content">
-            <div class="logo" onclick="window.location.reload()">
-                <span class="bracket">&lt;</span>
-                <span>graphics.h</span>
-                <span class="bracket">/&gt;</span>
-            </div>
+    <main>
 
-            <!-- Centered Navigation -->
-            <nav class="header-nav">
-                <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme">
-                    <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
-                    <i data-lucide="moon" class="theme-icon-dark"></i>
-                </button>
-                <div class="nav-divider"></div>
-                <button class="nav-btn" onclick="openModal()">
-                    <i data-lucide="info"></i>
-                    <span>About</span>
-                </button>
-                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
-                    class="nav-btn">
-                    <i data-lucide="github"></i>
-                    <span>Source</span>
-                </a>
-                <button class="nav-btn" onclick="openContactModal()">
-                    <i data-lucide="mail"></i>
-                    <span>Contact</span>
-                </button>
-                <div class="nav-divider"></div>
-                <a href="https://sppucodes.vercel.app/" target="_blank" class="nav-btn nav-btn-accent">
-                    <i data-lucide="external-link"></i>
-                    <span>Sppucodes</span>
-                </a>
-            </nav>
-
-            <!-- Mobile Menu Button -->
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
-                <i data-lucide="menu"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobile-menu">
-        <button class="mobile-menu-close" onclick="toggleMobileMenu()">
-            <i data-lucide="x"></i>
-        </button>
-
-        <div class="mobile-menu-items">
-            <button class="mobile-menu-item" onclick="toggleTheme(); toggleMobileMenu();">
-                <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
-                <i data-lucide="moon" class="theme-icon-dark"></i>
-                <span>Toggle Theme</span>
-            </button>
-
-            <button class="mobile-menu-item" onclick="openModal(); toggleMobileMenu();">
-                <i data-lucide="info"></i>
-                <span>About</span>
-            </button>
-
-            <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
-                class="mobile-menu-item" onclick="toggleMobileMenu()">
-                <i data-lucide="github"></i>
-                <span>GitHub Source</span>
-            </a>
-
-            <button class="mobile-menu-item" onclick="openContactModal(); toggleMobileMenu();">
-                <i data-lucide="mail"></i>
-                <span>Contact</span>
-            </button>
-
-            <a href="https://sppucodes.vercel.app/" target="_blank" class="mobile-menu-item"
-                onclick="toggleMobileMenu()">
-                <i data-lucide="external-link"></i>
-                <span>Sppucodes</span>
-            </a>
-        </div>
-    </div>
-
-    <!-- ==================== SECTION 1: HERO ==================== -->
-    <section class="page-section hero-section" id="hero">
-        <div class="section-inner">
-            <div class="status-badge animate-in delay-1">
-                <span class="status-dot"></span>
-                <span>Works on Windows, Ubuntu & Browser</span>
-            </div>
-
-            <h1 class="headline animate-in delay-2">
-                Run <span class="highlight">graphics.h</span> Anywhere
-            </h1>
-
-            <p class="subheadline animate-in delay-3">
-                A modern graphics.h online compiler — run your programs instantly in the browser with no installation
-                headaches. Also available as a VS Code extension.
-            </p>
-
-            <div class="cta-group animate-in delay-4">
-                <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
-                    target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
-                    <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
-                    <span>VS Code Extension</span>
-                </a>
-                <a href="/compiler.html" class="cta-btn cta-btn-primary">
-                    <i data-lucide="terminal"></i>
-                    <span>Online Compiler</span>
-                </a>
-            </div>
-
-            <div class="features-list animate-in delay-5">
-                <div class="feature-item">Zero Setup</div>
-                <div class="feature-item">Browser & VS Code</div>
-                <div class="feature-item">SPPU Ready</div>
-            </div>
-        </div>
-
-        <div class="scroll-indicator"
-            onclick="document.getElementById('online-section').scrollIntoView({behavior:'smooth'})">
-            <span>Scroll</span>
-            <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
-        </div>
-    </section>
-
-    <!-- ==================== SECTION 2: ONLINE COMPILER DEMO ==================== -->
-    <section class="page-section" id="online-section">
-        <div class="section-inner">
-            <div class="demo-grid">
-                <!-- LEFT: Video -->
-                <div class="video-col reveal">
-                    <div class="video-container">
-                        <div class="video-wrapper oc-ratio">
-                            <video id="online-video" autoplay loop muted playsinline preload="auto">
-                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4"
-                                    type="video/mp4">
-                            </video>
-                        </div>
-                    </div>
-                    <div class="video-glow green"></div>
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <div class="logo" onclick="window.location.reload()">
+                    <span class="bracket">&lt;</span>
+                    <span>graphics.h</span>
+                    <span class="bracket">/&gt;</span>
                 </div>
 
-                <!-- RIGHT: Text -->
-                <div class="demo-text reveal reveal-delay-1">
-                    <div class="demo-label">Online Compiler</div>
-                    <h2 class="demo-heading">Code in Your Browser.<br>Run Instantly.</h2>
-                    <p class="demo-description">
-                        Open your browser, write graphics.h code, and see the output live. No downloads, no
-                        installations—just instant compile and run with real-time graphics output.
-                    </p>
-                    <div class="demo-features">
-                        <div class="demo-feature-item">
-                            <span class="check-icon">✓</span>
-                            <span>Instant compile & run in browser</span>
-                        </div>
-                        <div class="demo-feature-item">
-                            <span class="check-icon">✓</span>
-                            <span>Live graphics output preview</span>
-                        </div>
-                        <div class="demo-feature-item">
-                            <span class="check-icon">✓</span>
-                            <span>No installation required</span>
-                        </div>
-                    </div>
-                    <a href="/compiler.html" class="demo-cta">
-                        <span>Try the Online Compiler</span>
-                        <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                <!-- Centered Navigation -->
+                <nav class="header-nav">
+                    <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme">
+                        <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                    </button>
+                    <div class="nav-divider"></div>
+                    <button class="nav-btn" onclick="openModal()">
+                        <i data-lucide="info"></i>
+                        <span>About</span>
+                    </button>
+                    <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                        rel="noopener noreferrer" class="nav-btn">
+                        <i data-lucide="github"></i>
+                        <span>Source</span>
                     </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ==================== SECTION 3: VS CODE DEMO ==================== -->
-    <section class="page-section" id="vscode-section">
-        <div class="section-inner">
-            <div class="demo-grid reversed">
-                <!-- LEFT: Text -->
-                <div class="demo-text reveal">
-                    <div class="demo-label">VS Code Extension</div>
-                    <h2 class="demo-heading">Full Power.<br>Right in VS Code.</h2>
-                    <p class="demo-description">
-                        Install the extension and get IntelliSense, auto-complete, error detection, and one-click
-                        compilation for graphics.h—all inside your favourite editor.
-                    </p>
-                    <div class="demo-features">
-                        <div class="demo-feature-item">
-                            <span class="check-icon">✓</span>
-                            <span>IntelliSense & auto-complete</span>
-                        </div>
-                        <div class="demo-feature-item">
-                            <span class="check-icon">✓</span>
-                            <span>Real-time error detection</span>
-                        </div>
-                        <div class="demo-feature-item">
-                            <span class="check-icon">✓</span>
-                            <span>One-click compile & run</span>
-                        </div>
-                    </div>
-                    <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
-                        target="_blank" rel="noopener noreferrer" class="demo-cta">
-                        <span>Get the Extension</span>
-                        <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                    <button class="nav-btn" onclick="openContactModal()">
+                        <i data-lucide="mail"></i>
+                        <span>Contact</span>
+                    </button>
+                    <a href="/docs" class="nav-btn">
+                        <i data-lucide="book-open"></i>
+                        <span>Docs</span>
                     </a>
-                </div>
+                    <div class="nav-divider"></div>
+                    <a href="https://sppucodes.vercel.app/" target="_blank" class="nav-btn nav-btn-accent">
+                        <i data-lucide="external-link"></i>
+                        <span>Sppucodes</span>
+                    </a>
+                </nav>
 
-                <!-- RIGHT: Video -->
-                <div class="video-col reveal reveal-delay-1">
-                    <div class="video-container">
-                        <div class="video-wrapper vscode-ratio">
-                            <video id="vscode-video" autoplay loop muted playsinline preload="auto">
-                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
-                                    type="video/mp4">
-                            </video>
-                        </div>
-                    </div>
-                    <div class="video-glow blue"></div>
-                </div>
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open navigation menu">
+                    <i data-lucide="menu"></i>
+                </button>
             </div>
-        </div>
-    </section>
+        </header>
 
-    <!-- About Modal -->
-    <div id="about-modal" class="modal" onclick="closeModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeModal()">
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobile-menu">
+            <button class="mobile-menu-close" onclick="toggleMobileMenu()" aria-label="Close navigation menu">
                 <i data-lucide="x"></i>
             </button>
 
-            <h2 class="modal-title">Why This Exists</h2>
+            <div class="mobile-menu-items">
+                <button class="mobile-menu-item" onclick="toggleTheme(); toggleMobileMenu();">
+                    <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
+                    <i data-lucide="moon" class="theme-icon-dark"></i>
+                    <span>Toggle Theme</span>
+                </button>
 
-            <p class="modal-text">
-                <strong>graphics.h</strong> is a legacy graphics library still taught in Computer Graphics
-                courses—especially in SPPU curriculum. But running it today requires jumping through hoops: installing
-                Turbo C, configuring DOSBox, dealing with broken environments.
-            </p>
+                <button class="mobile-menu-item" onclick="openModal(); toggleMobileMenu();">
+                    <i data-lucide="info"></i>
+                    <span>About</span>
+                </button>
 
-            <p class="modal-text">
-                Students waste hours fighting setup instead of learning graphics programming.
-            </p>
+                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
+                    class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <i data-lucide="github"></i>
+                    <span>GitHub Source</span>
+                </a>
 
-            <p class="modal-text">
-                <strong>This project eliminates that friction.</strong>
-            </p>
+                <button class="mobile-menu-item" onclick="openContactModal(); toggleMobileMenu();">
+                    <i data-lucide="mail"></i>
+                    <span>Contact</span>
+                </button>
 
-            <p class="modal-text">
-                It provides two ways to run graphics.h programs instantly:
-            </p>
+                <a href="/docs" class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <i data-lucide="book-open"></i>
+                    <span>Documentation</span>
+                </a>
 
-            <ul class="modal-list">
-                <li><strong>Online compiler</strong> – Works directly in your browser</li>
-                <li><strong>VS Code extension</strong> – Integrates with your local development environment</li>
-            </ul>
-
-            <p class="modal-text">
-                No legacy tools. No manual configuration. Just write code and run it.
-            </p>
-
-            <div class="modal-highlight">
-                <p class="modal-text">
-                    Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students
-                    focus on learning graphics, not wrestling with 1990s software.
-                </p>
+                <a href="https://sppucodes.vercel.app/" target="_blank" class="mobile-menu-item"
+                    onclick="toggleMobileMenu()">
+                    <i data-lucide="external-link"></i>
+                    <span>Sppucodes</span>
+                </a>
             </div>
         </div>
-    </div>
 
-    <!-- ==================== FOOTER ==================== -->
-    <footer class="site-footer">
-        <div class="footer-inner">
-            <div class="footer-grid">
-                <!-- Brand -->
-                <div class="footer-brand">
-                    <div class="footer-logo">
-                        <span class="bracket">&lt;</span>
-                        <span>graphics.h</span>
-                        <span class="bracket">/&gt;</span>
+        <!-- ==================== SECTION 1: HERO ==================== -->
+        <section class="page-section hero-section" id="hero">
+            <div class="section-inner">
+                <div class="status-badge animate-in delay-1">
+                    <span class="status-dot"></span>
+                    <span>Works on Windows, Ubuntu & Browser</span>
+                </div>
+
+                <h1 class="headline animate-in delay-2">
+                    Run <span class="highlight">graphics.h</span> Anywhere
+                </h1>
+
+                <p class="subheadline animate-in delay-3">
+                    A modern graphics.h online compiler — run your programs instantly in the browser with no
+                    installation
+                    headaches. Also available as a VS Code extension.
+                </p>
+
+                <div class="cta-group animate-in delay-4">
+                    <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                        target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
+                        <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
+                        <span>VS Code Extension</span>
+                    </a>
+                    <a href="/compiler.html" class="cta-btn cta-btn-primary">
+                        <i data-lucide="terminal"></i>
+                        <span>Online Compiler</span>
+                    </a>
+                </div>
+
+                <div class="features-list animate-in delay-5">
+                    <div class="feature-item">Zero Setup</div>
+                    <div class="feature-item">Browser & VS Code</div>
+                    <div class="feature-item">SPPU Ready</div>
+                </div>
+            </div>
+
+            <div class="scroll-indicator"
+                onclick="document.getElementById('online-section').scrollIntoView({behavior:'smooth'})">
+                <span>Scroll</span>
+                <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 2: ONLINE COMPILER DEMO ==================== -->
+        <section class="page-section" id="online-section">
+            <div class="section-inner">
+                <div class="demo-grid">
+                    <!-- LEFT: Video -->
+                    <div class="video-col reveal">
+                        <div class="video-container">
+                            <div class="video-wrapper oc-ratio">
+                                <video id="online-video" autoplay loop muted playsinline preload="auto">
+                                    <source src="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4"
+                                        type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="video-glow green"></div>
                     </div>
-                    <p class="footer-tagline">
-                        A modern compiler for graphics.h programs. Run code instantly in your browser or VS Code.
+
+                    <!-- RIGHT: Text -->
+                    <div class="demo-text reveal reveal-delay-1">
+                        <div class="demo-label">Online Compiler</div>
+                        <h2 class="demo-heading">Code in Your Browser.<br>Run Instantly.</h2>
+                        <p class="demo-description">
+                            Open your browser, write graphics.h code, and see the output live. No downloads, no
+                            installations—just instant compile and run with real-time graphics output.
+                        </p>
+                        <div class="demo-features">
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Instant compile & run in browser</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Live graphics output preview</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>No installation required</span>
+                            </div>
+                        </div>
+                        <a href="/compiler.html" class="demo-cta">
+                            <span>Try the Online Compiler</span>
+                            <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 3: VS CODE DEMO ==================== -->
+        <section class="page-section" id="vscode-section">
+            <div class="section-inner">
+                <div class="demo-grid reversed">
+                    <!-- LEFT: Text -->
+                    <div class="demo-text reveal">
+                        <div class="demo-label">VS Code Extension</div>
+                        <h2 class="demo-heading">Full Power.<br>Right in VS Code.</h2>
+                        <p class="demo-description">
+                            Install the extension and get IntelliSense, auto-complete, error detection, and one-click
+                            compilation for graphics.h—all inside your favourite editor.
+                        </p>
+                        <div class="demo-features">
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>IntelliSense & auto-complete</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Real-time error detection</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>One-click compile & run</span>
+                            </div>
+                        </div>
+                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                            target="_blank" rel="noopener noreferrer" class="demo-cta">
+                            <span>Get the Extension</span>
+                            <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                        </a>
+                    </div>
+
+                    <!-- RIGHT: Video -->
+                    <div class="video-col reveal reveal-delay-1">
+                        <div class="video-container">
+                            <div class="video-wrapper vscode-ratio">
+                                <video id="vscode-video" autoplay loop muted playsinline preload="auto">
+                                    <source
+                                        src="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
+                                        type="video/mp4">
+                                </video>
+                            </div>
+                        </div>
+                        <div class="video-glow blue"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 4: WHY GRAPHICS.H ==================== -->
+        <section class="page-section" id="why-section" style="min-height:auto; padding: 4rem 0;">
+            <div class="section-inner">
+                <div class="reveal" style="max-width:800px; margin:0 auto;">
+                    <div class="demo-label" style="justify-content:center; margin-bottom:1.5rem;">Why graphics.h?</div>
+                    <h2 class="demo-heading" style="text-align:center; margin-bottom:1.5rem;">The Modern Way to Learn C
+                        Graphics Programming</h2>
+                    <p style="font-size:1rem; line-height:1.8; opacity:0.7; text-align:center; margin-bottom:1.5rem;">
+                        The <strong style="color:var(--accent)">graphics.h</strong> header file is part of the legacy
+                        Borland Graphics Interface (BGI) and is still widely used in university computer graphics
+                        courses, especially in the SPPU curriculum. Traditionally, students had to install Turbo C++ and
+                        DOSBox — outdated software from the 1990s — just to compile a simple line-drawing program. This
+                        graphics.h online compiler removes that barrier entirely.
+                    </p>
+                    <p style="font-size:1rem; line-height:1.8; opacity:0.7; text-align:center; margin-bottom:1.5rem;">
+                        With this tool you can write, compile, and run graphics.h programs directly in your browser.
+                        Functions like <code
+                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">initgraph()</code>,
+                        <code
+                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">line()</code>,
+                        <code
+                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">circle()</code>,
+                        <code
+                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">rectangle()</code>,
+                        <code
+                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">setcolor()</code>,
+                        and <code
+                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">outtextxy()</code>
+                        all work out of the box — no installation, no configuration hassle.
+                    </p>
+                    <p style="font-size:1rem; line-height:1.8; opacity:0.7; text-align:center;">
+                        Whether you need to implement DDA line drawing, Bresenham's algorithm, midpoint circle, or flood
+                        fill for your SPPU Computer Graphics lab — this online compiler has you covered. Just open the
+                        browser and start coding.
                     </p>
                 </div>
-
-                <!-- Product -->
-                <div>
-                    <div class="footer-col-title">Product</div>
-                    <ul class="footer-links">
-                        <li><a href="/compiler.html"><i data-lucide="terminal"></i> Online Compiler</a></li>
-                        <li><a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
-                                target="_blank" rel="noopener noreferrer"><i data-lucide="code"></i> VS Code
-                                Extension</a></li>
-                        <li><a href="/viewer.html"><i data-lucide="book-open"></i> Docs & Examples</a></li>
-                    </ul>
-                </div>
-
-                <!-- Resources -->
-                <div>
-                    <div class="footer-col-title">Resources</div>
-                    <ul class="footer-links">
-                        <li><a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
-                                rel="noopener noreferrer"><i data-lucide="github"></i> GitHub</a></li>
-                        <li><a href="https://sppucodes.vercel.app/" target="_blank"><i data-lucide="external-link"></i>
-                                Sppucodes</a></li>
-                        <li><a href="javascript:void(0)" onclick="openModal()"><i data-lucide="info"></i> About</a></li>
-                    </ul>
-                </div>
-
-                <!-- Connect -->
-                <div>
-                    <div class="footer-col-title">Connect</div>
-                    <ul class="footer-links">
-                        <li><a href="javascript:void(0)" onclick="openContactModal()"><i data-lucide="mail"></i> Contact
-                                Us</a></li>
-                        <li><a href="https://github.com/AlbatrossC/graphics-h-compiler/issues" target="_blank"
-                                rel="noopener noreferrer"><i data-lucide="bug"></i> Report a Bug</a></li>
-                    </ul>
-                </div>
             </div>
+        </section>
 
-            <div class="footer-bottom">
-                <span class="footer-copyright">&copy; 2025 graphics.h Compiler. Open source under MIT.</span>
-                <div class="footer-social">
-                    <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
-                        rel="noopener noreferrer" title="GitHub">
-                        <i data-lucide="github"></i>
-                    </a>
-                    <a href="javascript:void(0)" onclick="openContactModal()" title="Contact">
-                        <i data-lucide="mail"></i>
-                    </a>
+        <!-- About Modal -->
+        <div id="about-modal" class="modal" onclick="closeModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <button class="modal-close" onclick="closeModal()">
+                    <i data-lucide="x"></i>
+                </button>
+
+                <h2 class="modal-title">Why This Exists</h2>
+
+                <p class="modal-text">
+                    <strong>graphics.h</strong> is a legacy graphics library still taught in Computer Graphics
+                    courses—especially in SPPU curriculum. But running it today requires jumping through hoops:
+                    installing
+                    Turbo C, configuring DOSBox, dealing with broken environments.
+                </p>
+
+                <p class="modal-text">
+                    Students waste hours fighting setup instead of learning graphics programming.
+                </p>
+
+                <p class="modal-text">
+                    <strong>This project eliminates that friction.</strong>
+                </p>
+
+                <p class="modal-text">
+                    It provides two ways to run graphics.h programs instantly:
+                </p>
+
+                <ul class="modal-list">
+                    <li><strong>Online compiler</strong> – Works directly in your browser</li>
+                    <li><strong>VS Code extension</strong> – Integrates with your local development environment</li>
+                </ul>
+
+                <p class="modal-text">
+                    No legacy tools. No manual configuration. Just write code and run it.
+                </p>
+
+                <div class="modal-highlight">
+                    <p class="modal-text">
+                        Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students
+                        focus on learning graphics, not wrestling with 1990s software.
+                    </p>
                 </div>
             </div>
         </div>
-    </footer>
+
+        <!-- ==================== FOOTER ==================== -->
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <div class="footer-grid">
+                    <!-- Brand -->
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <span class="bracket">&lt;</span>
+                            <span>graphics.h</span>
+                            <span class="bracket">/&gt;</span>
+                        </div>
+                        <p class="footer-tagline">
+                            A modern compiler for graphics.h programs. Run code instantly in your browser or VS Code.
+                        </p>
+                    </div>
+
+                    <!-- Product -->
+                    <div>
+                        <div class="footer-col-title">Product</div>
+                        <ul class="footer-links">
+                            <li><a href="/compiler.html"><i data-lucide="terminal"></i> Online Compiler</a></li>
+                            <li><a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                                    target="_blank" rel="noopener noreferrer"><i data-lucide="code"></i> VS Code
+                                    Extension</a></li>
+                            <li><a href="/docs"><i data-lucide="book-open"></i> Documentation</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Resources -->
+                    <div>
+                        <div class="footer-col-title">Resources</div>
+                        <ul class="footer-links">
+                            <li><a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="github"></i> GitHub</a></li>
+                            <li><a href="https://sppucodes.vercel.app/" target="_blank"><i
+                                        data-lucide="external-link"></i>
+                                    Sppucodes</a></li>
+                            <li><a href="javascript:void(0)" onclick="openModal()"><i data-lucide="info"></i> About</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Connect -->
+                    <div>
+                        <div class="footer-col-title">Connect</div>
+                        <ul class="footer-links">
+                            <li><a href="javascript:void(0)" onclick="openContactModal()"><i data-lucide="mail"></i>
+                                    Contact
+                                    Us</a></li>
+                            <li><a href="https://github.com/AlbatrossC/graphics-h-compiler/issues" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="bug"></i> Report a Bug</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <span class="footer-copyright">&copy; 2025 graphics.h Compiler. Open source under MIT.</span>
+                    <div class="footer-social">
+                        <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                            rel="noopener noreferrer" title="GitHub">
+                            <i data-lucide="github"></i>
+                        </a>
+                        <a href="javascript:void(0)" onclick="openContactModal()" title="Contact">
+                            <i data-lucide="mail"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </main>
 
     <script src="static/analytics.js" async></script>
-    <script src="static/notification.js" async></script>
 
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+        // Initialize Lucide icons after deferred scripts load
+        function initIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        // Run on DOMContentLoaded (deferred scripts run before this event)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initIcons);
+        } else {
+            // In case DOMContentLoaded already fired, wait a tick for deferred scripts
+            setTimeout(initIcons, 0);
+        }
+        window.addEventListener('load', initIcons);
 
         // Mobile Menu Toggle
         function toggleMobileMenu() {
@@ -1677,14 +1748,20 @@
     {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        "name": "graphics.h Compiler",
-        "description": "Modern online compiler and VS Code extension for running graphics.h programs with zero setup",
+        "name": "graphics.h Online Compiler",
+        "url": "https://graphics-h-online-compiler.vercel.app/",
+        "description": "A modern online compiler for running graphics.h C programs in the browser with zero setup. Alternative to Turbo C and DOSBox.",
         "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "Windows, Ubuntu, Browser",
+        "operatingSystem": "Windows, Ubuntu, Web Browser",
         "offers": {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Person",
+            "name": "AlbatrossC",
+            "url": "https://github.com/AlbatrossC"
         }
     }
     </script>

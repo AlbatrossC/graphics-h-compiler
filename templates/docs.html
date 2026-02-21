@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Documentation — graphics.h Online Compiler</title>
+    <meta name="description"
+        content="Documentation for the graphics.h online compiler. Guides, API reference, and examples coming soon.">
+    <meta name="keywords"
+        content="graphics.h documentation, graphics.h online compiler docs, C graphics programming guide, SPPU graphics.h">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="en">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://graphics-h-online-compiler.vercel.app/docs">
+
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --text-light: #fafafa;
+            --accent: #00ff88;
+            --border-dark: #1a1a1a;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .docs-container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .docs-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .docs-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.08);
+            border-radius: 100px;
+            margin-bottom: 1.5rem;
+        }
+
+        .docs-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 1rem;
+        }
+
+        h1 .highlight {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent);
+        }
+
+        .docs-desc {
+            font-size: 1rem;
+            line-height: 1.7;
+            opacity: 0.6;
+            margin-bottom: 2.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.85rem 1.8rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border: 2px solid var(--accent);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-dark);
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.25);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-light);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* Background glow */
+        .glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: var(--accent);
+            opacity: 0.06;
+            z-index: -1;
+            filter: blur(120px);
+            pointer-events: none;
+        }
+
+        .glow.top {
+            top: -150px;
+            right: -100px;
+        }
+
+        .glow.bottom {
+            bottom: -150px;
+            left: -100px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glow top"></div>
+    <div class="glow bottom"></div>
+
+    <div class="docs-container">
+        <div class="docs-icon">📖</div>
+
+        <div class="docs-badge">
+            <span class="dot"></span>
+            <span>In Progress</span>
+        </div>
+
+        <h1>Docs <span class="highlight">Coming Soon</span></h1>
+
+        <p class="docs-desc">
+            We're working on comprehensive documentation for the graphics.h online compiler — including setup guides,
+            API reference, code examples, and SPPU lab programs. Check back soon.
+        </p>
+
+        <div class="btn-group">
+            <a href="/compiler.html" class="btn btn-primary">
+                ▶ Open Compiler
+            </a>
+            <a href="/" class="btn btn-outline">
+                ← Back to Home
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

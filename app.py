@@ -45,10 +45,19 @@ def compiler():
 def maintenance():
     return render_template('maintenance.html')
 
+@app.route('/docs')
+@app.route('/docs.html')
+def docs():
+    return render_template('docs.html')
+
 # Static assets
 @app.route('/static/<path:path>')
 def serve_static(path):
     return send_from_directory('static', path)
+
+@app.route('/robots.txt')
+def robots_txt():
+    return send_from_directory('static', 'robots.txt', mimetype='text/plain')
 
 @app.route('/libs/<path:filename>')
 def serve_libs(filename):
