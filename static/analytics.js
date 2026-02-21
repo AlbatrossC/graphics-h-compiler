@@ -1,4 +1,4 @@
-// I am tracking your Ass
+// Analytics & Tracking Scripts
 
 // Google Analytics
 (function () {

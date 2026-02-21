@@ -487,7 +487,7 @@ async function updateCacheStatus() {
     }
 }
 
-const canvas = document.getElementById("dos-canvas");
+
 const loading = document.getElementById("loading");
 const loadingText = document.getElementById("loading-text");
 const loadingProgressBar = document.getElementById("loading-progress-bar");

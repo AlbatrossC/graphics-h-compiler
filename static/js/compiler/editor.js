@@ -2,49 +2,6 @@
 // Lightweight code editor with basic C++ syntax highlighting
 // and auto-close brackets. No heavy IDE features.
 
-// ==================== SCRIPT LOADING WITH FALLBACK ====================
-
-function loadScript(url, fallbackUrl, timeout = 5000) {
-    return new Promise((resolve, reject) => {
-        const tryLoad = (src, isFallback = false) => {
-            return new Promise((res, rej) => {
-                const script = document.createElement('script');
-                script.src = src;
-
-                const timer = setTimeout(() => {
-                    script.onerror = null;
-                    script.onload = null;
-                    rej(new Error('Timeout'));
-                }, timeout);
-
-                script.onload = () => {
-                    clearTimeout(timer);
-                    if (isFallback) {
-                        Logger.info(`Using fallback: ${src}`);
-                    }
-                    res(true);
-                };
-
-                script.onerror = () => {
-                    clearTimeout(timer);
-                    rej(new Error(`Failed to load: ${src}`));
-                };
-
-                document.head.appendChild(script);
-            });
-        };
-
-        tryLoad(url)
-            .then(resolve)
-            .catch(() => {
-                Logger.warn(`Primary source failed, trying fallback`);
-                tryLoad(fallbackUrl, true)
-                    .then(resolve)
-                    .catch(reject);
-            });
-    });
-}
-
 // ==================== CODEMIRROR CDN LOADING ====================
 
 // We load CodeMirror modules from esm.sh CDN

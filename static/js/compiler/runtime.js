@@ -430,7 +430,7 @@ async function runProgram() {
         Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
         updateLoadingProgress(40);
 
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
 
         const batchScript = `@ECHO OFF
 CD TURBOC3\\BIN
@@ -599,44 +599,42 @@ const userEmail = document.getElementById('user-email');
 const signoutBtn = document.getElementById('signout-btn');
 const mainFolderFiles = document.getElementById('main-folder-files');
 const newFileBtn = document.getElementById('new-file-btn');
-const newFileModal = document.getElementById('new-file-modal');
-const newFileInput = document.getElementById('new-file-input');
-const newFileCreate = document.getElementById('new-file-create');
-const newFileCancel = document.getElementById('new-file-cancel');
-const newFileClose = document.getElementById('new-file-close');
 
 // User state (will be updated by auth logic)
 let isUserLoggedIn = false;
 let currentUser = null;
 let supabaseClient = null;
 
+// Shared sidebar toggle for desktop
+function toggleDesktopSidebar() {
+    sidebar.classList.toggle('collapsed');
+
+    const activityBar = document.querySelector('.activity-bar');
+    if (activityBar) {
+        activityBar.classList.toggle('active');
+    }
+
+    // Resize editor after collapse animation
+    setTimeout(() => {
+        if (editor && editor.requestMeasure) {
+            editor.requestMeasure();
+        }
+    }, 350);
+}
+
 // FIXED: Mobile AND desktop toggle
 if (sidebarToggle) {
     sidebarToggle.addEventListener('click', () => {
         // Check if mobile (no activity bar visible)
         const activityBar = document.querySelector('.activity-bar');
-        const isMobile = activityBar && window.getComputedStyle(activityBar).display === 'none';
+        const isMobileSidebar = activityBar && window.getComputedStyle(activityBar).display === 'none';
 
-        if (isMobile) {
+        if (isMobileSidebar) {
             // Mobile: toggle open class and overlay
             sidebar.classList.toggle('open');
             sidebarOverlay.classList.toggle('active');
         } else {
-            // Desktop: toggle collapsed class
-            sidebar.classList.toggle('collapsed');
-
-            // Toggle activity bar
-            if (activityBar) {
-                activityBar.classList.toggle('active');
-            }
-
-            // Resize editor after collapse animation
-            setTimeout(() => {
-                if (editor) {
-                    editor.resize();
-                    editor.renderer.updateFull();
-                }
-            }, 350);
+            toggleDesktopSidebar();
         }
     });
 }
@@ -651,41 +649,12 @@ if (sidebarOverlay) {
 
 // Desktop collapse toggle
 if (sidebarCollapseBtn) {
-    sidebarCollapseBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-
-        // Toggle activity bar
-        const activityBar = document.querySelector('.activity-bar');
-        if (activityBar) {
-            activityBar.classList.toggle('active');
-        }
-
-        // Resize editor after collapse animation
-        setTimeout(() => {
-            if (editor && editor.requestMeasure) {
-                editor.requestMeasure();
-            }
-        }, 350);
-    });
+    sidebarCollapseBtn.addEventListener('click', toggleDesktopSidebar);
 }
 
 // Activity bar button to toggle sidebar
 if (explorerActivityBtn) {
-    explorerActivityBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-
-        // Toggle activity bar
-        const activityBar = document.querySelector('.activity-bar');
-        if (activityBar) {
-            activityBar.classList.toggle('active');
-        }
-
-        setTimeout(() => {
-            if (editor && editor.requestMeasure) {
-                editor.requestMeasure();
-            }
-        }, 350);
-    });
+    explorerActivityBtn.addEventListener('click', toggleDesktopSidebar);
 }
 
 if (refreshBtn) {
@@ -771,8 +740,6 @@ function updateLoginUI(loggedIn, user = null) {
         if (newFileBtn) {
             newFileBtn.style.display = 'none';
         }
-        // Close new file modal if open
-        if (newFileModal) newFileModal.classList.add('hidden');
 
         // Show auth section, hide user profile
         authSection.style.display = 'block';
@@ -834,21 +801,21 @@ async function warmupJSDOS() {
 }
 
 async function prefetchDemoFiles() {
-    // Pre-fetch all demo files in background
-    for (const [key, url] of Object.entries(DEMO_FILES)) {
-        if (!DemoCache.get(key)) {
-            try {
-                const response = await fetch(url);
-                if (response.ok) {
-                    const code = await response.text();
-                    DemoCache.set(key, code);
-                    Logger.info(`Pre-cached demo: ${key}`);
-                }
-            } catch (e) {
-                // Silently fail for background prefetch
+    const entries = Object.entries(DEMO_FILES).filter(([key]) => !DemoCache.get(key));
+    if (entries.length === 0) return;
+
+    await Promise.allSettled(entries.map(async ([key, url]) => {
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const code = await response.text();
+                DemoCache.set(key, code);
+                Logger.info(`Pre-cached demo: ${key}`);
             }
+        } catch (e) {
+            // Silently fail for background prefetch
         }
-    }
+    }));
 }
 
 // ==================== INITIALIZATION ====================
@@ -857,20 +824,11 @@ async function prefetchDemoFiles() {
     Logger.info('Initializing compiler...');
     updateSaveIndicator();
 
-    // Start background warmup immediately (don't wait for editor)
-    // This runs in parallel with script loading for faster first run
-    const warmupEarly = setTimeout(() => {
-        warmupJSDOS();
-    }, 100);
-
     const loaded = await loadAllScripts();
     if (loaded) {
         await initializeEditor();
 
-        // Clear early warmup if it hasn't started yet
-        clearTimeout(warmupEarly);
-
-        // Ensure warmup is running and update cache status
+        // Start warmup after editor is ready
         warmupJSDOS();
         updateCacheStatus();
 

@@ -145,8 +145,7 @@ function clearLocalDraft(folder, filename) {
 // ==================== PROGRESS & STATUS ====================
 const progressBar = document.getElementById('progress-bar');
 const progressFill = document.getElementById('progress-fill');
-const statusMessage = document.getElementById('status-message');
-const statusText = document.getElementById('status-text');
+
 
 function showProgress() {
     if (progressBar && progressFill) {
@@ -223,7 +222,6 @@ const autosaveMetrics = {
     operations: { cloudWrites: 0, cloudSkips: 0, localWrites: 0 }
 };
 
-// ==================== SAVE FUNCTIONS ====================
 // ==================== SAVE FUNCTIONS ====================
 async function saveCode() {
     if (!editor) return;
@@ -627,7 +625,7 @@ async function openFile(folder, filename, options = {}) {
     const cached = getCachedFileContent(folder, filename);
     if (cached) {
         if (editor) {
-            editor.setValue(cached.content, -1);
+            editor.setValue(cached.content);
             editor.clearSelection();
         }
         SAVE_STATE.cloudHash = cached.hash;
@@ -657,7 +655,7 @@ async function openFile(folder, filename, options = {}) {
                     const hash = etag || (await computeSha256(content));
 
                     if (editor) {
-                        editor.setValue(content, -1);
+                        editor.setValue(content);
                         editor.clearSelection();
                     }
 
@@ -675,7 +673,7 @@ async function openFile(folder, filename, options = {}) {
                     return;
                 } else if (response.status === 404) {
                     if (editor) {
-                        editor.setValue('', -1);
+                        editor.setValue('');
                     }
                     SAVE_STATE.cloudHash = null;
                     DIRTY_FLAG.isDirty = false;
@@ -699,7 +697,7 @@ async function openFile(folder, filename, options = {}) {
     const draft = getLocalDraft(folder, filename);
     if (draft !== null) {
         if (editor) {
-            editor.setValue(draft, -1);
+            editor.setValue(draft);
             editor.clearSelection();
         }
         DIRTY_FLAG.isDirty = false;
@@ -710,7 +708,7 @@ async function openFile(folder, filename, options = {}) {
 
     // Empty file
     if (editor) {
-        editor.setValue('', -1);
+        editor.setValue('');
     }
     DIRTY_FLAG.isDirty = false;
     highlightActiveFile();

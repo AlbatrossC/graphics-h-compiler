@@ -71,8 +71,6 @@ body {
     overflow: hidden;
     height: 100vh;
     transition: background-color var(--transition-slow), color var(--transition-slow);
-    /* Performance: Use GPU acceleration */
-    transform: translateZ(0);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -85,8 +83,6 @@ header {
     top: 0;
     z-index: 100;
     transition: background-color var(--transition-slow), border-color var(--transition-slow);
-    /* Performance: Use GPU layer */
-    will-change: transform;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -149,9 +145,6 @@ header {
     cursor: pointer;
     background: var(--vscode-sidebar);
     color: var(--text-primary);
-    /* Performance optimization */
-    transform: translateZ(0);
-    backface-visibility: hidden;
 }
 
 .btn {
@@ -339,8 +332,6 @@ header {
     overflow: hidden;
     min-width: 0;
     min-height: 0;
-    /* Performance */
-    will-change: border-color;
 }
 
 #editor-wrapper {
@@ -918,8 +909,6 @@ header {
     border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
-    transform: translateZ(0);
-    backface-visibility: hidden;
 }
 
 .copy-error-btn:hover {
@@ -1089,7 +1078,6 @@ header {
     }
 }
 
-/* Sidebar Container */
 /* Sidebar Container */
 .sidebar-container {
     display: flex;
