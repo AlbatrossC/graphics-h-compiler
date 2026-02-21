@@ -8,9 +8,9 @@
     <!-- SEO Meta Tags -->
     <title>graphics.h Online Compiler — Run C Graphics in Browser</title>
     <meta name="description"
-        content="Run graphics.h programs in your browser or VS Code. Zero setup needed. A modern Turbo C alternative for SPPU students.">
+        content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
     <meta name="keywords"
-        content="graphics.h, graphics.h online compiler, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative, SPPU graphics, graphics programming, C compiler">
+        content="graphics.h, graphics.h online compiler, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative, SPPU graphics, graphics programming, C compiler, run graphics.h, browser run code">
     <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow">
     <meta name="language" content="en">
@@ -19,22 +19,26 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://graphics-h-online-compiler.vercel.app/">
+    <meta property="og:url" content="https://graphics-h-compiler.vercel.app/">
     <meta property="og:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
     <meta property="og:description"
-        content="Run graphics.h programs in your browser or VS Code. Zero setup, no Turbo C needed.">
-    <meta property="og:image" content="https://graphics-h-online-compiler.vercel.app/static/og-image.png">
+        content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
+    <meta property="og:image" content="https://graphics-h-compiler.vercel.app/static/og-image.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://graphics-h-online-compiler.vercel.app/">
+    <meta property="twitter:url" content="https://graphics-h-compiler.vercel.app/">
     <meta property="twitter:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
     <meta property="twitter:description"
-        content="Run graphics.h programs in your browser or VS Code. Zero setup, no Turbo C needed.">
-    <meta property="twitter:image" content="https://graphics-h-online-compiler.vercel.app/static/og-image.png">
+        content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
+    <meta property="twitter:image" content="https://graphics-h-compiler.vercel.app/static/og-image.png">
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://graphics-h-online-compiler.vercel.app/">
+    <link rel="canonical" href="https://graphics-h-compiler.vercel.app/">
+
+    <!-- Hreflang Usage -->
+    <link rel="alternate" hreflang="en" href="https://graphics-h-compiler.vercel.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://graphics-h-compiler.vercel.app/" />
 
     <!-- Favicon -->
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
@@ -1451,40 +1455,179 @@
         </section>
 
         <!-- ==================== SECTION 4: WHY GRAPHICS.H ==================== -->
-        <section class="page-section" id="why-section" style="min-height:auto; padding: 4rem 0;">
-            <div class="section-inner">
-                <div class="reveal" style="max-width:800px; margin:0 auto;">
+        <style>
+            .why-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 1.5rem;
+                margin-top: 3rem;
+            }
+
+            .feature-card {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                padding: 2.2rem;
+                border-radius: 16px;
+                transition: var(--transition);
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+                position: relative;
+                overflow: hidden;
+            }
+
+            body.light .feature-card {
+                background: rgba(0, 0, 0, 0.02);
+                border-color: rgba(0, 0, 0, 0.06);
+            }
+
+            .feature-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: radial-gradient(circle at 50% 0%, rgba(0, 255, 136, 0.05), transparent 70%);
+                opacity: 0;
+                transition: var(--transition);
+                z-index: 0;
+            }
+
+            .feature-card:hover {
+                transform: translateY(-8px);
+                border-color: rgba(0, 255, 136, 0.3);
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 0 20px rgba(0, 255, 136, 0.05);
+            }
+
+            .feature-card:hover::before {
+                opacity: 1;
+            }
+
+            body.light .feature-card:hover {
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05), 0 0 20px rgba(0, 255, 136, 0.1);
+            }
+
+            .feature-icon-wrapper {
+                width: 52px;
+                height: 52px;
+                border-radius: 12px;
+                background: rgba(0, 255, 136, 0.08);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 1.5rem;
+                color: var(--accent);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 1;
+                border: 1px solid rgba(0, 255, 136, 0.15);
+            }
+
+            body.light .feature-icon-wrapper {
+                background: rgba(0, 255, 136, 0.15);
+                border-color: rgba(0, 255, 136, 0.3);
+            }
+
+            .feature-card:hover .feature-icon-wrapper {
+                background: var(--accent);
+                color: var(--bg-dark);
+                transform: rotate(-8deg) scale(1.1);
+            }
+
+            body.light .feature-card:hover .feature-icon-wrapper {
+                color: var(--bg-light);
+            }
+
+            .feature-card-title {
+                font-size: 1.15rem;
+                font-weight: 700;
+                margin-bottom: 0.8rem;
+                color: inherit;
+                z-index: 1;
+                letter-spacing: -0.01em;
+            }
+
+            .feature-card-desc {
+                font-size: 0.9rem;
+                line-height: 1.7;
+                opacity: 0.7;
+                z-index: 1;
+            }
+
+            .feature-code {
+                background: rgba(0, 255, 136, 0.1);
+                padding: 0.15em 0.4em;
+                border-radius: 4px;
+                font-family: 'Space Mono', monospace;
+                font-size: 0.85em;
+                color: var(--accent);
+            }
+        </style>
+        <section class="page-section" id="why-section" style="min-height:auto; padding: 6rem 0;">
+            <div class="section-inner" style="max-width: 1200px;">
+                <div class="reveal">
                     <div class="demo-label" style="justify-content:center; margin-bottom:1.5rem;">Why graphics.h?</div>
                     <h2 class="demo-heading" style="text-align:center; margin-bottom:1.5rem;">The Modern Way to Learn C
                         Graphics Programming</h2>
-                    <p style="font-size:1rem; line-height:1.8; opacity:0.7; text-align:center; margin-bottom:1.5rem;">
+                    <p
+                        style="font-size:1.05rem; line-height:1.8; opacity:0.7; text-align:center; max-width: 750px; margin: 0 auto 1.5rem;">
                         The <strong style="color:var(--accent)">graphics.h</strong> header file is part of the legacy
-                        Borland Graphics Interface (BGI) and is still widely used in university computer graphics
-                        courses, especially in the SPPU curriculum. Traditionally, students had to install Turbo C++ and
-                        DOSBox — outdated software from the 1990s — just to compile a simple line-drawing program. This
-                        graphics.h online compiler removes that barrier entirely.
+                        Borland Graphics Interface (BGI). Traditionally, students had to install outdated 1990s software
+                        like Turbo C++ and DOSBox. This graphics.h online compiler removes that barrier entirely.
                     </p>
-                    <p style="font-size:1rem; line-height:1.8; opacity:0.7; text-align:center; margin-bottom:1.5rem;">
-                        With this tool you can write, compile, and run graphics.h programs directly in your browser.
-                        Functions like <code
-                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">initgraph()</code>,
-                        <code
-                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">line()</code>,
-                        <code
-                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">circle()</code>,
-                        <code
-                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">rectangle()</code>,
-                        <code
-                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">setcolor()</code>,
-                        and <code
-                            style="background:rgba(0,255,136,0.1); padding:0.15em 0.4em; border-radius:4px; font-family:'Space Mono',monospace; font-size:0.9em;">outtextxy()</code>
-                        all work out of the box — no installation, no configuration hassle.
-                    </p>
-                    <p style="font-size:1rem; line-height:1.8; opacity:0.7; text-align:center;">
-                        Whether you need to implement DDA line drawing, Bresenham's algorithm, midpoint circle, or flood
-                        fill for your SPPU Computer Graphics lab — this online compiler has you covered. Just open the
-                        browser and start coding.
-                    </p>
+
+                    <div class="why-grid">
+                        <!-- Card 1 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="monitor" style="width: 26px; height: 26px;"></i>
+                            </div>
+                            <h3 class="feature-card-title">Run in Your Browser</h3>
+                            <p class="feature-card-desc">
+                                Write code and execute instantly. Functions like <code
+                                    class="feature-code">initgraph()</code> and <code
+                                    class="feature-code">circle()</code> work seamlessly, creating a perfect online
+                                compiler environment.
+                            </p>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="zap" style="width: 26px; height: 26px;"></i>
+                            </div>
+                            <h4 class="feature-card-title">Zero Setup Required</h4>
+                            <p class="feature-card-desc">
+                                Skip the 90s software setup. No DOSBox configuration, no missing BGI compiler settings.
+                                Simply code online and let our WebAssembly engine handle graphicsh execution.
+                            </p>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="code-2" style="width: 26px; height: 26px;"></i>
+                            </div>
+                            <h5 class="feature-card-title">VS Code Integration</h5>
+                            <p class="feature-card-desc">
+                                Prefer local IDEs? Our VS Code graphics extension brings one-click graphics.h compiling
+                                right to your editor. A seamless code extension for modern developers.
+                            </p>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="graduation-cap" style="width: 26px; height: 26px;"></i>
+                            </div>
+                            <h6 class="feature-card-title">Designed for SPPU</h6>
+                            <p class="feature-card-desc">
+                                Built with SPPU Computer Graphics labs in mind. Easily implement algorithms like DDA,
+                                Bresenham's, and flood fill. Your complete Turbo C online alternative.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1749,7 +1892,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "graphics.h Online Compiler",
-        "url": "https://graphics-h-online-compiler.vercel.app/",
+        "url": "https://graphics-h-compiler.vercel.app/",
         "description": "A modern online compiler for running graphics.h C programs in the browser with zero setup. Alternative to Turbo C and DOSBox.",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Windows, Ubuntu, Web Browser",

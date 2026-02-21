@@ -59,6 +59,10 @@ def serve_static(path):
 def robots_txt():
     return send_from_directory('static', 'robots.txt', mimetype='text/plain')
 
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    return send_from_directory('static', 'sitemap.xml', mimetype='application/xml')
+
 @app.route('/libs/<path:filename>')
 def serve_libs(filename):
     return send_from_directory('compiler-assets/libs', filename)
