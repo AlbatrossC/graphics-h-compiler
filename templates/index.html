@@ -79,15 +79,21 @@
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+            overflow-y: auto;
+            height: 100%;
+        }
+
         body {
             font-family: 'IBM Plex Sans', -apple-system, sans-serif;
             background: var(--bg-dark);
             color: var(--text-light);
             overflow-x: hidden;
             line-height: 1.6;
-            transition: var(--transition);
-            height: 100vh;
-            overflow-y: auto;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
         }
 
         body.light {
@@ -100,82 +106,142 @@
             font-family: 'Space Mono', 'JetBrains Mono', monospace;
         }
 
-        /* Header */
+        /* ==================== HEADER ==================== */
         header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
-            background: var(--bg-dark);
-            border-bottom: 2px solid var(--border-dark);
-            transition: var(--transition);
-            backdrop-filter: blur(10px);
-            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 10, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transition: background 0.4s ease, border-color 0.4s ease;
         }
 
         body.light header {
-            background: rgba(250, 250, 250, 0.95);
-            border-bottom: 2px solid var(--border-light);
+            background: rgba(250, 250, 250, 0.75);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .header-content {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0.8rem 1.5rem;
+            padding: 0.7rem 1.5rem;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+            gap: 1.5rem;
         }
 
         .logo {
             font-family: 'Space Mono', monospace;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             letter-spacing: -0.02em;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             cursor: pointer;
             user-select: none;
+            white-space: nowrap;
         }
 
         .logo .bracket {
             color: var(--accent);
-            font-size: 1.3rem;
+            font-size: 1.2rem;
         }
 
-        /* Desktop Navigation */
-        .desktop-nav {
+        /* Header Nav - Centered */
+        .header-nav {
             display: none;
-            gap: 0.5rem;
             align-items: center;
+            gap: 0.25rem;
         }
 
         @media (min-width: 768px) {
-            .desktop-nav {
+            .header-nav {
                 display: flex;
             }
+        }
+
+        .header-nav .nav-btn {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: inherit;
+            white-space: nowrap;
+            border-radius: 6px;
+            opacity: 0.7;
+        }
+
+        .header-nav .nav-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        body.light .header-nav .nav-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .header-nav .nav-btn i {
+            width: 15px;
+            height: 15px;
+        }
+
+        .header-nav .nav-divider {
+            width: 1px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 0.3rem;
+        }
+
+        body.light .header-nav .nav-divider {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .header-nav .nav-btn-accent {
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(0, 255, 136, 0.06);
+            opacity: 0.9;
+        }
+
+        .header-nav .nav-btn-accent:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.12);
+            opacity: 1;
         }
 
         /* Mobile Menu Button */
         .mobile-menu-btn {
             display: flex;
             background: transparent;
-            border: 2px solid var(--border-dark);
-            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.45rem;
             cursor: pointer;
             transition: var(--transition);
             align-items: center;
             justify-content: center;
+            border-radius: 6px;
         }
 
         body.light .mobile-menu-btn {
-            border-color: var(--border-light);
+            border-color: rgba(0, 0, 0, 0.1);
         }
 
         .mobile-menu-btn:hover {
             border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.06);
         }
 
         @media (min-width: 768px) {
@@ -263,174 +329,57 @@
             background: rgba(0, 255, 136, 0.1);
         }
 
-        /* Button Styles */
-        .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: 2px solid transparent;
-            background: transparent;
-            color: inherit;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-simple {
-            border: none;
-            background: transparent;
-            color: inherit;
-            opacity: 0.8;
-            padding: 0.5rem 0.8rem;
-        }
-
-        .btn-simple:hover {
-            opacity: 1;
-            background: rgba(128, 128, 128, 0.1);
-            border-radius: 4px;
-        }
-
-        .btn-icon {
-            padding: 0.5rem;
-            border: 2px solid var(--border-dark);
-        }
-
-        body.light .btn-icon {
-            border-color: var(--border-light);
-        }
-
-        .btn-sppucodes {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-dark);
-            border-radius: 4px;
-        }
-
-        body.light .btn-sppucodes {
-            border-color: var(--border-light);
-        }
-
-        body:not(.light) .btn-sppucodes:hover {
-            background: var(--code-bg-dark);
-            border-color: var(--accent);
-        }
-
-        body.light .btn-sppucodes:hover {
-            background: var(--code-bg-light);
-            border-color: var(--accent-dark);
-        }
-
-        /* Hero Section - Full viewport, no scroll */
-        .hero {
+        /* ==================== SECTIONS ==================== */
+        .page-section {
             min-height: 100vh;
+            scroll-snap-align: start;
             display: flex;
             align-items: center;
-            padding: 5rem 1.5rem 2rem;
+            justify-content: center;
             position: relative;
             overflow: hidden;
         }
 
-        @media (min-width: 768px) {
-            .hero {
-                padding: 5rem 2rem 2rem;
-            }
-        }
-
-        .hero-container {
-            max-width: 1400px;
+        .section-inner {
+            max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
-            width: 100%;
+            padding: 5rem 2rem 2rem;
+        }
+
+        /* ==================== HERO SECTION ==================== */
+        .hero-section {
+            text-align: center;
+        }
+
+        .hero-section .section-inner {
             display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
         }
 
-        .hero-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 2rem;
-            align-items: center;
-            width: 100%;
-        }
-
-        @media (min-width: 1024px) {
-            .hero-grid {
-                grid-template-columns: 1fr 1.2fr;
-                gap: 3rem;
-            }
-        }
-
-        /* Headline */
-        .headline {
-            font-size: clamp(2rem, 5vw, 3.2rem);
-            font-weight: 700;
-            line-height: 1;
-            letter-spacing: -0.03em;
-            margin-bottom: 1.2rem;
-        }
-
-        .headline .highlight {
-            font-family: 'Space Mono', monospace;
-            color: var(--accent);
-            display: inline-block;
-            position: relative;
-        }
-
-        .headline .highlight::after {
-            content: '_';
-            animation: blink 1s infinite;
-            color: var(--accent);
-        }
-
-        @keyframes blink {
-
-            0%,
-            50% {
-                opacity: 1;
-            }
-
-            51%,
-            100% {
-                opacity: 0;
-            }
-        }
-
-        .subheadline {
-            font-size: clamp(0.85rem, 1.5vw, 0.95rem);
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
-            opacity: 0.85;
-            max-width: 540px;
-        }
-
-        /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.7rem;
-            padding: 0.6rem 1.1rem;
-            border: 2px solid var(--accent);
-            margin-bottom: 1.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            margin-bottom: 2rem;
             font-size: 0.75rem;
             font-weight: 600;
-            background: rgba(0, 255, 136, 0.12);
-            letter-spacing: 0.02em;
+            background: rgba(0, 255, 136, 0.08);
+            letter-spacing: 0.04em;
+            border-radius: 100px;
         }
 
         body.light .status-badge {
-            background: rgba(0, 255, 136, 0.18);
+            background: rgba(0, 255, 136, 0.12);
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             background: var(--accent);
             border-radius: 50%;
             animation: pulse 2s infinite;
@@ -447,56 +396,86 @@
 
             50% {
                 opacity: 0.5;
-                transform: scale(0.9);
+                transform: scale(0.85);
             }
         }
 
-        /* CTA Buttons */
-        .cta-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.8rem;
+        .headline {
+            font-size: clamp(2.8rem, 7vw, 5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
             margin-bottom: 1.5rem;
         }
 
+        .headline .highlight {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent);
+            display: inline-block;
+            position: relative;
+            text-shadow: 0 0 40px rgba(0, 255, 136, 0.15);
+        }
+
+        .subheadline {
+            font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+            opacity: 0.65;
+            max-width: 640px;
+        }
+
+        .cta-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
         .cta-btn {
-            padding: 0.75rem 1.4rem;
-            font-size: 0.85rem;
+            padding: 1rem 2.2rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            border: 3px solid transparent;
+            border: 2px solid transparent;
             cursor: pointer;
             transition: var(--transition);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
             white-space: nowrap;
+            border-radius: 10px;
+            position: relative;
         }
 
         .cta-btn-primary {
             background: var(--accent);
             color: var(--bg-dark);
             border-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
         }
 
         .cta-btn-primary:hover {
             background: transparent;
             color: var(--accent);
             transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 255, 136, 0.3);
         }
 
         .cta-btn-vscode {
             background: #007ACC;
             border-color: #007ACC;
             color: white;
+            box-shadow: 0 4px 15px rgba(0, 122, 204, 0.2);
         }
 
         .cta-btn-vscode:hover {
             background: #005a9e;
             border-color: #005a9e;
             transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 122, 204, 0.35);
         }
 
         .vscode-icon {
@@ -505,11 +484,11 @@
             filter: brightness(0) invert(1);
         }
 
-        /* Features List */
         .features-list {
             display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .feature-item {
@@ -517,8 +496,8 @@
             font-size: 0.75rem;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            opacity: 0.9;
+            gap: 0.5rem;
+            opacity: 0.6;
         }
 
         .feature-item::before {
@@ -527,48 +506,187 @@
             font-weight: 700;
         }
 
-        /* Demo Section */
-        .demo-section {
-            position: relative;
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0.4;
+            animation: scrollBounce 2s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        .scroll-indicator span {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        @keyframes scrollBounce {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(8px);
+            }
+        }
+
+        /* ==================== DEMO SECTIONS ==================== */
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 3rem;
+            align-items: center;
             width: 100%;
         }
 
-        .demo-title {
+        @media (min-width: 900px) {
+            .demo-grid {
+                grid-template-columns: 1.15fr 0.85fr;
+                gap: 4rem;
+            }
+
+            .demo-grid.reversed {
+                grid-template-columns: 0.85fr 1.15fr;
+            }
+        }
+
+        .demo-text {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .demo-label {
             font-family: 'Space Mono', monospace;
             font-size: 0.7rem;
             font-weight: 700;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
             color: var(--accent);
-            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
         }
 
-        /* Video Container - Optimized aspect ratio */
+        .demo-label::before {
+            content: '';
+            display: inline-block;
+            width: 24px;
+            height: 2px;
+            background: var(--accent);
+        }
+
+        .demo-heading {
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+        }
+
+        .demo-description {
+            font-size: clamp(0.9rem, 1.3vw, 1rem);
+            line-height: 1.75;
+            opacity: 0.7;
+            max-width: 480px;
+        }
+
+        .demo-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .demo-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .demo-feature-item .check-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.12);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: var(--accent);
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+
+        .demo-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--accent);
+            text-decoration: none;
+            transition: var(--transition);
+            width: fit-content;
+        }
+
+        .demo-cta:hover {
+            gap: 0.8rem;
+        }
+
+        .demo-cta i {
+            transition: var(--transition);
+        }
+
+        /* Video Container */
         .video-container {
             position: relative;
-            border: 3px solid;
+            border: 2px solid;
             overflow: hidden;
             background: #000;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
         }
 
         body.light .video-container {
-            border-color: var(--text-dark);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-color: var(--border-light);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
 
         body:not(.light) .video-container {
-            border-color: var(--accent);
-            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.25);
+            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.08);
         }
 
         .video-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 52.91%;
-            /* For vscode video: 1080/1856 * 100 ≈ 58.19% */
+            padding-bottom: 56.25%;
             height: 0;
             overflow: hidden;
+        }
+
+        /* Correct aspect ratio for oc-demo: 1920x984 */
+        .video-wrapper.oc-ratio {
+            padding-bottom: 51.25%;
+        }
+
+        /* Correct aspect ratio for vscode-demo: 1856x1080 */
+        .video-wrapper.vscode-ratio {
+            padding-bottom: 58.19%;
         }
 
         .video-wrapper video {
@@ -581,92 +699,42 @@
             background: #000;
         }
 
-        .demo-video {
-            display: none;
+        /* Video glow effect */
+        .video-glow {
+            position: absolute;
+            inset: -1px;
+            border-radius: 12px;
+            z-index: -1;
+            opacity: 0.4;
+            filter: blur(30px);
+            transition: opacity 0.4s ease;
         }
 
-        .demo-video.active {
-            display: block;
-        }
-
-        /* Demo Tabs */
-        .demo-tabs {
-            display: flex;
-            gap: 0;
-            border: 2px solid;
-            margin-top: 0.8rem;
-        }
-
-        body.light .demo-tabs {
-            border-color: var(--border-light);
-        }
-
-        body:not(.light) .demo-tabs {
-            border-color: var(--border-dark);
-        }
-
-        .demo-tab {
-            flex: 1;
-            padding: 0.6rem 1rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            font-family: 'Space Mono', monospace;
-            border: none;
-            background: transparent;
-            color: inherit;
-            cursor: pointer;
-            transition: var(--transition);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            opacity: 0.5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem;
-        }
-
-        .demo-tab.active {
+        .video-glow.green {
             background: var(--accent);
-            color: var(--bg-dark);
-            opacity: 1;
         }
 
-        .demo-tab:not(.active):hover {
-            opacity: 0.8;
+        .video-glow.blue {
+            background: #007ACC;
         }
 
-        /* Video Description */
-        .video-description {
-            margin-top: 0.8rem;
-            padding: 0.7rem 0.9rem;
-            border: 2px solid;
-            font-size: 0.75rem;
-            line-height: 1.5;
-            display: none;
+        .video-container:hover+.video-glow,
+        .video-col:hover .video-glow {
+            opacity: 0.6;
         }
 
-        .video-description.active {
-            display: block;
+        .video-col {
+            position: relative;
         }
 
-        body.light .video-description {
-            border-color: var(--border-light);
-            background: var(--code-bg-light);
+        /* ==================== ORDER ON MOBILE ==================== */
+        @media (max-width: 899px) {
+            .demo-grid .video-col {
+                order: -1;
+            }
         }
 
-        body:not(.light) .video-description {
-            border-color: var(--border-dark);
-            background: var(--code-bg-dark);
-        }
-
-        .video-description-title {
-            color: var(--accent);
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-            font-size: 0.8rem;
-        }
-
-        /* Modal */
+        /* ==================== MODAL ==================== */
         .modal {
             position: fixed;
             top: 0;
@@ -690,16 +758,17 @@
             max-width: 700px;
             width: 100%;
             background: var(--bg-dark);
-            border: 3px solid var(--text-light);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             padding: 2.5rem;
             max-height: 85vh;
             overflow-y: auto;
             position: relative;
+            border-radius: 16px;
         }
 
         body.light .modal-content {
             background: var(--bg-light);
-            border-color: var(--text-dark);
+            border-color: rgba(0, 0, 0, 0.1);
         }
 
         .modal-close {
@@ -715,6 +784,7 @@
             justify-content: center;
             cursor: pointer;
             transition: var(--transition);
+            border-radius: 8px;
         }
 
         .modal-close:hover {
@@ -761,9 +831,10 @@
             padding: 1.2rem;
             margin-top: 1.5rem;
             background: rgba(0, 255, 136, 0.05);
+            border-radius: 8px;
         }
 
-        /* Background Elements */
+        /* ==================== BACKGROUND ==================== */
         .bg-pattern {
             position: fixed;
             top: 0;
@@ -771,12 +842,12 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            opacity: 0.04;
+            opacity: 0.03;
             z-index: -1;
         }
 
         body.light .bg-pattern {
-            opacity: 0.025;
+            opacity: 0.02;
         }
 
         .bg-pattern::before {
@@ -789,8 +860,8 @@
             background-image:
                 repeating-linear-gradient(0deg, transparent, transparent 2px, currentColor 2px, currentColor 3px),
                 repeating-linear-gradient(90deg, transparent, transparent 2px, currentColor 2px, currentColor 3px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
+            background-size: 60px 60px;
+            animation: gridMove 25s linear infinite;
         }
 
         @keyframes gridMove {
@@ -799,7 +870,7 @@
             }
 
             100% {
-                transform: translate(50px, 50px);
+                transform: translate(60px, 60px);
             }
         }
 
@@ -821,29 +892,29 @@
 
         .accent-corner {
             position: fixed;
-            width: 350px;
-            height: 350px;
+            width: 400px;
+            height: 400px;
             background: var(--accent);
-            opacity: 0.12;
+            opacity: 0.08;
             z-index: -1;
-            filter: blur(100px);
+            filter: blur(120px);
             pointer-events: none;
-            animation: float 8s ease-in-out infinite;
+            animation: float 10s ease-in-out infinite;
         }
 
         body.light .accent-corner {
-            opacity: 0.06;
+            opacity: 0.04;
         }
 
         .accent-corner.top-right {
-            top: -80px;
-            right: -80px;
+            top: -100px;
+            right: -100px;
         }
 
         .accent-corner.bottom-left {
-            bottom: -80px;
-            left: -80px;
-            animation-delay: -4s;
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -5s;
         }
 
         @keyframes float {
@@ -854,15 +925,15 @@
             }
 
             50% {
-                transform: translate(25px, -25px) scale(1.08);
+                transform: translate(30px, -30px) scale(1.1);
             }
         }
 
-        /* Animations */
+        /* ==================== ANIMATIONS ==================== */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(25px);
+                transform: translateY(30px);
             }
 
             to {
@@ -892,31 +963,219 @@
             animation-delay: 0.4s;
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 767px) {
-            .hero {
-                padding-top: 4.5rem;
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
+
+        /* ==================== SCROLL-TRIGGERED ANIMATIONS ==================== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 {
+            transition-delay: 0.15s;
+        }
+
+        .reveal-delay-2 {
+            transition-delay: 0.3s;
+        }
+
+        /* ==================== FOOTER ==================== */
+        .site-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 3rem 2rem 2rem;
+            scroll-snap-align: end;
+        }
+
+        body.light .site-footer {
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(250, 250, 250, 0.6);
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 2.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        .footer-brand .footer-logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-brand .footer-logo .bracket {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .footer-brand .footer-tagline {
+            font-size: 0.8rem;
+            opacity: 0.5;
+            line-height: 1.6;
+            max-width: 260px;
+        }
+
+        .footer-col-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .footer-links a {
+            font-size: 0.82rem;
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.55;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .footer-links a:hover {
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        .footer-links a i {
+            width: 13px;
+            height: 13px;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        body.light .footer-bottom {
+            border-top-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .footer-copyright {
+            font-size: 0.75rem;
+            opacity: 0.4;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .footer-social a {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: inherit;
+            opacity: 0.5;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        body.light .footer-social a {
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .footer-social a:hover {
+            opacity: 1;
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--accent);
+        }
+
+        .footer-social a i {
+            width: 15px;
+            height: 15px;
+        }
+
+        /* ==================== MOBILE ==================== */
+        @media (max-width: 899px) {
+            .page-section {
                 min-height: 100vh;
+                min-height: 100dvh;
+            }
+
+            .section-inner {
+                padding: 5rem 1.5rem 2rem;
             }
 
             .headline {
-                font-size: 2.2rem;
+                font-size: clamp(2.4rem, 9vw, 3.5rem);
             }
 
             .cta-btn {
                 width: 100%;
                 justify-content: center;
-                padding: 0.7rem 1.2rem;
-                font-size: 0.8rem;
-            }
-
-            .video-wrapper {
-                padding-bottom: 56%;
-                /* Slightly smaller on mobile */
+                padding: 0.9rem 1.4rem;
             }
 
             .features-list {
-                font-size: 0.7rem;
+                gap: 1rem;
+            }
+
+            .demo-heading {
+                font-size: 1.6rem;
+            }
+
+            .demo-grid {
+                gap: 2rem;
+            }
+
+            .scroll-indicator {
+                display: none;
             }
 
             .modal-content {
@@ -926,24 +1185,24 @@
             .modal-title {
                 font-size: 1.4rem;
             }
+
+            .site-footer {
+                padding: 2.5rem 1.5rem 1.5rem;
+            }
         }
 
         /* Landscape Mobile */
-        @media (max-width: 767px) and (orientation: landscape) {
-            .hero {
+        @media (max-width: 899px) and (orientation: landscape) {
+            .page-section {
                 min-height: auto;
                 padding: 5rem 1.5rem 2rem;
             }
         }
 
-        /* Tablet adjustments */
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .hero-grid {
-                gap: 2rem;
-            }
-
-            .video-wrapper {
-                padding-bottom: 55%;
+        /* Large screens */
+        @media (min-width: 1400px) {
+            .section-inner {
+                max-width: 1300px;
             }
         }
     </style>
@@ -965,26 +1224,28 @@
                 <span class="bracket">/&gt;</span>
             </div>
 
-            <!-- Desktop Navigation -->
-            <nav class="desktop-nav">
-                <button class="btn btn-icon" onclick="toggleTheme()" title="Toggle theme">
+            <!-- Centered Navigation -->
+            <nav class="header-nav">
+                <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme">
                     <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
                     <i data-lucide="moon" class="theme-icon-dark"></i>
                 </button>
-                <button class="btn btn-simple" onclick="openModal()">
+                <div class="nav-divider"></div>
+                <button class="nav-btn" onclick="openModal()">
                     <i data-lucide="info"></i>
                     <span>About</span>
                 </button>
                 <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
-                    class="btn btn-simple">
+                    class="nav-btn">
                     <i data-lucide="github"></i>
                     <span>Source</span>
                 </a>
-                <button class="btn btn-simple" onclick="openContactModal()">
+                <button class="nav-btn" onclick="openContactModal()">
                     <i data-lucide="mail"></i>
                     <span>Contact</span>
                 </button>
-                <a href="https://sppucodes.vercel.app/" target="_blank" class="btn btn-sppucodes">
+                <div class="nav-divider"></div>
+                <a href="https://sppucodes.vercel.app/" target="_blank" class="nav-btn nav-btn-accent">
                     <i data-lucide="external-link"></i>
                     <span>Sppucodes</span>
                 </a>
@@ -1034,90 +1295,145 @@
         </div>
     </div>
 
-    <!-- Hero Section -->
-    <main class="hero">
-        <div class="hero-container">
-            <div class="hero-grid">
-                <!-- Left: Content -->
-                <div>
-                    <div class="status-badge animate-in delay-1">
-                        <span class="status-dot"></span>
-                        <span>Works on Windows, Ubuntu and Browser</span>
-                    </div>
+    <!-- ==================== SECTION 1: HERO ==================== -->
+    <section class="page-section hero-section" id="hero">
+        <div class="section-inner">
+            <div class="status-badge animate-in delay-1">
+                <span class="status-dot"></span>
+                <span>Works on Windows, Ubuntu & Browser</span>
+            </div>
 
-                    <h1 class="headline animate-in delay-2">
-                        Run<br>
-                        <span class="highlight">graphics.h</span><br>
-                        Anywhere
-                    </h1>
+            <h1 class="headline animate-in delay-2">
+                Run <span class="highlight">graphics.h</span> Anywhere
+            </h1>
 
-                    <p class="subheadline animate-in delay-3">
-                        Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with
-                        broken legacy setups. This modern compiler brings graphics.h into the 21st century—run your
-                        programs instantly in any browser or directly within VS Code, with zero configuration required.
-                    </p>
+            <p class="subheadline animate-in delay-3">
+                A modern graphics.h online compiler — run your programs instantly in the browser with no installation
+                headaches. Also available as a VS Code extension.
+            </p>
 
-                    <div class="cta-group animate-in delay-4">
-                        <a href="/compiler.html" class="cta-btn cta-btn-primary">
-                            <i data-lucide="terminal"></i>
-                            <span>Online Compiler</span>
-                        </a>
-                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
-                            target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
-                            <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
-                            <span>VS Code Extension</span>
-                        </a>
-                    </div>
+            <div class="cta-group animate-in delay-4">
+                <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                    target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
+                    <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
+                    <span>VS Code Extension</span>
+                </a>
+                <a href="/compiler.html" class="cta-btn cta-btn-primary">
+                    <i data-lucide="terminal"></i>
+                    <span>Online Compiler</span>
+                </a>
+            </div>
 
-                    <div class="features-list animate-in delay-4">
-                        <div class="feature-item">Zero Setup</div>
-                        <div class="feature-item">Browser & VS Code</div>
-                        <div class="feature-item">IntelliSense Support</div>
-                    </div>
-                </div>
+            <div class="features-list animate-in delay-5">
+                <div class="feature-item">Zero Setup</div>
+                <div class="feature-item">Browser & VS Code</div>
+                <div class="feature-item">SPPU Ready</div>
+            </div>
+        </div>
 
-                <!-- Right: Demo -->
-                <div class="demo-section animate-in delay-3">
-                    <div class="demo-title">SEE IT IN ACTION</div>
+        <div class="scroll-indicator"
+            onclick="document.getElementById('online-section').scrollIntoView({behavior:'smooth'})">
+            <span>Scroll</span>
+            <i data-lucide="chevron-down" style="width:18px;height:18px;"></i>
+        </div>
+    </section>
 
+    <!-- ==================== SECTION 2: ONLINE COMPILER DEMO ==================== -->
+    <section class="page-section" id="online-section">
+        <div class="section-inner">
+            <div class="demo-grid">
+                <!-- LEFT: Video -->
+                <div class="video-col reveal">
                     <div class="video-container">
-                        <div class="video-wrapper">
-                            <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline
-                                preload="auto">
-                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
-                                    type="video/mp4">
-                            </video>
-                            <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
+                        <div class="video-wrapper oc-ratio">
+                            <video id="online-video" autoplay loop muted playsinline preload="auto">
                                 <source src="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4"
                                     type="video/mp4">
                             </video>
                         </div>
                     </div>
+                    <div class="video-glow green"></div>
+                </div>
 
-                    <!-- Tabs below video -->
-                    <div class="demo-tabs">
-                        <button class="demo-tab active" data-demo="vscode" onclick="switchDemo('vscode')">
-                            <i data-lucide="video" style="width: 14px; height: 14px;"></i> VS Code
-                        </button>
-                        <button class="demo-tab" data-demo="online" onclick="switchDemo('online')">
-                            <i data-lucide="video" style="width: 14px; height: 14px;"></i> Online
-                        </button>
+                <!-- RIGHT: Text -->
+                <div class="demo-text reveal reveal-delay-1">
+                    <div class="demo-label">Online Compiler</div>
+                    <h2 class="demo-heading">Code in Your Browser.<br>Run Instantly.</h2>
+                    <p class="demo-description">
+                        Open your browser, write graphics.h code, and see the output live. No downloads, no
+                        installations—just instant compile and run with real-time graphics output.
+                    </p>
+                    <div class="demo-features">
+                        <div class="demo-feature-item">
+                            <span class="check-icon">✓</span>
+                            <span>Instant compile & run in browser</span>
+                        </div>
+                        <div class="demo-feature-item">
+                            <span class="check-icon">✓</span>
+                            <span>Live graphics output preview</span>
+                        </div>
+                        <div class="demo-feature-item">
+                            <span class="check-icon">✓</span>
+                            <span>No installation required</span>
+                        </div>
                     </div>
-
-                    <!-- Video Descriptions -->
-                    <div id="vscode-description" class="video-description active">
-                        <div class="video-description-title">VS Code Extension Demo</div>
-                        <div>IntelliSense, auto-complete, and error detection for graphics.h</div>
-                    </div>
-
-                    <div id="online-description" class="video-description">
-                        <div class="video-description-title">Online Compiler Demo</div>
-                        <div>Instant compile and live graphics output in your browser</div>
-                    </div>
+                    <a href="/compiler.html" class="demo-cta">
+                        <span>Try the Online Compiler</span>
+                        <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                    </a>
                 </div>
             </div>
         </div>
-    </main>
+    </section>
+
+    <!-- ==================== SECTION 3: VS CODE DEMO ==================== -->
+    <section class="page-section" id="vscode-section">
+        <div class="section-inner">
+            <div class="demo-grid reversed">
+                <!-- LEFT: Text -->
+                <div class="demo-text reveal">
+                    <div class="demo-label">VS Code Extension</div>
+                    <h2 class="demo-heading">Full Power.<br>Right in VS Code.</h2>
+                    <p class="demo-description">
+                        Install the extension and get IntelliSense, auto-complete, error detection, and one-click
+                        compilation for graphics.h—all inside your favourite editor.
+                    </p>
+                    <div class="demo-features">
+                        <div class="demo-feature-item">
+                            <span class="check-icon">✓</span>
+                            <span>IntelliSense & auto-complete</span>
+                        </div>
+                        <div class="demo-feature-item">
+                            <span class="check-icon">✓</span>
+                            <span>Real-time error detection</span>
+                        </div>
+                        <div class="demo-feature-item">
+                            <span class="check-icon">✓</span>
+                            <span>One-click compile & run</span>
+                        </div>
+                    </div>
+                    <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                        target="_blank" rel="noopener noreferrer" class="demo-cta">
+                        <span>Get the Extension</span>
+                        <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+                    </a>
+                </div>
+
+                <!-- RIGHT: Video -->
+                <div class="video-col reveal reveal-delay-1">
+                    <div class="video-container">
+                        <div class="video-wrapper vscode-ratio">
+                            <video id="vscode-video" autoplay loop muted playsinline preload="auto">
+                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
+                                    type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="video-glow blue"></div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- About Modal -->
     <div id="about-modal" class="modal" onclick="closeModal(event)">
@@ -1164,6 +1480,73 @@
         </div>
     </div>
 
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-grid">
+                <!-- Brand -->
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <span class="bracket">&lt;</span>
+                        <span>graphics.h</span>
+                        <span class="bracket">/&gt;</span>
+                    </div>
+                    <p class="footer-tagline">
+                        A modern compiler for graphics.h programs. Run code instantly in your browser or VS Code.
+                    </p>
+                </div>
+
+                <!-- Product -->
+                <div>
+                    <div class="footer-col-title">Product</div>
+                    <ul class="footer-links">
+                        <li><a href="/compiler.html"><i data-lucide="terminal"></i> Online Compiler</a></li>
+                        <li><a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                                target="_blank" rel="noopener noreferrer"><i data-lucide="code"></i> VS Code
+                                Extension</a></li>
+                        <li><a href="/viewer.html"><i data-lucide="book-open"></i> Docs & Examples</a></li>
+                    </ul>
+                </div>
+
+                <!-- Resources -->
+                <div>
+                    <div class="footer-col-title">Resources</div>
+                    <ul class="footer-links">
+                        <li><a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                                rel="noopener noreferrer"><i data-lucide="github"></i> GitHub</a></li>
+                        <li><a href="https://sppucodes.vercel.app/" target="_blank"><i data-lucide="external-link"></i>
+                                Sppucodes</a></li>
+                        <li><a href="javascript:void(0)" onclick="openModal()"><i data-lucide="info"></i> About</a></li>
+                    </ul>
+                </div>
+
+                <!-- Connect -->
+                <div>
+                    <div class="footer-col-title">Connect</div>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)" onclick="openContactModal()"><i data-lucide="mail"></i> Contact
+                                Us</a></li>
+                        <li><a href="https://github.com/AlbatrossC/graphics-h-compiler/issues" target="_blank"
+                                rel="noopener noreferrer"><i data-lucide="bug"></i> Report a Bug</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <span class="footer-copyright">&copy; 2025 graphics.h Compiler. Open source under MIT.</span>
+                <div class="footer-social">
+                    <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                        rel="noopener noreferrer" title="GitHub">
+                        <i data-lucide="github"></i>
+                    </a>
+                    <a href="javascript:void(0)" onclick="openContactModal()" title="Contact">
+                        <i data-lucide="mail"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <script src="static/analytics.js" async></script>
     <script src="static/notification.js" async></script>
 
@@ -1185,7 +1568,6 @@
             const isLight = body.classList.toggle('light');
             localStorage.setItem('theme', isLight ? 'light' : 'dark');
 
-            // Update icons
             const lightIcons = document.querySelectorAll('.theme-icon-light');
             const darkIcons = document.querySelectorAll('.theme-icon-dark');
 
@@ -1203,58 +1585,37 @@
             document.querySelectorAll('.theme-icon-dark').forEach(icon => icon.style.display = 'none');
         }
 
-        // Video Management
-        const vscodeVideo = document.getElementById('vscode-video');
-        const onlineVideo = document.getElementById('online-video');
-        const vscodeDescription = document.getElementById('vscode-description');
-        const onlineDescription = document.getElementById('online-description');
-
-        function switchDemo(type) {
-            const tabs = document.querySelectorAll('.demo-tab');
-            const videos = document.querySelectorAll('.demo-video');
-
-            tabs.forEach(tab => {
-                if (tab.dataset.demo === type) {
-                    tab.classList.add('active');
-                } else {
-                    tab.classList.remove('active');
-                }
-            });
-
-            if (type === 'vscode') {
-                vscodeVideo.classList.add('active');
-                onlineVideo.classList.remove('active');
-                vscodeDescription.classList.add('active');
-                onlineDescription.classList.remove('active');
-                vscodeVideo.play().catch(() => { });
-                onlineVideo.pause();
-            } else {
-                onlineVideo.classList.add('active');
-                vscodeVideo.classList.remove('active');
-                onlineDescription.classList.add('active');
-                vscodeDescription.classList.remove('active');
-                onlineVideo.play().catch(() => { });
-                vscodeVideo.pause();
-            }
-
-            lucide.createIcons();
-        }
-
-        // Ensure video plays on load
+        // Video autoplay on load
         window.addEventListener('load', () => {
+            const onlineVideo = document.getElementById('online-video');
+            const vscodeVideo = document.getElementById('vscode-video');
+            onlineVideo.play().catch(() => { });
             vscodeVideo.play().catch(() => { });
             lucide.createIcons();
         });
 
-        // Handle visibility change
+        // Handle visibility change - resume playing visible videos
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                if (vscodeVideo.classList.contains('active')) {
-                    vscodeVideo.play().catch(() => { });
-                } else {
-                    onlineVideo.play().catch(() => { });
-                }
+                document.getElementById('online-video').play().catch(() => { });
+                document.getElementById('vscode-video').play().catch(() => { });
             }
+        });
+
+        // Scroll-triggered reveal animations
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            revealObserver.observe(el);
         });
 
         // Modal Management
@@ -1287,7 +1648,7 @@
             }
         });
 
-        // Contact Modal - Lazy loaded for performance
+        // Contact Modal - Lazy loaded
         function openContactModal() {
             if (!window.ContactModal) {
                 const script = document.createElement('script');
@@ -1327,6 +1688,7 @@
         }
     }
     </script>
+
 </body>
 
 </html>
