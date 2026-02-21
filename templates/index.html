@@ -40,7 +40,6 @@
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
 
-
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,8 +48,10 @@
         rel="stylesheet">
 
     <!-- Preload videos from R2 CDN for faster loading -->
-    <link rel="preload" href="https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4" as="video" type="video/mp4">
-    <link rel="preload" href="https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4" as="video" type="video/mp4">
+    <link rel="preload" href="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4" as="video"
+        type="video/mp4">
+    <link rel="preload" href="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4" as="video"
+        type="video/mp4">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -85,6 +86,8 @@
             overflow-x: hidden;
             line-height: 1.6;
             transition: var(--transition);
+            height: 100vh;
+            overflow-y: auto;
         }
 
         body.light {
@@ -97,34 +100,191 @@
             font-family: 'Space Mono', 'JetBrains Mono', monospace;
         }
 
-
-
-        .top-strip a {
-            color: inherit;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .top-strip a:hover {
-            text-decoration: underline;
-        }
-
         /* Header */
         header {
             position: fixed;
             top: 0;
-            /* Adjusted for top strip */
             left: 0;
             right: 0;
             z-index: 1000;
             background: var(--bg-dark);
             border-bottom: 2px solid var(--border-dark);
             transition: var(--transition);
+            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 10, 0.95);
         }
 
-        /* Improved Header Button Styles */
+        body.light header {
+            background: rgba(250, 250, 250, 0.95);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .logo .bracket {
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+
+        /* Desktop Navigation */
+        .desktop-nav {
+            display: none;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-nav {
+                display: flex;
+            }
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: flex;
+            background: transparent;
+            border: 2px solid var(--border-dark);
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.light .mobile-menu-btn {
+            border-color: var(--border-light);
+        }
+
+        .mobile-menu-btn:hover {
+            border-color: var(--accent);
+        }
+
+        @media (min-width: 768px) {
+            .mobile-menu-btn {
+                display: none;
+            }
+        }
+
+        /* Mobile Menu Overlay */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: var(--bg-dark);
+            z-index: 999;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 5rem 2rem 2rem;
+            overflow-y: auto;
+        }
+
+        body.light .mobile-menu {
+            background: var(--bg-light);
+        }
+
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+
+        .mobile-menu-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            border: 2px solid var(--border-dark);
+            padding: 0.6rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        body.light .mobile-menu-close {
+            border-color: var(--border-light);
+        }
+
+        .mobile-menu-close:hover {
+            border-color: var(--accent);
+            transform: rotate(90deg);
+        }
+
+        .mobile-menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .mobile-menu-item {
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: 2px solid var(--border-dark);
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-align: left;
+        }
+
+        body.light .mobile-menu-item {
+            border-color: var(--border-light);
+        }
+
+        .mobile-menu-item:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 2px solid transparent;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
         .btn-simple {
             border: none;
             background: transparent;
@@ -137,6 +297,15 @@
             opacity: 1;
             background: rgba(128, 128, 128, 0.1);
             border-radius: 4px;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: 2px solid var(--border-dark);
+        }
+
+        body.light .btn-icon {
+            border-color: var(--border-light);
         }
 
         .btn-sppucodes {
@@ -159,155 +328,52 @@
             border-color: var(--accent-dark);
         }
 
-        body.light header {
-            background: var(--bg-light);
-            border-bottom: 2px solid var(--border-light);
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0.7rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: 'Space Mono', monospace;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .logo .bracket {
-            color: var(--accent);
-            font-size: 1.2rem;
-        }
-
-        /* Navigation */
-        nav {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: 2px solid transparent;
-            background: transparent;
-            color: inherit;
-            cursor: pointer;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: inherit;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: var(--bg-dark);
-            border-color: var(--accent);
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-dark);
-            border-color: var(--accent-dark);
-        }
-
-        .btn-outline {
-            border-color: currentColor;
-        }
-
-        body.light .btn-outline:hover {
-            background: var(--text-dark);
-            color: var(--text-light);
-        }
-
-        body:not(.light) .btn-outline:hover {
-            background: var(--text-light);
-            color: var(--text-dark);
-        }
-
-        .btn-icon {
-            padding: 0.5rem;
-            border: 2px solid transparent;
-        }
-
-        body.light .btn-icon {
-            border-color: var(--border-light);
-        }
-
-        body:not(.light) .btn-icon {
-            border-color: var(--border-dark);
-        }
-
-        /* Hero Section */
+        /* Hero Section - Full viewport, no scroll */
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            padding: 0 2rem;
+            padding: 5rem 1.5rem 2rem;
             position: relative;
             overflow: hidden;
         }
 
+        @media (min-width: 768px) {
+            .hero {
+                padding: 5rem 2rem 2rem;
+            }
+        }
+
         .hero-container {
-            max-width: 1500px;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
-            height: 100%;
             display: flex;
             align-items: center;
         }
 
-
-
         .hero-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 3vh;
+            gap: 2rem;
             align-items: center;
             width: 100%;
         }
 
         @media (min-width: 1024px) {
-            .hero {
-                padding: 0 3rem;
-            }
-
             .hero-grid {
-                grid-template-columns: 1fr 1.15fr;
-                gap: 2rem;
-            }
-        }
-
-        @media (max-width: 1023px) {
-            .hero {
-                height: auto;
-                min-height: 100vh;
-                padding: 8rem 2rem 4rem;
+                grid-template-columns: 1fr 1.2fr;
+                gap: 3rem;
             }
         }
 
         /* Headline */
         .headline {
-            font-size: clamp(1.8rem, 4vw + 1vh, 3.5rem);
+            font-size: clamp(2rem, 5vw, 3.2rem);
             font-weight: 700;
-            line-height: 0.95;
+            line-height: 1;
             letter-spacing: -0.03em;
-            margin-bottom: 2vh;
+            margin-bottom: 1.2rem;
         }
 
         .headline .highlight {
@@ -337,31 +403,29 @@
         }
 
         .subheadline {
-            font-size: clamp(0.85rem, 1.6vw, 0.95rem);
+            font-size: clamp(0.85rem, 1.5vw, 0.95rem);
             line-height: 1.6;
-            margin-bottom: 2vh;
+            margin-bottom: 1.5rem;
             opacity: 0.85;
-            max-width: 520px;
+            max-width: 540px;
         }
 
-        /* Status Badge - Improved */
+        /* Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.8rem;
-            padding: 0.7rem 1.2rem;
+            gap: 0.7rem;
+            padding: 0.6rem 1.1rem;
             border: 2px solid var(--accent);
-            margin-bottom: 2vh;
-            font-size: 0.8rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            font-family: 'IBM Plex Sans', sans-serif;
             background: rgba(0, 255, 136, 0.12);
             letter-spacing: 0.02em;
         }
 
         body.light .status-badge {
             background: rgba(0, 255, 136, 0.18);
-            border-color: var(--accent);
         }
 
         .status-dot {
@@ -391,13 +455,13 @@
         .cta-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.9rem;
-            margin-bottom: 2vh;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
         }
 
         .cta-btn {
-            padding: 0.8rem 1.6rem;
-            font-size: 0.9rem;
+            padding: 0.75rem 1.4rem;
+            font-size: 0.85rem;
             font-weight: 700;
             border: 3px solid transparent;
             cursor: pointer;
@@ -408,6 +472,7 @@
             gap: 0.6rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            white-space: nowrap;
         }
 
         .cta-btn-primary {
@@ -422,24 +487,6 @@
             transform: translateY(-3px);
         }
 
-        .cta-btn-secondary {
-            background: transparent;
-            border-color: currentColor;
-        }
-
-        body.light .cta-btn-secondary:hover {
-            background: var(--text-dark);
-            color: var(--text-light);
-            transform: translateY(-3px);
-        }
-
-        body:not(.light) .cta-btn-secondary:hover {
-            background: var(--text-light);
-            color: var(--text-dark);
-            transform: translateY(-3px);
-        }
-
-        /* VS Code Button - Blue */
         .cta-btn-vscode {
             background: #007ACC;
             border-color: #007ACC;
@@ -452,10 +499,9 @@
             transform: translateY(-3px);
         }
 
-        /* VS Code icon color fix */
         .vscode-icon {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             filter: brightness(0) invert(1);
         }
 
@@ -463,12 +509,12 @@
         .features-list {
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
+            gap: 0.3rem;
         }
 
         .feature-item {
             font-family: 'Space Mono', monospace;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.6rem;
@@ -484,23 +530,71 @@
         /* Demo Section */
         .demo-section {
             position: relative;
+            width: 100%;
         }
 
         .demo-title {
             font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 0.15em;
             text-transform: uppercase;
             color: var(--accent);
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
         }
 
+        /* Video Container - Optimized aspect ratio */
+        .video-container {
+            position: relative;
+            border: 3px solid;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        body.light .video-container {
+            border-color: var(--text-dark);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        body:not(.light) .video-container {
+            border-color: var(--accent);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 52.91%;
+            /* For vscode video: 1080/1856 * 100 ≈ 58.19% */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .demo-video {
+            display: none;
+        }
+
+        .demo-video.active {
+            display: block;
+        }
+
+        /* Demo Tabs */
         .demo-tabs {
             display: flex;
             gap: 0;
             border: 2px solid;
-            margin-top: 1rem;
+            margin-top: 0.8rem;
         }
 
         body.light .demo-tabs {
@@ -513,8 +607,8 @@
 
         .demo-tab {
             flex: 1;
-            padding: 0.7rem 1.3rem;
-            font-size: 0.8rem;
+            padding: 0.6rem 1rem;
+            font-size: 0.75rem;
             font-weight: 700;
             font-family: 'Space Mono', monospace;
             border: none;
@@ -528,7 +622,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .demo-tab.active {
@@ -541,62 +635,12 @@
             opacity: 0.8;
         }
 
-        /* Video Container */
-        .video-container {
-            position: relative;
-            border: 4px solid;
-            overflow: hidden;
-            background: #000;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-
-        body.light .video-container {
-            border-color: var(--text-dark);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        }
-
-        body:not(.light) .video-container {
-            border-color: var(--accent);
-            box-shadow: 0 20px 60px rgba(0, 255, 136, 0.3);
-        }
-
-        .video-wrapper {
-            position: relative;
-            padding-bottom: 60%;
-            height: 0;
-        }
-
-        @media (min-width: 1024px) {
-            .video-wrapper {
-                padding-bottom: 56.25%;
-            }
-        }
-
-        .video-wrapper video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-
-        .demo-video {
-            display: none;
-        }
-
-        .demo-video.active {
-            display: block;
-        }
-
         /* Video Description */
         .video-description {
-            margin-top: 1rem;
-            padding: 0.9rem 1rem;
+            margin-top: 0.8rem;
+            padding: 0.7rem 0.9rem;
             border: 2px solid;
-            font-family: 'IBM Plex Sans', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             line-height: 1.5;
             display: none;
         }
@@ -618,8 +662,8 @@
         .video-description-title {
             color: var(--accent);
             font-weight: 700;
-            margin-bottom: 0.35rem;
-            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.8rem;
         }
 
         /* Modal */
@@ -634,7 +678,8 @@
             align-items: center;
             justify-content: center;
             z-index: 2000;
-            padding: 2rem;
+            padding: 1.5rem;
+            overflow-y: auto;
         }
 
         .modal.active {
@@ -646,8 +691,8 @@
             width: 100%;
             background: var(--bg-dark);
             border: 3px solid var(--text-light);
-            padding: 3rem;
-            max-height: 90vh;
+            padding: 2.5rem;
+            max-height: 85vh;
             overflow-y: auto;
             position: relative;
         }
@@ -659,12 +704,12 @@
 
         .modal-close {
             position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
+            top: 1rem;
+            right: 1rem;
             background: transparent;
             border: 2px solid currentColor;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -683,17 +728,17 @@
         }
 
         .modal-title {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
             font-family: 'Space Mono', monospace;
             letter-spacing: -0.02em;
         }
 
         .modal-text {
-            font-size: 1rem;
-            line-height: 1.8;
-            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 1.2rem;
         }
 
         .modal-text strong {
@@ -701,24 +746,24 @@
         }
 
         .modal-list {
-            margin: 1.5rem 0;
-            padding-left: 2rem;
+            margin: 1.2rem 0;
+            padding-left: 1.8rem;
         }
 
         .modal-list li {
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-            line-height: 1.8;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+            line-height: 1.7;
         }
 
         .modal-highlight {
             border: 2px solid var(--accent);
-            padding: 1.5rem;
-            margin-top: 2rem;
+            padding: 1.2rem;
+            margin-top: 1.5rem;
             background: rgba(0, 255, 136, 0.05);
         }
 
-        /* Background Pattern */
+        /* Background Elements */
         .bg-pattern {
             position: fixed;
             top: 0;
@@ -758,7 +803,6 @@
             }
         }
 
-        /* Noise Texture */
         .noise-overlay {
             position: fixed;
             top: 0;
@@ -775,31 +819,30 @@
             opacity: 0.02;
         }
 
-        /* Accent Corner */
         .accent-corner {
             position: fixed;
-            width: 400px;
-            height: 400px;
+            width: 350px;
+            height: 350px;
             background: var(--accent);
-            opacity: 0.15;
+            opacity: 0.12;
             z-index: -1;
-            filter: blur(120px);
+            filter: blur(100px);
             pointer-events: none;
             animation: float 8s ease-in-out infinite;
         }
 
         body.light .accent-corner {
-            opacity: 0.08;
+            opacity: 0.06;
         }
 
         .accent-corner.top-right {
-            top: -100px;
-            right: -100px;
+            top: -80px;
+            right: -80px;
         }
 
         .accent-corner.bottom-left {
-            bottom: -100px;
-            left: -100px;
+            bottom: -80px;
+            left: -80px;
             animation-delay: -4s;
         }
 
@@ -811,201 +854,7 @@
             }
 
             50% {
-                transform: translate(30px, -30px) scale(1.1);
-            }
-        }
-
-        /* Animated Lines */
-        .animated-lines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .line {
-            position: absolute;
-            background: var(--accent);
-            opacity: 0.1;
-        }
-
-        body.light .line {
-            opacity: 0.06;
-        }
-
-        .line.horizontal {
-            width: 0;
-            height: 2px;
-            left: 0;
-            animation: lineExpandHorizontal 4s ease-in-out infinite;
-        }
-
-        .line.vertical {
-            height: 0;
-            width: 2px;
-            top: 0;
-            animation: lineExpandVertical 4s ease-in-out infinite;
-        }
-
-        .line-1 {
-            top: 20%;
-            animation-delay: 0s;
-        }
-
-        .line-2 {
-            top: 50%;
-            animation-delay: 1s;
-        }
-
-        .line-3 {
-            top: 80%;
-            animation-delay: 2s;
-        }
-
-        .line-4 {
-            left: 25%;
-            animation-delay: 0.5s;
-        }
-
-        .line-5 {
-            left: 75%;
-            animation-delay: 1.5s;
-        }
-
-        @keyframes lineExpandHorizontal {
-
-            0%,
-            100% {
-                width: 0;
-                opacity: 0;
-            }
-
-            10%,
-            90% {
-                opacity: 0.1;
-            }
-
-            50% {
-                width: 100%;
-            }
-        }
-
-        @keyframes lineExpandVertical {
-
-            0%,
-            100% {
-                height: 0;
-                opacity: 0;
-            }
-
-            10%,
-            90% {
-                opacity: 0.1;
-            }
-
-            50% {
-                height: 100%;
-            }
-        }
-
-        /* Scan Line Effect */
-        .scanline {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .scanline::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(to bottom,
-                    transparent,
-                    var(--accent),
-                    transparent);
-            opacity: 0.15;
-            animation: scan 8s linear infinite;
-        }
-
-        body.light .scanline::before {
-            opacity: 0.08;
-        }
-
-        @keyframes scan {
-            0% {
-                transform: translateY(0);
-            }
-
-            100% {
-                transform: translateY(100vh);
-            }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-content {
-                padding: 1rem;
-            }
-
-            .hero {
-                padding: 6rem 1rem 2rem;
-            }
-
-            .headline {
-                font-size: 2.5rem;
-            }
-
-            .cta-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .demo-tabs {
-                flex-direction: row;
-            }
-
-            .demo-tab {
-                flex: 1;
-            }
-
-            .btn {
-                font-size: 0.85rem;
-                padding: 0.5rem 1rem;
-            }
-
-            .btn-text {
-                display: none;
-            }
-
-            .modal-content {
-                padding: 2rem;
-            }
-
-            .modal-title {
-                font-size: 1.5rem;
-            }
-
-            /* Hide complex background effects on mobile */
-            .animated-lines,
-            .scanline {
-                display: none;
-            }
-
-            .accent-corner {
-                width: 200px;
-                height: 200px;
+                transform: translate(25px, -25px) scale(1.08);
             }
         }
 
@@ -1013,7 +862,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(25px);
             }
 
             to {
@@ -1023,7 +872,8 @@
         }
 
         .animate-in {
-            animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
         }
 
         .delay-1 {
@@ -1042,9 +892,59 @@
             animation-delay: 0.4s;
         }
 
-        /* Initial state */
-        .animate-in {
-            opacity: 0;
+        /* Mobile Responsive */
+        @media (max-width: 767px) {
+            .hero {
+                padding-top: 4.5rem;
+                min-height: 100vh;
+            }
+
+            .headline {
+                font-size: 2.2rem;
+            }
+
+            .cta-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.7rem 1.2rem;
+                font-size: 0.8rem;
+            }
+
+            .video-wrapper {
+                padding-bottom: 56%;
+                /* Slightly smaller on mobile */
+            }
+
+            .features-list {
+                font-size: 0.7rem;
+            }
+
+            .modal-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .modal-title {
+                font-size: 1.4rem;
+            }
+        }
+
+        /* Landscape Mobile */
+        @media (max-width: 767px) and (orientation: landscape) {
+            .hero {
+                min-height: auto;
+                padding: 5rem 1.5rem 2rem;
+            }
+        }
+
+        /* Tablet adjustments */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .hero-grid {
+                gap: 2rem;
+            }
+
+            .video-wrapper {
+                padding-bottom: 55%;
+            }
         }
     </style>
 </head>
@@ -1056,52 +956,83 @@
     <div class="accent-corner top-right"></div>
     <div class="accent-corner bottom-left"></div>
 
-    <!-- Animated Lines -->
-    <div class="animated-lines">
-        <div class="line horizontal line-1"></div>
-        <div class="line horizontal line-2"></div>
-        <div class="line horizontal line-3"></div>
-        <div class="line vertical line-4"></div>
-        <div class="line vertical line-5"></div>
-    </div>
-
-    <!-- Scanline Effect -->
-    <div class="scanline"></div>
-
     <!-- Header -->
     <header>
         <div class="header-content">
-            <div class="logo">
+            <div class="logo" onclick="window.location.reload()">
                 <span class="bracket">&lt;</span>
                 <span>graphics.h</span>
                 <span class="bracket">/&gt;</span>
             </div>
 
-            <nav>
+            <!-- Desktop Navigation -->
+            <nav class="desktop-nav">
                 <button class="btn btn-icon" onclick="toggleTheme()" title="Toggle theme">
                     <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
                     <i data-lucide="moon" class="theme-icon-dark"></i>
                 </button>
                 <button class="btn btn-simple" onclick="openModal()">
                     <i data-lucide="info"></i>
-                    <span class="btn-text">About</span>
+                    <span>About</span>
                 </button>
                 <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
                     class="btn btn-simple">
                     <i data-lucide="github"></i>
-                    <span class="btn-text">Source</span>
+                    <span>Source</span>
                 </a>
                 <button class="btn btn-simple" onclick="openContactModal()">
                     <i data-lucide="mail"></i>
-                    <span class="btn-text">Contact</span>
+                    <span>Contact</span>
                 </button>
-                <a href="https://sppucodes.vercel.app/" target="_blank" class="btn btn-sppucodes btn">
+                <a href="https://sppucodes.vercel.app/" target="_blank" class="btn btn-sppucodes">
                     <i data-lucide="external-link"></i>
-                    <span class="btn-text">Sppucodes</span>
+                    <span>Sppucodes</span>
                 </a>
             </nav>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i data-lucide="menu"></i>
+            </button>
         </div>
     </header>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+        <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="mobile-menu-items">
+            <button class="mobile-menu-item" onclick="toggleTheme(); toggleMobileMenu();">
+                <i data-lucide="sun" class="theme-icon-light" style="display: none;"></i>
+                <i data-lucide="moon" class="theme-icon-dark"></i>
+                <span>Toggle Theme</span>
+            </button>
+
+            <button class="mobile-menu-item" onclick="openModal(); toggleMobileMenu();">
+                <i data-lucide="info"></i>
+                <span>About</span>
+            </button>
+
+            <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
+                class="mobile-menu-item" onclick="toggleMobileMenu()">
+                <i data-lucide="github"></i>
+                <span>GitHub Source</span>
+            </a>
+
+            <button class="mobile-menu-item" onclick="openContactModal(); toggleMobileMenu();">
+                <i data-lucide="mail"></i>
+                <span>Contact</span>
+            </button>
+
+            <a href="https://sppucodes.vercel.app/" target="_blank" class="mobile-menu-item"
+                onclick="toggleMobileMenu()">
+                <i data-lucide="external-link"></i>
+                <span>Sppucodes</span>
+            </a>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <main class="hero">
@@ -1121,20 +1052,20 @@
                     </h1>
 
                     <p class="subheadline animate-in delay-3">
-                        Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with broken
-                        legacy setups. This modern compiler brings graphics.h into the 21st century—run your programs
-                        instantly in any browser or directly within VS Code, with zero configuration required.
+                        Say goodbye to the nightmare of installing Turbo C, configuring DOSBox, or wrestling with
+                        broken legacy setups. This modern compiler brings graphics.h into the 21st century—run your
+                        programs instantly in any browser or directly within VS Code, with zero configuration required.
                     </p>
 
                     <div class="cta-group animate-in delay-4">
                         <a href="/compiler.html" class="cta-btn cta-btn-primary">
                             <i data-lucide="terminal"></i>
-                            <span>Open Online Compiler</span>
+                            <span>Online Compiler</span>
                         </a>
                         <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
                             target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
                             <img src="static/vscode.svg" alt="VS Code" class="vscode-icon">
-                            <span>Get VS Code Extension</span>
+                            <span>VS Code Extension</span>
                         </a>
                     </div>
 
@@ -1153,12 +1084,24 @@
                         <div class="video-wrapper">
                             <video id="vscode-video" class="demo-video active" autoplay loop muted playsinline
                                 preload="auto">
-                                <source src="https://r2-public-assets.pes-soham135.workers.dev/videos/vscode-demo-v2.mp4" type="video/mp4">
+                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/vscode-demo-v2.mp4"
+                                    type="video/mp4">
                             </video>
                             <video id="online-video" class="demo-video" loop muted playsinline preload="auto">
-                                <source src="https://r2-public-assets.pes-soham135.workers.dev/videos/oc-demo.mp4" type="video/mp4">
+                                <source src="https://r2-public-assets.albatrossc.workers.dev/videos/oc-demo.mp4"
+                                    type="video/mp4">
                             </video>
                         </div>
+                    </div>
+
+                    <!-- Tabs below video -->
+                    <div class="demo-tabs">
+                        <button class="demo-tab active" data-demo="vscode" onclick="switchDemo('vscode')">
+                            <i data-lucide="video" style="width: 14px; height: 14px;"></i> VS Code
+                        </button>
+                        <button class="demo-tab" data-demo="online" onclick="switchDemo('online')">
+                            <i data-lucide="video" style="width: 14px; height: 14px;"></i> Online
+                        </button>
                     </div>
 
                     <!-- Video Descriptions -->
@@ -1170,16 +1113,6 @@
                     <div id="online-description" class="video-description">
                         <div class="video-description-title">Online Compiler Demo</div>
                         <div>Instant compile and live graphics output in your browser</div>
-                    </div>
-
-                    <!-- Tabs below video -->
-                    <div class="demo-tabs">
-                        <button class="demo-tab active" data-demo="vscode" onclick="switchDemo('vscode')">
-                            <i data-lucide="video" style="width: 16px; height: 16px;"></i> VS Code
-                        </button>
-                        <button class="demo-tab" data-demo="online" onclick="switchDemo('online')">
-                            <i data-lucide="video" style="width: 16px; height: 16px;"></i> Online
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1224,8 +1157,8 @@
 
             <div class="modal-highlight">
                 <p class="modal-text">
-                    Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students focus
-                    on learning graphics, not wrestling with 1990s software.
+                    Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students
+                    focus on learning graphics, not wrestling with 1990s software.
                 </p>
             </div>
         </div>
@@ -1237,6 +1170,14 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('active');
+            document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : 'auto';
+            setTimeout(() => lucide.createIcons(), 50);
+        }
 
         // Theme Management
         function toggleTheme() {
@@ -1332,11 +1273,14 @@
             }
         }
 
-        // Close modal with Escape key
+        // Close modal and mobile menu with Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeModal();
-                // Also close contact modal if it's loaded
+                const menu = document.getElementById('mobile-menu');
+                if (menu.classList.contains('active')) {
+                    toggleMobileMenu();
+                }
                 if (window.ContactModal) {
                     window.ContactModal.close();
                 }
@@ -1356,6 +1300,15 @@
                 window.ContactModal.open();
             }
         }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('mobile-menu');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            if (menu.classList.contains('active') && !menu.contains(e.target) && !menuBtn.contains(e.target)) {
+                toggleMobileMenu();
+            }
+        });
     </script>
 
     <!-- Structured Data for SEO -->

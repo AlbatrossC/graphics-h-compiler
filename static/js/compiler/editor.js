@@ -223,54 +223,137 @@ async function initializeEditor() {
 
     editor.session.setMode("ace/mode/c_cpp");
 
+    // Mobile detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
     editor.setShowPrintMargin(false);
+
+    // Default Font Size
+    let currentFontSize = parseInt(localStorage.getItem('editor_font_size')) || (isMobile ? 14 : 16);
+
+    // Apply basic settings
     editor.setOptions({
-        fontSize: "16px",
+        fontSize: `${currentFontSize}px`,
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        highlightActiveLine: true,
+        highlightActiveLine: !isMobile, // Disable on mobile for performance
         showGutter: true,
         tabSize: 4,
         useSoftTabs: true,
-        wrap: true
+        wrap: true,
+        behavioursEnabled: !isMobile, // Disable auto-pairing on mobile (can be annoying/slow)
+        animatedScroll: !isMobile,    // Disable smooth scrolling on mobile
+        displayIndentGuides: !isMobile, // Disable indent guides on mobile
+        showFoldWidgets: !isMobile    // Disable code folding widgets on mobile
     });
+
+    // Font Size Controls
+    const increaseFontBtn = document.getElementById('increase-font-btn');
+    const decreaseFontBtn = document.getElementById('decrease-font-btn');
+
+    const fontSizeDisplay = document.getElementById('font-size-display');
+
+    function updateFontSizeDisplay(size) {
+        if (fontSizeDisplay) {
+            fontSizeDisplay.textContent = size;
+        }
+    }
+
+    // Set initial display
+    updateFontSizeDisplay(currentFontSize);
+
+    if (increaseFontBtn && decreaseFontBtn) {
+        increaseFontBtn.addEventListener('click', () => {
+            currentFontSize += 1;
+            if (currentFontSize > 32) currentFontSize = 32;
+            editor.setFontSize(`${currentFontSize}px`);
+            localStorage.setItem('editor_font_size', currentFontSize);
+            updateFontSizeDisplay(currentFontSize);
+            Logger.info(`Font size increased to ${currentFontSize}px`);
+        });
+
+        decreaseFontBtn.addEventListener('click', () => {
+            currentFontSize -= 1;
+            if (currentFontSize < 10) currentFontSize = 10;
+            editor.setFontSize(`${currentFontSize}px`);
+            localStorage.setItem('editor_font_size', currentFontSize);
+            updateFontSizeDisplay(currentFontSize);
+            Logger.info(`Font size decreased to ${currentFontSize}px`);
+        });
+    }
+
+    // Copy Code Button
+    const copyCodeBtn = document.getElementById('copy-code-btn');
+    if (copyCodeBtn) {
+        copyCodeBtn.addEventListener('click', async () => {
+            const code = editor.getValue();
+            if (!code) return;
+
+            try {
+                await navigator.clipboard.writeText(code);
+
+                // Visual feedback
+                const originalTitle = copyCodeBtn.title;
+                const originalHTML = copyCodeBtn.innerHTML;
+
+                copyCodeBtn.classList.add('success');
+                copyCodeBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                copyCodeBtn.title = 'Copied!';
+
+                setTimeout(() => {
+                    copyCodeBtn.classList.remove('success');
+                    copyCodeBtn.innerHTML = originalHTML;
+                    copyCodeBtn.title = originalTitle;
+                }, 2000);
+
+                Logger.info('Code copied to clipboard');
+            } catch (err) {
+                Logger.error('Failed to copy code', err);
+            }
+        });
+    }
 
     await loadDefaultCode();
 
-    // Debounced UI update timer for smoother typing
+    // CRITICAL FIX #1: Separate fast and slow operations, use dirty flag
     let uiUpdateTimer = null;
     const UI_UPDATE_DEBOUNCE_MS = 150;
+    let lastEditorValue = '';
 
     editor.on('change', () => {
-        // Track editor changes (metrics only, no behavior change)
+        const currentValue = editor.getValue();
+
+        // Track editor changes (metrics only)
         metrics.editor.changeCount++;
         metrics.editor.lastChangeAt = Date.now();
 
-        // Log periodically (not on every keystroke) to avoid spam
-        if (metrics.editor.changeCount % metrics.editor.changeLogInterval === 0) {
-            const elapsed = ((Date.now() - metrics.editor.lastChangeAt) / 1000).toFixed(1);
-            Logger.info(`[Editor] Changes: ${metrics.editor.changeCount}`);
-        }
+        // Set dirty flag immediately (synchronous, no blocking)
+        // BUGFIX #1: Fixed dirty flag logic - always mark as dirty on ANY keystroke
+        DIRTY_FLAG.isDirty = true;
 
-        // Debounce UI updates for smooth typing
-        if (uiUpdateTimer) {
-            clearTimeout(uiUpdateTimer);
-        }
-        uiUpdateTimer = setTimeout(() => {
-            updateEditorInfo();
-            updateSaveIndicator();
-            uiUpdateTimer = null;
-        }, UI_UPDATE_DEBOUNCE_MS);
-
-        // Schedule cloud autosave (already debounced)
+        // FAST PATH: Save locally immediately (non-blocking, small operation)
         if (isUserLoggedIn) {
             const activeKey = CLOUD_STATE.activeFileKey;
             if (activeKey) {
                 const [folder, filename] = activeKey.split('/');
-                setLocalDraft(folder, filename, editor.getValue());
+                // Use debounced local draft save (already 100ms debounced internally)
+                setLocalDraft(folder, filename, currentValue);
             }
-            CLOUD_STATE.lastSavedHash = null;
+            // Schedule cloud autosave (debounced at 3000ms)
             scheduleAutosave();
         }
+
+        // SLOW PATH: Debounce UI updates (updateEditorInfo + updateSaveIndicator)
+        // These use dirty flag now, so they're much faster but still debounced for smoothness
+        if (uiUpdateTimer) {
+            clearTimeout(uiUpdateTimer);
+        }
+        uiUpdateTimer = setTimeout(() => {
+            updateEditorInfo();  // Fast now (just counts lines/chars)
+            updateSaveIndicator();  // Fast now (uses dirty flag, no hash)
+            uiUpdateTimer = null;
+        }, UI_UPDATE_DEBOUNCE_MS);
+
+        lastEditorValue = currentValue;
     });
 
     setTimeout(() => {
@@ -305,6 +388,9 @@ async function loadDefaultCode() {
         const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [folder, filename] = activeKey.split('/');
         await openFile(folder, filename, { skipSave: true });
+        // CRITICAL FIX #7: Set dirty flag after loading
+        DIRTY_FLAG.isDirty = false;
+        updateSaveIndicator();
         return;
     }
 
@@ -312,6 +398,8 @@ async function loadDefaultCode() {
     if (savedCode) {
         editor.setValue(savedCode, -1);
         updateEditorInfo();
+        // CRITICAL FIX #7: Content loaded = not dirty
+        DIRTY_FLAG.isDirty = false;
         updateSaveIndicator();
 
         Logger.info('Restored saved code');
@@ -320,6 +408,9 @@ async function loadDefaultCode() {
 
     // Load default demo (graphics-demo)
     await loadDemoFile('graphics-demo', false);
+    // CRITICAL FIX #7: Demo loaded = not dirty
+    DIRTY_FLAG.isDirty = false;
+    updateSaveIndicator();
 }
 
 // Clear button functionality

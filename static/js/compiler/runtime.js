@@ -1,72 +1,50 @@
-// ==================== GLOBAL CONSOLE FILTER ====================
-// Suppress verbose js-dos extraction logs and worker messages
 (function () {
     const originalLog = console.log;
     const originalInfo = console.info;
 
-    // Filter function to block unwanted messages
     const shouldBlock = (msg) => {
         if (typeof msg !== 'string') return false;
 
-        // Block extraction messages
         if (msg.includes('extracting:')) return true;
-
-        // Block js-dos version and copyright
         if (msg.includes('js-dos version')) return true;
         if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
-
-        // Block CONFIG messages
         if (msg.startsWith('CONFIG:')) return true;
-
-        // Block MIDI messages
         if (msg.startsWith('MIDI:')) return true;
-
-        // Block SHELL messages
         if (msg.startsWith('SHELL:')) return true;
-
-        // Block progress percentage messages (UUID with %)
         if (msg.includes('%') && msg.match(/[a-f0-9-]{36}/)) return true;
-
-        // Block [INFO] messages with UUIDs (progress indicators)
         if (msg.startsWith('[INFO]') && msg.match(/[a-f0-9-]{36}/)) return true;
-
-        // Block "Resolving DosBox" messages
         if (msg.includes('Resolving DosBox')) return true;
         if (msg.includes('DosBox resolved')) return true;
-
-        // Block runtime error messages from js-dos
         if (msg.includes('Runtime is still alive')) return true;
-
-        // Block separator lines
         if (msg.trim() === '---') return true;
 
         return false;
     };
 
-    // Override console.log
     console.log = function (...args) {
         if (args.length > 0 && shouldBlock(args[0])) {
-            return; // Silently drop the message
+            return;
         }
         originalLog.apply(console, args);
     };
 
-    // Override console.info
     console.info = function (...args) {
         if (args.length > 0 && shouldBlock(args[0])) {
-            return; // Silently drop the message
+            return;
         }
         originalInfo.apply(console, args);
     };
 })();
 
-// ==================== FULLSCREEN FUNCTIONALITY - FIXED ====================
-
 let isEditorFullscreen = false;
 let isTerminalFullscreen = false;
 
-document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
-    isEditorFullscreen = !isEditorFullscreen;
+function toggleEditorFullscreen(forceState) {
+    if (typeof forceState === 'boolean') {
+        isEditorFullscreen = forceState;
+    } else {
+        isEditorFullscreen = !isEditorFullscreen;
+    }
 
     if (isEditorFullscreen) {
         editorWrapper.classList.add('fullscreen');
@@ -76,14 +54,45 @@ document.getElementById('fullscreen-editor-btn').addEventListener('click', () =>
         terminalWrapper.classList.remove('hidden');
     }
 
-    // Force editor resize after fullscreen toggle
     setTimeout(() => {
         if (editor) {
             editor.resize();
             editor.renderer.updateFull();
         }
     }, 100);
+}
+
+document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
+    toggleEditorFullscreen();
 });
+
+// Mobile: auto-fullscreen editor when tapped (fixes freeze issue after compile)
+(function setupMobileEditorAutoFullscreen() {
+    const isMobile = () => window.innerWidth <= 768;
+    const editorEl = document.getElementById('editor');
+
+    if (!editorEl) return;
+
+    editorEl.addEventListener('click', (e) => {
+        if (isMobile() && !isEditorFullscreen) {
+            e.stopPropagation();
+            toggleEditorFullscreen(true);
+        }
+    }, { capture: true });
+
+    // Also make the panel header area clickable on mobile
+    const editorPanelHeader = editorWrapper.querySelector('.panel-header');
+    if (editorPanelHeader) {
+        editorPanelHeader.addEventListener('click', (e) => {
+            if (isMobile() && !isEditorFullscreen && !e.target.closest('button') && !e.target.closest('.file-tab')) {
+                toggleEditorFullscreen(true);
+            }
+        });
+    }
+})();
+
+const downloadTerminalBtn = document.getElementById('download-terminal-btn');
+const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 
 document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
     isTerminalFullscreen = !isTerminalFullscreen;
@@ -91,61 +100,93 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     if (isTerminalFullscreen) {
         terminalWrapper.classList.add('fullscreen');
         editorWrapper.classList.add('hidden');
+        resetTerminalZoom();
+        if (terminalZoomControls) {
+            terminalZoomControls.classList.remove('hidden');
+            terminalZoomControls.style.display = 'flex';
+        }
     } else {
         terminalWrapper.classList.remove('fullscreen');
         editorWrapper.classList.remove('hidden');
+        if (terminalZoomControls) {
+            terminalZoomControls.classList.add('hidden');
+            terminalZoomControls.style.display = 'none';
+        }
+        resetTerminalZoom();
     }
 
-    // Force canvas resize after fullscreen toggle
     setTimeout(() => {
-        if (dosInstance) {
-            // Trigger canvas resize
+        if (document.getElementById('dos-iframe')) {
             window.dispatchEvent(new Event('resize'));
         }
     }, 100);
 });
 
-// ==================== KEYBOARD INPUT ISOLATION ====================
+document.getElementById('download-terminal-btn')?.classList.add('hidden');
 
-let keyboardEventBlocker = null;
+let currentTerminalZoom = 1.0;
 
-function setupKeyboardBlocker() {
-    keyboardEventBlocker = function (e) {
-        if (!terminalFocused) {
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
-    };
+function updateTerminalZoom(change) {
+    const iframe = document.getElementById('dos-iframe');
 
-    window.addEventListener('keydown', keyboardEventBlocker, true);
-    window.addEventListener('keyup', keyboardEventBlocker, true);
-    window.addEventListener('keypress', keyboardEventBlocker, true);
+    if (!iframe) return;
+
+    let newZoom = currentTerminalZoom + change;
+
+    if (newZoom < 0.5) newZoom = 0.5;
+    if (newZoom > 3.0) newZoom = 3.0;
+
+    currentTerminalZoom = newZoom;
+
+    iframe.style.transform = `scale(${currentTerminalZoom})`;
+    iframe.style.transformOrigin = 'center center';
+    iframe.style.transition = 'transform 0.2s ease';
 }
 
-// ==================== FOCUS MANAGEMENT ====================
+function resetTerminalZoom() {
+    currentTerminalZoom = 1.0;
+    const iframe = document.getElementById('dos-iframe');
+    if (iframe) {
+        iframe.style.transform = 'scale(1)';
+    }
+}
+
+document.getElementById('increase-terminal-btn')?.addEventListener('click', () => {
+    updateTerminalZoom(0.1);
+});
+
+document.getElementById('decrease-terminal-btn')?.addEventListener('click', () => {
+    updateTerminalZoom(-0.1);
+});
+
 
 function focusTerminal() {
-    if (!dosInstance) return;
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe) return;
 
     terminalFocused = true;
-    canvas.focus();
-    canvas.tabIndex = 1;
+    iframe.focus();
+    if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'FOCUS' }, '*');
+    }
     terminalWrapper.classList.add('terminal-active');
     editorWrapper.classList.remove('active');
     keyboardBlocker.classList.remove('active');
 }
 
 function focusEditor() {
-    if (!editor) return;
-
     terminalFocused = false;
-    canvas.tabIndex = -1;
-    canvas.blur();
-    editor.focus();
+    if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+        document.activeElement.blur();
+    }
+    if (editor) {
+        editor.focus();
+    }
     terminalWrapper.classList.remove('terminal-active');
     editorWrapper.classList.add('active');
-    keyboardBlocker.classList.add('active');
+    if (document.getElementById('dos-iframe')) {
+        keyboardBlocker.classList.add('active');
+    }
 }
 
 keyboardBlocker.addEventListener('click', () => {
@@ -153,8 +194,9 @@ keyboardBlocker.addEventListener('click', () => {
 });
 
 terminalWrapper.addEventListener('click', (e) => {
-    if (e.target === terminalWrapper || e.target === canvas) {
-        if (dosInstance && !terminalFocused) {
+    const iframe = document.getElementById('dos-iframe');
+    if (e.target === terminalWrapper || e.target === iframe) {
+        if (!terminalFocused) {
             focusTerminal();
         }
     }
@@ -163,6 +205,14 @@ terminalWrapper.addEventListener('click', (e) => {
 editorWrapper.addEventListener('click', () => {
     focusEditor();
 });
+
+document.addEventListener('click', (e) => {
+    if (!terminalFocused) return;
+    const isInsideTerminal = terminalWrapper.contains(e.target);
+    if (!isInsideTerminal) {
+        focusEditor();
+    }
+}, true);
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -174,7 +224,72 @@ document.addEventListener('keydown', (e) => {
     }
 }, true);
 
-// ==================== RUN PROGRAM ====================
+let currentTcZipObjectUrl = null;
+
+window.addEventListener('message', (event) => {
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe || event.source !== iframe.contentWindow) return;
+
+    const data = event.data || {};
+    if (data.type === 'STATUS') {
+        if (data.status === 'STARTING') {
+            loadingText.textContent = 'Initializing DOS environment...';
+            updateLoadingProgress(40);
+        } else if (data.status === 'EXTRACTING') {
+            loadingText.textContent = 'Extracting compiler files...';
+            updateLoadingProgress(60);
+            metrics.runtime.zipExtractionStarted++;
+        } else if (data.status === 'WRITING_CODE') {
+            loadingText.textContent = 'Writing source code...';
+            updateLoadingProgress(80);
+        } else if (data.status === 'RUNNING') {
+            loadingText.textContent = 'Starting program...';
+            updateLoadingProgress(100);
+            loading.classList.remove('active');
+            runBtn.disabled = false;
+            runBtn.classList.remove('loading');
+            metrics.runtime.zipExtractionCompleted++;
+
+            if (currentTcZipObjectUrl) {
+                URL.revokeObjectURL(currentTcZipObjectUrl);
+                currentTcZipObjectUrl = null;
+            }
+
+            setTimeout(focusTerminal, 500);
+            Logger.success('Program started successfully');
+        }
+    } else if (data.type === 'COMPILATION_ERROR') {
+        Logger.info('[Error Panel] Received COMPILATION_ERROR from iframe');
+        Logger.info('[Error Panel] Content: ' + (data.content || '').substring(0, 200));
+        outputContent.textContent = data.content || '';
+        outputContent.classList.remove('output-success');
+        outputContent.classList.add('output-error');
+        outputPanel.classList.remove('expanded');
+        expandOutputBtn.classList.remove('expanded');
+        expandOutputBtn.title = 'Expand panel';
+        isOutputExpanded = false;
+
+        if (!outputPanel.classList.contains('visible')) {
+            outputPanel.classList.add('visible');
+            terminalWrapper.classList.add('has-panel');
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
+            Logger.success('[Error Panel] Panel made visible');
+        }
+        focusEditor();
+    } else if (data.type === 'ERROR') {
+        const message = data.message || 'Unknown DOS error';
+        Logger.error('DOS Error', message);
+        alert('DOS Error: ' + message);
+        loading.classList.remove('active');
+        runBtn.disabled = false;
+        runBtn.classList.remove('loading');
+        updateLoadingProgress(0);
+        if (currentTcZipObjectUrl) {
+            URL.revokeObjectURL(currentTcZipObjectUrl);
+            currentTcZipObjectUrl = null;
+        }
+    }
+});
 
 async function runProgram() {
     if (!editor) {
@@ -189,7 +304,6 @@ async function runProgram() {
         return;
     }
 
-    // Track run execution
     metrics.runtime.runCount++;
     Logger.info(`[Run] Triggered | count=${metrics.runtime.runCount}`);
 
@@ -222,140 +336,49 @@ async function runProgram() {
     runBtn.disabled = true;
     runBtn.classList.add('loading');
 
-    if (dosInstance) {
-        try {
-            metrics.runtime.runtimeReuseErrors++;
-            Logger.warn('[Run] Runtime already alive – reuse prevented');
-            dosInstance.exit();
-        } catch (e) {
-            Logger.warn('Error closing previous DOS instance');
-        }
-        dosInstance = null;
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe || !iframe.contentWindow) {
+        alert('DOS terminal is not available.');
+        loading.classList.remove('active');
+        runBtn.disabled = false;
+        runBtn.classList.remove('loading');
+        return;
     }
 
-    // Clear existing error interval
-    if (errorUpdateInterval) {
-        clearInterval(errorUpdateInterval);
-        errorUpdateInterval = null;
-    }
-
-    // Hide panel initially
     outputPanel.classList.remove('visible');
+    outputPanel.classList.remove('expanded');
+    expandOutputBtn.classList.remove('expanded');
+    expandOutputBtn.title = 'Expand panel';
+    isOutputExpanded = false;
     terminalWrapper.classList.remove('has-panel');
+    if (downloadTerminalBtn) {
+        downloadTerminalBtn.classList.add('hidden');
+    }
     lastErrorContent = '';
     outputContent.textContent = '';
 
     try {
-        // Wait for Dos to be available
-        if (!scriptsLoaded.jsdos || typeof Dos === 'undefined') {
-            loadingText.textContent = 'Waiting for JS-DOS...';
-            updateLoadingProgress(20);
-            await new Promise((resolve) => {
-                const checkDos = setInterval(() => {
-                    if (typeof Dos !== 'undefined') {
-                        clearInterval(checkDos);
-                        resolve();
-                    }
-                }, 100);
-            });
-        }
-
-        updateLoadingProgress(40);
+        updateLoadingProgress(20);
 
         // Determine wdosbox URL using ResourceLoader with automatic fallback
         let wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
         const usingOnline = !ResourceLoader.isOffline() && wdosboxUrl && !wdosboxUrl.startsWith('/');
 
         Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
-        updateLoadingProgress(60);
+        updateLoadingProgress(40);
 
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
-        Dos(canvas, {
-            wdosboxUrl: wdosboxUrl,
-            cycles: "max",
-            autolock: false,
-        }).ready(async (fs, main) => {
-
-            loadingText.textContent = 'Loading Turbo C++...';
-            updateLoadingProgress(70);
-
-            try {
-                // Use shared getTCZip to prevent race condition with warmup
-                loadingText.textContent = 'Loading compiler...';
-                const tcBlob = await getTCZip();
-
-                // Create a temporary URL for the blob
-                const blobUrl = URL.createObjectURL(tcBlob);
-
-                loadingText.textContent = 'Extracting compiler files...';
-
-                // Track ZIP extraction (metrics only, no logging)
-                metrics.runtime.zipExtractionStarted++;
-
-                // Log clean extraction message
-                Logger.info('[Runtime] Extracting Turbo C environment...');
-                const extractStartTime = performance.now();
-
-                // Suppress ALL console output during extraction (js-dos is very verbose)
-                const originalLog = console.log;
-                const originalInfo = console.info;
-                const originalWarn = console.warn;
-                const originalError = console.error;
-                const originalDebug = console.debug;
-
-                // Create a filter function to block extraction messages
-                const blockExtraction = (msg) => {
-                    if (typeof msg === 'string' && msg.includes('extracting:')) {
-                        return true; // Block this message
-                    }
-                    return false;
-                };
-
-                // Suppress all console methods
-                console.log = (...args) => { if (!blockExtraction(args[0])) originalLog.apply(console, args); };
-                console.info = (...args) => { if (!blockExtraction(args[0])) originalInfo.apply(console, args); };
-                console.warn = (...args) => { if (!blockExtraction(args[0])) originalWarn.apply(console, args); };
-                console.error = (...args) => { if (!blockExtraction(args[0])) originalError.apply(console, args); };
-                console.debug = () => { }; // Completely silent
-
-                try {
-                    // Now extract from the blob URL - js-dos can handle blob: URLs
-                    await fs.extract(blobUrl);
-                } finally {
-                    // Restore ALL console methods
-                    console.log = originalLog;
-                    console.info = originalInfo;
-                    console.warn = originalWarn;
-                    console.error = originalError;
-                    console.debug = originalDebug;
-                }
-
-                // Track completion (metrics only, no logging)
-                metrics.runtime.zipExtractionCompleted++;
-
-                // Calculate extraction time
-                const extractTime = ((performance.now() - extractStartTime) / 1000).toFixed(1);
-                Logger.success(`[Runtime] Extraction complete (312 files, ${extractTime}s)`);
-
-                // Clean up the blob URL
-                URL.revokeObjectURL(blobUrl);
-
-                Logger.success('Turbo C compiler loaded');
-            } catch (e) {
-                Logger.error('Compiler extraction failed', e);
-                throw new Error('Failed to load compiler: ' + e.message);
-            }
-
-            loadingText.textContent = 'Writing source code...';
-            updateLoadingProgress(80);
-            fs.createFile("TURBOC3/BIN/USER.CPP", code);
-
-            const batchScript = `@ECHO OFF
+        const batchScript = `@ECHO OFF
 CD TURBOC3\\BIN
 IF EXIST USER.EXE DEL USER.EXE
 IF EXIST ERR.TXT DEL ERR.TXT
+IF EXIST FAIL.TXT DEL FAIL.TXT
 TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
 IF EXIST USER.EXE GOTO SUCCESS
+ECHO COMPILE_FAILED > FAIL.TXT
+COPY ERR.TXT C:\\ERR.TXT >NUL
+COPY FAIL.TXT C:\\FAIL.TXT >NUL
 CLS
 ECHO ========================================
 ECHO COMPILATION ERRORS:
@@ -370,29 +393,26 @@ USER.EXE
 PAUSE
 `;
 
-            fs.createFile("AUTOEXEC.BAT", batchScript);
+        loadingText.textContent = 'Loading compiler...';
+        const tcBlob = await getTCZip();
 
-            loadingText.textContent = 'Starting program...';
-            updateLoadingProgress(90);
+        if (currentTcZipObjectUrl) {
+            URL.revokeObjectURL(currentTcZipObjectUrl);
+            currentTcZipObjectUrl = null;
+        }
+        currentTcZipObjectUrl = URL.createObjectURL(tcBlob);
 
-            dosInstance = await main(["-conf", "dosbox.conf", "AUTOEXEC.BAT"]);
-
-            setupKeyboardBlocker();
-
-            updateLoadingProgress(100);
-            loading.classList.remove('active');
-            runBtn.disabled = false;
-            runBtn.classList.remove('loading');
-
-            Logger.success('Program started successfully');
-
-            setTimeout(() => {
-                focusTerminal();
-            }, 500);
-
-            // Start checking for compilation errors
-            errorUpdateInterval = setInterval(() => checkCompilationErrors(), 1000);
-        });
+        iframe.contentWindow.postMessage({ type: 'STOP_DOS' }, '*');
+        iframe.contentWindow.postMessage({
+            type: 'INIT_DOS',
+            payload: {
+                wdosboxUrl: wdosboxUrl,
+                zipUrl: currentTcZipObjectUrl,
+                code: code,
+                batchScript: batchScript,
+                cycles: isMobile ? 'auto' : 'max'
+            }
+        }, '*');
 
     } catch (error) {
         Logger.error('Failed to start DOS environment', error);
@@ -401,6 +421,10 @@ PAUSE
         runBtn.disabled = false;
         runBtn.classList.remove('loading');
         updateLoadingProgress(0);
+        if (currentTcZipObjectUrl) {
+            URL.revokeObjectURL(currentTcZipObjectUrl);
+            currentTcZipObjectUrl = null;
+        }
     }
 }
 
@@ -442,72 +466,42 @@ window.addEventListener('beforeunload', (event) => {
         // localStorage might be full, ignore
     }
 
-    // Check if content has changed since last cloud save
-    const currentContent = code;
-    const lastSavedContent = localStorage.getItem(`lastCloudSave_${folder}_${filename}`);
-
-    // If content is the same, no need to save
-    if (currentContent === lastSavedContent) {
-        return;
-    }
-
     // Try sendBeacon for guaranteed background save
-    if (navigator.sendBeacon && supabaseClient) {
+    if (navigator.sendBeacon && supabaseClient && sessionCache.accessToken) {
         try {
-            // Get session synchronously from localStorage cache if available
-            const sessionData = localStorage.getItem('sb-session');
-            let token = null;
+            const payload = JSON.stringify({
+                folder,
+                filename,
+                content: code
+            });
 
-            if (sessionData) {
-                try {
-                    const parsed = JSON.parse(sessionData);
-                    token = parsed?.access_token;
-                } catch (e) { }
-            }
+            // Create blob with JSON content type
+            const blob = new Blob([payload], { type: 'application/json' });
+
+            // Get token for Authorization header simulation
+            // Note: sendBeacon doesn't support custom headers, so we use fetch with keepalive
+            const token = sessionCache.accessToken;
 
             if (token) {
-                // CRITICAL FIX #8: Token in request body - Security consideration documented
-                // Why token is in body instead of Authorization header:
-                // - navigator.sendBeacon() does NOT support custom headers
-                // - This is a trade-off for UX: guarantees save on tab close
-                // 
-                // SECURITY: This is an ACCEPTED RISK because:
-                // 1. Server ALWAYS re-verifies token locally (verifyJwtLocal)
-                // 2. Server recomputes content hash - prevents token swapping attacks
-                // 3. Token is short-lived (1 hour expiry)
-                // 4. HTTPS-only transmission prevents interception
-                //
-                // Alternatives considered (rejected):
-                // - Skip save on tab close: User data loss (unacceptable)
-                // - Use fetch() without keepalive: Not guaranteed after tab closes
-                // - Store token elsewhere: Would require separate token endpoint (complexity)
-                //
-                // The risk of token exposure is FAR lower than data loss from missing saves
-                const payload = JSON.stringify({
-                    folder,
-                    filename,
-                    content: code,
-                    token: token // Token included to enable sendBeacon usage
+                // Use fetch with keepalive instead of sendBeacon for Authorization header support
+                fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: payload,
+                    keepalive: true // Ensures request completes even after tab closes
+                }).catch(() => {
+                    // Silently fail - localStorage save already happened
                 });
 
-                // sendBeacon is fire-and-forget, will complete even after tab closes
-                const sent = navigator.sendBeacon('/files/beacon-save', payload);
-                if (sent) {
-                    Logger.info('Tab close: sendBeacon fired for background save');
-                }
+                Logger.info('Tab close: Background save initiated');
             }
         } catch (e) {
-            // sendBeacon failed, but localStorage save already happened
+            // Beacon failed, but localStorage save already happened
         }
     }
-
-    // Only show warning if there are significant unsaved changes AND last save was long ago
-    const lastSaveTime = CLOUD_STATE.lastSavedAt || 0;
-    const timeSinceLastSave = Date.now() - lastSaveTime;
-    const significantDelay = 5 * 60 * 1000; // 5 minutes
-
-    // Don't show warning - rely on localStorage + sendBeacon protection
-    // This provides smooth UX while still protecting user's work
 });
 
 // ==================== RESPONSIVE HANDLING ====================
@@ -524,7 +518,7 @@ window.addEventListener('orientationchange', () => {
     setTimeout(handleResize, 300);
 });
 
-// ==================== SIDEBAR FUNCTIONALITY ====================
+// ==================== SIDEBAR FUNCTIONALITY - FIXED ====================
 const sidebar = document.getElementById('sidebar');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
 const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -554,11 +548,34 @@ let isUserLoggedIn = false;
 let currentUser = null;
 let supabaseClient = null;
 
-// Mobile toggle
+// FIXED: Mobile AND desktop toggle
 if (sidebarToggle) {
     sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        sidebarOverlay.classList.toggle('active');
+        // Check if mobile (no activity bar visible)
+        const activityBar = document.querySelector('.activity-bar');
+        const isMobile = activityBar && window.getComputedStyle(activityBar).display === 'none';
+
+        if (isMobile) {
+            // Mobile: toggle open class and overlay
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+        } else {
+            // Desktop: toggle collapsed class
+            sidebar.classList.toggle('collapsed');
+
+            // Toggle activity bar
+            if (activityBar) {
+                activityBar.classList.toggle('active');
+            }
+
+            // Resize editor after collapse animation
+            setTimeout(() => {
+                if (editor) {
+                    editor.resize();
+                    editor.renderer.updateFull();
+                }
+            }, 350);
+        }
     });
 }
 
@@ -574,6 +591,13 @@ if (sidebarOverlay) {
 if (sidebarCollapseBtn) {
     sidebarCollapseBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
+
+        // Toggle activity bar
+        const activityBar = document.querySelector('.activity-bar');
+        if (activityBar) {
+            activityBar.classList.toggle('active');
+        }
+
         // Resize editor after collapse animation
         setTimeout(() => {
             if (editor) {
@@ -588,6 +612,13 @@ if (sidebarCollapseBtn) {
 if (explorerActivityBtn) {
     explorerActivityBtn.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
+
+        // Toggle activity bar
+        const activityBar = document.querySelector('.activity-bar');
+        if (activityBar) {
+            activityBar.classList.toggle('active');
+        }
+
         setTimeout(() => {
             if (editor) {
                 editor.resize();
@@ -603,63 +634,16 @@ if (refreshBtn) {
     });
 }
 
-// New File button
+// New File button - Uses native prompt() to bypass js-dos keyboard capture
 if (newFileBtn) {
     newFileBtn.addEventListener('click', () => {
         if (!isUserLoggedIn) {
             return;
         }
-        openNewFileModal();
-    });
-}
-
-function openNewFileModal() {
-    if (!newFileModal || !newFileInput) return;
-    newFileModal.classList.remove('hidden');
-    newFileInput.value = '';
-    newFileInput.focus();
-}
-
-function closeNewFileModal() {
-    if (!newFileModal) return;
-    newFileModal.classList.add('hidden');
-}
-
-if (newFileCreate) {
-    newFileCreate.addEventListener('click', () => {
-        const filename = newFileInput ? newFileInput.value : '';
-        closeNewFileModal();
-        createNewFile(filename);
-    });
-}
-
-if (newFileCancel) {
-    newFileCancel.addEventListener('click', () => {
-        closeNewFileModal();
-    });
-}
-
-if (newFileClose) {
-    newFileClose.addEventListener('click', () => {
-        closeNewFileModal();
-    });
-}
-
-if (newFileModal) {
-    newFileModal.addEventListener('click', (e) => {
-        if (e.target === newFileModal) {
-            closeNewFileModal();
-        }
-    });
-}
-
-if (newFileInput) {
-    newFileInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            newFileCreate?.click();
-        } else if (e.key === 'Escape') {
-            closeNewFileModal();
+        // Use native browser prompt() - immune to js-dos keyboard capture
+        const filename = prompt('Enter a file name (e.g., mycode.cpp):\nOnly letters, numbers, dots, underscores, and dashes are allowed.');
+        if (filename && filename.trim()) {
+            createNewFile(filename.trim());
         }
     });
 }

@@ -24,10 +24,6 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
-    <!-- Preload critical JS resources -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.min.js" as="script" crossorigin>
-    <link rel="preload" href="https://js-dos.com/6.22/current/js-dos.js" as="script" crossorigin>
-
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation">
@@ -147,10 +143,7 @@
                 <span id="save-text">Not Saved</span>
             </div>
 
-            <!-- Status Message -->
-            <div id="status-message" class="status-message hidden">
-                <span id="status-text"></span>
-            </div>
+            <!-- Status Message Removed -->
 
             <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -164,7 +157,6 @@
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
     <div id="workspace">
         <div class="sidebar-container">
-            <!-- Activity Bar (VS Code style) -->
             <div class="activity-bar">
                 <button id="explorer-activity-btn" class="activity-bar-btn active" title="Explorer">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -173,7 +165,6 @@
                 </button>
             </div>
 
-            <!-- Sidebar Panel -->
             <div id="sidebar">
                 <div class="sidebar-header">
                     <div class="sidebar-header-left">
@@ -181,9 +172,9 @@
                     </div>
                     <div class="sidebar-actions">
                         <button id="refresh-btn" class="sidebar-action-btn" title="Refresh Files">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
                             </svg>
                         </button>
                         <button id="sidebar-collapse-btn" class="sidebar-collapse-btn" title="Collapse Sidebar">
@@ -194,7 +185,6 @@
                     </div>
                 </div>
 
-                <!-- Large Action Buttons -->
                 <div class="explorer-actions">
                     <button id="new-file-btn" class="explorer-action-btn" style="display: none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -207,7 +197,6 @@
                     </button>
                 </div>
 
-                <!-- Cloud Storage Promo (Shown when NOT logged in) -->
                 <div id="cloud-promo-view" class="cloud-promo">
                     <svg class="cloud-promo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="1.5">
@@ -243,15 +232,12 @@
                     </ul>
                 </div>
 
-                <!-- File Explorer (Shown when logged in) - Flat File List -->
                 <div id="file-explorer-view" class="file-explorer" style="display: none;">
-                    <!-- Files Header -->
                     <div class="files-header">
                         <span class="files-title">Project Files</span>
                         <span class="files-count" id="files-count">0 files</span>
                     </div>
 
-                    <!-- Flat File List (no folder structure shown) -->
                     <div class="file-list-flat" id="main-folder-files">
                         <div class="file-item active" data-file="main.cpp" data-folder="main">
                             <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -326,23 +312,41 @@
                 </div>
 
                 <div class="panel-actions">
+                    <button id="copy-code-btn" class="panel-action-btn" title="Copy Code">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                        </svg>
+                    </button>
                     <button id="clear-btn" class="panel-action-btn" title="Clear Code">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path
                                 d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
                         </svg>
-                        <span>Clear</span>
                     </button>
+                    <div class="vertical-separator"></div>
+                    <div class="font-controls">
+                        <button id="decrease-font-btn" class="panel-action-btn" title="Decrease Font Size">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13H5v-2h14v2z" />
+                            </svg>
+                        </button>
+                        <span id="font-size-display" class="font-size-display">14</span>
+                        <button id="increase-font-btn" class="panel-action-btn" title="Increase Font Size">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                        </button>
+                    </div>
                     <button id="fullscreen-editor-btn" class="panel-action-btn" title="Toggle Fullscreen">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                         </svg>
-                        <span>Fullscreen</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Initial Editor Loading Overlay -->
             <div id="editor-loading-overlay" class="editor-loading-overlay">
                 <div class="editor-loading-spinner"></div>
                 <div class="editor-loading-text">Loading editor...</div>
@@ -364,6 +368,26 @@
                     DOS Output
                 </div>
                 <div class="panel-actions">
+                    <button id="download-terminal-btn" class="panel-action-btn hidden" title="Download Screenshot">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                        <span>Save Image</span>
+                    </button>
+                    <div id="terminal-zoom-controls" class="resize-controls hidden" style="display: flex; gap: 2px;">
+                        <button id="decrease-terminal-btn" class="panel-action-btn" title="Zoom Out"
+                            style="padding: 0 8px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13H5v-2h14v2z" />
+                            </svg>
+                        </button>
+                        <button id="increase-terminal-btn" class="panel-action-btn" title="Zoom In"
+                            style="padding: 0 8px;">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                            </svg>
+                        </button>
+                    </div>
                     <button id="fullscreen-terminal-btn" class="panel-action-btn" title="Toggle Fullscreen">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
@@ -379,7 +403,7 @@
                         <path
                             d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                     </svg>
-                    Click to interact with terminal
+                    Click to interact with the dos output
                 </div>
             </div>
 
@@ -392,7 +416,8 @@
             </div>
 
             <div class="terminal-canvas-wrap">
-                <canvas id="dos-canvas" tabindex="-1"></canvas>
+                <iframe id="dos-iframe" src="{{ url_for('static', filename='dos-runner.html') }}" title="DOS Terminal"
+                    sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
             </div>
 
             <div id="output-panel">
@@ -419,7 +444,7 @@
                             </svg>
                         </button>
                         <button id="close-output-btn" class="icon-btn"
-                            style="height: 28px; width: 28px; min-height: unset; border: 1px solid var(--border-color); background: transparent; border-radius: 6px;">
+                            style="height: 30px; width: 30px; min-height: unset; border: 1px solid var(--border-color); background: transparent; border-radius: 6px;">
                             <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px;">
                                 <path
                                     d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
@@ -459,6 +484,7 @@
     <script src="/static/js/compiler/storage.js"></script>
     <script src="/static/js/compiler/editor.js"></script>
     <script src="/static/js/compiler/runtime.js"></script>
+    <script src="/static/js/popup.js"></script>
 
 </body>
 

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maintenance — Graphics Compiler</title>
+<script src="static/analytics.js" async></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --surface: #f9f9f9;
+    --border: #e8e8e8;
+    --text: #111111;
+    --muted: #999999;
+    --accent: #111111;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .frame {
+    height: 100vh;
+    width: 100vw;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* ── LEFT ── */
+  .left {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.5rem 3rem;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { color: #fff; }
+
+  .logo-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    min-height: 0;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    width: fit-content;
+    flex-shrink: 0;
+  }
+
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #f59e0b;
+    animation: blink 2.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.25; }
+  }
+
+  h1 {
+    font-size: clamp(2.8rem, 4.5vw, 4.2rem);
+    font-weight: 300;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .desc {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--muted);
+    line-height: 1.75;
+    max-width: 300px;
+    margin-bottom: 2rem;
+    flex-shrink: 0;
+  }
+
+  .date-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.35rem;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    width: fit-content;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .date-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .date-value {
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .footer {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--border);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  /* ── RIGHT ── */
+  .right {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 2.5rem 3rem;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .top-spacer { height: 32px; flex-shrink: 0; }
+
+  .form-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 380px;
+    min-height: 0;
+  }
+
+  .form-heading {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.45rem;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+  }
+
+  .form-sub {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--muted);
+    line-height: 1.75;
+    margin-bottom: 1.75rem;
+    flex-shrink: 0;
+  }
+
+  .field { margin-bottom: 0.85rem; flex-shrink: 0; }
+
+  .field label {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.45rem;
+  }
+
+  .field textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    color: var(--text);
+    font-family: 'Geist', -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.7;
+    outline: none;
+    resize: none;
+    height: 130px;
+    transition: border-color 0.15s;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .field textarea::placeholder { color: #cccccc; }
+  .field textarea:focus { border-color: #aaaaaa; }
+
+  .send-btn {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Geist', -apple-system, sans-serif;
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.12s;
+    -webkit-font-smoothing: antialiased;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover   { opacity: 0.75; }
+  .send-btn:active  { transform: scale(0.99); opacity: 1; }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  .status {
+    margin-top: 0.7rem;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    display: none;
+    padding: 0.7rem 1rem;
+    border-radius: 7px;
+    flex-shrink: 0;
+  }
+  .status.success { display: block; background: #f0faf2; color: #2d7a40; border: 1px solid #c6e8cd; }
+  .status.error   { display: block; background: #fff5f5; color: #c0392b; border: 1px solid #f5c6c6; }
+
+  .right-footer {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
+  }
+
+  .active-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+
+  /* Entrance */
+  .left > * { animation: up 0.5s ease both; }
+  .left > *:nth-child(1) { animation-delay: 0s; }
+  .left > *:nth-child(2) { animation-delay: 0.08s; }
+  .left > *:nth-child(3) { animation-delay: 0.16s; }
+
+  .right > * { animation: up 0.5s ease both; }
+  .right > *:nth-child(1) { animation-delay: 0.12s; }
+  .right > *:nth-child(2) { animation-delay: 0.2s; }
+  .right > *:nth-child(3) { animation-delay: 0.28s; }
+
+  @keyframes up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 680px) {
+    html, body { overflow: auto; }
+    .frame { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+    .left { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
+  /* Compact screens */
+  @media (max-height: 700px) {
+    h1 { font-size: clamp(2rem, 3.5vw, 3rem); margin-bottom: 0.75rem; }
+    .desc { font-size: 0.85rem; margin-bottom: 1.25rem; }
+    .tag { margin-bottom: 1rem; }
+    .field textarea { height: 100px; }
+    .left, .right { padding: 1.75rem 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <span class="logo-name">Graphics Compiler</span>
+    </div>
+
+    <div class="main">
+      <div class="tag">
+        <span class="dot"></span>
+        Under maintenance
+      </div>
+
+      <h1>Improving<br>things for you.</h1>
+      <p class="desc">Graphics Compiler is undergoing scheduled maintenance. I'm making improvements under the hood — it'll be better when it's back.</p>
+
+      <div class="date-block">
+        <span class="date-label">Back online</span>
+        <span class="date-value">20 Feb 2026 · 2:00 PM IST</span>
+      </div>
+    </div>
+
+    <div class="footer">© 2026 Graphics Compiler</div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="top-spacer"></div>
+
+    <div class="form-section">
+      <div class="form-heading">Need it now?</div>
+      <p class="form-sub">If this is urgent, send a message below — I'll consider postponing the maintenance so you can get back to work.</p>
+
+      <div class="field">
+        <label>Your message</label>
+        <textarea id="msg" placeholder="Describe what you need and why it can't wait..."></textarea>
+      </div>
+
+      <button class="send-btn" id="btn" onclick="handleSend()">Send Message</button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="right-footer">
+      <span class="active-dot"></span>
+      Team is online
+    </div>
+  </div>
+
+</div>
+
+<script>
+  async function handleSend() {
+    const msg = document.getElementById('msg').value.trim();
+    const btn = document.getElementById('btn');
+    const status = document.getElementById('status');
+
+    status.className = 'status';
+
+    if (!msg) {
+      status.className = 'status error';
+      status.textContent = 'Please enter a message before sending.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch('/api/maintenance/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        status.className = 'status success';
+        status.textContent = "Message sent. We'll review it and reach out shortly.";
+        document.getElementById('msg').value = '';
+      } else {
+        status.className = 'status error';
+        status.textContent = data.error || 'Something went wrong. Please try again.';
+      }
+    } catch {
+      status.className = 'status error';
+      status.textContent = 'Could not send message. Please try again.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send Message';
+    }
+  }
+
+  document.getElementById('msg').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  });
+</script>
+
+</body>
+</html>
