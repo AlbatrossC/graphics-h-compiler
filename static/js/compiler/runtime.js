@@ -39,7 +39,79 @@
 let isEditorFullscreen = false;
 let isTerminalFullscreen = false;
 
+// ==================== MOBILE TAB SWITCHING ====================
+const _mobileTabBar = document.getElementById('mobile-tab-bar');
+const _mobileTabEditor = document.getElementById('mobile-tab-editor');
+const _mobileTabOutput = document.getElementById('mobile-tab-output');
+
+function isMobileView() {
+    return window.innerWidth <= 768;
+}
+
+function switchMobileTab(tab) {
+    if (!_mobileTabEditor || !_mobileTabOutput) return;
+
+    if (tab === 'output') {
+        document.body.classList.add('mobile-tab-output');
+        _mobileTabEditor.classList.remove('active');
+        _mobileTabOutput.classList.add('active');
+    } else {
+        document.body.classList.remove('mobile-tab-output');
+        _mobileTabEditor.classList.add('active');
+        _mobileTabOutput.classList.remove('active');
+
+        // ── Force-release keyboard from the DOS iframe ──
+        // 1. Blur the iframe element itself
+        const iframe = document.getElementById('dos-iframe');
+        if (iframe) {
+            iframe.blur();
+            // Tell the iframe's DOSBox to release keyboard capture
+            if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'BLUR' }, '*');
+            }
+        }
+        // 2. Blur any other focused element (safety net)
+        if (document.activeElement && document.activeElement !== document.body) {
+            document.activeElement.blur();
+        }
+        // 3. Reset terminal focus state
+        terminalFocused = false;
+        terminalWrapper.classList.remove('terminal-active');
+        editorWrapper.classList.add('active');
+        if (iframe) {
+            keyboardBlocker.classList.add('active');
+        }
+    }
+
+    // Re-layout after tab switch, then focus editor if on editor tab
+    requestAnimationFrame(() => {
+        if (editor && editor.requestMeasure) editor.requestMeasure();
+        window.dispatchEvent(new Event('resize'));
+
+        // Focus the CodeMirror editor after DOM settles
+        if (tab === 'editor' && editor) {
+            setTimeout(() => {
+                editor.focus();
+            }, 80);
+        }
+    });
+}
+
+if (_mobileTabEditor) {
+    _mobileTabEditor.addEventListener('click', () => switchMobileTab('editor'));
+}
+if (_mobileTabOutput) {
+    _mobileTabOutput.addEventListener('click', () => switchMobileTab('output'));
+}
+
+// ==================== DESKTOP FULLSCREEN TOGGLE ====================
 function toggleEditorFullscreen(forceState) {
+    // On mobile, use tab switching instead of fullscreen
+    if (isMobileView()) {
+        switchMobileTab('editor');
+        return;
+    }
+
     if (typeof forceState === 'boolean') {
         isEditorFullscreen = forceState;
     } else {
@@ -65,35 +137,16 @@ document.getElementById('fullscreen-editor-btn').addEventListener('click', () =>
     toggleEditorFullscreen();
 });
 
-// Mobile: auto-fullscreen editor when tapped (fixes freeze issue after compile)
-(function setupMobileEditorAutoFullscreen() {
-    const isMobile = () => window.innerWidth <= 768;
-    const editorEl = document.getElementById('editor');
-
-    if (!editorEl) return;
-
-    editorEl.addEventListener('click', (e) => {
-        if (isMobile() && !isEditorFullscreen) {
-            e.stopPropagation();
-            toggleEditorFullscreen(true);
-        }
-    }, { capture: true });
-
-    // Also make the panel header area clickable on mobile
-    const editorPanelHeader = editorWrapper.querySelector('.panel-header');
-    if (editorPanelHeader) {
-        editorPanelHeader.addEventListener('click', (e) => {
-            if (isMobile() && !isEditorFullscreen && !e.target.closest('button') && !e.target.closest('.file-tab')) {
-                toggleEditorFullscreen(true);
-            }
-        });
-    }
-})();
-
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 
 document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
+    // On mobile, use tab switching instead of fullscreen
+    if (isMobileView()) {
+        switchMobileTab('output');
+        return;
+    }
+
     isTerminalFullscreen = !isTerminalFullscreen;
 
     if (isTerminalFullscreen) {
@@ -274,7 +327,13 @@ window.addEventListener('message', (event) => {
             setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
             Logger.success('[Error Panel] Panel made visible');
         }
-        focusEditor();
+
+        // On mobile, switch to output tab so errors are visible
+        if (isMobileView()) {
+            switchMobileTab('output');
+        } else {
+            focusEditor();
+        }
     } else if (data.type === 'ERROR') {
         const message = data.message || 'Unknown DOS error';
         Logger.error('DOS Error', message);
@@ -334,6 +393,11 @@ async function runProgram() {
     updateLoadingProgress(0);
     runBtn.disabled = true;
     runBtn.classList.add('loading');
+
+    // On mobile, switch to DOS output tab immediately
+    if (isMobileView()) {
+        switchMobileTab('output');
+    }
 
     const iframe = document.getElementById('dos-iframe');
     if (!iframe || !iframe.contentWindow) {
