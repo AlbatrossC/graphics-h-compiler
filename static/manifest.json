@@ -16,33 +16,12 @@
             ],
             "localPath": "/libs/wdosbox.js"
         },
-        "ace": {
-            "name": "Ace Editor",
-            "urls": [
-                "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"
-            ],
-            "localPath": "/libs/ace.js"
-        },
-        "ace-mode-cpp": {
-            "name": "Ace C++ Mode",
-            "urls": [
-                "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/mode-c_cpp.js"
-            ],
-            "localPath": "/libs/mode-c_cpp.js"
-        },
-        "ace-theme-monokai": {
-            "name": "Ace Monokai Theme",
-            "urls": [
-                "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-monokai.js"
-            ],
-            "localPath": "/libs/theme-monokai.js"
-        },
-        "ace-theme-textmate": {
-            "name": "Ace Textmate Theme",
-            "urls": [
-                "https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/theme-textmate.js"
-            ],
-            "localPath": "/libs/theme-textmate.js"
+        "codemirror": {
+            "name": "CodeMirror Editor",
+            "type": "module",
+            "urls": [],
+            "localPath": "/libs/codemirror-bundle.js",
+            "note": "CodeMirror 6 loaded as ES module in editor.js"
         },
         "tailwindcss": {
             "name": "Tailwind CSS",

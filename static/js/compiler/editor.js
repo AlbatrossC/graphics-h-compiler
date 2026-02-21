@@ -1,3 +1,7 @@
+// ==================== CODEMIRROR 6 EDITOR ====================
+// Lightweight code editor with basic C++ syntax highlighting
+// and auto-close brackets. No heavy IDE features.
+
 // ==================== SCRIPT LOADING WITH FALLBACK ====================
 
 function loadScript(url, fallbackUrl, timeout = 5000) {
@@ -41,9 +45,66 @@ function loadScript(url, fallbackUrl, timeout = 5000) {
     });
 }
 
+// ==================== CODEMIRROR CDN LOADING ====================
+
+// We load CodeMirror modules from esm.sh CDN
+// IMPORTANT: Do NOT use ?bundle — it causes each package to inline its own
+// copy of @codemirror/state, breaking instanceof checks.
+let cmModules = null;
+
+async function loadCodeMirror() {
+    Logger.info('Loading CodeMirror via ESM CDN...');
+    updateLoadingProgress(30);
+
+    try {
+        // Import all needed CodeMirror modules from CDN
+        // Without ?bundle, esm.sh deduplicates shared dependencies via consistent URLs
+        const [
+            cm,
+            cmView,
+            cmState,
+            cmLanguage,
+            cmCpp,
+            cmCommands,
+            cmAutocomplete,
+            cmSearch,
+            cmHighlight
+        ] = await Promise.all([
+            import('https://esm.sh/codemirror@6'),
+            import('https://esm.sh/@codemirror/view@6'),
+            import('https://esm.sh/@codemirror/state@6'),
+            import('https://esm.sh/@codemirror/language@6'),
+            import('https://esm.sh/@codemirror/lang-cpp@6'),
+            import('https://esm.sh/@codemirror/commands@6'),
+            import('https://esm.sh/@codemirror/autocomplete@6'),
+            import('https://esm.sh/@codemirror/search@6'),
+            import('https://esm.sh/@lezer/highlight@1')
+        ]);
+
+        cmModules = {
+            cm: cm,
+            view: cmView,
+            state: cmState,
+            language: cmLanguage,
+            cpp: cmCpp,
+            commands: cmCommands,
+            autocomplete: cmAutocomplete,
+            search: cmSearch,
+            highlight: cmHighlight
+        };
+
+        Logger.success('CodeMirror modules loaded');
+        updateLoadingProgress(70);
+        return true;
+    } catch (error) {
+        Logger.error('Failed to load CodeMirror from ESM CDN', error);
+        throw error;
+    }
+}
+
 async function loadAllScripts() {
     try {
-        Logger.info('Loading dependencies via ResourceLoader...');
+        Logger.info('Loading dependencies...');
         updateLoadingProgress(10);
 
         // Initialize resources from manifest first
@@ -52,27 +113,11 @@ async function loadAllScripts() {
         // Load JS-DOS using ResourceLoader
         await ResourceLoader.loadScript('libs', 'jsdos');
         scriptsLoaded.jsdos = true;
-        updateLoadingProgress(30);
+        updateLoadingProgress(20);
 
-        // Load Ace Editor using ResourceLoader
-        await ResourceLoader.loadScript('libs', 'ace');
-        scriptsLoaded.ace = true;
-        updateLoadingProgress(50);
-
-        await waitForAce();
-
-        // Load Ace C++ Mode using ResourceLoader
-        await ResourceLoader.loadScript('libs', 'ace-mode-cpp');
-        scriptsLoaded.aceMode = true;
-        updateLoadingProgress(70);
-
-        // Load Ace Monokai Theme using ResourceLoader
-        await ResourceLoader.loadScript('libs', 'ace-theme-monokai');
-
-        // Load Ace Textmate Theme for light mode using ResourceLoader
-        await ResourceLoader.loadScript('libs', 'ace-theme-textmate');
-
-        scriptsLoaded.aceTheme = true;
+        // Load CodeMirror via ESM imports
+        await loadCodeMirror();
+        scriptsLoaded.codemirror = true;
         updateLoadingProgress(100);
 
         Logger.success('All dependencies loaded');
@@ -84,33 +129,20 @@ async function loadAllScripts() {
     }
 }
 
-
 function updateLoadingProgress(percent) {
     if (loadingProgressBar) {
         loadingProgressBar.style.width = `${percent}%`;
     }
 }
 
-function waitForAce() {
-    return new Promise((resolve) => {
-        const checkAce = setInterval(() => {
-            if (typeof ace !== 'undefined') {
-                clearInterval(checkAce);
-                resolve();
-            }
-        }, 50);
-    });
-}
-
-// ==================== DEMO FILE MANAGEMENT - FIXED ====================
+// ==================== DEMO FILE MANAGEMENT ====================
 
 demoSelect.addEventListener('change', async (e) => {
     const selectedDemo = e.target.value;
 
-    // Check if clicking the same demo that's already loaded
     if (selectedDemo === lastLoadedDemo) {
         Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
-        await loadDemoFile(selectedDemo, true); // Force reload
+        await loadDemoFile(selectedDemo, true);
     } else {
         currentDemo = selectedDemo;
         await loadDemoFile(selectedDemo, false);
@@ -126,11 +158,9 @@ async function loadDemoFile(demoKey, forceReload = false) {
             const cachedCode = DemoCache.get(demoKey);
             if (cachedCode) {
                 Logger.info(`Loading ${demoKey} demo from cache`);
-                editor.setValue('', -1);
+                editor.setValue('');
                 await new Promise(resolve => setTimeout(resolve, 50));
-                editor.setValue(cachedCode, -1);
-                editor.clearSelection();
-                editor.moveCursorTo(0, 0);
+                editor.setValue(cachedCode);
 
                 lastLoadedDemo = demoKey;
                 currentDemo = demoKey;
@@ -146,15 +176,12 @@ async function loadDemoFile(demoKey, forceReload = false) {
 
         Logger.info(`Loading ${demoKey} demo using ResourceLoader...${forceReload ? ' (force reload)' : ''}`);
 
-        // Use ResourceLoader to fetch demo with automatic fallback to local files
         let response;
         try {
-            // For force reload, add cache buster to the fetch
             const fetchOptions = forceReload ? { cache: 'no-cache' } : {};
             response = await ResourceLoader.fetchResource('demos', demoKey, fetchOptions);
         } catch (resourceError) {
             Logger.warn(`ResourceLoader failed for ${demoKey}, trying direct DEMO_FILES fallback`);
-            // Fallback to DEMO_FILES if ResourceLoader fails
             const demoUrl = DEMO_FILES[demoKey];
             if (demoUrl) {
                 const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
@@ -167,20 +194,15 @@ async function loadDemoFile(demoKey, forceReload = false) {
         if (response.ok) {
             const code = await response.text();
 
-            // Cache the demo file
             DemoCache.set(demoKey, code);
 
-            editor.setValue('', -1);
+            editor.setValue('');
             await new Promise(resolve => setTimeout(resolve, 50));
-            editor.setValue(code, -1);
-            editor.clearSelection();
-            editor.moveCursorTo(0, 0);
+            editor.setValue(code);
 
-            // Update last loaded demo
             lastLoadedDemo = demoKey;
             currentDemo = demoKey;
 
-            // Mark as modified when loading a demo
             if (isUserLoggedIn) {
                 const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
                 const [folder, filename] = activeKey.split('/');
@@ -206,50 +228,280 @@ async function loadDemoFile(demoKey, forceReload = false) {
 }
 
 
+// ==================== CODEMIRROR THEME CONFIGURATION ====================
+
+// Theme compartment for live theme switching
+let themeCompartment = null;
+let fontSizeCompartment = null;
+let cmView = null; // Store the EditorView instance
+
+function createDarkTheme() {
+    const { EditorView } = cmModules.view;
+    const { HighlightStyle, syntaxHighlighting } = cmModules.language;
+    const { tags } = cmModules.highlight;
+
+    const darkHighlight = HighlightStyle.define([
+        { tag: tags.keyword, color: '#f92672' },
+        { tag: tags.name, color: '#f8f8f2' },
+        { tag: tags.typeName, color: '#66d9ef' },
+        { tag: tags.variableName, color: '#f8f8f2' },
+        { tag: tags.propertyName, color: '#a6e22e' },
+        { tag: tags.function(tags.variableName), color: '#a6e22e' },
+        { tag: tags.string, color: '#e6db74' },
+        { tag: tags.number, color: '#ae81ff' },
+        { tag: tags.bool, color: '#ae81ff' },
+        { tag: tags.comment, color: '#75715e' },
+        { tag: tags.operator, color: '#f92672' },
+        { tag: tags.bracket, color: '#f8f8f2' },
+        { tag: tags.meta, color: '#f92672' },
+        { tag: tags.processingInstruction, color: '#f92672' },
+        { tag: tags.definition(tags.variableName), color: '#a6e22e' },
+        { tag: tags.macroName, color: '#a6e22e' },
+    ]);
+
+    const editorTheme = EditorView.theme({
+        '&': { backgroundColor: 'transparent' },
+        '.cm-content': { color: '#f8f8f2' },
+        '.cm-cursor': { borderLeftColor: '#00ff88' },
+        '.cm-activeLine': { backgroundColor: '#1a1a1a' },
+        '.cm-activeLineGutter': { backgroundColor: '#1a1a1a' },
+        '.cm-gutters': {
+            backgroundColor: '#151515',
+            color: '#a0a0a0',
+            borderRight: '1px solid #262626'
+        },
+        '.cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
+        '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
+        '.cm-matchingBracket': {
+            backgroundColor: 'rgba(0, 255, 136, 0.25)',
+            outline: '1px solid rgba(0, 255, 136, 0.4)'
+        },
+    }, { dark: true });
+
+    return [editorTheme, syntaxHighlighting(darkHighlight)];
+}
+
+function createLightTheme() {
+    const { EditorView } = cmModules.view;
+    const { HighlightStyle, syntaxHighlighting } = cmModules.language;
+    const { tags } = cmModules.highlight;
+
+    const lightHighlight = HighlightStyle.define([
+        { tag: tags.keyword, color: '#7928a1' },
+        { tag: tags.name, color: '#1a1a1a' },
+        { tag: tags.typeName, color: '#0550ae' },
+        { tag: tags.variableName, color: '#1a1a1a' },
+        { tag: tags.propertyName, color: '#116329' },
+        { tag: tags.function(tags.variableName), color: '#116329' },
+        { tag: tags.string, color: '#0a3069' },
+        { tag: tags.number, color: '#0550ae' },
+        { tag: tags.bool, color: '#0550ae' },
+        { tag: tags.comment, color: '#6e7781' },
+        { tag: tags.operator, color: '#cf222e' },
+        { tag: tags.bracket, color: '#1a1a1a' },
+        { tag: tags.meta, color: '#cf222e' },
+        { tag: tags.processingInstruction, color: '#cf222e' },
+        { tag: tags.definition(tags.variableName), color: '#116329' },
+        { tag: tags.macroName, color: '#116329' },
+    ]);
+
+    const editorTheme = EditorView.theme({
+        '&': { backgroundColor: 'transparent' },
+        '.cm-content': { color: '#1a1a1a' },
+        '.cm-cursor': { borderLeftColor: '#00cc6a' },
+        '.cm-activeLine': { backgroundColor: '#f0f0f0' },
+        '.cm-activeLineGutter': { backgroundColor: '#f0f0f0' },
+        '.cm-gutters': {
+            backgroundColor: '#f5f5f5',
+            color: '#606060',
+            borderRight: '1px solid #e0e0e0'
+        },
+        '.cm-selectionBackground': { backgroundColor: 'rgba(0, 204, 106, 0.2) !important' },
+        '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(0, 204, 106, 0.2) !important' },
+        '.cm-matchingBracket': {
+            backgroundColor: 'rgba(0, 204, 106, 0.2)',
+            outline: '1px solid rgba(0, 204, 106, 0.4)'
+        },
+    }, { dark: false });
+
+    return [editorTheme, syntaxHighlighting(lightHighlight)];
+}
+
+// Global function for theme switching (called from core.js)
+function updateEditorTheme(newTheme) {
+    if (!cmView || !themeCompartment) return;
+    const theme = newTheme === 'dark' ? createDarkTheme() : createLightTheme();
+    cmView.dispatch({
+        effects: themeCompartment.reconfigure(theme)
+    });
+}
+
+// ==================== EDITOR WRAPPER API ====================
+// Provides the same API as the old Ace editor so storage.js, runtime.js, etc. work unchanged
+
+function createEditorWrapper(view) {
+    return {
+        // Get full document text
+        getValue() {
+            return view.state.doc.toString();
+        },
+
+        // Set full document text
+        setValue(text) {
+            view.dispatch({
+                changes: {
+                    from: 0,
+                    to: view.state.doc.length,
+                    insert: text || ''
+                }
+            });
+        },
+
+        // No-op for compatibility
+        clearSelection() {
+            view.dispatch({ selection: { anchor: 0 } });
+        },
+
+        // Move cursor to line/col (0-based)
+        moveCursorTo(line, col) {
+            const targetLine = Math.min(line + 1, view.state.doc.lines);
+            const lineInfo = view.state.doc.line(targetLine);
+            const pos = lineInfo.from + Math.min(col, lineInfo.length);
+            view.dispatch({ selection: { anchor: pos } });
+        },
+
+        // Focus the editor
+        focus() {
+            view.focus();
+        },
+
+        // Set font size
+        setFontSize(sizeStr) {
+            if (!fontSizeCompartment) return;
+            const { EditorView } = cmModules.view;
+            view.dispatch({
+                effects: fontSizeCompartment.reconfigure(
+                    EditorView.theme({ '.cm-content, .cm-gutters': { fontSize: sizeStr } })
+                )
+            });
+        },
+
+        // Resize — CodeMirror auto-resizes, but requestMeasure forces relayout
+        resize() {
+            view.requestMeasure();
+        },
+
+        // For compatibility with runtime.js
+        requestMeasure() {
+            view.requestMeasure();
+        },
+
+        // Change listener — no-op, actual listener set up in initializeEditor
+        on(event, callback) { },
+
+        // Renderer compatibility
+        renderer: {
+            updateFull() {
+                view.requestMeasure();
+            }
+        },
+
+        // Theme compatibility — handled by updateEditorTheme
+        setTheme() { }
+    };
+}
+
+
 // ==================== EDITOR INITIALIZATION ====================
 
 async function initializeEditor() {
-    if (!scriptsLoaded.ace || typeof ace === 'undefined') {
+    if (!scriptsLoaded.codemirror || !cmModules) {
         setTimeout(initializeEditor, 100);
         return;
     }
 
-    editor = ace.edit("editor");
-
-    // Set theme based on current theme setting
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const aceTheme = currentTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
-    editor.setTheme(aceTheme);
-
-    editor.session.setMode("ace/mode/c_cpp");
+    const { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } = cmModules.view;
+    const { EditorState, Compartment } = cmModules.state;
+    const { indentOnInput, bracketMatching } = cmModules.language;
+    const { cpp } = cmModules.cpp;
+    const { defaultKeymap, indentWithTab, history, historyKeymap } = cmModules.commands;
+    const { closeBrackets, closeBracketsKeymap } = cmModules.autocomplete;
+    const { highlightSelectionMatches } = cmModules.search;
 
     // Mobile detection
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
-    editor.setShowPrintMargin(false);
+    // Create compartments for dynamic reconfiguration
+    themeCompartment = new Compartment();
+    fontSizeCompartment = new Compartment();
 
     // Default Font Size
-    let currentFontSize = parseInt(localStorage.getItem('editor_font_size')) || (isMobile ? 14 : 16);
+    let currentFontSize = parseInt(localStorage.getItem('editor_font_size')) || (isMobileDevice ? 14 : 16);
 
-    // Apply basic settings
-    editor.setOptions({
-        fontSize: `${currentFontSize}px`,
-        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        highlightActiveLine: !isMobile, // Disable on mobile for performance
-        showGutter: true,
-        tabSize: 4,
-        useSoftTabs: true,
-        wrap: true,
-        behavioursEnabled: !isMobile, // Disable auto-pairing on mobile (can be annoying/slow)
-        animatedScroll: !isMobile,    // Disable smooth scrolling on mobile
-        displayIndentGuides: !isMobile, // Disable indent guides on mobile
-        showFoldWidgets: !isMobile    // Disable code folding widgets on mobile
+    // Determine initial theme
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const initialTheme = currentTheme === 'dark' ? createDarkTheme() : createLightTheme();
+
+    // Build extensions
+    const extensions = [
+        lineNumbers(),
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        drawSelection(),
+        indentOnInput(),
+        bracketMatching(),
+        closeBrackets(),
+        history(),
+        highlightSelectionMatches(),
+        cpp(),
+        keymap.of([
+            ...closeBracketsKeymap,
+            ...defaultKeymap,
+            ...historyKeymap,
+            indentWithTab,
+        ]),
+        themeCompartment.of(initialTheme),
+        fontSizeCompartment.of(
+            EditorView.theme({
+                '.cm-content, .cm-gutters': { fontSize: `${currentFontSize}px` }
+            })
+        ),
+        EditorView.theme({
+            '.cm-content': {
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            },
+            '.cm-gutters': {
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+            },
+            '&': {
+                height: '100%',
+            },
+            '.cm-scroller': {
+                overflow: 'auto',
+            }
+        }),
+        EditorState.tabSize.of(4),
+        EditorView.lineWrapping,
+    ];
+
+    // Create the editor view
+    const editorContainer = document.getElementById('editor');
+    editorContainer.innerHTML = ''; // Clear any loading content
+
+    cmView = new EditorView({
+        state: EditorState.create({
+            doc: '',
+            extensions: extensions
+        }),
+        parent: editorContainer
     });
+
+    // Create the wrapper that provides Ace-compatible API
+    editor = createEditorWrapper(cmView);
 
     // Font Size Controls
     const increaseFontBtn = document.getElementById('increase-font-btn');
     const decreaseFontBtn = document.getElementById('decrease-font-btn');
-
     const fontSizeDisplay = document.getElementById('font-size-display');
 
     function updateFontSizeDisplay(size) {
@@ -258,7 +510,6 @@ async function initializeEditor() {
         }
     }
 
-    // Set initial display
     updateFontSizeDisplay(currentFontSize);
 
     if (increaseFontBtn && decreaseFontBtn) {
@@ -291,7 +542,6 @@ async function initializeEditor() {
             try {
                 await navigator.clipboard.writeText(code);
 
-                // Visual feedback
                 const originalTitle = copyCodeBtn.title;
                 const originalHTML = copyCodeBtn.innerHTML;
 
@@ -314,60 +564,58 @@ async function initializeEditor() {
 
     await loadDefaultCode();
 
-    // CRITICAL FIX #1: Separate fast and slow operations, use dirty flag
+    // Change listener — using CodeMirror's updateListener
     let uiUpdateTimer = null;
     const UI_UPDATE_DEBOUNCE_MS = 150;
-    let lastEditorValue = '';
 
-    editor.on('change', () => {
-        const currentValue = editor.getValue();
+    // Add change listener extension
+    const changeListener = EditorView.updateListener.of((update) => {
+        if (!update.docChanged) return;
 
         // Track editor changes (metrics only)
         metrics.editor.changeCount++;
         metrics.editor.lastChangeAt = Date.now();
 
-        // Set dirty flag immediately (synchronous, no blocking)
-        // BUGFIX #1: Fixed dirty flag logic - always mark as dirty on ANY keystroke
+        // Set dirty flag immediately
         DIRTY_FLAG.isDirty = true;
 
-        // FAST PATH: Save locally immediately (non-blocking, small operation)
+        // FAST PATH: Save locally immediately
         if (isUserLoggedIn) {
             const activeKey = CLOUD_STATE.activeFileKey;
             if (activeKey) {
                 const [folder, filename] = activeKey.split('/');
-                // Use debounced local draft save (already 100ms debounced internally)
-                setLocalDraft(folder, filename, currentValue);
+                setLocalDraft(folder, filename, update.state.doc.toString());
             }
-            // Schedule cloud autosave (debounced at 3000ms)
             scheduleAutosave();
         }
 
-        // SLOW PATH: Debounce UI updates (updateEditorInfo + updateSaveIndicator)
-        // These use dirty flag now, so they're much faster but still debounced for smoothness
+        // SLOW PATH: Debounce UI updates
         if (uiUpdateTimer) {
             clearTimeout(uiUpdateTimer);
         }
         uiUpdateTimer = setTimeout(() => {
-            updateEditorInfo();  // Fast now (just counts lines/chars)
-            updateSaveIndicator();  // Fast now (uses dirty flag, no hash)
+            updateEditorInfo();
+            updateSaveIndicator();
             uiUpdateTimer = null;
         }, UI_UPDATE_DEBOUNCE_MS);
+    });
 
-        lastEditorValue = currentValue;
+    // Dispatch the change listener into the view
+    cmView.dispatch({
+        effects: cmModules.state.StateEffect.appendConfig.of(changeListener)
     });
 
     setTimeout(() => {
         editor.focus();
         editorWrapper.classList.add('active');
 
-        // Hide the initial loading overlay
         const editorLoadingOverlay = document.getElementById('editor-loading-overlay');
         if (editorLoadingOverlay) {
             editorLoadingOverlay.classList.add('hidden');
         }
     }, 100);
 
-    Logger.success('Editor ready');
+    Logger.success('Editor ready (CodeMirror 6)');
 }
 
 function updateEditorInfo() {
@@ -388,7 +636,6 @@ async function loadDefaultCode() {
         const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [folder, filename] = activeKey.split('/');
         await openFile(folder, filename, { skipSave: true });
-        // CRITICAL FIX #7: Set dirty flag after loading
         DIRTY_FLAG.isDirty = false;
         updateSaveIndicator();
         return;
@@ -396,9 +643,8 @@ async function loadDefaultCode() {
 
     const savedCode = localStorage.getItem("tc_code");
     if (savedCode) {
-        editor.setValue(savedCode, -1);
+        editor.setValue(savedCode);
         updateEditorInfo();
-        // CRITICAL FIX #7: Content loaded = not dirty
         DIRTY_FLAG.isDirty = false;
         updateSaveIndicator();
 
@@ -408,7 +654,6 @@ async function loadDefaultCode() {
 
     // Load default demo (graphics-demo)
     await loadDemoFile('graphics-demo', false);
-    // CRITICAL FIX #7: Demo loaded = not dirty
     DIRTY_FLAG.isDirty = false;
     updateSaveIndicator();
 }
@@ -416,7 +661,7 @@ async function loadDefaultCode() {
 // Clear button functionality
 clearBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the editor?')) {
-        editor.setValue('', -1);
+        editor.setValue('');
         if (isUserLoggedIn) {
             const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
             const [folder, filename] = activeKey.split('/');
@@ -425,10 +670,9 @@ clearBtn.addEventListener('click', () => {
         } else {
             localStorage.removeItem("tc_code");
         }
-        lastLoadedDemo = ''; // Reset last loaded demo
+        lastLoadedDemo = '';
         updateEditorInfo();
         updateSaveIndicator();
         Logger.info('Editor cleared');
     }
 });
-

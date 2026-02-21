@@ -55,9 +55,8 @@ function toggleEditorFullscreen(forceState) {
     }
 
     setTimeout(() => {
-        if (editor) {
-            editor.resize();
-            editor.renderer.updateFull();
+        if (editor && editor.requestMeasure) {
+            editor.requestMeasure();
         }
     }, 100);
 }
@@ -507,9 +506,8 @@ window.addEventListener('beforeunload', (event) => {
 // ==================== RESPONSIVE HANDLING ====================
 
 function handleResize() {
-    if (editor) {
-        editor.resize();
-        editor.renderer.updateFull();
+    if (editor && editor.requestMeasure) {
+        editor.requestMeasure();
     }
 }
 
@@ -600,9 +598,8 @@ if (sidebarCollapseBtn) {
 
         // Resize editor after collapse animation
         setTimeout(() => {
-            if (editor) {
-                editor.resize();
-                editor.renderer.updateFull();
+            if (editor && editor.requestMeasure) {
+                editor.requestMeasure();
             }
         }, 350);
     });
@@ -620,9 +617,8 @@ if (explorerActivityBtn) {
         }
 
         setTimeout(() => {
-            if (editor) {
-                editor.resize();
-                editor.renderer.updateFull();
+            if (editor && editor.requestMeasure) {
+                editor.requestMeasure();
             }
         }, 350);
     });
@@ -711,7 +707,8 @@ function updateLoginUI(loggedIn, user = null) {
         if (newFileBtn) {
             newFileBtn.style.display = 'none';
         }
-        closeNewFileModal();
+        // Close new file modal if open
+        if (newFileModal) newFileModal.classList.add('hidden');
 
         // Show auth section, hide user profile
         authSection.style.display = 'block';

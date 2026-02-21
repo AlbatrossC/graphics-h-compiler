@@ -14,10 +14,9 @@ function toggleTheme() {
     localStorage.setItem('theme', newTheme);
     updateThemeIcon(newTheme);
 
-    // Update Ace editor theme
-    if (editor) {
-        const aceTheme = newTheme === 'dark' ? 'ace/theme/monokai' : 'ace/theme/textmate';
-        editor.setTheme(aceTheme);
+    // Update CodeMirror editor theme
+    if (editor && typeof updateEditorTheme === 'function') {
+        updateEditorTheme(newTheme);
     }
 
     Logger.info(`Theme switched to ${newTheme}`);
@@ -189,9 +188,7 @@ let currentDemo = 'graphics-demo';
 let lastLoadedDemo = ''; // Track last loaded demo
 let scriptsLoaded = {
     jsdos: false,
-    ace: false,
-    aceMode: false,
-    aceTheme: false
+    codemirror: false
 };
 
 // ==================== CLOUD STORAGE STATE ====================

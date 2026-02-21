@@ -526,35 +526,130 @@ header {
     color: var(--primary);
 }
 
-/* Editor */
+/* CodeMirror Editor Container */
 #editor {
     flex: 1;
     width: 100%;
     font-size: 14px;
     background: var(--vscode-editor) !important;
     overflow: hidden;
+    position: relative;
 }
 
-.ace_editor {
+/* CodeMirror 6 Root */
+.cm-editor {
+    height: 100%;
     background: var(--vscode-editor) !important;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-.ace-monokai .ace_gutter {
+.cm-editor .cm-scroller {
+    overflow: auto;
+    font-family: inherit;
+}
+
+.cm-editor .cm-content {
+    caret-color: var(--primary);
+}
+
+.cm-editor .cm-cursor {
+    border-left-color: var(--primary);
+}
+
+/* Gutter */
+.cm-editor .cm-gutters {
+    background: var(--vscode-sidebar);
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border-color);
+}
+
+.cm-editor .cm-activeLineGutter {
+    background: var(--vscode-line-bg);
+}
+
+/* Active Line */
+.cm-editor .cm-activeLine {
+    background: var(--vscode-line-bg);
+}
+
+/* Selection */
+.cm-editor .cm-selectionBackground,
+.cm-editor.cm-focused .cm-selectionBackground,
+::selection {
+    background: rgba(0, 255, 136, 0.15) !important;
+}
+
+[data-theme="light"] .cm-editor .cm-selectionBackground,
+[data-theme="light"] .cm-editor.cm-focused .cm-selectionBackground {
+    background: rgba(0, 204, 106, 0.2) !important;
+}
+
+/* Matching Brackets */
+.cm-editor .cm-matchingBracket {
+    background: rgba(0, 255, 136, 0.25);
+    outline: 1px solid rgba(0, 255, 136, 0.4);
+}
+
+/* Light theme gutter overrides */
+[data-theme="light"] .cm-editor .cm-gutters {
+    background: var(--vscode-sidebar);
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .cm-editor .cm-activeLineGutter {
+    background: var(--vscode-line-bg);
+}
+
+/* CodeMirror focused state */
+.cm-editor.cm-focused {
+    outline: none;
+}
+
+/* Scrollbar styling for CodeMirror */
+.cm-editor .cm-scroller::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.cm-editor .cm-scroller::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cm-editor .cm-scroller::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.cm-editor .cm-scroller::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Tooltip / autocomplete panel */
+.cm-tooltip {
     background: var(--vscode-sidebar) !important;
-    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px;
+    box-shadow: var(--shadow);
 }
 
-.ace-monokai .ace_gutter-active-line {
-    background: var(--vscode-line-bg) !important;
+.cm-tooltip-autocomplete ul li {
+    padding: 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8125rem;
 }
 
-[data-theme="light"] .ace-textmate .ace_gutter {
+.cm-tooltip-autocomplete ul li[aria-selected] {
+    background: rgba(0, 255, 136, 0.15);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .cm-tooltip {
     background: var(--vscode-sidebar) !important;
-    color: var(--text-secondary) !important;
+    border-color: var(--border-color) !important;
 }
 
-[data-theme="light"] .ace-textmate .ace_gutter-active-line {
-    background: var(--vscode-line-bg) !important;
+[data-theme="light"] .cm-tooltip-autocomplete ul li[aria-selected] {
+    background: rgba(0, 204, 106, 0.15);
 }
 
 /* Editor Footer */
