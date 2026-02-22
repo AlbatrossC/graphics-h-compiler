@@ -721,6 +721,7 @@ header {
     height: 100%;
     max-width: none;
     max-height: none;
+    transform: scale(1.2) !important;
 }
 
 /* Keyboard Blocker - Toast Mode */

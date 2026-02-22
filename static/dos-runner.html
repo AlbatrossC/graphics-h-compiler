@@ -32,14 +32,17 @@
 <body>
     <canvas id="dos-canvas" tabindex="0"></canvas>
     <script>
+        // ==================== CONSOLE FILTER ====================
+        // Must run first, before js-dos loads, to suppress all noisy output.
         (function () {
-            // Block noisy console logs from js-dos
             const originalLog = console.log;
             const originalInfo = console.info;
+            const originalWarn = console.warn;
 
             const shouldBlock = (msg) => {
                 if (typeof msg !== 'string') return false;
                 if (msg.includes('extracting:')) return true;
+                if (msg.includes('mtime:')) return true;
                 if (msg.includes('js-dos version')) return true;
                 if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
                 if (msg.startsWith('CONFIG:')) return true;
@@ -63,22 +66,43 @@
                 if (args.length > 0 && shouldBlock(args[0])) return;
                 originalInfo.apply(console, args);
             };
+
+            // js-dos sometimes routes noisy messages through warn too
+            console.warn = function (...args) {
+                if (args.length > 0 && shouldBlock(args[0])) return;
+                originalWarn.apply(console, args);
+            };
         })();
 
+        // ==================== DOS RUNNER ====================
         (function () {
+            // NOTE: parentOrigin assumes dos-runner.html is served from the same
+            // origin as the parent page. If you ever move this file to a CDN or
+            // subdomain, postMessage will silently fail — update this accordingly.
             const canvas = document.getElementById('dos-canvas');
             const parentOrigin = window.location.origin;
+
+            // Hint to browser that this canvas will be read frequently (suppresses warning)
+            try {
+                canvas.getContext('2d', { willReadFrequently: true });
+            } catch (e) {
+                // Non-critical, ignore if it fails
+            }
+
             let jsdosReady = false;
             let dosInstance = null;
             let errorPollTimer = null;
             let errorPollDelayTimer = null;
+            let startupTimeoutTimer = null;
             let lastErrorContent = '';
             let compileErrorSent = false;
 
+            // ==================== MESSAGING ====================
             function post(message) {
                 window.parent.postMessage(message, parentOrigin);
             }
 
+            // ==================== STATE CLEANUP ====================
             function clearRuntimeState() {
                 if (errorPollDelayTimer) {
                     clearTimeout(errorPollDelayTimer);
@@ -87,6 +111,10 @@
                 if (errorPollTimer) {
                     clearInterval(errorPollTimer);
                     errorPollTimer = null;
+                }
+                if (startupTimeoutTimer) {
+                    clearTimeout(startupTimeoutTimer);
+                    startupTimeoutTimer = null;
                 }
                 lastErrorContent = '';
                 compileErrorSent = false;
@@ -98,18 +126,19 @@
                     try {
                         dosInstance.exit();
                     } catch (e) {
-                        // Ignore shutdown errors
+                        // Ignore shutdown errors — DOSBox cleanup is best-effort
                     }
                 }
                 dosInstance = null;
             }
 
+            // ==================== SCRIPT LOADING ====================
             function loadScript(src) {
                 return new Promise((resolve, reject) => {
                     const script = document.createElement('script');
                     script.src = src;
                     script.onload = resolve;
-                    script.onerror = () => reject(new Error('Failed to load ' + src));
+                    script.onerror = () => reject(new Error('Failed to load: ' + src));
                     document.head.appendChild(script);
                 });
             }
@@ -122,6 +151,7 @@
                 jsdosReady = true;
             }
 
+            // ==================== FILESYSTEM HELPERS ====================
             function fileExists(fs, path) {
                 try {
                     fs.stat(path);
@@ -151,14 +181,14 @@
                 }
             }
 
+            // ==================== ERROR POLLING ====================
             function startErrorPolling() {
                 clearRuntimeState();
 
-                // Wait a moment for compilation to begin, then start polling
+                // Delay polling start to let compilation begin
                 errorPollDelayTimer = setTimeout(() => {
                     const probe = () => {
                         try {
-                            // Use Emscripten FS from dosInstance (not the js-dos fs wrapper)
                             if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) return;
                             const FS = dosInstance.em.FS;
 
@@ -193,6 +223,14 @@
 
                             const hasFailMarker = !!failPath;
                             const hasUserExe = !!userExePath;
+
+                            // Compilation succeeded — stop polling, nothing more to do
+                            if (hasUserExe && !hasFailMarker) {
+                                clearInterval(errorPollTimer);
+                                errorPollTimer = null;
+                                return;
+                            }
+
                             const content = errPath ? readTextFile(FS, errPath) : '';
                             const trimmed = content.trim();
 
@@ -208,25 +246,41 @@
 
                             if (looksLikeError && !compileErrorSent) {
                                 compileErrorSent = true;
-                                console.log('[DOS Runner] Compilation error detected, sending to parent');
+                                // Stop polling once error is confirmed and sent
+                                clearInterval(errorPollTimer);
+                                errorPollTimer = null;
                                 post({
                                     type: 'COMPILATION_ERROR',
                                     content: trimmed || 'Compilation failed. Check your code and try again.'
                                 });
                             }
                         } catch (e) {
-                            // Ignore polling errors
+                            // Ignore polling errors silently
                         }
                     };
 
                     probe();
                     errorPollTimer = setInterval(probe, 400);
-                }, 1500); // Delay to let compilation begin
+                }, 1500);
             }
 
+            // ==================== DOS STARTUP ====================
             async function startDos(payload) {
                 await stopDos();
                 await ensureJsdos();
+
+                // Safety timeout: if DOS hasn't started within 60s, report failure.
+                // This handles corrupted ZIPs, network stalls mid-extract, or
+                // Emscripten hangs that would otherwise freeze the UI permanently.
+                startupTimeoutTimer = setTimeout(() => {
+                    startupTimeoutTimer = null;
+                    if (!dosInstance) {
+                        post({
+                            type: 'ERROR',
+                            message: 'Compiler took too long to start. Please refresh and try again.'
+                        });
+                    }
+                }, 60000);
 
                 post({ type: 'STATUS', status: 'STARTING' });
 
@@ -241,21 +295,46 @@
                     await fs.extract(payload.zipUrl);
 
                     post({ type: 'STATUS', status: 'WRITING_CODE' });
-                    fs.createFile('TURBOC3/BIN/USER.CPP', payload.code || '');
-                    fs.createFile('AUTOEXEC.BAT', payload.batchScript || '');
+
+                    // Write source files — if this fails, report immediately
+                    // rather than letting DOSBox silently compile an empty file
+                    try {
+                        fs.createFile('TURBOC3/BIN/USER.CPP', payload.code || '');
+                        fs.createFile('AUTOEXEC.BAT', payload.batchScript || '');
+                    } catch (e) {
+                        post({
+                            type: 'ERROR',
+                            message: 'Failed to write source file to DOS filesystem: ' + e.message
+                        });
+                        return;
+                    }
 
                     dosInstance = await main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT']);
+
+                    // Clear startup timeout — DOS is now running
+                    if (startupTimeoutTimer) {
+                        clearTimeout(startupTimeoutTimer);
+                        startupTimeoutTimer = null;
+                    }
+
                     startErrorPolling();
                     post({ type: 'STATUS', status: 'RUNNING' });
                 });
             }
 
+            // ==================== MESSAGE HANDLER ====================
             window.addEventListener('message', async (event) => {
                 if (event.origin !== parentOrigin) return;
                 const data = event.data || {};
 
                 if (data.type === 'FOCUS') {
                     canvas.focus();
+                    return;
+                }
+
+                // Release keyboard capture when user switches back to editor
+                if (data.type === 'BLUR') {
+                    canvas.blur();
                     return;
                 }
 
@@ -271,8 +350,18 @@
                         post({ type: 'ERROR', message: e.message || 'Failed to start DOS' });
                     }
                 }
+
+                if (data.type === 'TAKE_SCREENSHOT') {
+                    try {
+                        const dataUrl = canvas.toDataURL('image/png');
+                        post({ type: 'SCREENSHOT_DATA', dataUrl: dataUrl });
+                    } catch (e) {
+                        console.error('Failed to capture screenshot', e);
+                    }
+                }
             });
 
+            // Signal to parent that iframe is ready to receive messages
             post({ type: 'IFRAME_READY' });
         })();
     </script>
