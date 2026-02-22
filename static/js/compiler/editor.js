@@ -190,6 +190,11 @@ async function loadDemoFile(demoKey, forceReload = false) {
 // Theme compartment for live theme switching
 let themeCompartment = null;
 let fontSizeCompartment = null;
+let wordWrapCompartment = null;
+let lineNumbersCompartment = null;
+let autocompleteCompartment = null;
+let bracketMatchCompartment = null;
+let activeLineCompartment = null;
 let cmView = null; // Store the EditorView instance
 
 function createDarkTheme() {
@@ -391,6 +396,11 @@ async function initializeEditor() {
     // Create compartments for dynamic reconfiguration
     themeCompartment = new Compartment();
     fontSizeCompartment = new Compartment();
+    wordWrapCompartment = new Compartment();
+    lineNumbersCompartment = new Compartment();
+    autocompleteCompartment = new Compartment();
+    bracketMatchCompartment = new Compartment();
+    activeLineCompartment = new Compartment();
 
     // Default Font Size
     let currentFontSize = parseInt(localStorage.getItem('editor_font_size')) || (isMobileDevice ? 14 : 16);
@@ -401,13 +411,12 @@ async function initializeEditor() {
 
     // Build extensions
     const extensions = [
-        lineNumbers(),
-        highlightActiveLine(),
-        highlightActiveLineGutter(),
+        lineNumbersCompartment.of(lineNumbers()),
+        activeLineCompartment.of([highlightActiveLine(), highlightActiveLineGutter()]),
         drawSelection(),
         indentOnInput(),
-        bracketMatching(),
-        closeBrackets(),
+        bracketMatchCompartment.of(bracketMatching()),
+        autocompleteCompartment.of(closeBrackets()),
         history(),
         highlightSelectionMatches(),
         cpp(),
@@ -438,7 +447,7 @@ async function initializeEditor() {
             }
         }),
         EditorState.tabSize.of(4),
-        EditorView.lineWrapping,
+        wordWrapCompartment.of(EditorView.lineWrapping),
     ];
 
     // Create the editor view

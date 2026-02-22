@@ -609,11 +609,6 @@ let supabaseClient = null;
 function toggleDesktopSidebar() {
     sidebar.classList.toggle('collapsed');
 
-    const activityBar = document.querySelector('.activity-bar');
-    if (activityBar) {
-        activityBar.classList.toggle('active');
-    }
-
     // Resize editor after collapse animation
     setTimeout(() => {
         if (editor && editor.requestMeasure) {
@@ -625,11 +620,7 @@ function toggleDesktopSidebar() {
 // FIXED: Mobile AND desktop toggle
 if (sidebarToggle) {
     sidebarToggle.addEventListener('click', () => {
-        // Check if mobile (no activity bar visible)
-        const activityBar = document.querySelector('.activity-bar');
-        const isMobileSidebar = activityBar && window.getComputedStyle(activityBar).display === 'none';
-
-        if (isMobileSidebar) {
+        if (isMobileView()) {
             // Mobile: toggle open class and overlay
             sidebar.classList.toggle('open');
             sidebarOverlay.classList.toggle('active');
@@ -652,10 +643,27 @@ if (sidebarCollapseBtn) {
     sidebarCollapseBtn.addEventListener('click', toggleDesktopSidebar);
 }
 
-// Activity bar button to toggle sidebar
+// Activity bar: Explorer button opens/collapses sidebar
 if (explorerActivityBtn) {
-    explorerActivityBtn.addEventListener('click', toggleDesktopSidebar);
+    explorerActivityBtn.addEventListener('click', () => {
+        // If settings panel is open, switch back to explorer (handled by settings.js)
+        if (typeof window.settingsShowExplorer === 'function' && settingsActivityBtn && settingsActivityBtn.classList.contains('active')) {
+            window.settingsShowExplorer();
+            // If sidebar is collapsed, expand it
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+                setTimeout(() => {
+                    if (editor && editor.requestMeasure) editor.requestMeasure();
+                }, 350);
+            }
+            return;
+        }
+        // Otherwise toggle sidebar collapse
+        toggleDesktopSidebar();
+    });
 }
+
+const settingsActivityBtn = document.getElementById('settings-activity-btn');
 
 if (refreshBtn) {
     refreshBtn.addEventListener('click', () => {
