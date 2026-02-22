@@ -81,7 +81,13 @@ async function loadAllScripts() {
         return true;
     } catch (error) {
         Logger.error('Failed to load dependencies', error);
-        alert('Failed to load required libraries. Please check your connection and try again.');
+        const editorContainer = document.getElementById('editor');
+        if (editorContainer) {
+            editorContainer.innerHTML = `<div style="color: #ff6b6b; text-align: center; padding: 2rem; border: 1px solid #ff6b6b; border-radius: 8px; margin: 2rem;">
+                <p style="margin-bottom: 1rem; font-size: 1.1rem;">⚠ Editor failed to load. This may be a network issue. Please refresh the page.</p>
+                <button onclick="window.location.reload()" style="padding: 0.5rem 1rem; cursor: pointer; background: #ff6b6b; color: #fff; border: none; border-radius: 4px; font-weight: bold;">Refresh</button>
+            </div>`;
+        }
         return false;
     }
 }
@@ -197,105 +203,18 @@ let bracketMatchCompartment = null;
 let activeLineCompartment = null;
 let cmView = null; // Store the EditorView instance
 
-function createDarkTheme() {
-    const { EditorView } = cmModules.view;
-    const { HighlightStyle, syntaxHighlighting } = cmModules.language;
-    const { tags } = cmModules.highlight;
-
-    const darkHighlight = HighlightStyle.define([
-        { tag: tags.keyword, color: '#f92672' },
-        { tag: tags.name, color: '#f8f8f2' },
-        { tag: tags.typeName, color: '#66d9ef' },
-        { tag: tags.variableName, color: '#f8f8f2' },
-        { tag: tags.propertyName, color: '#a6e22e' },
-        { tag: tags.function(tags.variableName), color: '#a6e22e' },
-        { tag: tags.string, color: '#e6db74' },
-        { tag: tags.number, color: '#ae81ff' },
-        { tag: tags.bool, color: '#ae81ff' },
-        { tag: tags.comment, color: '#75715e' },
-        { tag: tags.operator, color: '#f92672' },
-        { tag: tags.bracket, color: '#f8f8f2' },
-        { tag: tags.meta, color: '#f92672' },
-        { tag: tags.processingInstruction, color: '#f92672' },
-        { tag: tags.definition(tags.variableName), color: '#a6e22e' },
-        { tag: tags.macroName, color: '#a6e22e' },
-    ]);
-
-    const editorTheme = EditorView.theme({
-        '&': { backgroundColor: 'transparent' },
-        '.cm-content': { color: '#f8f8f2' },
-        '.cm-cursor': { borderLeftColor: '#00ff88' },
-        '.cm-activeLine': { backgroundColor: '#1a1a1a' },
-        '.cm-activeLineGutter': { backgroundColor: '#1a1a1a' },
-        '.cm-gutters': {
-            backgroundColor: '#151515',
-            color: '#a0a0a0',
-            borderRight: '1px solid #262626'
-        },
-        '.cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
-        '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
-        '.cm-matchingBracket': {
-            backgroundColor: 'rgba(0, 255, 136, 0.25)',
-            outline: '1px solid rgba(0, 255, 136, 0.4)'
-        },
-    }, { dark: true });
-
-    return [editorTheme, syntaxHighlighting(darkHighlight)];
-}
-
-function createLightTheme() {
-    const { EditorView } = cmModules.view;
-    const { HighlightStyle, syntaxHighlighting } = cmModules.language;
-    const { tags } = cmModules.highlight;
-
-    const lightHighlight = HighlightStyle.define([
-        { tag: tags.keyword, color: '#7928a1' },
-        { tag: tags.name, color: '#1a1a1a' },
-        { tag: tags.typeName, color: '#0550ae' },
-        { tag: tags.variableName, color: '#1a1a1a' },
-        { tag: tags.propertyName, color: '#116329' },
-        { tag: tags.function(tags.variableName), color: '#116329' },
-        { tag: tags.string, color: '#0a3069' },
-        { tag: tags.number, color: '#0550ae' },
-        { tag: tags.bool, color: '#0550ae' },
-        { tag: tags.comment, color: '#6e7781' },
-        { tag: tags.operator, color: '#cf222e' },
-        { tag: tags.bracket, color: '#1a1a1a' },
-        { tag: tags.meta, color: '#cf222e' },
-        { tag: tags.processingInstruction, color: '#cf222e' },
-        { tag: tags.definition(tags.variableName), color: '#116329' },
-        { tag: tags.macroName, color: '#116329' },
-    ]);
-
-    const editorTheme = EditorView.theme({
-        '&': { backgroundColor: 'transparent' },
-        '.cm-content': { color: '#1a1a1a' },
-        '.cm-cursor': { borderLeftColor: '#00cc6a' },
-        '.cm-activeLine': { backgroundColor: '#f0f0f0' },
-        '.cm-activeLineGutter': { backgroundColor: '#f0f0f0' },
-        '.cm-gutters': {
-            backgroundColor: '#f5f5f5',
-            color: '#606060',
-            borderRight: '1px solid #e0e0e0'
-        },
-        '.cm-selectionBackground': { backgroundColor: 'rgba(0, 204, 106, 0.2) !important' },
-        '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(0, 204, 106, 0.2) !important' },
-        '.cm-matchingBracket': {
-            backgroundColor: 'rgba(0, 204, 106, 0.2)',
-            outline: '1px solid rgba(0, 204, 106, 0.4)'
-        },
-    }, { dark: false });
-
-    return [editorTheme, syntaxHighlighting(lightHighlight)];
-}
-
 // Global function for theme switching (called from core.js)
 function updateEditorTheme(newTheme) {
     if (!cmView || !themeCompartment) return;
-    const theme = newTheme === 'dark' ? createDarkTheme() : createLightTheme();
-    cmView.dispatch({
-        effects: themeCompartment.reconfigure(theme)
-    });
+    if (typeof window.createEditorTheme === 'function') {
+        const themeName = newTheme === 'dark' ? 'vscode-dark' : 'vscode-light';
+        const theme = window.createEditorTheme(themeName);
+        if (theme) {
+            cmView.dispatch({
+                effects: themeCompartment.reconfigure(theme)
+            });
+        }
+    }
 }
 
 // ==================== EDITOR WRAPPER API ====================
@@ -359,7 +278,9 @@ function createEditorWrapper(view) {
         },
 
         // Change listener — no-op, actual listener set up in initializeEditor
-        on(event, callback) { },
+        on(event, callback) {
+            Logger.warn('editor.on("' + event + '") is a no-op in the CodeMirror 6 wrapper. Use EditorView.updateListener instead.');
+        },
 
         // Renderer compatibility
         renderer: {
@@ -407,7 +328,16 @@ async function initializeEditor() {
 
     // Determine initial theme
     const currentTheme = document.documentElement.getAttribute('data-theme');
-    const initialTheme = currentTheme === 'dark' ? createDarkTheme() : createLightTheme();
+    let initialTheme;
+    if (typeof window.createEditorTheme === 'function') {
+        initialTheme = window.createEditorTheme(currentTheme === 'dark' ? 'vscode-dark' : 'vscode-light');
+    } else {
+        const isDark = currentTheme === 'dark';
+        initialTheme = [EditorView.theme({
+            '&': { backgroundColor: 'transparent' },
+            '.cm-content': { color: isDark ? '#f8f8f2' : '#1a1a1a' }
+        }, { dark: isDark })];
+    }
 
     // Build extensions
     const extensions = [

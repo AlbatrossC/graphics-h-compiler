@@ -640,5 +640,6 @@
     // Expose for use from header theme toggle
     window.settingsApplyTheme = applyEditorTheme;
     window.settingsShowExplorer = showExplorerPanel;
+    window.createEditorTheme = createEditorTheme;
 
 })();

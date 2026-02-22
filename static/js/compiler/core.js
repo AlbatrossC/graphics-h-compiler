@@ -442,31 +442,48 @@ let tcZipPromise = null; // Shared promise to prevent duplicate downloads
 
 // Shared function to get TC ZIP - prevents race condition between warmup and run
 async function getTCZip() {
+    // Wait for manifest to load TC_ZIP_URL if not ready (up to 5 times, 500ms delay)
+    if (!TC_ZIP_URL) {
+        let retries = 0;
+        while (!TC_ZIP_URL && retries < 5) {
+            await new Promise(r => setTimeout(r, 500));
+            retries++;
+        }
+        if (!TC_ZIP_URL) {
+            throw new Error('Compiler URL not ready');
+        }
+    }
+
     if (tcZipPromise) return tcZipPromise;
 
     tcZipPromise = (async () => {
-        // Try cache first
-        let blob = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
-        if (blob) {
-            Logger.info('TC ZIP loaded from cache');
+        try {
+            // Try cache first
+            let blob = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
+            if (blob) {
+                Logger.info('TC ZIP loaded from cache');
+                return blob;
+            }
+
+            // Download and cache
+            Logger.info('Downloading TC ZIP...');
+            const response = await fetch(TC_ZIP_URL);
+            if (!response.ok) {
+                throw new Error(`Failed to download compiler (HTTP ${response.status})`);
+            }
+            blob = await response.blob();
+
+            // Cache for next time (async, don't block)
+            CacheDB.set(CACHE_CONFIG.TC_ZIP_CACHE_KEY, blob)
+                .then(cached => {
+                    if (cached) Logger.success('TC ZIP cached for future use');
+                });
+
             return blob;
+        } catch (error) {
+            tcZipPromise = null; // Clear rejected promise
+            throw error;
         }
-
-        // Download and cache
-        Logger.info('Downloading TC ZIP...');
-        const response = await fetch(TC_ZIP_URL);
-        if (!response.ok) {
-            throw new Error(`Failed to download compiler (HTTP ${response.status})`);
-        }
-        blob = await response.blob();
-
-        // Cache for next time (async, don't block)
-        CacheDB.set(CACHE_CONFIG.TC_ZIP_CACHE_KEY, blob)
-            .then(cached => {
-                if (cached) Logger.success('TC ZIP cached for future use');
-            });
-
-        return blob;
     })();
 
     return tcZipPromise;

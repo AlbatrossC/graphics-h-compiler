@@ -33,6 +33,39 @@
     <canvas id="dos-canvas" tabindex="0"></canvas>
     <script>
         (function () {
+            // Block noisy console logs from js-dos
+            const originalLog = console.log;
+            const originalInfo = console.info;
+
+            const shouldBlock = (msg) => {
+                if (typeof msg !== 'string') return false;
+                if (msg.includes('extracting:')) return true;
+                if (msg.includes('js-dos version')) return true;
+                if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
+                if (msg.startsWith('CONFIG:')) return true;
+                if (msg.startsWith('MIDI:')) return true;
+                if (msg.startsWith('SHELL:')) return true;
+                if (msg.includes('%') && msg.match(/[a-f0-9-]{36}/)) return true;
+                if (msg.startsWith('[INFO]') && msg.match(/[a-f0-9-]{36}/)) return true;
+                if (msg.includes('Resolving DosBox')) return true;
+                if (msg.includes('DosBox resolved')) return true;
+                if (msg.includes('Runtime is still alive')) return true;
+                if (msg.trim() === '---') return true;
+                return false;
+            };
+
+            console.log = function (...args) {
+                if (args.length > 0 && shouldBlock(args[0])) return;
+                originalLog.apply(console, args);
+            };
+
+            console.info = function (...args) {
+                if (args.length > 0 && shouldBlock(args[0])) return;
+                originalInfo.apply(console, args);
+            };
+        })();
+
+        (function () {
             const canvas = document.getElementById('dos-canvas');
             const parentOrigin = window.location.origin;
             let jsdosReady = false;

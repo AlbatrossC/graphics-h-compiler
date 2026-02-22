@@ -210,12 +210,10 @@ const SAVE_STATE = {
 };
 
 const DIRTY_FLAG = {
-    isDirty: false,
-    lastDisplayedState: null
+    isDirty: false
 };
 
 let isSaving = false;
-let typingDebounceTimer = null;
 
 const autosaveMetrics = {
     triggers: { manual: 0, idle: 0, compileRun: 0, exit: 0 },
@@ -371,24 +369,16 @@ document.addEventListener('visibilitychange', () => {
 function scheduleAutosave() {
     if (!isTabVisible) return; // Don't schedule if tab is hidden
 
-    if (typingDebounceTimer) clearTimeout(typingDebounceTimer);
     if (CLOUD_STATE.autosaveTimer) clearTimeout(CLOUD_STATE.autosaveTimer);
 
-    typingDebounceTimer = setTimeout(() => {
-        typingDebounceTimer = null;
-        CLOUD_STATE.autosaveTimer = setTimeout(async () => {
-            CLOUD_STATE.autosaveTimer = null;
-            metrics.autosave.scheduled++;
-            await forceSaveActiveFile('idle');
-        }, AUTOSAVE_DELAY_MS);
-    }, TYPING_DEBOUNCE_MS);
+    CLOUD_STATE.autosaveTimer = setTimeout(async () => {
+        CLOUD_STATE.autosaveTimer = null;
+        metrics.autosave.scheduled++;
+        await forceSaveActiveFile('idle');
+    }, TYPING_DEBOUNCE_MS + AUTOSAVE_DELAY_MS);
 }
 
 function cancelPendingAutosave() {
-    if (typingDebounceTimer) {
-        clearTimeout(typingDebounceTimer);
-        typingDebounceTimer = null;
-    }
     if (CLOUD_STATE.autosaveTimer) {
         clearTimeout(CLOUD_STATE.autosaveTimer);
         CLOUD_STATE.autosaveTimer = null;
@@ -840,35 +830,24 @@ async function deleteFile(folder, filename) {
 function updateSaveIndicator() {
     if (!saveIndicator || !saveText) return;
 
-    const isDirty = DIRTY_FLAG.isDirty;
-
     if (isUserLoggedIn && SAVE_STATE.cloudHash) {
-        if (!isDirty) {
-            if (DIRTY_FLAG.lastDisplayedState !== 'saved') {
-                saveIndicator.classList.add('saved');
-                saveText.textContent = 'Saved to cloud';
-                DIRTY_FLAG.lastDisplayedState = 'saved';
-            }
+        if (!DIRTY_FLAG.isDirty) {
+            saveIndicator.classList.add('saved');
+            saveText.textContent = 'Saved to cloud';
         } else {
-            if (DIRTY_FLAG.lastDisplayedState !== 'unsaved') {
-                saveIndicator.classList.remove('saved');
-                saveText.textContent = 'Unsaved changes';
-                DIRTY_FLAG.lastDisplayedState = 'unsaved';
-            }
+            saveIndicator.classList.remove('saved');
+            saveText.textContent = 'Unsaved changes';
         }
     } else {
         const code = editor?.getValue() || '';
         const savedCode = localStorage.getItem('tc_code') || '';
-        const isSaved = code === savedCode;
 
-        if (isSaved && DIRTY_FLAG.lastDisplayedState !== 'saved-local') {
+        if (code === savedCode) {
             saveIndicator.classList.add('saved');
             saveText.textContent = 'Saved locally';
-            DIRTY_FLAG.lastDisplayedState = 'saved-local';
-        } else if (!isSaved && DIRTY_FLAG.lastDisplayedState !== 'unsaved') {
+        } else {
             saveIndicator.classList.remove('saved');
             saveText.textContent = 'Unsaved changes';
-            DIRTY_FLAG.lastDisplayedState = 'unsaved';
         }
     }
 }

@@ -370,10 +370,6 @@ async function runProgram() {
             clearTimeout(CLOUD_STATE.autosaveTimer);
             CLOUD_STATE.autosaveTimer = null;
         }
-        if (typingDebounceTimer) {
-            clearTimeout(typingDebounceTimer);
-            typingDebounceTimer = null;
-        }
 
         const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
         const [folder, filename] = activeKey.split('/');
@@ -479,6 +475,15 @@ PAUSE
 
     } catch (error) {
         Logger.error('Failed to start DOS environment', error);
+
+        if (error.message && (error.message.includes('Compiler URL') || error.message.includes('Failed to download compiler') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+            loading.innerHTML = `<div style="color: #ffb454; text-align: center; padding: 2rem; background: #2a2a2a; border-radius: 8px; border: 1px solid #ffb454; margin: auto;">
+                <p style="margin-bottom: 1rem; font-size: 1.1rem;">⚠ Failed to load compiler files. Please refresh the page to try again.</p>
+                <button onclick="window.location.reload()" style="padding: 0.5rem 1rem; cursor: pointer; background: #ffb454; color: #000; border: none; border-radius: 4px; font-weight: bold;">Refresh</button>
+            </div>`;
+            return;
+        }
+
         alert('Failed to start DOS environment. Error: ' + error.message);
         loading.classList.remove('active');
         runBtn.disabled = false;
@@ -513,7 +518,7 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// Graceful tab close handler with sendBeacon for guaranteed delivery
+// Graceful tab close handler with fetch keepalive for guaranteed delivery
 window.addEventListener('beforeunload', (event) => {
     if (!isUserLoggedIn || !editor) return;
 
@@ -529,8 +534,8 @@ window.addEventListener('beforeunload', (event) => {
         // localStorage might be full, ignore
     }
 
-    // Try sendBeacon for guaranteed background save
-    if (navigator.sendBeacon && supabaseClient && sessionCache.accessToken) {
+    // Use fetch with keepalive because sendBeacon doesn't support custom Authorization headers
+    if (supabaseClient && sessionCache.accessToken) {
         try {
             const payload = JSON.stringify({
                 folder,
@@ -538,29 +543,19 @@ window.addEventListener('beforeunload', (event) => {
                 content: code
             });
 
-            // Create blob with JSON content type
-            const blob = new Blob([payload], { type: 'application/json' });
+            fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${sessionCache.accessToken}`
+                },
+                body: payload,
+                keepalive: true // Ensures request completes even after tab closes
+            }).catch(() => {
+                // Silently fail - localStorage save already happened
+            });
 
-            // Get token for Authorization header simulation
-            // Note: sendBeacon doesn't support custom headers, so we use fetch with keepalive
-            const token = sessionCache.accessToken;
-
-            if (token) {
-                // Use fetch with keepalive instead of sendBeacon for Authorization header support
-                fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: payload,
-                    keepalive: true // Ensures request completes even after tab closes
-                }).catch(() => {
-                    // Silently fail - localStorage save already happened
-                });
-
-                Logger.info('Tab close: Background save initiated');
-            }
+            Logger.info('Tab close: Background save initiated');
         } catch (e) {
             // Beacon failed, but localStorage save already happened
         }
@@ -770,6 +765,19 @@ async function warmupJSDOS() {
 
     warmupPromise = new Promise(async (resolve) => {
         try {
+            Logger.info('Starting JS-DOS background warmup...');
+
+            // Pre-fetch and cache TC ZIP using shared function immediately
+            try {
+                await getTCZip();
+                Logger.success('TC ZIP ready for instant run');
+            } catch (e) {
+                Logger.warn('Failed to pre-cache TC ZIP: ' + e.message);
+            }
+
+            // Pre-cache all demo files in background
+            prefetchDemoFiles();
+
             // Wait for JS-DOS to be available
             if (typeof Dos === 'undefined') {
                 let attempts = 0;
@@ -783,19 +791,6 @@ async function warmupJSDOS() {
                     return;
                 }
             }
-
-            Logger.info('Starting JS-DOS background warmup...');
-
-            // Pre-fetch and cache TC ZIP using shared function
-            try {
-                await getTCZip();
-                Logger.success('TC ZIP ready for instant run');
-            } catch (e) {
-                Logger.warn('Failed to pre-cache TC ZIP: ' + e.message);
-            }
-
-            // Pre-cache all demo files in background
-            prefetchDemoFiles();
 
             Logger.success('JS-DOS warmup complete - Run will be instant!');
             resolve(true);
