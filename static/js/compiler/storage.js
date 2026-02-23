@@ -602,6 +602,12 @@ function downloadFile(folder, filename) {
 async function openFile(folder, filename, options = {}) {
     cancelPendingAutosave();
 
+    // Close sidebar on mobile
+    const sidebarElement = document.getElementById('sidebar');
+    if (sidebarElement && sidebarElement.classList.contains('open')) {
+        sidebarElement.classList.remove('open');
+    }
+
     if (!options.skipSave && isUserLoggedIn && editor) {
         const currentCode = editor.getValue();
         const currentKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
