@@ -511,6 +511,18 @@ async function initializeEditor() {
         }
     }, 100);
 
+    // Auto-fullscreen editor on mobile when clicked/focused
+    const editorDom = cmView.contentDOM;
+    if (editorDom) {
+        const checkMobileFullscreen = () => {
+            if (window.innerWidth <= 768 && typeof toggleEditorFullscreen === 'function' && typeof isEditorFullscreen !== 'undefined' && !isEditorFullscreen) {
+                toggleEditorFullscreen(true);
+            }
+        };
+        editorDom.addEventListener('focus', checkMobileFullscreen);
+        editorDom.addEventListener('click', checkMobileFullscreen);
+    }
+
     Logger.success('Editor ready (CodeMirror 6)');
 }
 

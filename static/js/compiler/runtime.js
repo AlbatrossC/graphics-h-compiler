@@ -106,12 +106,6 @@ if (_mobileTabOutput) {
 
 // ==================== DESKTOP FULLSCREEN TOGGLE ====================
 function toggleEditorFullscreen(forceState) {
-    // On mobile, use tab switching instead of fullscreen
-    if (isMobileView()) {
-        switchMobileTab('editor');
-        return;
-    }
-
     if (typeof forceState === 'boolean') {
         isEditorFullscreen = forceState;
     } else {
@@ -141,12 +135,6 @@ const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 
 document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
-    // On mobile, use tab switching instead of fullscreen
-    if (isMobileView()) {
-        switchMobileTab('output');
-        return;
-    }
-
     isTerminalFullscreen = !isTerminalFullscreen;
 
     if (isTerminalFullscreen) {
@@ -347,10 +335,10 @@ window.addEventListener('message', (event) => {
             Logger.success('[Error Panel] Panel made visible');
         }
 
-        // On mobile, switch to output tab so errors are visible
-        if (isMobileView()) {
-            switchMobileTab('output');
-        } else {
+        // On mobile, if editor is fullscreen, exit it so errors are visible
+        if (isMobileView() && isEditorFullscreen) {
+            toggleEditorFullscreen(false);
+        } else if (!isMobileView()) {
             focusEditor();
         }
     } else if (data.type === 'ERROR') {
@@ -424,9 +412,9 @@ async function runProgram() {
     runBtn.disabled = true;
     runBtn.classList.add('loading');
 
-    // On mobile, switch to DOS output tab immediately
-    if (isMobileView()) {
-        switchMobileTab('output');
+    // On mobile, if editor is fullscreen, exit it
+    if (isMobileView() && isEditorFullscreen) {
+        toggleEditorFullscreen(false);
     }
 
     const iframe = document.getElementById('dos-iframe');

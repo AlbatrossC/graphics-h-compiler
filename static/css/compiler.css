@@ -2267,7 +2267,7 @@ header {
     /* ---- CSS Variables ---- */
     :root {
         --header-height: 90px;
-        --tab-bar-height: 44px;
+        --tab-bar-height: 0px;
     }
 
     /* ---- Header ---- */
@@ -2339,16 +2339,7 @@ header {
 
     /* ---- Mobile Tab Bar ---- */
     .mobile-tab-bar {
-        display: flex;
-        background: var(--vscode-sidebar);
-        border-bottom: 1px solid var(--border-color);
-        padding: 0 8px;
-        gap: 4px;
-        height: var(--tab-bar-height);
-        align-items: center;
-        position: sticky;
-        top: var(--header-height);
-        z-index: 99;
+        display: none !important;
     }
 
     .mobile-tab {
@@ -2415,35 +2406,23 @@ header {
         display: none;
     }
 
+    /* Keep header visible when panels go fullscreen so Run button is accessible */
+    .fullscreen {
+        top: var(--header-height) !important;
+        height: calc(100vh - var(--header-height)) !important;
+    }
+
     /* ---- Tab Panels: show/hide ---- */
     #editor-wrapper,
     #terminal-wrapper {
         border-radius: 0;
         border: none;
+        border-bottom: 1px solid var(--border-color);
         box-shadow: none;
-        flex: 1 1 100%;
+        flex: 1 1 50%;
         width: 100%;
         min-height: 0;
-    }
-
-    /* Active/inactive tab panels */
-    #editor-wrapper {
-        display: flex;
-        /* shown by default (editor tab) */
-    }
-
-    #terminal-wrapper {
-        display: none;
-        /* hidden by default */
-    }
-
-    /* When output tab is active */
-    body.mobile-tab-output #editor-wrapper {
-        display: none;
-    }
-
-    body.mobile-tab-output #terminal-wrapper {
-        display: flex;
+        display: flex !important;
     }
 
     /* ---- Sidebar (off-canvas drawer) ---- */
@@ -2538,10 +2517,10 @@ header {
         height: 16px;
     }
 
-    /* Hide fullscreen buttons on mobile (tabs replace them) */
+    /* Show fullscreen buttons on mobile since we use split view */
     #fullscreen-editor-btn,
     #fullscreen-terminal-btn {
-        display: none;
+        display: inline-flex;
     }
 
     /* Editor footer */

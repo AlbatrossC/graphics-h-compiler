@@ -1392,7 +1392,8 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     if (isTerminalFullscreen) {
         terminalWrapper.classList.add('fullscreen');
         editorWrapper.classList.add('hidden');
-        resetTerminalZoom();
+        currentTerminalZoom = 1.2;
+        updateTerminalZoom(0);
         if (terminalZoomControls) {
             terminalZoomControls.classList.remove('hidden');
             terminalZoomControls.style.display = 'flex';
@@ -1414,7 +1415,16 @@ document.getElementById('fullscreen-terminal-btn').addEventListener('click', () 
     }, 100);
 });
 
-document.getElementById('download-terminal-btn')?.classList.add('hidden');
+// document.getElementById('download-terminal-btn')?.classList.add('hidden');
+
+if (downloadTerminalBtn) {
+    downloadTerminalBtn.addEventListener('click', () => {
+        const iframe = document.getElementById('dos-iframe');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'TAKE_SCREENSHOT' }, '*');
+        }
+    });
+}
 
 let currentTerminalZoom = 1.0;
 
@@ -1542,6 +1552,10 @@ window.addEventListener('message', (event) => {
             runBtn.classList.remove('loading');
             metrics.runtime.zipExtractionCompleted++;
 
+            if (downloadTerminalBtn) {
+                downloadTerminalBtn.classList.remove('hidden');
+            }
+
             if (currentTcZipObjectUrl) {
                 URL.revokeObjectURL(currentTcZipObjectUrl);
                 currentTcZipObjectUrl = null;
@@ -1552,6 +1566,11 @@ window.addEventListener('message', (event) => {
         }
     } else if (data.type === 'COMPILATION_ERROR') {
         Logger.info('[Error Panel] Received COMPILATION_ERROR from iframe');
+
+        if (downloadTerminalBtn) {
+            downloadTerminalBtn.classList.add('hidden');
+        }
+
         Logger.info('[Error Panel] Content: ' + (data.content || '').substring(0, 200));
         outputContent.textContent = data.content || '';
         outputContent.classList.remove('output-success');
@@ -1586,6 +1605,21 @@ window.addEventListener('message', (event) => {
             URL.revokeObjectURL(currentTcZipObjectUrl);
             currentTcZipObjectUrl = null;
         }
+    } else if (data.type === 'SCREENSHOT_DATA') {
+        const link = document.createElement('a');
+        link.href = data.dataUrl;
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        link.download = `graphics_h_${yyyy}_${mm}_${dd}_${hh}_${min}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 });
 
