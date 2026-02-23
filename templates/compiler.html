@@ -156,7 +156,7 @@
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                 </svg>
-                <span class="btn-text">Run</span>
+                <span class="btn-text">Compile and Run</span>
             </button>
         </div>
     </header>
@@ -165,6 +165,13 @@
 
     <!-- Mobile Tab Bar -->
     <div id="mobile-tab-bar" class="mobile-tab-bar" role="tablist" aria-label="Mobile workspace tabs">
+        <button id="mobile-tab-explorer" class="mobile-tab" data-tab="explorer" type="button" role="tab"
+            aria-selected="false" aria-controls="sidebar-container">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Menu</span>
+        </button>
         <button id="mobile-tab-editor" class="mobile-tab active" data-tab="editor" type="button" role="tab"
             aria-selected="true" aria-controls="editor-wrapper">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -224,18 +231,12 @@
                     </div>
                 </div>
                 <div class="mobile-menu-shortcuts">
-                    <button class="mobile-menu-btn" type="button" onclick="window.location.href='index.html'">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    <button id="mobile-menu-files-btn" class="mobile-menu-btn active" type="button">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z">
+                            </path>
                         </svg>
-                        <span>Home</span>
-                    </button>
-                    <button class="mobile-menu-btn" type="button" onclick="saveCode()">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
-                        </svg>
-                        <span>Save</span>
+                        <span>Files</span>
                     </button>
                     <button id="mobile-menu-settings-btn" class="mobile-menu-btn" type="button">
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -461,12 +462,7 @@
                             </svg>
                         </button>
                     </div>
-                    <button id="fullscreen-editor-btn" class="panel-action-btn" title="Toggle Fullscreen">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        </svg>
-                    </button>
+
                 </div>
             </div>
 
@@ -511,12 +507,7 @@
                             </svg>
                         </button>
                     </div>
-                    <button id="fullscreen-terminal-btn" class="panel-action-btn" title="Toggle Fullscreen">
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
-                        </svg>
-                        <span>Fullscreen</span>
-                    </button>
+
                 </div>
             </div>
 

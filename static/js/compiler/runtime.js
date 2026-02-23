@@ -43,6 +43,7 @@ let isTerminalFullscreen = false;
 const _mobileTabBar = document.getElementById('mobile-tab-bar');
 const _mobileTabEditor = document.getElementById('mobile-tab-editor');
 const _mobileTabOutput = document.getElementById('mobile-tab-output');
+const _mobileTabExplorer = document.getElementById('mobile-tab-explorer');
 
 function isMobileView() {
     return window.innerWidth <= 768;
@@ -51,18 +52,26 @@ function isMobileView() {
 function switchMobileTab(tab) {
     if (!_mobileTabEditor || !_mobileTabOutput) return;
 
+    document.body.classList.remove('mobile-tab-output', 'mobile-tab-explorer');
+    _mobileTabEditor.classList.remove('active');
+    _mobileTabOutput.classList.remove('active');
+    if (_mobileTabExplorer) _mobileTabExplorer.classList.remove('active');
+
+    _mobileTabEditor.setAttribute('aria-selected', 'false');
+    _mobileTabOutput.setAttribute('aria-selected', 'false');
+    if (_mobileTabExplorer) _mobileTabExplorer.setAttribute('aria-selected', 'false');
+
     if (tab === 'output') {
         document.body.classList.add('mobile-tab-output');
-        _mobileTabEditor.classList.remove('active');
         _mobileTabOutput.classList.add('active');
-        _mobileTabEditor.setAttribute('aria-selected', 'false');
         _mobileTabOutput.setAttribute('aria-selected', 'true');
+    } else if (tab === 'explorer') {
+        document.body.classList.add('mobile-tab-explorer');
+        if (_mobileTabExplorer) _mobileTabExplorer.classList.add('active');
+        if (_mobileTabExplorer) _mobileTabExplorer.setAttribute('aria-selected', 'true');
     } else {
-        document.body.classList.remove('mobile-tab-output');
         _mobileTabEditor.classList.add('active');
-        _mobileTabOutput.classList.remove('active');
         _mobileTabEditor.setAttribute('aria-selected', 'true');
-        _mobileTabOutput.setAttribute('aria-selected', 'false');
 
         // ── Force-release keyboard from the DOS iframe ──
         // 1. Blur the iframe element itself
@@ -107,6 +116,9 @@ if (_mobileTabEditor) {
 if (_mobileTabOutput) {
     _mobileTabOutput.addEventListener('click', () => switchMobileTab('output'));
 }
+if (_mobileTabExplorer) {
+    _mobileTabExplorer.addEventListener('click', () => switchMobileTab('explorer'));
+}
 
 // ==================== DESKTOP FULLSCREEN TOGGLE ====================
 function toggleEditorFullscreen(forceState) {
@@ -131,41 +143,47 @@ function toggleEditorFullscreen(forceState) {
     }, 100);
 }
 
-document.getElementById('fullscreen-editor-btn').addEventListener('click', () => {
-    toggleEditorFullscreen();
-});
+const fullscreenEditorBtn = document.getElementById('fullscreen-editor-btn');
+if (fullscreenEditorBtn) {
+    fullscreenEditorBtn.addEventListener('click', () => {
+        toggleEditorFullscreen();
+    });
+}
 
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 
-document.getElementById('fullscreen-terminal-btn').addEventListener('click', () => {
-    isTerminalFullscreen = !isTerminalFullscreen;
+const fullscreenTerminalBtn = document.getElementById('fullscreen-terminal-btn');
+if (fullscreenTerminalBtn) {
+    fullscreenTerminalBtn.addEventListener('click', () => {
+        isTerminalFullscreen = !isTerminalFullscreen;
 
-    if (isTerminalFullscreen) {
-        terminalWrapper.classList.add('fullscreen');
-        editorWrapper.classList.add('hidden');
-        currentTerminalZoom = 1.2;
-        updateTerminalZoom(0);
-        if (terminalZoomControls) {
-            terminalZoomControls.classList.remove('hidden');
-            terminalZoomControls.style.display = 'flex';
+        if (isTerminalFullscreen) {
+            terminalWrapper.classList.add('fullscreen');
+            editorWrapper.classList.add('hidden');
+            currentTerminalZoom = 1.2;
+            updateTerminalZoom(0);
+            if (terminalZoomControls) {
+                terminalZoomControls.classList.remove('hidden');
+                terminalZoomControls.style.display = 'flex';
+            }
+        } else {
+            terminalWrapper.classList.remove('fullscreen');
+            editorWrapper.classList.remove('hidden');
+            if (terminalZoomControls) {
+                terminalZoomControls.classList.add('hidden');
+                terminalZoomControls.style.display = 'none';
+            }
+            resetTerminalZoom();
         }
-    } else {
-        terminalWrapper.classList.remove('fullscreen');
-        editorWrapper.classList.remove('hidden');
-        if (terminalZoomControls) {
-            terminalZoomControls.classList.add('hidden');
-            terminalZoomControls.style.display = 'none';
-        }
-        resetTerminalZoom();
-    }
 
-    setTimeout(() => {
-        if (document.getElementById('dos-iframe')) {
-            window.dispatchEvent(new Event('resize'));
-        }
-    }, 100);
-});
+        setTimeout(() => {
+            if (document.getElementById('dos-iframe')) {
+                window.dispatchEvent(new Event('resize'));
+            }
+        }, 100);
+    });
+}
 
 // document.getElementById('download-terminal-btn')?.classList.add('hidden');
 
@@ -627,9 +645,6 @@ const mainFolderFiles = document.getElementById('main-folder-files');
 const newFileBtn = document.getElementById('new-file-btn');
 
 // User state (will be updated by auth logic)
-let isUserLoggedIn = false;
-let currentUser = null;
-let supabaseClient = null;
 
 // Shared sidebar toggle for desktop
 function toggleDesktopSidebar() {

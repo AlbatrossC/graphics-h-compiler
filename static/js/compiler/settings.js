@@ -42,6 +42,7 @@
     const settingsHeaderBtn = document.getElementById('settings-header-btn');
     const settingsActivityBtn = document.getElementById('settings-activity-btn');
     const mobileMenuSettingsBtn = document.getElementById('mobile-menu-settings-btn');
+    const mobileMenuFilesBtn = document.getElementById('mobile-menu-files-btn');
     const explorerActivityBtn = document.getElementById('explorer-activity-btn');
     const settingsPanel = document.getElementById('settings-panel-view');
     const cloudPromoView = document.getElementById('cloud-promo-view');
@@ -78,6 +79,8 @@
         // Update activity bar buttons
         if (explorerActivityBtn) explorerActivityBtn.classList.remove('active');
         if (settingsActivityBtn) settingsActivityBtn.classList.add('active');
+        if (mobileMenuFilesBtn) mobileMenuFilesBtn.classList.remove('active');
+        if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.add('active');
 
         // Update sidebar header
         if (sidebarHeader) {
@@ -118,6 +121,8 @@
         // Update activity bar buttons
         if (explorerActivityBtn) explorerActivityBtn.classList.add('active');
         if (settingsActivityBtn) settingsActivityBtn.classList.remove('active');
+        if (mobileMenuFilesBtn) mobileMenuFilesBtn.classList.add('active');
+        if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.remove('active');
 
         // Update sidebar header
         if (sidebarHeader) {
@@ -153,11 +158,13 @@
 
     if (mobileMenuSettingsBtn) {
         mobileMenuSettingsBtn.addEventListener('click', () => {
-            if (isSettingsOpen) {
-                showExplorerPanel();
-            } else {
-                showSettingsPanel();
-            }
+            showSettingsPanel();
+        });
+    }
+
+    if (mobileMenuFilesBtn) {
+        mobileMenuFilesBtn.addEventListener('click', () => {
+            showExplorerPanel();
         });
     }
 

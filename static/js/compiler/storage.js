@@ -1,3 +1,8 @@
+// User state (used across files)
+let isUserLoggedIn = false;
+let currentUser = null;
+let supabaseClient = null;
+
 // ==================== AUTHENTICATION CACHING ====================
 const sessionCache = {
     accessToken: null,
