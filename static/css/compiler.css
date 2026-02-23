@@ -2329,7 +2329,6 @@ header {
     .editor-mode,
     .logo-full,
     #settings-header-btn,
-    #sidebar-toggle,
     #theme-toggle {
         display: none !important;
     }
@@ -2343,11 +2342,16 @@ header {
         display: none;
     }
 
-    #run-btn .btn-text {
+    #run-btn .btn-text-mobile {
         display: inline !important;
         font-weight: 700;
     }
 
+    #run-btn .btn-text-desktop {
+        display: none !important;
+    }
+
+    #sidebar-toggle,
     #back-btn,
     #save-btn {
         display: inline-flex !important;
@@ -2362,12 +2366,14 @@ header {
         color: var(--text-primary);
     }
 
+    #sidebar-toggle svg,
     #back-btn svg,
     #save-btn svg {
         width: 20px;
         height: 20px;
     }
 
+    #sidebar-toggle:hover,
     #back-btn:hover,
     #save-btn:hover {
         background: var(--vscode-sidebar);

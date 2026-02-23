@@ -156,7 +156,8 @@
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                 </svg>
-                <span class="btn-text">Compile and Run</span>
+                <span class="btn-text btn-text-desktop">Compile and Run</span>
+                <span class="btn-text btn-text-mobile" style="display: none;">Run</span>
             </button>
         </div>
     </header>
@@ -165,13 +166,6 @@
 
     <!-- Mobile Tab Bar -->
     <div id="mobile-tab-bar" class="mobile-tab-bar" role="tablist" aria-label="Mobile workspace tabs">
-        <button id="mobile-tab-explorer" class="mobile-tab" data-tab="explorer" type="button" role="tab"
-            aria-selected="false" aria-controls="sidebar-container">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span>Menu</span>
-        </button>
         <button id="mobile-tab-editor" class="mobile-tab active" data-tab="editor" type="button" role="tab"
             aria-selected="true" aria-controls="editor-wrapper">
             <svg viewBox="0 0 24 24" fill="currentColor">
