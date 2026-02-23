@@ -156,7 +156,7 @@
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8 5v14l11-7z" />
                 </svg>
-                <span class="btn-text">Compile and Run</span>
+                <span class="btn-text">Run</span>
             </button>
         </div>
     </header>
@@ -164,20 +164,22 @@
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
     <!-- Mobile Tab Bar -->
-    <div id="mobile-tab-bar" class="mobile-tab-bar">
-        <button id="mobile-tab-editor" class="mobile-tab active" data-tab="editor">
+    <div id="mobile-tab-bar" class="mobile-tab-bar" role="tablist" aria-label="Mobile workspace tabs">
+        <button id="mobile-tab-editor" class="mobile-tab active" data-tab="editor" type="button" role="tab"
+            aria-selected="true" aria-controls="editor-wrapper">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" />
                 <path d="M9 13h6v2H9zm0 4h4v2H9z" opacity="0.6" />
             </svg>
-            <span>Code Editor</span>
+            <span>Code</span>
         </button>
-        <button id="mobile-tab-output" class="mobile-tab" data-tab="output">
+        <button id="mobile-tab-output" class="mobile-tab" data-tab="output" type="button" role="tab"
+            aria-selected="false" aria-controls="terminal-wrapper">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <path
                     d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4V8h16v10z" />
             </svg>
-            <span>DOS Output</span>
+            <span>DOS</span>
         </button>
     </div>
 
@@ -220,6 +222,28 @@
                             </svg>
                         </button>
                     </div>
+                </div>
+                <div class="mobile-menu-shortcuts">
+                    <button class="mobile-menu-btn" type="button" onclick="window.location.href='index.html'">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                        </svg>
+                        <span>Home</span>
+                    </button>
+                    <button class="mobile-menu-btn" type="button" onclick="saveCode()">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                        </svg>
+                        <span>Save</span>
+                    </button>
+                    <button id="mobile-menu-settings-btn" class="mobile-menu-btn" type="button">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" />
+                        </svg>
+                        <span>Settings</span>
+                    </button>
                 </div>
 
                 <div class="explorer-actions">

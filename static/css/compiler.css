@@ -2241,6 +2241,10 @@ header {
     /* hidden on desktop */
 }
 
+.mobile-menu-shortcuts {
+    display: none;
+}
+
 /* ============================================================
    TABLET ( ≤1024px )
    ============================================================ */
@@ -2266,41 +2270,56 @@ header {
 
     /* ---- CSS Variables ---- */
     :root {
-        --header-height: 90px;
-        --tab-bar-height: 0px;
+        --header-height: 56px;
+        --tab-bar-height: 50px;
     }
 
     /* ---- Header ---- */
+    header {
+        border-bottom: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
     .header-content {
-        flex-wrap: wrap;
-        padding: 0.5rem;
-        gap: 0.5rem;
+        flex-wrap: nowrap;
+        padding: 8px 10px;
+        gap: 8px;
+        min-height: var(--header-height);
+        background: linear-gradient(180deg, rgba(21, 21, 21, 0.95) 0%, rgba(10, 10, 10, 0.97) 100%);
     }
 
     .header-left {
         order: 1;
-        gap: 0.5rem;
+        gap: 0;
+        flex: 0 0 auto;
     }
 
     .header-center {
-        order: 2;
-        flex: 1;
-        min-width: 0;
+        display: none;
     }
 
     .header-right {
         order: 3;
-        gap: 0.5rem;
+        gap: 0;
+        flex: 0 0 auto;
     }
 
-    /* Run button — full width, second row */
+    /* Run button is the center anchor action */
     #run-btn {
-        order: 4;
-        flex: 1 1 100%;
+        order: 2;
+        flex: 1 1 0;
         width: 100%;
         height: 40px;
         font-size: 0.9rem;
+        border-radius: 10px;
+        letter-spacing: 0.01em;
         justify-content: center;
+        min-width: 0;
+    }
+
+    #run-btn svg {
+        width: 14px;
+        height: 14px;
     }
 
     /* Hide desktop-only elements */
@@ -2308,38 +2327,45 @@ header {
     #status-message,
     .save-indicator,
     .editor-mode,
-    .logo-full {
+    .logo-full,
+    #settings-header-btn,
+    #back-btn,
+    #save-btn {
         display: none !important;
     }
 
     .logo-mobile {
-        display: inline;
+        display: none !important;
     }
 
-    .btn-text {
+    .header-left .btn-text,
+    .header-right .btn-text {
         display: none;
     }
 
     #run-btn .btn-text {
         display: inline !important;
+        font-weight: 700;
     }
 
-    /* Smaller buttons */
-    .btn,
-    .icon-btn,
-    .theme-toggle {
-        height: 34px;
-        font-size: 0.8125rem;
-    }
-
-    .icon-btn,
-    .theme-toggle {
-        width: 34px;
+    #sidebar-toggle,
+    #theme-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--vscode-line-bg);
     }
 
     /* ---- Mobile Tab Bar ---- */
     .mobile-tab-bar {
-        display: none !important;
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+        height: var(--tab-bar-height);
+        padding: 6px 10px;
+        background: linear-gradient(180deg, rgba(17, 17, 17, 0.98) 0%, rgba(10, 10, 10, 0.98) 100%);
+        border-bottom: 1px solid var(--border-color);
     }
 
     .mobile-tab {
@@ -2347,13 +2373,13 @@ header {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        height: 34px;
-        background: transparent;
-        border: none;
-        border-radius: 8px;
+        gap: 5px;
+        height: 36px;
+        background: var(--vscode-line-bg);
+        border: 1px solid transparent;
+        border-radius: 10px;
         color: var(--text-muted);
-        font-size: 0.8125rem;
+        font-size: 0.78rem;
         font-weight: 600;
         cursor: pointer;
         transition: all var(--transition-fast);
@@ -2367,24 +2393,19 @@ header {
     }
 
     .mobile-tab.active {
-        background: rgba(0, 255, 136, 0.1);
-        color: var(--primary);
+        background: rgba(0, 255, 136, 0.16);
+        border-color: rgba(0, 255, 136, 0.45);
+        color: #d4ffe9;
     }
 
     [data-theme="light"] .mobile-tab.active {
-        background: rgba(0, 204, 106, 0.1);
+        background: rgba(0, 204, 106, 0.14);
+        border-color: rgba(0, 204, 106, 0.4);
         color: var(--primary);
     }
 
     .mobile-tab.active::after {
-        content: '';
-        position: absolute;
-        bottom: -5px;
-        left: 20%;
-        right: 20%;
-        height: 2px;
-        background: var(--primary);
-        border-radius: 1px;
+        display: none;
     }
 
     .mobile-tab:not(.active):hover {
@@ -2397,7 +2418,7 @@ header {
         flex-direction: column;
         height: calc(100vh - var(--header-height) - var(--tab-bar-height));
         gap: 0;
-        padding: 0;
+        padding: 6px 0 0;
         overflow: hidden;
     }
 
@@ -2408,8 +2429,8 @@ header {
 
     /* Keep header visible when panels go fullscreen so Run button is accessible */
     .fullscreen {
-        top: var(--header-height) !important;
-        height: calc(100vh - var(--header-height)) !important;
+        top: calc(var(--header-height) + var(--tab-bar-height)) !important;
+        height: calc(100vh - var(--header-height) - var(--tab-bar-height)) !important;
     }
 
     /* ---- Tab Panels: show/hide ---- */
@@ -2419,9 +2440,25 @@ header {
         border: none;
         border-bottom: 1px solid var(--border-color);
         box-shadow: none;
-        flex: 1 1 50%;
+        flex: 1 1 auto;
         width: 100%;
         min-height: 0;
+        display: flex !important;
+    }
+
+    body:not(.mobile-tab-output) #editor-wrapper {
+        display: flex !important;
+    }
+
+    body:not(.mobile-tab-output) #terminal-wrapper {
+        display: none !important;
+    }
+
+    body.mobile-tab-output #editor-wrapper {
+        display: none !important;
+    }
+
+    body.mobile-tab-output #terminal-wrapper {
         display: flex !important;
     }
 
@@ -2437,7 +2474,7 @@ header {
     #sidebar {
         width: 270px;
         height: 100%;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        box-shadow: 8px 0 26px rgba(0, 0, 0, 0.45);
         transform: translateX(-100%);
         transition: transform var(--transition-normal);
         overflow-y: auto;
@@ -2455,6 +2492,40 @@ header {
 
     .sidebar-collapse-btn {
         display: none;
+    }
+
+    .mobile-menu-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--vscode-line-bg);
+    }
+
+    .mobile-menu-btn {
+        height: 36px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--vscode-sidebar);
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.74rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .mobile-menu-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .mobile-menu-btn:hover {
+        color: var(--primary);
+        border-color: var(--primary);
     }
 
     /* Sidebar overlay */
@@ -2650,18 +2721,20 @@ header {
     }
 
     #run-btn {
-        order: 3;
-        flex: none;
+        order: 2;
+        flex: 1 1 auto;
         width: auto;
         height: 32px;
+        font-size: 0.8rem;
     }
 
     .mobile-tab-bar {
         height: var(--tab-bar-height);
+        padding: 4px 10px;
     }
 
     .mobile-tab {
-        height: 30px;
+        height: 28px;
     }
 }
 

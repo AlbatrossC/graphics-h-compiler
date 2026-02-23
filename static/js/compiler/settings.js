@@ -41,6 +41,7 @@
     // ==================== DOM ELEMENTS ====================
     const settingsHeaderBtn = document.getElementById('settings-header-btn');
     const settingsActivityBtn = document.getElementById('settings-activity-btn');
+    const mobileMenuSettingsBtn = document.getElementById('mobile-menu-settings-btn');
     const explorerActivityBtn = document.getElementById('explorer-activity-btn');
     const settingsPanel = document.getElementById('settings-panel-view');
     const cloudPromoView = document.getElementById('cloud-promo-view');
@@ -142,6 +143,16 @@
 
     if (settingsActivityBtn) {
         settingsActivityBtn.addEventListener('click', () => {
+            if (isSettingsOpen) {
+                showExplorerPanel();
+            } else {
+                showSettingsPanel();
+            }
+        });
+    }
+
+    if (mobileMenuSettingsBtn) {
+        mobileMenuSettingsBtn.addEventListener('click', () => {
             if (isSettingsOpen) {
                 showExplorerPanel();
             } else {

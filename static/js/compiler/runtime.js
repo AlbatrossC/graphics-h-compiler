@@ -55,10 +55,14 @@ function switchMobileTab(tab) {
         document.body.classList.add('mobile-tab-output');
         _mobileTabEditor.classList.remove('active');
         _mobileTabOutput.classList.add('active');
+        _mobileTabEditor.setAttribute('aria-selected', 'false');
+        _mobileTabOutput.setAttribute('aria-selected', 'true');
     } else {
         document.body.classList.remove('mobile-tab-output');
         _mobileTabEditor.classList.add('active');
         _mobileTabOutput.classList.remove('active');
+        _mobileTabEditor.setAttribute('aria-selected', 'true');
+        _mobileTabOutput.setAttribute('aria-selected', 'false');
 
         // ── Force-release keyboard from the DOS iframe ──
         // 1. Blur the iframe element itself
@@ -411,6 +415,11 @@ async function runProgram() {
     updateLoadingProgress(0);
     runBtn.disabled = true;
     runBtn.classList.add('loading');
+
+    // On mobile, jump directly to DOS output when compilation starts.
+    if (isMobileView()) {
+        switchMobileTab('output');
+    }
 
     // On mobile, if editor is fullscreen, exit it
     if (isMobileView() && isEditorFullscreen) {
