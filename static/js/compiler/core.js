@@ -550,14 +550,14 @@ copyErrorBtn.addEventListener('click', async () => {
 
         // Visual feedback
         copyErrorBtn.classList.add('copied');
-        copyBtnText.textContent = 'Copied!';
+        copyBtnText.textContent = 'Copied';
 
         Logger.success('Errors copied to clipboard');
 
         // Reset after 2 seconds
         setTimeout(() => {
             copyErrorBtn.classList.remove('copied');
-            copyBtnText.textContent = 'Copy';
+            copyBtnText.textContent = 'Copy Errors';
         }, 2000);
     } catch (err) {
         Logger.error('Failed to copy errors', err);
@@ -573,11 +573,11 @@ copyErrorBtn.addEventListener('click', async () => {
         try {
             document.execCommand('copy');
             copyErrorBtn.classList.add('copied');
-            copyBtnText.textContent = 'Copied!';
+            copyBtnText.textContent = 'Copied';
 
             setTimeout(() => {
                 copyErrorBtn.classList.remove('copied');
-                copyBtnText.textContent = 'Copy';
+                copyBtnText.textContent = 'Copy Errors';
             }, 2000);
         } catch (fallbackErr) {
             Logger.error('Fallback copy failed', fallbackErr);

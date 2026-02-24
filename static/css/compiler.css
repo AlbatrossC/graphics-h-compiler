@@ -960,9 +960,9 @@ header {
 }
 
 .copy-error-btn.copied {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #0a0a0a;
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
 }
 
 .copy-error-btn svg {
@@ -2369,9 +2369,7 @@ header {
     }
 
     #sidebar-toggle .btn-text-mobile {
-        display: inline !important;
-        font-weight: 600;
-        font-size: 0.85rem;
+        display: none !important;
     }
 
     #back-btn .btn-text-mobile {
@@ -2388,21 +2386,38 @@ header {
     }
 
     #save-btn {
-        display: none !important;
-    }
-
-    #sidebar-toggle {
         display: inline-flex !important;
-        width: auto !important;
+        width: 40px !important;
         height: 40px;
-        padding: 0 12px !important;
+        padding: 0 !important;
         justify-content: center;
         align-items: center;
         border-radius: 10px;
         border: 1px solid var(--border-color);
         background: var(--vscode-line-bg);
         color: var(--text-primary);
-        gap: 6px;
+    }
+
+    #save-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    #save-btn .btn-text {
+        display: none !important;
+    }
+
+    #sidebar-toggle {
+        display: inline-flex !important;
+        width: 40px !important;
+        height: 40px;
+        padding: 0 !important;
+        justify-content: center;
+        align-items: center;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--vscode-line-bg);
+        color: var(--text-primary);
     }
 
     #back-btn {
@@ -2454,7 +2469,7 @@ header {
         height: 36px;
         background: var(--vscode-line-bg);
         border: 1px solid transparent;
-        border-radius: 10px;
+        border-radius: 0px;
         color: var(--text-muted);
         font-size: 0.78rem;
         font-weight: 600;
