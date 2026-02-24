@@ -121,8 +121,6 @@ async function loadDemoFile(demoKey, forceReload = false) {
             const cachedCode = DemoCache.get(demoKey);
             if (cachedCode) {
                 Logger.info(`Loading ${demoKey} demo from cache`);
-                editor.setValue('');
-                await new Promise(resolve => setTimeout(resolve, 50));
                 editor.setValue(cachedCode);
 
                 lastLoadedDemo = demoKey;
@@ -159,8 +157,6 @@ async function loadDemoFile(demoKey, forceReload = false) {
 
             DemoCache.set(demoKey, code);
 
-            editor.setValue('');
-            await new Promise(resolve => setTimeout(resolve, 50));
             editor.setValue(code);
 
             lastLoadedDemo = demoKey;
@@ -202,20 +198,6 @@ let autocompleteCompartment = null;
 let bracketMatchCompartment = null;
 let activeLineCompartment = null;
 let cmView = null; // Store the EditorView instance
-
-// Global function for theme switching (called from core.js)
-function updateEditorTheme(newTheme) {
-    if (!cmView || !themeCompartment) return;
-    if (typeof window.createEditorTheme === 'function') {
-        const themeName = newTheme === 'dark' ? 'vscode-dark' : 'vscode-light';
-        const theme = window.createEditorTheme(themeName);
-        if (theme) {
-            cmView.dispatch({
-                effects: themeCompartment.reconfigure(theme)
-            });
-        }
-    }
-}
 
 // ==================== EDITOR WRAPPER API ====================
 // Provides the same API as the old Ace editor so storage.js, runtime.js, etc. work unchanged
@@ -289,7 +271,7 @@ function createEditorWrapper(view) {
             }
         },
 
-        // Theme compatibility — handled by updateEditorTheme
+        // Theme compatibility
         setTheme() { }
     };
 }
@@ -311,8 +293,30 @@ async function initializeEditor() {
     const { closeBrackets, closeBracketsKeymap } = cmModules.autocomplete;
     const { highlightSelectionMatches } = cmModules.search;
 
-    // Mobile detection
-    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    const defaultEditorSettings = (typeof APP_SETTINGS_DEFAULTS !== 'undefined' && APP_SETTINGS_DEFAULTS.editor)
+        ? APP_SETTINGS_DEFAULTS.editor
+        : {
+            theme: THEME_VSCODE_DARK,
+            fontSize: 14,
+            wordWrap: true,
+            lineNumbers: true,
+            autocomplete: true,
+            bracketMatching: true,
+            activeLine: true
+        };
+
+    const appSettings = (typeof loadAppSettings === 'function')
+        ? loadAppSettings()
+        : { editor: { ...defaultEditorSettings } };
+
+    const initialEditorSettings = {
+        ...defaultEditorSettings,
+        ...(appSettings.editor || {})
+    };
+
+    const initialFontSize = Math.max(10, Math.min(32, Number.parseInt(initialEditorSettings.fontSize, 10) || defaultEditorSettings.fontSize));
+    const themeEngine = await import('/static/js/compiler/theme-engine.js');
+    const initialThemeName = initialEditorSettings.theme || THEME_VSCODE_DARK;
 
     // Create compartments for dynamic reconfiguration
     themeCompartment = new Compartment();
@@ -323,30 +327,14 @@ async function initializeEditor() {
     bracketMatchCompartment = new Compartment();
     activeLineCompartment = new Compartment();
 
-    // Default Font Size
-    let currentFontSize = parseInt(localStorage.getItem('editor_font_size')) || (isMobileDevice ? 14 : 16);
-
-    // Determine initial theme
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    let initialTheme;
-    if (typeof window.createEditorTheme === 'function') {
-        initialTheme = window.createEditorTheme(currentTheme === 'dark' ? 'vscode-dark' : 'vscode-light');
-    } else {
-        const isDark = currentTheme === 'dark';
-        initialTheme = [EditorView.theme({
-            '&': { backgroundColor: 'transparent' },
-            '.cm-content': { color: isDark ? '#f8f8f2' : '#1a1a1a' }
-        }, { dark: isDark })];
-    }
-
     // Build extensions
     const extensions = [
-        lineNumbersCompartment.of(lineNumbers()),
-        activeLineCompartment.of([highlightActiveLine(), highlightActiveLineGutter()]),
+        lineNumbersCompartment.of(initialEditorSettings.lineNumbers ? lineNumbers() : []),
+        activeLineCompartment.of(initialEditorSettings.activeLine ? [highlightActiveLine(), highlightActiveLineGutter()] : []),
         drawSelection(),
         indentOnInput(),
-        bracketMatchCompartment.of(bracketMatching()),
-        autocompleteCompartment.of(closeBrackets()),
+        bracketMatchCompartment.of(initialEditorSettings.bracketMatching ? bracketMatching() : []),
+        autocompleteCompartment.of(initialEditorSettings.autocomplete ? closeBrackets() : []),
         history(),
         highlightSelectionMatches(),
         cpp(),
@@ -356,10 +344,10 @@ async function initializeEditor() {
             ...historyKeymap,
             indentWithTab,
         ]),
-        themeCompartment.of(initialTheme),
+        themeCompartment.of([]),
         fontSizeCompartment.of(
             EditorView.theme({
-                '.cm-content, .cm-gutters': { fontSize: `${currentFontSize}px` }
+                '.cm-content, .cm-gutters': { fontSize: `${initialFontSize}px` }
             })
         ),
         EditorView.theme({
@@ -377,7 +365,7 @@ async function initializeEditor() {
             }
         }),
         EditorState.tabSize.of(4),
-        wordWrapCompartment.of(EditorView.lineWrapping),
+        wordWrapCompartment.of(initialEditorSettings.wordWrap ? EditorView.lineWrapping : []),
     ];
 
     // Create the editor view
@@ -394,6 +382,7 @@ async function initializeEditor() {
 
     // Create the wrapper that provides Ace-compatible API
     editor = createEditorWrapper(cmView);
+    themeEngine.applyTheme(cmView, themeCompartment, initialThemeName);
 
     // Font Size Controls
     const increaseFontBtn = document.getElementById('increase-font-btn');
@@ -406,27 +395,36 @@ async function initializeEditor() {
         }
     }
 
-    updateFontSizeDisplay(currentFontSize);
+    function requestFontSizeChange(delta) {
+        if (typeof loadAppSettings !== 'function') return;
+
+        const currentSettings = loadAppSettings();
+        const currentFontSize = Math.max(10, Math.min(32, Number.parseInt(currentSettings.editor.fontSize, 10) || defaultEditorSettings.fontSize));
+        const nextFontSize = Math.max(10, Math.min(32, currentFontSize + delta));
+
+        document.dispatchEvent(new CustomEvent('editor-font-size-change-requested', {
+            detail: { fontSize: nextFontSize }
+        }));
+    }
+
+    updateFontSizeDisplay(initialFontSize);
 
     if (increaseFontBtn && decreaseFontBtn) {
         increaseFontBtn.addEventListener('click', () => {
-            currentFontSize += 1;
-            if (currentFontSize > 32) currentFontSize = 32;
-            editor.setFontSize(`${currentFontSize}px`);
-            localStorage.setItem('editor_font_size', currentFontSize);
-            updateFontSizeDisplay(currentFontSize);
-            Logger.info(`Font size increased to ${currentFontSize}px`);
+            requestFontSizeChange(1);
         });
 
         decreaseFontBtn.addEventListener('click', () => {
-            currentFontSize -= 1;
-            if (currentFontSize < 10) currentFontSize = 10;
-            editor.setFontSize(`${currentFontSize}px`);
-            localStorage.setItem('editor_font_size', currentFontSize);
-            updateFontSizeDisplay(currentFontSize);
-            Logger.info(`Font size decreased to ${currentFontSize}px`);
+            requestFontSizeChange(-1);
         });
     }
+
+    document.addEventListener('editor-settings-changed', (event) => {
+        const latestFontSize = event.detail?.settings?.editor?.fontSize;
+        if (Number.isFinite(latestFontSize)) {
+            updateFontSizeDisplay(latestFontSize);
+        }
+    });
 
     // Copy Code Button
     const copyCodeBtn = document.getElementById('copy-code-btn');
@@ -522,6 +520,10 @@ async function initializeEditor() {
         editorDom.addEventListener('focus', checkMobileFullscreen);
         editorDom.addEventListener('click', checkMobileFullscreen);
     }
+
+    document.dispatchEvent(new CustomEvent('editor-ready', {
+        detail: { cmView }
+    }));
 
     Logger.success('Editor ready (CodeMirror 6)');
 }

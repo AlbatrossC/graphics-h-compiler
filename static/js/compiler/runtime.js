@@ -688,8 +688,8 @@ if (sidebarCollapseBtn) {
 if (explorerActivityBtn) {
     explorerActivityBtn.addEventListener('click', () => {
         // If settings panel is open, switch back to explorer (handled by settings.js)
-        if (typeof window.settingsShowExplorer === 'function' && settingsActivityBtn && settingsActivityBtn.classList.contains('active')) {
-            window.settingsShowExplorer();
+        if (settingsActivityBtn && settingsActivityBtn.classList.contains('active')) {
+            document.dispatchEvent(new CustomEvent('request-show-explorer'));
             // If sidebar is collapsed, expand it
             if (sidebar.classList.contains('collapsed')) {
                 sidebar.classList.remove('collapsed');

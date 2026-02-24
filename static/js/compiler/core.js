@@ -1,25 +1,127 @@
+// ==================== APP SETTINGS ====================
+
+const SETTINGS_STORAGE_KEY = 'editor_settings';
+const LEGACY_THEME_STORAGE_KEY = 'theme';
+const LEGACY_FONT_STORAGE_KEY = 'editor_font_size';
+
+const UI_THEME_DARK = 'dark';
+const UI_THEME_LIGHT = 'light';
+const THEME_VSCODE_DARK = 'vscode-dark';
+const THEME_VSCODE_LIGHT = 'vscode-light';
+
+const APP_SETTINGS_DEFAULTS = Object.freeze({
+    uiTheme: UI_THEME_DARK,
+    editor: {
+        theme: THEME_VSCODE_DARK,
+        fontSize: 14,
+        wordWrap: true,
+        lineNumbers: true,
+        autocomplete: true,
+        bracketMatching: true,
+        activeLine: true
+    }
+});
+
+function cloneDefaultSettings() {
+    return {
+        uiTheme: APP_SETTINGS_DEFAULTS.uiTheme,
+        editor: { ...APP_SETTINGS_DEFAULTS.editor }
+    };
+}
+
+function clampFontSize(value) {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) return APP_SETTINGS_DEFAULTS.editor.fontSize;
+    return Math.max(10, Math.min(32, parsed));
+}
+
+function normalizeAppSettings(rawSettings) {
+    const base = cloneDefaultSettings();
+    const raw = (rawSettings && typeof rawSettings === 'object') ? rawSettings : {};
+    const legacyTheme = localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
+    const legacyFontSize = localStorage.getItem(LEGACY_FONT_STORAGE_KEY);
+
+    const rawEditor = raw.editor && typeof raw.editor === 'object' ? raw.editor : {};
+    const legacyEditorTheme = raw.editorTheme;
+    const legacyUiTheme = raw.uiTheme || legacyTheme;
+
+    const resolvedUiTheme = legacyUiTheme === UI_THEME_LIGHT ? UI_THEME_LIGHT : UI_THEME_DARK;
+    const resolvedEditorTheme = (
+        rawEditor.theme ||
+        legacyEditorTheme ||
+        (resolvedUiTheme === UI_THEME_LIGHT ? THEME_VSCODE_LIGHT : THEME_VSCODE_DARK)
+    );
+
+    return {
+        uiTheme: resolvedUiTheme,
+        editor: {
+            theme: resolvedEditorTheme,
+            fontSize: clampFontSize(rawEditor.fontSize ?? raw.fontSize ?? legacyFontSize),
+            wordWrap: rawEditor.wordWrap ?? raw.wordWrap ?? base.editor.wordWrap,
+            lineNumbers: rawEditor.lineNumbers ?? raw.lineNumbers ?? base.editor.lineNumbers,
+            autocomplete: rawEditor.autocomplete ?? raw.autocomplete ?? base.editor.autocomplete,
+            bracketMatching: rawEditor.bracketMatching ?? raw.bracketMatching ?? base.editor.bracketMatching,
+            activeLine: rawEditor.activeLine ?? raw.activeLine ?? base.editor.activeLine
+        }
+    };
+}
+
+function loadAppSettings() {
+    try {
+        const serialized = localStorage.getItem(SETTINGS_STORAGE_KEY);
+        if (!serialized) {
+            return normalizeAppSettings({});
+        }
+        return normalizeAppSettings(JSON.parse(serialized));
+    } catch (error) {
+        return normalizeAppSettings({});
+    }
+}
+
+function saveAppSettings(settings) {
+    const normalized = normalizeAppSettings(settings);
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
+    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_FONT_STORAGE_KEY);
+    return normalized;
+}
+
+function updateAppSettings(mutator) {
+    const current = loadAppSettings();
+    const next = mutator(current);
+    return saveAppSettings(next);
+}
+
 // ==================== THEME TOGGLE ====================
 
 function initializeTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
+    const settings = saveAppSettings(loadAppSettings());
+    document.documentElement.setAttribute('data-theme', settings.uiTheme);
+    updateThemeIcon(settings.uiTheme);
 }
 
 function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const updatedSettings = updateAppSettings((current) => {
+        const nextUiTheme = current.uiTheme === UI_THEME_DARK ? UI_THEME_LIGHT : UI_THEME_DARK;
+        const nextEditorTheme = nextUiTheme === UI_THEME_LIGHT ? THEME_VSCODE_LIGHT : THEME_VSCODE_DARK;
 
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeIcon(newTheme);
+        return {
+            ...current,
+            uiTheme: nextUiTheme,
+            editor: {
+                ...current.editor,
+                theme: nextEditorTheme
+            }
+        };
+    });
 
-    // Update CodeMirror editor theme
-    if (editor && typeof updateEditorTheme === 'function') {
-        updateEditorTheme(newTheme);
-    }
+    document.documentElement.setAttribute('data-theme', updatedSettings.uiTheme);
+    updateThemeIcon(updatedSettings.uiTheme);
+    document.dispatchEvent(new CustomEvent('ui-theme-toggled', {
+        detail: { settings: updatedSettings }
+    }));
 
-    Logger.info(`Theme switched to ${newTheme}`);
+    Logger.info(`Theme switched to ${updatedSettings.uiTheme}`);
 }
 
 function updateThemeIcon(theme) {
