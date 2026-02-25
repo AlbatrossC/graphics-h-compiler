@@ -109,6 +109,16 @@
       </div>
 
       <div class="header-right">
+        <button id="contact-header-btn" class="btn"
+          style="background-color: #fde047; color: #111; font-weight: 600; padding: 6px 14px; margin-right: 8px; border: none; border-radius: 6px; display: flex; align-items: center; gap: 6px; transition: filter 0.2s;"
+          onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'"
+          title="Send me a message or ask for help">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px;">
+            <path
+              d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+          </svg>
+          <span class="btn-text" style="display: inline-block;">Contact Me</span>
+        </button>
         <button id="settings-header-btn" class="icon-btn" title="Settings">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -576,6 +586,7 @@
   <script src="/static/js/compiler/runtime.js"></script>
 
   <script src="/static/js/compiler/settings.js"></script>
+  <script src="/static/js/contact.js"></script>
 </body>
 
 </html>
