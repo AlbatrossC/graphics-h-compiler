@@ -31,6 +31,12 @@
 
 <body>
     <canvas id="dos-canvas" tabindex="0"></canvas>
+
+    <!-- Mobile Keyboard Helper -->
+    <input type="text" id="mobile-keyboard-helper"
+        style="position: absolute; opacity: 0; top: -1000px; left: -1000px; border: none; outline: none; background: transparent; color: transparent; width: 1px; height: 1px;"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+
     <script>
         // ==================== CONSOLE FILTER ====================
         // Must run first, before js-dos loads, to suppress all noisy output.
@@ -80,7 +86,105 @@
             // origin as the parent page. If you ever move this file to a CDN or
             // subdomain, postMessage will silently fail — update this accordingly.
             const canvas = document.getElementById('dos-canvas');
+            const mobileHelper = document.getElementById('mobile-keyboard-helper');
             const parentOrigin = window.location.origin;
+
+            // --- Mobile Keyboard Forwarding ---
+            const cloneKeyEvent = (type, e) => {
+                const event = new KeyboardEvent(type, {
+                    key: e.key,
+                    code: e.code,
+                    keyCode: e.keyCode,
+                    which: e.which,
+                    shiftKey: e.shiftKey,
+                    ctrlKey: e.ctrlKey,
+                    altKey: e.altKey,
+                    metaKey: e.metaKey,
+                    bubbles: true,
+                    cancelable: true
+                });
+                canvas.dispatchEvent(event);
+            };
+
+            let lastKeyCode = 0;
+
+            mobileHelper.addEventListener('keydown', (e) => {
+                lastKeyCode = e.keyCode;
+                // If it's a Backspace, keep the value populated so mobile browsers keep sending delete events
+                if (e.key === 'Backspace' && mobileHelper.value.length === 0) {
+                    mobileHelper.value = ' ';
+                }
+                // Do not clone if it's the virtual keyboard proxy code (229)
+                if (e.keyCode !== 229) {
+                    cloneKeyEvent('keydown', e);
+                }
+            });
+
+            mobileHelper.addEventListener('keyup', (e) => {
+                if (e.keyCode !== 229) {
+                    cloneKeyEvent('keyup', e);
+                }
+            });
+
+            mobileHelper.addEventListener('keypress', (e) => {
+                if (e.keyCode !== 229) {
+                    cloneKeyEvent('keypress', e);
+                }
+            });
+
+            mobileHelper.addEventListener('input', (e) => {
+                // Determine if we need to synthesize key events from the 'input' event
+                if (lastKeyCode === 229) {
+                    if (e.inputType === 'insertText' && e.data) {
+                        for (let i = 0; i < e.data.length; i++) {
+                            const char = e.data[i];
+                            const charCode = char.charCodeAt(0);
+                            const isUpper = char === char.toUpperCase() && char !== char.toLowerCase();
+                            const baseCode = char.toUpperCase().charCodeAt(0);
+
+                            const eventData = {
+                                key: char,
+                                code: 'Key' + char.toUpperCase(),
+                                keyCode: baseCode,
+                                which: baseCode,
+                                charCode: charCode,
+                                shiftKey: isUpper,
+                                bubbles: true,
+                                cancelable: true
+                            };
+
+                            canvas.dispatchEvent(new KeyboardEvent('keydown', eventData));
+                            canvas.dispatchEvent(new KeyboardEvent('keypress', eventData));
+                            canvas.dispatchEvent(new KeyboardEvent('keyup', eventData));
+                        }
+                    } else if (e.inputType === 'deleteContentBackward') {
+                        const eventData = {
+                            key: 'Backspace',
+                            code: 'Backspace',
+                            keyCode: 8,
+                            which: 8,
+                            bubbles: true,
+                            cancelable: true
+                        };
+                        canvas.dispatchEvent(new KeyboardEvent('keydown', eventData));
+                        canvas.dispatchEvent(new KeyboardEvent('keyup', eventData));
+                    }
+                }
+
+                // Ensure there's always something to backspace for mobile keyboards
+                if (mobileHelper.value.length === 0) {
+                    mobileHelper.value = ' ';
+                }
+            });
+
+            // Focus helper when canvas is clicked/touched
+            canvas.addEventListener('click', () => {
+                mobileHelper.focus();
+            });
+            canvas.addEventListener('touchend', () => {
+                mobileHelper.focus();
+            }, { passive: true });
+            // ----------------------------------
 
             // Hint to browser that this canvas will be read frequently (suppresses warning)
             try {
@@ -329,12 +433,18 @@
 
                 if (data.type === 'FOCUS') {
                     canvas.focus();
+                    try {
+                        mobileHelper.focus();
+                    } catch (e) { }
                     return;
                 }
 
                 // Release keyboard capture when user switches back to editor
                 if (data.type === 'BLUR') {
                     canvas.blur();
+                    try {
+                        mobileHelper.blur();
+                    } catch (e) { }
                     return;
                 }
 
