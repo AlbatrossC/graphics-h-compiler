@@ -2,7 +2,7 @@
   "name": "graphics-h-compiler",
   "displayName": "Graphics.h Compiler",
   "description": "Compile and run C++ graphics.h programs with one click. Includes automatic MinGW setup and WinBGIM library for Windows.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "AlbatrossC",
   "icon": "assets/icon.png",
   "repository": {
@@ -47,7 +47,8 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onLanguage:cpp"
+    "onLanguage:cpp",
+    "onLanguage:c++"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -86,30 +87,30 @@
       {
         "command": "graphics-h-compiler.compileAndRun",
         "key": "ctrl+alt+n",
-        "when": "editorLangId == cpp"
+        "when": "editorLangId == cpp || resourceExtname == .c++"
       },
       {
         "command": "graphics-h-compiler.compileOnly",
         "key": "ctrl+alt+b",
-        "when": "editorLangId == cpp"
+        "when": "editorLangId == cpp || resourceExtname == .c++"
       },
       {
         "command": "graphics-h-compiler.stopProgram",
         "key": "ctrl+alt+k",
-        "when": "editorLangId == cpp"
+        "when": "editorLangId == cpp || resourceExtname == .c++"
       }
     ],
     "menus": {
       "editor/title/run": [
         {
-          "when": "resourceExtname == .cpp",
+          "when": "resourceExtname == .cpp || resourceExtname == .c++",
           "command": "graphics-h-compiler.compileAndRun",
           "group": "navigation@1"
         }
       ],
       "editor/context": [
         {
-          "when": "resourceExtname == .cpp",
+          "when": "resourceExtname == .cpp || resourceExtname == .c++",
           "command": "graphics-h-compiler.compileAndRun",
           "group": "navigation"
         }
@@ -117,15 +118,15 @@
       "commandPalette": [
         {
           "command": "graphics-h-compiler.compileAndRun",
-          "when": "editorLangId == cpp"
+          "when": "editorLangId == cpp || resourceExtname == .c++"
         },
         {
           "command": "graphics-h-compiler.compileOnly",
-          "when": "editorLangId == cpp"
+          "when": "editorLangId == cpp || resourceExtname == .c++"
         },
         {
           "command": "graphics-h-compiler.stopProgram",
-          "when": "editorLangId == cpp"
+          "when": "editorLangId == cpp || resourceExtname == .c++"
         }
       ]
     },
@@ -146,6 +147,11 @@
           "type": "boolean",
           "default": true,
           "description": "Clear output panel before each compilation"
+        },
+        "graphics-h-compiler.runInTerminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Run the compiled program in the integrated terminal (recommended). When disabled, output is captured in the Output panel instead."
         }
       }
     }

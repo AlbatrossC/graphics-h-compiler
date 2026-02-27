@@ -19,5 +19,5 @@ def create_llm_txt(folder_path, output_file="llm.txt"):
                 out.write(f"{filename} -> {content}\n\n")
 
 if __name__ == "__main__":
-    folder_to_scan = "static\js"
+    folder_to_scan = "VScodeExtension\src"
     create_llm_txt(folder_to_scan)

@@ -9,28 +9,25 @@ let windowsDownloader: WindowsDownloader | null = null;
 let ubuntuDownloader: UbuntuDownloader | null = null;
 let compiler: GraphicsCompiler;
 let statusBarItem: vscode.StatusBarItem;
+let statusBarInterval: ReturnType<typeof setInterval> | null = null;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Graphics.h Compiler extension activated');
 
-    // Initialize core managers
     pathManager = new PathManager(context);
     const currentOS = pathManager.getOS();
-    
-    // Initialize OS-specific downloader
+
     if (currentOS === OperatingSystem.Windows) {
         windowsDownloader = new WindowsDownloader();
     } else if (currentOS === OperatingSystem.Linux) {
         ubuntuDownloader = new UbuntuDownloader();
     }
-    
+
     compiler = new GraphicsCompiler(pathManager);
 
-    // Show OS detection info
     const osName = pathManager.getOSDisplayName();
     console.log(`Detected OS: ${osName}`);
 
-    // Check for unsupported OS
     if (currentOS !== OperatingSystem.Windows && currentOS !== OperatingSystem.Linux) {
         vscode.window.showErrorMessage(
             'Graphics.h Compiler: This extension only works on Windows and Ubuntu/Linux.',
@@ -39,28 +36,34 @@ export function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    // Display welcome message on first activation
     const hasShownWelcome = context.globalState.get<boolean>('graphics-h.welcomeShown', false);
     if (!hasShownWelcome) {
         showWelcomeMessage(context);
         context.globalState.update('graphics-h.welcomeShown', true);
     }
 
-    // Create status bar button
+    // Status bar
     statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         100
     );
-    statusBarItem.command = 'graphics-h-compiler.compileAndRun';
     context.subscriptions.push(statusBarItem);
 
-    // Update status bar
+    // Update status bar on editor change
     context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(updateStatusBar)
+        vscode.window.onDidChangeActiveTextEditor(editor => updateStatusBar(editor))
     );
+
+    // Poll only when a C++ file is active — still needed to reflect running state
+    // But register the interval so it can be cleaned up on deactivate
+    statusBarInterval = setInterval(() => {
+        updateStatusBar(vscode.window.activeTextEditor);
+    }, 1000);
+
+    // Seed initial state
     updateStatusBar(vscode.window.activeTextEditor);
 
-    // Register commands
+    // Commands
     context.subscriptions.push(
         vscode.commands.registerCommand(
             'graphics-h-compiler.compileAndRun',
@@ -96,7 +99,6 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    // Register cleanup
     context.subscriptions.push({
         dispose: () => {
             if (compiler) {
@@ -105,17 +107,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    // Check dependencies quietly
     checkDependenciesQuietly();
 }
 
-// Show welcome message
 function showWelcomeMessage(context: vscode.ExtensionContext): void {
     const osName = pathManager.getOSDisplayName();
-    const message = `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`;
-
     vscode.window.showInformationMessage(
-        message,
+        `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`,
         'Check Dependencies',
         'Dismiss'
     ).then(choice => {
@@ -125,9 +123,12 @@ function showWelcomeMessage(context: vscode.ExtensionContext): void {
     });
 }
 
-// Update status bar
 function updateStatusBar(editor: vscode.TextEditor | undefined): void {
-    if (editor && editor.document.languageId === 'cpp') {
+    const isCppFile = editor && (
+        editor.document.languageId === 'cpp' ||
+        editor.document.fileName.endsWith('.c++')
+    );
+    if (isCppFile) {
         if (compiler && compiler.isProgramRunning()) {
             statusBarItem.text = '$(debug-stop) Stop Graphics';
             statusBarItem.tooltip = 'Stop Running Graphics Program';
@@ -143,24 +144,15 @@ function updateStatusBar(editor: vscode.TextEditor | undefined): void {
     }
 }
 
-// Periodically update status bar
-setInterval(() => {
-    updateStatusBar(vscode.window.activeTextEditor);
-}, 1000);
-
-// Quiet dependency check - just verifies, doesn't install
 async function checkDependenciesQuietly(): Promise<void> {
     const missing = pathManager.getMissingDependencies();
-    
     if (missing.length > 0) {
         console.log('Graphics.h dependencies not installed:', missing.join(', '));
-        console.log('User will be prompted when they try to compile.');
     } else {
         console.log('Graphics.h toolchain is ready');
     }
 }
 
-// Check and display dependency status
 async function handleCheckDependencies(): Promise<void> {
     const missing = pathManager.getMissingDependencies();
     const required = pathManager.getRequiredDependencies();
@@ -168,21 +160,13 @@ async function handleCheckDependencies(): Promise<void> {
 
     if (missing.length === 0) {
         vscode.window.showInformationMessage(
-            `✓ All dependencies are installed!\n\n` +
-            `Platform: ${osName}\n` +
-            `Required: ${required.join(', ')}`
+            `✓ All dependencies are installed! Platform: ${osName} | Required: ${required.join(', ')}`
         );
         return;
     }
 
-    const message = 
-        `⚠️ Missing dependencies on ${osName}:\n\n` +
-        `Missing: ${missing.join(', ')}\n\n` +
-        `Required: ${required.join(', ')}\n\n` +
-        `Would you like to install the missing dependencies now?`;
-
     const choice = await vscode.window.showWarningMessage(
-        message,
+        `⚠️ Missing dependencies on ${osName}: ${missing.join(', ')}. Would you like to install them now?`,
         { modal: true },
         'Install Now',
         'Cancel'
@@ -193,65 +177,52 @@ async function handleCheckDependencies(): Promise<void> {
     }
 }
 
-// Wait for toolchain and ask permission if needed (Windows)
 async function waitForToolchainWindows(): Promise<boolean> {
     const missing = pathManager.getMissingDependencies();
-    
+
     if (missing.length === 0) {
         return true;
     }
 
-    // Check if installation is in progress
-    const isInProgress = windowsDownloader?.isInProgress() ?? false;
-
-    if (isInProgress) {
-        vscode.window.showInformationMessage(
-            '⏳ Toolchain installation is already in progress. Please wait...'
-        );
+    if (windowsDownloader?.isInProgress()) {
+        vscode.window.showInformationMessage('⏳ Toolchain installation is already in progress. Please wait...');
         return false;
     }
 
-    // Toolchain not installed - ask user for permission
     const hasPermission = await windowsDownloader!.promptForPermission();
-    
+
     if (!hasPermission) {
         vscode.window.showInformationMessage(
-            'ℹ️ Graphics.h toolchain is required to compile programs.\n\n' +
-            'You can install it anytime using:\n' +
-            'Command Palette (Ctrl+Shift+P) → "Graphics.h: Setup Graphics.h Toolchain"',
+            'ℹ️ Graphics.h toolchain is required to compile programs. ' +
+            'Install anytime via Command Palette → "Graphics.h: Setup Graphics.h Toolchain"',
             'OK'
         );
         return false;
     }
 
-    // User gave permission - start installation
     const targetPath = pathManager.getToolchainPath();
     return await windowsDownloader!.download(targetPath, pathManager.getExtensionPath());
 }
 
-// Wait for toolchain and ask permission if needed (Ubuntu)
 async function waitForToolchainUbuntu(): Promise<boolean> {
     const missing = pathManager.getMissingDependencies();
-    
+
     if (missing.length === 0) {
         return true;
     }
 
-    // Toolchain not installed - show installation instructions
     return await ubuntuDownloader!.promptForInstallation();
 }
 
-// Wait for toolchain (OS-agnostic)
 async function waitForToolchain(): Promise<boolean> {
     if (pathManager.isWindows()) {
-        return await waitForToolchainWindows();
+        return waitForToolchainWindows();
     } else if (pathManager.isLinux()) {
-        return await waitForToolchainUbuntu();
+        return waitForToolchainUbuntu();
     }
     return false;
 }
 
-// Handle compile and run
 async function handleCompileAndRun(): Promise<void> {
     try {
         const ready = await waitForToolchain();
@@ -280,7 +251,18 @@ async function handleCompileAndRun(): Promise<void> {
             }
         }
 
-        await compiler.compileAndRun(filePath);
+        // Wire up cancellation via progress notification
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Compiling ${editor.document.fileName.split(/[\\/]/).pop()}...`,
+                cancellable: true
+            },
+            async (_progress, token) => {
+                await compiler.compileAndRun(filePath, token);
+            }
+        );
+
         updateStatusBar(editor);
 
     } catch (error) {
@@ -290,7 +272,6 @@ async function handleCompileAndRun(): Promise<void> {
     }
 }
 
-// Handle compile only
 async function handleCompileOnly(): Promise<void> {
     try {
         const ready = await waitForToolchain();
@@ -319,7 +300,16 @@ async function handleCompileOnly(): Promise<void> {
             }
         }
 
-        await compiler.compile(filePath);
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Compiling ${editor.document.fileName.split(/[\\/]/).pop()}...`,
+                cancellable: true
+            },
+            async (_progress, token) => {
+                await compiler.compile(filePath, token);
+            }
+        );
 
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -328,7 +318,6 @@ async function handleCompileOnly(): Promise<void> {
     }
 }
 
-// Handle manual setup (Windows)
 async function handleSetupToolchainWindows(): Promise<boolean> {
     try {
         const missing = pathManager.getMissingDependencies();
@@ -347,9 +336,8 @@ async function handleSetupToolchainWindows(): Promise<boolean> {
             }
         }
 
-        // Ask for permission
         const hasPermission = await windowsDownloader!.promptForPermission();
-            
+
         if (!hasPermission) {
             return false;
         }
@@ -365,7 +353,6 @@ async function handleSetupToolchainWindows(): Promise<boolean> {
     }
 }
 
-// Handle manual setup (Ubuntu)
 async function handleSetupToolchainUbuntu(): Promise<boolean> {
     try {
         const missing = pathManager.getMissingDependencies();
@@ -375,7 +362,6 @@ async function handleSetupToolchainUbuntu(): Promise<boolean> {
             return true;
         }
 
-        // Show installation instructions
         return await ubuntuDownloader!.promptForInstallation();
 
     } catch (error) {
@@ -386,17 +372,15 @@ async function handleSetupToolchainUbuntu(): Promise<boolean> {
     }
 }
 
-// Handle manual setup (OS-agnostic)
 async function handleSetupToolchain(): Promise<boolean> {
     if (pathManager.isWindows()) {
-        return await handleSetupToolchainWindows();
+        return handleSetupToolchainWindows();
     } else if (pathManager.isLinux()) {
-        return await handleSetupToolchainUbuntu();
+        return handleSetupToolchainUbuntu();
     }
     return false;
 }
 
-// Handle stop program
 async function handleStopProgram(): Promise<void> {
     if (compiler && compiler.isProgramRunning()) {
         const stopped = compiler.stopRunningProgram();
@@ -410,6 +394,12 @@ async function handleStopProgram(): Promise<void> {
 }
 
 export function deactivate() {
+    // Clean up the polling interval
+    if (statusBarInterval !== null) {
+        clearInterval(statusBarInterval);
+        statusBarInterval = null;
+    }
+
     if (statusBarItem) {
         statusBarItem.dispose();
     }

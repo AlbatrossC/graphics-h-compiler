@@ -8,8 +8,8 @@
 
 - [Installation Methods](#installation-methods)
 - [Extension Structure](#extension-structure)
-- [Prerequisites & Dependencies](#prerequisites--dependencies)
-- [Commands & Shortcuts](#commands--shortcuts)
+- [Prerequisites and Dependencies](#prerequisites-and-dependencies)
+- [Commands and Shortcuts](#commands-and-shortcuts)
 - [Compilation Workflow](#compilation-workflow)
 - [Architecture Details](#architecture-details)
 - [Error Handling](#error-handling)
@@ -22,9 +22,9 @@
 ### Method 1: VS Code Marketplace (End Users)
 
 1. Open VS Code
-2. Press `Ctrl+Shift+X` (Extensions panel)
+2. Press `Ctrl+Shift+X` to open the Extensions panel
 3. Search for "graphics.h compiler"
-4. Click Install on extension by AlbatrossC
+4. Click Install on the extension by AlbatrossC
 
 ### Method 2: Command Line Installation
 
@@ -62,13 +62,13 @@ code --install-extension graphics-h-compiler-*.vsix
 VScodeExtension/
 ├── src/
 │   ├── extension.ts          # Entry point, command registration
-│   ├── compiler.ts           # Compilation & execution engine
+│   ├── compiler.ts           # Compilation and execution engine
 │   ├── paths.ts              # OS detection, path resolution
 │   ├── windowsDownloader.ts  # Windows toolchain installer
 │   └── ubuntuDownloader.ts   # Linux setup coordinator
 ├── resources/
 │   └── graphics/             # Bundled graphics files
-│       ├── graphics.h        # Modified BGI header
+│       ├── graphics.h        # Modified BGI header (ISO C++ compliant)
 │       ├── winbgim.h         # Windows BGI implementation
 │       └── libbgi.a          # Static BGI library (i686)
 ├── assets/                   # Extension icons
@@ -79,13 +79,13 @@ VScodeExtension/
 ├── esbuild.js                # Build script
 ├── eslint.config.mjs         # ESLint configuration
 ├── .vscodeignore             # Files excluded from packaging
-├── LICENSE                   # License file
-└── README.md                 # Extension README
+├── LICENSE
+└── README.md
 ```
 
 ---
 
-## Prerequisites & Dependencies
+## Prerequisites and Dependencies
 
 ### Windows
 
@@ -93,8 +93,8 @@ VScodeExtension/
 
 **Package:** GCC 11.5.0 + MinGW-w64 12.0.0 (Win32, MSVCRT, POSIX)
 
-**Source:**  
-- Original: [WinLibs](https://winlibs.com/#:~:text=GCC%2011.5.0%20%2B%20MinGW%2Dw64%2012.0.0%20(MSVCRT)%20release)
+**Source:**
+- Original: [WinLibs](https://winlibs.com/)
 - Redistributed: https://github.com/AlbatrossC/graphics-h-compiler/releases/tag/gcc-11.5.0-mingw32
 
 **Download Details:**
@@ -104,12 +104,12 @@ VScodeExtension/
 - **SHA256:** `72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd`
 
 **Toolchain Specifications:**
-- **GCC Version:** 11.5.0
-- **Architecture:** Win32 (i686)
-- **Runtime:** MSVCRT (Microsoft Visual C Runtime)
-- **Thread Model:** POSIX
-- **Exception Model:** DWARF-2
-- **Linking:** Static (standalone executables)
+- GCC Version: 11.5.0
+- Architecture: Win32 (i686)
+- Runtime: MSVCRT
+- Thread Model: POSIX
+- Exception Model: DWARF-2
+- Linking: Static (produces standalone executables)
 
 **Installation Location:**
 ```
@@ -131,19 +131,18 @@ mingw32/
 └── libexec/                  # GCC internal executables
 ```
 
-**All directories are required** - do not remove any folders.
-
 #### Graphics Libraries
 
 **Bundled in `resources/graphics/`:**
-- **`graphics.h`** - Modified BGI API (ISO C++ compatible)
-- **`winbgim.h`** - Windows BGI implementation header
-- **`libbgi.a`** - Static BGI library (i686 target)
+- `graphics.h` - Modified BGI API (ISO C++ compatible)
+- `winbgim.h` - Windows BGI implementation header
+- `libbgi.a` - Static BGI library (i686 target)
 
 **Source:** WinBGIm project (http://winbgim.codecutter.org/)
 
 **Modifications Applied:**
-The bundled `graphics.h` has been patched for ISO C++ compliance to eliminate "string constant to `char*`" warnings:
+
+The bundled `graphics.h` has been patched for ISO C++ compliance to eliminate "string constant to char*" warnings:
 
 ```cpp
 // Original (causes warnings)
@@ -155,7 +154,7 @@ void initgraph(int *gd, int *gm, const char *path);
 void outtextxy(int x, int y, const char *text);
 ```
 
-**Full list of modified function signatures:**
+Modified function signatures:
 - `initgraph()` - path parameter now `const char*`
 - `outtext()`, `outtextxy()` - text parameters now `const char*`
 - `textheight()`, `textwidth()` - text parameters now `const char*`
@@ -163,10 +162,7 @@ void outtextxy(int x, int y, const char *text);
 - `installuserdriver()`, `installuserfont()` - name parameters now `const char*`
 - `getdrivername()`, `getmodename()`, `grapherrormsg()` - return `const char*`
 
-**Impact:**
-- Eliminates all ISO C++ forbids warnings
-- 100% backward compatible
-- No code changes required in user programs
+These changes are 100% backward compatible. No changes required in user programs.
 
 ---
 
@@ -174,18 +170,15 @@ void outtextxy(int x, int y, const char *text);
 
 **Manual Installation Required**
 
-The extension does **not** auto-download on Linux. Users must run the installation script:
+The extension does not auto-download on Linux. Users must run the installation script:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/Installers/ubuntu_install.sh | bash
 ```
 
-**Script Source:**  
-https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Installers/ubuntu_install.sh
-
 **What the Script Installs:**
 
-1. **System Packages:**
+1. System packages:
    ```bash
    sudo apt update
    sudo apt install -y gcc-mingw-w64-i686 g++-mingw-w64-i686
@@ -193,213 +186,139 @@ https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Inst
    sudo apt install -y wget ca-certificates
    ```
 
-2. **Graphics.h Library Files:**
+2. Graphics.h library files:
    ```bash
-   # Download from GitHub
-   wget https://raw.githubusercontent.com/.../graphics.h
-   wget https://raw.githubusercontent.com/.../winbgim.h
-   wget https://raw.githubusercontent.com/.../libbgi.a
-   
-   # Install to system directories
    sudo mkdir -p /usr/local/include/graphics_h
    sudo mkdir -p /usr/local/lib/graphics_h
-   
    sudo cp graphics.h winbgim.h /usr/local/include/graphics_h/
    sudo cp libbgi.a /usr/local/lib/graphics_h/
    ```
 
-3. **Apply ISO C++ Patches:**
-   ```bash
-   # Patch graphics.h for const-correctness
-   sudo sed -i 's/char \*pathtodriver/const char *pathtodriver/g' \
-       /usr/local/include/graphics_h/graphics.h
-   
-   sudo sed -i 's/void outtext(char \*textstring)/void outtext(const char *textstring)/g' \
-       /usr/local/include/graphics_h/graphics.h
-   
-   # ... (additional patches applied in-place)
-   ```
-
-**Key Difference from Windows:**
-- **Windows:** Extension packages pre-modified `graphics.h`
-- **Linux:** Pure `graphics.h` downloaded, then patched by install script
+3. ISO C++ patches applied in-place via `sed`.
 
 **Installed Locations:**
 ```
-/usr/local/include/graphics_h/
-├── graphics.h    # Patched for ISO C++
-└── winbgim.h
-
-/usr/local/lib/graphics_h/
-└── libbgi.a
-
-System packages (via apt):
-- /usr/bin/i686-w64-mingw32-g++
-- /usr/bin/wine
+/usr/local/include/graphics_h/graphics.h
+/usr/local/include/graphics_h/winbgim.h
+/usr/local/lib/graphics_h/libbgi.a
+/usr/bin/i686-w64-mingw32-g++   (via apt)
+/usr/bin/wine                    (via apt)
 ```
 
 ---
 
-## Commands & Shortcuts
+## Commands and Shortcuts
 
 ### Registered Commands
 
 | Command ID | Description | Default Shortcut |
 |-----------|-------------|------------------|
 | `graphics-h-compiler.compileAndRun` | Compile and run current file | `Ctrl+Alt+N` |
-| `graphics-h-compiler.compileOnly` | Compile without running | *(none)* |
-| `graphics-h-compiler.setupToolchain` | Install/reinstall toolchain | *(none)* |
-| `graphics-h-compiler.stopProgram` | Stop running program | `Ctrl+Shift+F5` |
-| `graphics-h-compiler.checkDependencies` | Verify installation | *(none)* |
-
-### Context Menu
-
-- Right-click in C++ editor → **"Compile and Run Graphics.h"**
+| `graphics-h-compiler.compileOnly` | Compile without running | `Ctrl+Alt+B` |
+| `graphics-h-compiler.setupToolchain` | Install/reinstall toolchain | - |
+| `graphics-h-compiler.stopProgram` | Stop running program | `Ctrl+Alt+K` |
+| `graphics-h-compiler.checkDependencies` | Verify installation | - |
 
 ### Status Bar Button
 
-- **Icon:** `$(play)` / `$(debug-stop)`
-- **Text:** "Run Graphics" / "Stop Graphics"
-- **Visibility:** Only shown in C++ files
-- **Click Action:** Compile & Run / Stop Program
+- Icon: `$(play)` when idle, `$(debug-stop)` when a program is running
+- Text: "Run Graphics" / "Stop Graphics"
+- Visibility: Only shown when a `.cpp` or `.c++` file is active
+- The running state is detected for both terminal-mode and background-process-mode execution
 
-### Command Palette Access
+### Command Palette
 
-All commands available via `Ctrl+Shift+P`:
-```
-Graphics.h: Compile and Run
-Graphics.h: Compile Only
-Graphics.h: Setup Graphics.h Toolchain
-Graphics.h: Stop Program
-Graphics.h: Check Dependencies
-```
+All commands available via `Ctrl+Shift+P` under the `Graphics.h` category.
 
 ---
 
 ## Compilation Workflow
 
-### Windows Compilation
+### Compile Command (Both Platforms)
 
-#### Command Template
+The compiler is invoked via `spawn(command, args[])` directly on both Windows and Linux — no shell interpolation is used, which prevents shell injection from filenames containing special characters.
 
-```bash
-g++.exe <source> \
-  -I <include_path> \
-  -L <lib_path> \
-  -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 \
-  -static-libgcc -static-libstdc++ -static \
-  -o <output.exe>
-```
-
-#### Actual Implementation (compiler.ts)
-
+**Windows:**
 ```typescript
-const args = [
-  sourceFile,                          // e.g., test.cpp
-  '-I', graphicsPath,                  // {globalStorage}/mingw32/include
-  '-L', libraryPath,                   // {globalStorage}/mingw32/lib
-  '-lbgi',                             // Graphics primitives
-  '-lgdi32', '-lcomdlg32', '-luuid',   // Windows GDI/COM
-  '-loleaut32', '-lole32',
-  '-static-libgcc',                    // Link libgcc statically
-  '-static-libstdc++',                 // Link libstdc++ statically
-  '-static',                           // Create standalone executable
-  '-o', outputPath                     // e.g., test.exe
-];
-
-const command = gppPath;  // {globalStorage}/mingw32/bin/g++.exe
-
-const compilerProcess = spawn(command, args, {
-  cwd: path.dirname(sourceFile)
-});
+spawn(gppPath, [
+    sourceFile,
+    '-I', graphicsPath,
+    '-L', libraryPath,
+    '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
+    '-static-libgcc', '-static-libstdc++', '-static',
+    '-o', outputPath
+], { cwd: path.dirname(sourceFile) });
 ```
 
-#### Linked Libraries Explained
+**Linux:**
+```typescript
+spawn('i686-w64-mingw32-g++', [
+    sourceFile,
+    '-I', '/usr/local/include/graphics_h',
+    '-L', '/usr/local/lib/graphics_h',
+    '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
+    '-static-libgcc', '-static-libstdc++', '-static',
+    '-o', outputPath
+], { cwd: path.dirname(sourceFile) });
+```
+
+### Linked Libraries
 
 | Library | Purpose |
 |---------|---------|
-| `libbgi.a` | BGI graphics primitives (circle, line, rectangle, etc.) |
-| `gdi32` | Windows GDI for rendering to screen |
-| `comdlg32` | Common dialogs (file open, color picker) |
+| `libbgi.a` | BGI graphics primitives |
+| `gdi32` | Windows GDI rendering |
+| `comdlg32` | Common dialogs |
 | `uuid` | UUID/GUID generation |
-| `oleaut32` | OLE Automation support |
-| `ole32` | Component Object Model (COM) infrastructure |
+| `oleaut32` | OLE Automation |
+| `ole32` | COM infrastructure |
 
-**Static Linking Flags:**
-- `-static-libgcc` - Embed GCC runtime (no libgcc_s dependency)
-- `-static-libstdc++` - Embed C++ standard library
-- `-static` - Link all libraries statically (standalone .exe)
+Static flags produce a self-contained `.exe` with no external DLL dependencies.
 
-**Result:** Self-contained executable with no external DLL dependencies.
+### Run Command
 
----
-
-### Linux Compilation
-
-#### Command Template
-
-```bash
-i686-w64-mingw32-g++ <source> \
-  -I /usr/local/include/graphics_h \
-  -L /usr/local/lib/graphics_h \
-  -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 \
-  -static-libgcc -static-libstdc++ -static \
-  -o <output.exe>
+**Windows (terminal mode):**
+```typescript
+terminal.sendText(`cmd /c "${exePath}"`);
 ```
 
-#### Actual Implementation (compiler.ts)
+**Linux (terminal mode):**
+```typescript
+terminal.sendText(`wine "${exePath}"`);
+```
+
+**Non-terminal mode** (background process, output captured in Output panel):
+```typescript
+spawn(exePath, [], { cwd: path.dirname(exePath) });          // Windows
+spawn('wine', [exePath], { cwd: path.dirname(exePath) });    // Linux
+```
+
+Wine stderr is filtered to suppress `fixme:` and `wine:` debug lines.
+
+### Stopping a Running Program
 
 ```typescript
-const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" ` +
-  `-I /usr/local/include/graphics_h ` +
-  `-L /usr/local/lib/graphics_h ` +
-  `-lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 ` +
-  `-static-libgcc -static-libstdc++ -static ` +
-  `-o "${outputPath}"`;
+stopRunningProgram(): boolean {
+    // Background process
+    if (this.runningProgram && !this.runningProgram.killed) {
+        this.runningProgram.kill();
+        this.runningProgram = null;
+        return true;
+    }
 
-const compilerProcess = spawn('bash', ['-c', compileCmd], {
-  cwd: path.dirname(sourceFile)
-});
+    // Terminal process — send Ctrl+C first, then dispose after 500ms
+    if (this.terminal && this.terminal.exitStatus === undefined) {
+        this.terminal.sendText('\x03');
+        setTimeout(() => {
+            this.terminal?.dispose();
+            this.terminal = null;
+        }, 500);
+        return true;
+    }
+
+    return false;
+}
 ```
-
-**Note:** Uses system-wide MinGW cross-compiler (`i686-w64-mingw32-g++`), not a bundled compiler.
-
-#### Wine Execution
-
-```bash
-wine test.exe
-```
-
-**Implementation:**
-
-```typescript
-const runCmd = `wine "${exePath}"`;
-
-const programProcess = spawn('bash', ['-c', runCmd], {
-  cwd: path.dirname(exePath)
-});
-```
-
-#### Wine Output Filtering
-
-Wine generates debug messages that clutter the output. The extension filters these:
-
-```typescript
-programProcess.stderr.on('data', (data) => {
-  const output = data.toString();
-  
-  // Ignore Wine debug/info messages
-  if (!output.includes('fixme:') && !output.includes('wine:')) {
-    this.outputChannel.append(`[Program Error] ${output}`);
-  }
-});
-```
-
-**Filtered patterns:**
-- `fixme:` - Wine unimplemented features
-- `wine:` - Wine diagnostic messages
-
-**Result:** Clean output showing only actual program errors.
 
 ---
 
@@ -407,380 +326,102 @@ programProcess.stderr.on('data', (data) => {
 
 ### Module Breakdown
 
-#### 1. extension.ts - Entry Point
+#### extension.ts — Entry Point
 
-**Responsibilities:**
+Responsibilities:
 - Register commands and keyboard shortcuts
-- Manage extension lifecycle (activate/deactivate)
-- Initialize OS-specific downloaders
-- Coordinate UI updates (status bar, notifications)
-- Handle user interactions
+- Manage extension lifecycle (`activate` / `deactivate`)
+- Initialise OS-specific downloaders
+- Status bar updates
+- User interaction flow (toolchain checks, save prompts)
 
-**Key Functions:**
+Key notes:
+- The `setInterval` for status bar polling is stored and cleared in `deactivate()` to prevent leaks
+- Both `handleCompileAndRun` and `handleCompileOnly` use `vscode.window.withProgress({ cancellable: true })` and pass the cancellation token to the compiler
+- Status bar activates for both `languageId === 'cpp'` and filenames ending in `.c++`
 
-```typescript
-export function activate(context: vscode.ExtensionContext)
-- Initialize PathManager, downloaders, compiler
-- Detect OS and show unsupported OS error if needed
-- Register all commands
-- Create status bar item
-- Check dependencies quietly
+#### compiler.ts — Compilation Engine
 
-showWelcomeMessage(context)
-- Display on first activation
-- Offer dependency check
-
-updateStatusBar(editor)
-- Show/hide based on file type
-- Change icon/text based on program state
-
-waitForToolchain()
-- Check if toolchain installed
-- Prompt for installation if missing
-- Handle both Windows and Linux flows
-
-handleCompileAndRun()
-- Ensure toolchain ready
-- Validate file type
-- Auto-save dirty files
-- Call compiler.compileAndRun()
-
-handleStopProgram()
-- Stop running graphics program
-- Update UI state
-```
-
----
-
-#### 2. compiler.ts - Compilation Engine
-
-**Responsibilities:**
+Responsibilities:
 - Source file validation
-- Platform-specific compilation
-- Error parsing and diagnostic creation
-- Process management (spawn, monitor, kill)
-- Output formatting and display
+- Building compile arguments
+- Spawning and monitoring the compiler process
+- Parsing GCC errors into VS Code diagnostics
+- Process lifecycle management
 
-**Key Classes/Methods:**
+Key design decisions:
+- `buildCompileConfig()` returns the platform-specific `{ command, args }` pair
+- `runCompilation()` is a single shared implementation used by both platforms — OS differences are handled entirely in `buildCompileConfig()` and `runExecutable()`
+- Cancellation token listener is stored as a disposable and cleaned up in both `close` and `error` handlers to prevent leaks
 
-```typescript
-class GraphicsCompiler {
-  private pathManager: PathManager
-  private outputChannel: vscode.OutputChannel
-  private activeProcesses: Set<ChildProcess>
-  private diagnosticCollection: vscode.DiagnosticCollection
-  private runningProgram: ChildProcess | null
-  
-  validateSourceFile(source: string): boolean
-  - Path traversal check (reject paths with '..')
-  - File existence verification
-  - Extension validation (.cpp or .c++)
-  
-  parseCompilerErrors(stderr: string): CompilationError[]
-  - Regex: /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm
-  - Extract file, line, column, severity, message
-  
-  updateDiagnostics(errors: CompilationError[], source: string)
-  - Convert to vscode.Diagnostic objects
-  - Set in diagnostic collection (shows in Problems panel)
-  
-  compileWindows(source: string, token?: CancellationToken): Promise<string|null>
-  - Spawn g++.exe with graphics.h includes/libs
-  - Stream stderr/stdout to output panel
-  - Parse errors on failure
-  - Return executable path on success
-  
-  compileLinux(source: string, token?: CancellationToken): Promise<string|null>
-  - Spawn i686-w64-mingw32-g++ via bash
-  - Same error handling as Windows
-  
-  runWindows(exePath: string): Promise<void>
-  - Spawn executable directly
-  - Capture stdout/stderr
-  - Report exit code
-  
-  runLinux(exePath: string): Promise<void>
-  - Spawn via `wine <exe>`
-  - Filter Wine debug messages
-  - Report exit code
-  
-  stopRunningProgram(): boolean
-  - Kill active program process
-  - Clear runningProgram reference
-  
-  dispose()
-  - Clean up diagnostics, output channel
-  - Kill all active processes
-}
-```
+#### paths.ts — Path Management
 
-**Compilation Flow:**
-
-```
-User triggers compile
-        ↓
-validateSourceFile()
-   ├─ Path traversal check
-   ├─ File existence check
-   └─ Extension check (.cpp/.c++)
-        ↓
-clearDiagnostics()
-        ↓
-OS detection (Windows / Linux)
-        ↓
-   ┌────────────┴────────────┐
-   ↓                         ↓
-compileWindows()      compileLinux()
-   ↓                         ↓
-spawn(g++.exe)       spawn(i686-w64-mingw32-g++)
-   ↓                         ↓
-Stream stderr → output panel
-   ↓                         ↓
-Exit code check
-   ↓                         ↓
-   ├─ Code 0: Success       ├─ Code 0: Success
-   │  └─ Return exe path    │  └─ Return exe path
-   │                        │
-   └─ Code ≠ 0: Failure     └─ Code ≠ 0: Failure
-      ↓                        ↓
-   parseCompilerErrors()    parseCompilerErrors()
-      ↓                        ↓
-   updateDiagnostics()      updateDiagnostics()
-      ↓                        ↓
-   Show error notification
-      ↓
-   Return null
-```
-
----
-
-#### 3. paths.ts - Path Management
-
-**Responsibilities:**
-- OS detection (Windows / Linux / Unknown)
+Responsibilities:
+- OS detection
 - Toolchain path resolution
 - Dependency checking
 - Output path generation
 
-**Key Methods:**
-
-```typescript
-class PathManager {
-  constructor(context: vscode.ExtensionContext)
-  
-  detectOS(): OperatingSystem
-  - Check process.platform
-  - Return Windows | Linux | Unknown
-  
-  getToolchainPath(): string
-  - Windows: {globalStorageUri}/mingw32
-  - Linux: /usr/local
-  
-  getGppPath(): string
-  - Windows: {toolchain}/bin/g++.exe
-  - Linux: i686-w64-mingw32-g++ (system command)
-  
-  getGraphicsPath(): string
-  - Windows: {toolchain}/include
-  - Linux: /usr/local/include/graphics_h
-  
-  getLibraryPath(): string
-  - Windows: {toolchain}/lib
-  - Linux: /usr/local/lib/graphics_h
-  
-  isToolchainInstalled(): boolean
-  - Windows: Check if g++.exe exists
-  - Linux: Check if all graphics files exist
-  
-  getMissingDependencies(): string[]
-  - Return list of missing components
-}
+**Example paths (Windows):**
 ```
-
-**Example Paths (Windows):**
-
-```
-Extension path: C:\Users\{user}\AppData\Local\Programs\Microsoft VS Code\...
 Global storage: C:\Users\{user}\AppData\Roaming\Code\User\globalStorage\albatrossc.graphics-h-compiler
 Toolchain:      {globalStorage}\mingw32
-G++ compiler:   {globalStorage}\mingw32\bin\g++.exe
+Compiler:       {globalStorage}\mingw32\bin\g++.exe
 Headers:        {globalStorage}\mingw32\include
 Libraries:      {globalStorage}\mingw32\lib
 ```
 
----
+#### windowsDownloader.ts — Windows Installer
 
-#### 4. windowsDownloader.ts - Windows Installer
-
-**Responsibilities:**
-- Download MinGW32 toolchain from GitHub
+Responsibilities:
+- Download MinGW32 toolchain from GitHub with streaming progress
 - Verify SHA256 checksum
-- Extract ZIP archive
-- Copy bundled graphics files to MinGW directories
+- Extract ZIP archive with per-file progress reporting
+- Copy bundled graphics files into the MinGW directory tree
 - Verify installation success
 
-**Key Methods:**
+**Extraction approach:**
+
+The ZIP extraction iterates entries individually using `zip.extractEntryTo()` inside `setImmediate()` so the progress message renders before the blocking work begins. Progress is reported every ~5% of total file count:
 
 ```typescript
-class WindowsDownloader {
-  private isDownloading: boolean
-  private downloadPromise: Promise<boolean> | null
-  
-  private readonly MINGW_CONFIG = {
-    url: 'https://github.com/AlbatrossC/graphics-h-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
-    sha256: '72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd'
-  }
-  
-  promptForPermission(): Promise<boolean>
-  - Show modal dialog asking user permission
-  - Display download size (221MB) and disk space (950MB)
-  
-  download(targetPath: string, extensionPath: string): Promise<boolean>
-  - Main download workflow
-  - Uses vscode.window.withProgress for UI feedback
-  
-  private downloadFromUrl(url, tempZip, progress)
-  - HTTP download using node-fetch
-  - Stream to disk with progress reporting
-  - Verify SHA256 checksum
-  
-  private streamToDisk(response, filePath, progress, totalSize)
-  - Memory-efficient streaming
-  - Progress updates every 5%
-  
-  private verifyDownload(filePath, expectedHash)
-  - Calculate SHA256 of downloaded file
-  - Compare with expected hash
-  
-  private copyBundledGraphicsFiles(mingwPath, extensionPath, progress)
-  - Copy resources/graphics/* to mingw32/include and lib
-  - Files: graphics.h, winbgim.h, libbgi.a
-}
-```
+setImmediate(() => {
+    const entries = zip.getEntries();
+    const total = entries.length;
+    let done = 0;
 
-**Download Pipeline:**
-
-```
-User triggers setup (or first compile)
-        ↓
-promptForPermission()
-   └─ Show modal: "~221MB download, ~950MB space"
-        ↓
-User clicks "Download"
-        ↓
-download(targetPath, extensionPath)
-        ↓
-Create {globalStorage}/mingw32 directory
-        ↓
-downloadFromUrl()
-   ├─ fetch(MINGW_CONFIG.url)
-   ├─ streamToDisk() → mingw32_temp.zip
-   └─ verifyDownload() → SHA256 check
-        ↓
-Extract ZIP (AdmZip)
-   └─ Extract to {globalStorage}/
-        ↓
-Delete mingw32_temp.zip
-        ↓
-copyBundledGraphicsFiles()
-   ├─ Copy graphics.h → mingw32/include/
-   ├─ Copy winbgim.h → mingw32/include/
-   └─ Copy libbgi.a → mingw32/lib/
-        ↓
-Verify g++.exe exists
-        ↓
-Show success notification
-```
-
-**Progress Reporting:**
-
-```typescript
-vscode.window.withProgress({
-  location: vscode.ProgressLocation.Notification,
-  title: "Graphics.h Toolchain Setup (Windows)",
-  cancellable: false
-}, async (progress) => {
-  progress.report({ message: "Preparing...", increment: 5 });
-  progress.report({ message: "Downloading: 45.2MB / 221MB (20%)", increment: 5 });
-  progress.report({ message: "Verifying integrity...", increment: 5 });
-  progress.report({ message: "Extracting...", increment: 30 });
-  progress.report({ message: "Installing graphics.h files...", increment: 5 });
-  progress.report({ message: "Complete!", increment: 5 });
+    for (const entry of entries) {
+        zip.extractEntryTo(entry, path.dirname(targetPath), true, true);
+        done++;
+        if (done % Math.max(1, Math.floor(total / 20)) === 0) {
+            const pct = Math.floor((done / total) * 100);
+            progress.report({
+                message: `Extracting files... ${pct}% (${done} / ${total})`
+            });
+        }
+    }
 });
 ```
 
----
+**Progress phases:**
+```
+Preparing installation...
+Downloading: 45.2MB / 221MB (20%)
+Verifying integrity...
+Extracting files... 42% (840 / 2000)
+Installing graphics.h files...
+Verifying installation...
+Installation complete.
+```
 
-#### 5. ubuntuDownloader.ts - Linux Coordinator
+#### ubuntuDownloader.ts — Linux Coordinator
 
-**Responsibilities:**
+Responsibilities:
 - Guide user through manual installation
-- Verify installation status
-- Provide installation script command
-- Check for missing dependencies
+- Verify installation status by checking file paths and running `which` commands
+- Provide the installation script command
 
-**Key Methods:**
-
-```typescript
-class UbuntuDownloader {
-  private readonly INSTALL_COMMAND = 
-    'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/Installers/ubuntu_install.sh | bash'
-  
-  promptForInstallation(): Promise<boolean>
-  - Show modal with install command
-  - "Copy & Open Terminal" button
-  - Copy command to clipboard
-  - Open integrated terminal
-  
-  checkInstallation(): Promise<boolean>
-  - Check if graphics files exist
-  - Check if i686-w64-mingw32-g++ exists
-  - Check if wine exists
-  
-  private runCommand(command: string)
-  - Spawn bash process
-  - Return { success, output, error }
-  
-  getInstallationStatus(): Promise<{ installed, missing[] }>
-  - Detailed check of all components
-  - Return list of missing dependencies
-  
-  showDetailedStatus()
-  - Display installation state
-  - Show missing components if incomplete
-}
-```
-
-**Installation Flow (Linux):**
-
-```
-User triggers setup (or first compile)
-        ↓
-checkInstallation()
-   └─ Return false (not installed)
-        ↓
-promptForInstallation()
-        ↓
-Show modal with command
-        ↓
-User clicks "Copy & Open Terminal"
-        ↓
-await vscode.env.clipboard.writeText(INSTALL_COMMAND)
-        ↓
-await vscode.commands.executeCommand('workbench.action.terminal.new')
-        ↓
-Show notification: "Paste (Ctrl+Shift+V) and press Enter"
-        ↓
-User pastes and runs script in terminal
-        ↓
-Script installs packages and downloads files
-        ↓
-User clicks "I Already Installed"
-        ↓
-checkInstallation() → true
-        ↓
-Show success notification
-```
+Note: This class does **not** compile or run programs. All compilation and execution is handled by `compiler.ts`. The compile/run methods that existed in earlier versions have been removed as dead code.
 
 ---
 
@@ -788,139 +429,26 @@ Show success notification
 
 ### Compiler Error Parsing
 
-**GCC Error Format:**
+**GCC error format:**
 ```
 test.cpp:15:5: error: 'initgraph' was not declared in this scope
-   15 |     initgraph(&gd, &gm, "");
-      |     ^~~~~~~~~
 test.cpp:17:5: warning: unused variable 'x' [-Wunused-variable]
-   17 |     int x = 10;
-      |         ^
 ```
 
-**Regex Pattern:**
+**Regex:**
 ```typescript
 const errorRegex = /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm;
 ```
 
-**Parsed Structure:**
-```typescript
-interface CompilationError {
-  file: string;      // "test.cpp"
-  line: number;      // 15
-  column: number;    // 5
-  severity: 'error' | 'warning';
-  message: string;   // "'initgraph' was not declared in this scope"
-}
-```
-
-**Conversion to VS Code Diagnostics:**
-
-```typescript
-const diagnostic = new vscode.Diagnostic(
-  new vscode.Range(
-    new vscode.Position(line - 1, column - 1),  // Convert to 0-indexed
-    new vscode.Position(line - 1, column + 100)  // Highlight ~100 chars
-  ),
-  message,
-  severity === 'error' 
-    ? vscode.DiagnosticSeverity.Error 
-    : vscode.DiagnosticSeverity.Warning
-);
-
-diagnostic.source = 'graphics-h-compiler';
-
-diagnosticCollection.set(uri, diagnostics);
-```
-
-**Result:**
-- Errors appear in Problems panel (Ctrl+Shift+M)
-- Red squiggly underlines in editor
-- Hover shows error message
-- Click to jump to error location
-
----
+**Result:** Errors appear as red squiggles in the editor and entries in the Problems panel (`Ctrl+Shift+M`). Clicking a problem jumps to the exact line.
 
 ### Process Management
 
-**Tracking Active Processes:**
-
-```typescript
-private activeProcesses: Set<ChildProcess> = new Set();
-
-// Add on spawn
-const proc = spawn(command, args);
-this.activeProcesses.add(proc);
-
-// Remove on close
-proc.on('close', (code) => {
-  this.activeProcesses.delete(proc);
-});
-
-// Cleanup on dispose
-dispose() {
-  this.activeProcesses.forEach(proc => {
-    if (!proc.killed) {
-      proc.kill();
-    }
-  });
-  this.activeProcesses.clear();
-}
-```
-
-**Cancellation Token Support:**
-
-```typescript
-async compile(sourceFile: string, token?: vscode.CancellationToken) {
-  const proc = spawn(compiler, args);
-  
-  token?.onCancellationRequested(() => {
-    if (!proc.killed) {
-      proc.kill();
-      this.outputChannel.appendLine('[graphics-h] Compilation cancelled');
-    }
-  });
-}
-```
-
----
+All spawned compiler processes are tracked in `activeProcesses: Set<ChildProcess>`. On `dispose()`, any surviving processes are killed and the set is cleared. This ensures no orphaned compiler processes remain when the extension is deactivated or VS Code is closed.
 
 ### Input Validation
 
-**Security Checks (compiler.ts):**
-
-```typescript
-private validateSourceFile(sourceFile: string): boolean {
-  const normalized = path.normalize(sourceFile);
-  
-  // 1. Path traversal attack prevention
-  if (normalized.includes('..')) {
-    vscode.window.showErrorMessage('Path traversal detected');
-    return false;
-  }
-  
-  // 2. File existence
-  if (!fs.existsSync(normalized)) {
-    vscode.window.showErrorMessage('Source file does not exist');
-    return false;
-  }
-  
-  // 3. Regular file check (not directory/symlink)
-  const stats = fs.statSync(normalized);
-  if (!stats.isFile()) {
-    vscode.window.showErrorMessage('Path is not a file');
-    return false;
-  }
-  
-  // 4. Extension validation
-  if (!normalized.endsWith('.cpp') && !normalized.endsWith('.c++')) {
-    vscode.window.showErrorMessage('File must be C++ (.cpp or .c++)');
-    return false;
-  }
-  
-  return true;
-}
-```
+`validateSourceFile()` uses `path.resolve()` to canonicalise the path before checking existence and extension, avoiding the unreliable `..` substring check that was fragile on Windows paths with dots in directory names.
 
 ---
 
@@ -928,213 +456,49 @@ private validateSourceFile(sourceFile: string): boolean {
 
 ### Prerequisites
 
-```bash
+```
 Node.js >= 16.x
 npm >= 8.x
-VS Code >= 1.75.0
+VS Code >= 1.96.0
 ```
 
 ### Clone and Build
 
 ```bash
-# Clone repository
 git clone https://github.com/AlbatrossC/graphics-h-compiler.git
-
-# Navigate to extension directory
 cd graphics-h-compiler/VScodeExtension
 
-# Install dependencies
 npm install
+npm run compile        # single build
+npm run watch          # watch mode
 
-# Compile TypeScript → JavaScript
-npm run compile
-
-# Watch mode (auto-recompile on save)
-npm run watch
-
-# Package extension
-npx vsce package
-
-# Install locally for testing
+npx vsce package       # produces graphics-h-compiler-x.x.x.vsix
 code --install-extension graphics-h-compiler-*.vsix
-```
-
-### Build Configuration
-
-**esbuild.js:**
-```javascript
-const esbuild = require('esbuild');
-
-esbuild.build({
-  entryPoints: ['./src/extension.ts'],
-  bundle: true,
-  outfile: 'dist/extension.js',
-  external: ['vscode'],
-  format: 'cjs',
-  platform: 'node',
-  sourcemap: true,
-  minify: false
-});
-```
-
-### Dependencies
-
-**package.json:**
-```json
-{
-  "dependencies": {
-    "node-fetch": "^2.6.7",    // HTTP downloads
-    "adm-zip": "^0.5.10"       // ZIP extraction
-  },
-  "devDependencies": {
-    "@types/node": "^18.x",
-    "@types/vscode": "^1.75.0",
-    "@types/node-fetch": "^2.6.2",
-    "@types/adm-zip": "^0.5.0",
-    "typescript": "^5.0.0",
-    "@vscode/vsce": "^2.19.0",  // Extension packager
-    "esbuild": "^0.17.0",
-    "eslint": "^8.0.0"
-  }
-}
 ```
 
 ### Debug Extension
 
-**Launch VS Code debugger:**
+1. Open `VScodeExtension/` in VS Code
+2. Press `F5` to launch the Extension Development Host
+3. Set breakpoints in TypeScript source files
+4. Test commands in the debug instance
+5. Check the Debug Console for logs
 
-1. Open `VScodeExtension/` folder in VS Code
-2. Press `F5` → launches Extension Development Host
-3. Set breakpoints in TypeScript files
-4. Test commands in debug instance
-5. Check Debug Console for logs
+### Publishing
 
-**.vscode/launch.json:**
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "Run Extension",
-      "type": "extensionHost",
-      "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
-      "outFiles": ["${workspaceFolder}/out/**/*.js"],
-      "preLaunchTask": "${defaultBuildTask}"
-    }
-  ]
-}
+```bash
+# Requires a Personal Access Token from marketplace.visualstudio.com
+npx vsce publish
 ```
 
 ---
 
-## Extension Manifest
+## Licensing
 
-**package.json (key sections):**
+**Extension code:** MIT License
 
-```json
-{
-  "name": "graphics-h-compiler",
-  "displayName": "Graphics.h Compiler",
-  "description": "Compile and run graphics.h programs on Windows and Linux",
-  "version": "1.0.4",
-  "publisher": "AlbatrossC",
-  "engines": {
-    "vscode": "^1.75.0"
-  },
-  "categories": ["Programming Languages", "Debuggers"],
-  "activationEvents": [],
-  "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "graphics-h-compiler.compileAndRun",
-        "title": "Graphics.h: Compile and Run",
-        "icon": "$(play)"
-      },
-      {
-        "command": "graphics-h-compiler.stopProgram",
-        "title": "Graphics.h: Stop Program",
-        "icon": "$(debug-stop)"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "graphics-h-compiler.compileAndRun",
-        "key": "ctrl+alt+n",
-        "when": "editorTextFocus && editorLangId == cpp"
-      },
-      {
-        "command": "graphics-h-compiler.stopProgram",
-        "key": "ctrl+shift+f5",
-        "when": "editorTextFocus"
-      }
-    ],
-    "menus": {
-      "editor/context": [
-        {
-          "command": "graphics-h-compiler.compileAndRun",
-          "when": "resourceExtname == .cpp || resourceExtname == .c++",
-          "group": "navigation"
-        }
-      ],
-      "editor/title": [
-        {
-          "command": "graphics-h-compiler.compileAndRun",
-          "when": "resourceExtname == .cpp || resourceExtname == .c++",
-          "group": "navigation"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "Graphics.h Compiler",
-      "properties": {
-        "graphics-h-compiler.autoRun": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically run program after successful compilation"
-        },
-        "graphics-h-compiler.showOutputPanel": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show output panel during compilation"
-        },
-        "graphics-h-compiler.clearOutputBeforeCompile": {
-          "type": "boolean",
-          "default": true,
-          "description": "Clear output panel before each compilation"
-        },
-        "graphics-h-compiler.runInTerminal": {
-          "type": "boolean",
-          "default": true,
-          "description": "Run program in Integrated Terminal (required for user input/scanf/cin)"
-        }
-      }
-    }
-  }
-}
-```
-
----
-
-## Additional Notes
-
-### Licensing
-
-**Extension Code:** MIT License
-
-**Bundled Components:**
+**Bundled components:**
 - GCC 11.5.0: GPL v3 with runtime library exception
 - MinGW-w64: ZPL 2.1
-- graphics.h/winbgim.h: Public domain (WinBGIm project)
+- graphics.h / winbgim.h: Public domain (WinBGIm project)
 - libbgi.a: Modified BSD
-
-**Compliance:**
-- Source code available at upstream URLs
-- No GPL code modifications
-- Binary redistribution permitted
-- License notices included
-
-### Licensing
-
-**Extension Code:** MIT License

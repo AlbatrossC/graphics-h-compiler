@@ -12,6 +12,12 @@ interface CompilationError {
     message: string;
 }
 
+interface CompileConfig {
+    command: string;
+    args: string[];
+    useShell: boolean;
+}
+
 export class GraphicsCompiler {
     private pathManager: PathManager;
     private outputChannel: vscode.OutputChannel;
@@ -37,25 +43,21 @@ export class GraphicsCompiler {
     }
 
     private validateSourceFile(sourceFile: string): boolean {
-        const normalizedPath = path.normalize(sourceFile);
+        // Use path.resolve for safe path checking
+        const resolvedPath = path.resolve(sourceFile);
 
-        if (normalizedPath.includes('..')) {
-            vscode.window.showErrorMessage('Invalid file path: Path traversal detected');
-            return false;
-        }
-
-        if (!fs.existsSync(normalizedPath)) {
+        if (!fs.existsSync(resolvedPath)) {
             vscode.window.showErrorMessage('Source file does not exist');
             return false;
         }
 
-        const stats = fs.statSync(normalizedPath);
+        const stats = fs.statSync(resolvedPath);
         if (!stats.isFile()) {
             vscode.window.showErrorMessage('Path is not a file');
             return false;
         }
 
-        if (!normalizedPath.endsWith('.cpp') && !normalizedPath.endsWith('.c++')) {
+        if (!resolvedPath.endsWith('.cpp') && !resolvedPath.endsWith('.c++')) {
             vscode.window.showErrorMessage('File must be a C++ source file (.cpp or .c++)');
             return false;
         }
@@ -70,7 +72,6 @@ export class GraphicsCompiler {
         let match;
         while ((match = errorRegex.exec(stderr)) !== null) {
             const [_, file, line, column, severity, message] = match;
-
             errors.push({
                 file: file.trim(),
                 line: parseInt(line, 10),
@@ -121,7 +122,6 @@ export class GraphicsCompiler {
             return this.terminal;
         }
 
-        // Dispose old terminal if it exists but has exit status (meaning it was closed)
         if (this.terminal) {
             this.terminal.dispose();
         }
@@ -130,12 +130,53 @@ export class GraphicsCompiler {
         return this.terminal;
     }
 
-    private async compileWindows(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
-        const config = this.getConfig();
-        const gppPath = this.pathManager.getGppPath();
+    private buildCompileConfig(sourceFile: string): CompileConfig {
+        const outputPath = this.pathManager.getOutputPath(sourceFile);
         const graphicsPath = this.pathManager.getGraphicsPath();
         const libraryPath = this.pathManager.getLibraryPath();
+
+        if (this.pathManager.isWindows()) {
+            return {
+                command: this.pathManager.getGppPath(),
+                args: [
+                    sourceFile,
+                    '-I', graphicsPath,
+                    '-L', libraryPath,
+                    '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
+                    '-static-libgcc',
+                    '-static-libstdc++',
+                    '-static',
+                    '-o', outputPath
+                ],
+                useShell: false
+            };
+        } else {
+            // Linux: spawn directly, no bash -c, avoids shell injection
+            return {
+                command: 'i686-w64-mingw32-g++',
+                args: [
+                    sourceFile,
+                    '-I', graphicsPath,
+                    '-L', libraryPath,
+                    '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
+                    '-static-libgcc',
+                    '-static-libstdc++',
+                    '-static',
+                    '-o', outputPath
+                ],
+                useShell: false
+            };
+        }
+    }
+
+    // Unified compile implementation - no more Windows/Linux duplication
+    private async runCompilation(
+        sourceFile: string,
+        token?: vscode.CancellationToken
+    ): Promise<string | null> {
+        const config = this.getConfig();
         const outputPath = this.pathManager.getOutputPath(sourceFile);
+        const osLabel = this.pathManager.isWindows() ? 'Windows' : 'Ubuntu/Linux';
 
         this.clearDiagnostics(sourceFile);
 
@@ -147,25 +188,15 @@ export class GraphicsCompiler {
             this.outputChannel.show(true);
         }
 
-        this.outputChannel.appendLine(`[graphics-h] OS: Windows`);
+        this.outputChannel.appendLine(`[graphics-h] OS: ${osLabel}`);
         this.outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
         this.outputChannel.appendLine(`[graphics-h] Output: ${path.basename(outputPath)}`);
         this.outputChannel.appendLine('');
 
+        const { command, args } = this.buildCompileConfig(sourceFile);
+
         return new Promise((resolve) => {
             const startTime = Date.now();
-
-            const command = gppPath;
-            const args = [
-                sourceFile,
-                '-I', graphicsPath,
-                '-L', libraryPath,
-                '-lbgi', '-lgdi32', '-lcomdlg32', '-luuid', '-loleaut32', '-lole32',
-                '-static-libgcc',
-                '-static-libstdc++',
-                '-static',
-                '-o', outputPath
-            ];
 
             const compilerProcess = spawn(command, args, {
                 cwd: path.dirname(sourceFile)
@@ -174,10 +205,9 @@ export class GraphicsCompiler {
             this.activeProcesses.add(compilerProcess);
 
             let stderr = '';
-            let stdout = '';
 
             compilerProcess.stdout.on('data', (data) => {
-                stdout += data.toString();
+                this.outputChannel.append(data.toString());
             });
 
             compilerProcess.stderr.on('data', (data) => {
@@ -186,12 +216,13 @@ export class GraphicsCompiler {
                 this.outputChannel.append(output);
             });
 
-            token?.onCancellationRequested(() => {
+            const cancellationListener = token?.onCancellationRequested(() => {
                 if (!compilerProcess.killed) {
                     compilerProcess.kill();
                     this.outputChannel.appendLine('');
                     this.outputChannel.appendLine('[graphics-h] Compilation cancelled by user');
                     this.activeProcesses.delete(compilerProcess);
+                    cancellationListener?.dispose();
                     resolve(null);
                 }
             });
@@ -199,6 +230,7 @@ export class GraphicsCompiler {
             compilerProcess.on('close', (code) => {
                 const duration = ((Date.now() - startTime) / 1000).toFixed(2);
                 this.activeProcesses.delete(compilerProcess);
+                cancellationListener?.dispose();
 
                 if (code !== 0) {
                     if (stderr.trim().length === 0) {
@@ -219,160 +251,36 @@ export class GraphicsCompiler {
                         message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
                     }
 
-                    vscode.window.showErrorMessage(
-                        message,
-                        'Show Output',
-                        'Show Problems'
-                    ).then(choice => {
-                        if (choice === 'Show Output') {
-                            this.outputChannel.show();
-                        } else if (choice === 'Show Problems') {
-                            vscode.commands.executeCommand('workbench.actions.view.problems');
-                        }
-                    });
+                    vscode.window.showErrorMessage(message, 'Show Output', 'Show Problems')
+                        .then(choice => {
+                            if (choice === 'Show Output') {
+                                this.outputChannel.show();
+                            } else if (choice === 'Show Problems') {
+                                vscode.commands.executeCommand('workbench.actions.view.problems');
+                            }
+                        });
 
                     resolve(null);
                 } else {
                     this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
                     this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
-
                     resolve(outputPath);
                 }
             });
 
             compilerProcess.on('error', (error) => {
+                this.activeProcesses.delete(compilerProcess);
+                cancellationListener?.dispose();
+
                 this.outputChannel.appendLine('');
                 this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
 
-                this.activeProcesses.delete(compilerProcess);
-
-                vscode.window.showErrorMessage(
-                    `Compiler error: ${error.message}`,
-                    'Show Output'
-                ).then(choice => {
-                    if (choice === 'Show Output') {
-                        this.outputChannel.show();
-                    }
-                });
-
-                resolve(null);
-            });
-        });
-    }
-
-    private async compileLinux(sourceFile: string, token?: vscode.CancellationToken): Promise<string | null> {
-        const config = this.getConfig();
-        const outputPath = this.pathManager.getOutputPath(sourceFile);
-
-        this.clearDiagnostics(sourceFile);
-
-        if (config.clearOutputBeforeCompile) {
-            this.outputChannel.clear();
-        }
-
-        if (config.showOutput) {
-            this.outputChannel.show(true);
-        }
-
-        this.outputChannel.appendLine(`[graphics-h] OS: Ubuntu/Linux`);
-        this.outputChannel.appendLine(`[graphics-h] Compiling: ${path.basename(sourceFile)}`);
-        this.outputChannel.appendLine(`[graphics-h] Output: ${path.basename(outputPath)}`);
-        this.outputChannel.appendLine('');
-
-        return new Promise((resolve) => {
-            const startTime = Date.now();
-
-            const compileCmd = `i686-w64-mingw32-g++ "${sourceFile}" -I /usr/local/include/graphics_h -L /usr/local/lib/graphics_h -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32 -static-libgcc -static-libstdc++ -static -o "${outputPath}"`;
-
-            const compilerProcess = spawn('bash', ['-c', compileCmd], {
-                cwd: path.dirname(sourceFile)
-            });
-
-            this.activeProcesses.add(compilerProcess);
-
-            let stderr = '';
-            let stdout = '';
-
-            compilerProcess.stdout.on('data', (data) => {
-                const output = data.toString();
-                stdout += output;
-                this.outputChannel.append(output);
-            });
-
-            compilerProcess.stderr.on('data', (data) => {
-                const output = data.toString();
-                stderr += output;
-                this.outputChannel.append(output);
-            });
-
-            token?.onCancellationRequested(() => {
-                if (!compilerProcess.killed) {
-                    compilerProcess.kill();
-                    this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine('[graphics-h] Compilation cancelled by user');
-                    this.activeProcesses.delete(compilerProcess);
-                    resolve(null);
-                }
-            });
-
-            compilerProcess.on('close', (code) => {
-                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-                this.activeProcesses.delete(compilerProcess);
-
-                if (code !== 0) {
-                    if (stderr.trim().length === 0) {
-                        this.outputChannel.appendLine('error: compilation failed with no error output');
-                    }
-
-                    this.outputChannel.appendLine('');
-                    this.outputChannel.appendLine(`[graphics-h] Build failed (${duration}s)`);
-
-                    const errors = this.parseCompilerErrors(stderr, sourceFile);
-                    this.updateDiagnostics(errors, sourceFile);
-
-                    const errorCount = errors.filter(e => e.severity === 'error').length;
-                    const warningCount = errors.filter(e => e.severity === 'warning').length;
-
-                    let message = `Compilation failed: ${errorCount} error${errorCount !== 1 ? 's' : ''}`;
-                    if (warningCount > 0) {
-                        message += `, ${warningCount} warning${warningCount !== 1 ? 's' : ''}`;
-                    }
-
-                    vscode.window.showErrorMessage(
-                        message,
-                        'Show Output',
-                        'Show Problems'
-                    ).then(choice => {
+                vscode.window.showErrorMessage(`Compiler error: ${error.message}`, 'Show Output')
+                    .then(choice => {
                         if (choice === 'Show Output') {
                             this.outputChannel.show();
-                        } else if (choice === 'Show Problems') {
-                            vscode.commands.executeCommand('workbench.actions.view.problems');
                         }
                     });
-
-                    resolve(null);
-                } else {
-                    this.outputChannel.appendLine(`[graphics-h] Build succeeded (${duration}s)`);
-                    this.outputChannel.appendLine(`[graphics-h] Executable: ${path.basename(outputPath)}`);
-
-                    resolve(outputPath);
-                }
-            });
-
-            compilerProcess.on('error', (error) => {
-                this.outputChannel.appendLine('');
-                this.outputChannel.appendLine(`[graphics-h] Compiler error: ${error.message}`);
-
-                this.activeProcesses.delete(compilerProcess);
-
-                vscode.window.showErrorMessage(
-                    `Compiler error: ${error.message}`,
-                    'Show Output'
-                ).then(choice => {
-                    if (choice === 'Show Output') {
-                        this.outputChannel.show();
-                    }
-                });
 
                 resolve(null);
             });
@@ -384,17 +292,16 @@ export class GraphicsCompiler {
             return null;
         }
 
-        if (this.pathManager.isWindows()) {
-            return this.compileWindows(sourceFile, token);
-        } else if (this.pathManager.isLinux()) {
-            return this.compileLinux(sourceFile, token);
-        } else {
+        if (!this.pathManager.isWindows() && !this.pathManager.isLinux()) {
             vscode.window.showErrorMessage('Unsupported operating system');
             return null;
         }
+
+        return this.runCompilation(sourceFile, token);
     }
 
-    private async runWindows(exePath: string): Promise<void> {
+    // Unified run implementation - no more Windows/Linux duplication
+    private async runExecutable(exePath: string): Promise<void> {
         if (!fs.existsSync(exePath)) {
             vscode.window.showErrorMessage('Executable not found: ' + exePath);
             return;
@@ -402,21 +309,30 @@ export class GraphicsCompiler {
 
         const config = this.getConfig();
 
+        // Build the run command based on OS
+        const runCommand = this.pathManager.isWindows()
+            ? { command: exePath, args: [] as string[] }
+            : { command: 'wine', args: [exePath] };
+
         if (config.runInTerminal) {
             const terminal = this.getTerminal();
             terminal.show();
             this.outputChannel.appendLine(`[graphics-h] Running in terminal: ${path.basename(exePath)}`);
             this.outputChannel.appendLine('');
 
-            // Use cmd /c to ensure execution works in both PowerShell and CMD, and handles quoting
-            terminal.sendText(`cmd /c "${exePath}"`);
+            if (this.pathManager.isWindows()) {
+                // cmd /c handles quoting and works in both PowerShell and CMD
+                terminal.sendText(`cmd /c "${exePath}"`);
+            } else {
+                terminal.sendText(`wine "${exePath}"`);
+            }
             return;
         }
 
         this.outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exePath)}`);
         this.outputChannel.appendLine('');
 
-        const programProcess = spawn(exePath, [], {
+        const programProcess = spawn(runCommand.command, runCommand.args, {
             cwd: path.dirname(exePath),
             detached: false,
             stdio: ['ignore', 'pipe', 'pipe']
@@ -429,72 +345,8 @@ export class GraphicsCompiler {
         });
 
         programProcess.stderr.on('data', (data) => {
-            this.outputChannel.append(`[Program Error] ${data.toString()}`);
-        });
-
-        programProcess.on('close', (code) => {
-            this.runningProgram = null;
-            this.outputChannel.appendLine('');
-            if (code === 0) {
-                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
-            } else if (code !== null) {
-                this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
-            } else {
-                this.outputChannel.appendLine(`[graphics-h] Program stopped`);
-            }
-        });
-
-        programProcess.on('error', (error) => {
-            this.runningProgram = null;
-            this.outputChannel.appendLine('');
-            this.outputChannel.appendLine('[graphics-h] Program execution failed:');
-            this.outputChannel.appendLine(error.message);
-
-            vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
-        });
-
-        programProcess.on('exit', (code, signal) => {
-            if (signal) {
-                this.outputChannel.appendLine(`[graphics-h] Program terminated by signal: ${signal}`);
-            }
-        });
-    }
-
-    private async runLinux(exePath: string): Promise<void> {
-        if (!fs.existsSync(exePath)) {
-            vscode.window.showErrorMessage('Executable not found: ' + exePath);
-            return;
-        }
-
-        const config = this.getConfig();
-
-        if (config.runInTerminal) {
-            const terminal = this.getTerminal();
-            terminal.show();
-            this.outputChannel.appendLine(`[graphics-h] Running in terminal: ${path.basename(exePath)}`);
-            this.outputChannel.appendLine('');
-
-            terminal.sendText(`wine "${exePath}"`);
-            return;
-        }
-
-        this.outputChannel.appendLine(`[graphics-h] Running: ${path.basename(exePath)}`);
-        this.outputChannel.appendLine('');
-
-        const runCmd = `wine "${exePath}"`;
-
-        const programProcess = spawn('bash', ['-c', runCmd], {
-            cwd: path.dirname(exePath)
-        });
-
-        this.runningProgram = programProcess;
-
-        programProcess.stdout.on('data', (data) => {
-            this.outputChannel.append(`[Program Output] ${data.toString()}`);
-        });
-
-        programProcess.stderr.on('data', (data) => {
             const output = data.toString();
+            // Filter noisy Wine debug lines on Linux
             if (!output.includes('fixme:') && !output.includes('wine:')) {
                 this.outputChannel.append(`[Program Error] ${output}`);
             }
@@ -504,11 +356,11 @@ export class GraphicsCompiler {
             this.runningProgram = null;
             this.outputChannel.appendLine('');
             if (code === 0) {
-                this.outputChannel.appendLine(`[graphics-h] Program finished successfully`);
+                this.outputChannel.appendLine('[graphics-h] Program finished successfully');
             } else if (code !== null) {
                 this.outputChannel.appendLine(`[graphics-h] Program exited with code ${code}`);
             } else {
-                this.outputChannel.appendLine(`[graphics-h] Program stopped`);
+                this.outputChannel.appendLine('[graphics-h] Program stopped');
             }
         });
 
@@ -517,11 +369,10 @@ export class GraphicsCompiler {
             this.outputChannel.appendLine('');
             this.outputChannel.appendLine('[graphics-h] Program execution failed:');
             this.outputChannel.appendLine(error.message);
-
             vscode.window.showErrorMessage('Failed to run program. Check Output panel.');
         });
 
-        programProcess.on('exit', (code, signal) => {
+        programProcess.on('exit', (_code, signal) => {
             if (signal) {
                 this.outputChannel.appendLine(`[graphics-h] Program terminated by signal: ${signal}`);
             }
@@ -529,16 +380,15 @@ export class GraphicsCompiler {
     }
 
     async run(exePath: string): Promise<void> {
-        if (this.pathManager.isWindows()) {
-            return this.runWindows(exePath);
-        } else if (this.pathManager.isLinux()) {
-            return this.runLinux(exePath);
-        } else {
+        if (!this.pathManager.isWindows() && !this.pathManager.isLinux()) {
             vscode.window.showErrorMessage('Unsupported operating system');
+            return;
         }
+        return this.runExecutable(exePath);
     }
 
     stopRunningProgram(): boolean {
+        // If running as a managed process, kill it
         if (this.runningProgram && !this.runningProgram.killed) {
             this.outputChannel.appendLine('[graphics-h] Stopping program...');
             this.runningProgram.kill();
@@ -546,10 +396,17 @@ export class GraphicsCompiler {
             return true;
         }
 
-        if (this.terminal) {
-            this.outputChannel.appendLine('[graphics-h] Closing terminal...');
-            this.terminal.dispose();
-            this.terminal = null;
+        // If running in terminal, send Ctrl+C first then dispose
+        if (this.terminal && this.terminal.exitStatus === undefined) {
+            this.outputChannel.appendLine('[graphics-h] Sending interrupt to terminal...');
+            this.terminal.sendText('\x03'); // Ctrl+C
+            // Give it a moment to handle the signal before disposing
+            setTimeout(() => {
+                if (this.terminal) {
+                    this.terminal.dispose();
+                    this.terminal = null;
+                }
+            }, 500);
             return true;
         }
 
@@ -557,21 +414,31 @@ export class GraphicsCompiler {
     }
 
     isProgramRunning(): boolean {
-        return this.runningProgram !== null && !this.runningProgram.killed;
+        return (
+            (this.runningProgram !== null && !this.runningProgram.killed) ||
+            (this.terminal !== null && this.terminal.exitStatus === undefined)
+        );
     }
 
-    async compileAndRun(sourceFile: string): Promise<void> {
+    async compileAndRun(
+        sourceFile: string,
+        token?: vscode.CancellationToken
+    ): Promise<void> {
         const config = this.getConfig();
 
         if (this.isProgramRunning()) {
             this.stopRunningProgram();
         }
 
-        const exePath = await this.compile(sourceFile);
+        const exePath = await this.compile(sourceFile, token);
 
-        if (exePath && config.autoRun) {
+        if (!exePath) {
+            return;
+        }
+
+        if (config.autoRun) {
             await this.run(exePath);
-        } else if (exePath && !config.autoRun) {
+        } else {
             const choice = await vscode.window.showInformationMessage(
                 'Compilation successful',
                 'Run Program'

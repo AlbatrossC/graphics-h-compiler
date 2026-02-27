@@ -14,7 +14,6 @@ export class WindowsDownloader {
     private isDownloading = false;
     private downloadPromise: Promise<boolean> | null = null;
 
-    // Configuration for MinGW download
     private readonly MINGW_CONFIG: DownloadConfig = {
         url: 'https://github.com/AlbatrossC/graphics-h-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip',
         sha256: '72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd'
@@ -24,7 +23,6 @@ export class WindowsDownloader {
         return this.isDownloading;
     }
 
-    // Verify downloaded file integrity using SHA256
     private async verifyDownload(filePath: string, expectedHash: string): Promise<boolean> {
         if (!expectedHash) {
             return true;
@@ -51,20 +49,16 @@ export class WindowsDownloader {
         }
     }
 
-    // Download from URL
     private async downloadFromUrl(
         url: string,
         tempZip: string,
         progress: vscode.Progress<{ message?: string; increment?: number }>
     ): Promise<boolean> {
         try {
-            progress.report({ 
-                message: `Downloading MinGW32 toolchain...`,
-                increment: 5
-            });
+            progress.report({ message: 'Downloading MinGW32 toolchain...', increment: 5 });
 
             const response = await fetch(url, {
-                headers: { 
+                headers: {
                     'User-Agent': 'Mozilla/5.0',
                     'Accept': 'application/octet-stream'
                 },
@@ -76,7 +70,7 @@ export class WindowsDownloader {
             }
 
             const totalSize = parseInt(response.headers.get('content-length') || '0');
-            
+
             if (totalSize === 0) {
                 throw new Error('Could not determine file size');
             }
@@ -84,14 +78,10 @@ export class WindowsDownloader {
             await this.streamToDisk(response, tempZip, progress, totalSize);
 
             if (this.MINGW_CONFIG.sha256) {
-                progress.report({ 
-                    message: `Verifying integrity...`,
-                    increment: 5
-                });
-
+                progress.report({ message: 'Verifying integrity...', increment: 5 });
                 const isValid = await this.verifyDownload(tempZip, this.MINGW_CONFIG.sha256);
                 if (!isValid) {
-                    throw new Error(`Verification failed: Checksum mismatch`);
+                    throw new Error('Verification failed: Checksum mismatch');
                 }
             }
 
@@ -104,7 +94,6 @@ export class WindowsDownloader {
         }
     }
 
-    // Stream download directly to disk
     private async streamToDisk(
         response: any,
         filePath: string,
@@ -119,16 +108,16 @@ export class WindowsDownloader {
             response.body.on('data', (chunk: Buffer) => {
                 downloadedSize += chunk.length;
                 const percent = Math.floor((downloadedSize / totalSize) * 100);
-                
+
                 if (percent >= lastReportedPercent + 5) {
                     const sizeMB = (downloadedSize / 1024 / 1024).toFixed(1);
                     const totalMB = (totalSize / 1024 / 1024).toFixed(1);
-                    
+
                     progress.report({
                         message: `Downloading: ${sizeMB}MB / ${totalMB}MB (${percent}%)`,
                         increment: 5
                     });
-                    
+
                     lastReportedPercent = percent;
                 }
             });
@@ -140,42 +129,25 @@ export class WindowsDownloader {
                 resolve();
             });
 
-            fileStream.on('error', (error: Error) => {
+            const cleanup = (error: Error) => {
                 fileStream.close();
                 if (fs.existsSync(filePath)) {
-                    try {
-                        fs.unlinkSync(filePath);
-                    } catch (cleanupError) {
-                        console.error('Failed to cleanup partial file:', cleanupError);
-                    }
+                    try { fs.unlinkSync(filePath); } catch { /* ignore cleanup error */ }
                 }
                 reject(error);
-            });
+            };
 
-            response.body.on('error', (error: Error) => {
-                fileStream.close();
-                if (fs.existsSync(filePath)) {
-                    try {
-                        fs.unlinkSync(filePath);
-                    } catch (cleanupError) {
-                        console.error('Failed to cleanup partial file:', cleanupError);
-                    }
-                }
-                reject(error);
-            });
+            fileStream.on('error', cleanup);
+            response.body.on('error', cleanup);
         });
     }
 
-    // Copy bundled graphics files to MinGW directories
     private copyBundledGraphicsFiles(
         mingwPath: string,
         extensionPath: string,
         progress: vscode.Progress<{ message?: string; increment?: number }>
     ): void {
-        progress.report({
-            message: "Installing graphics.h files...",
-            increment: 5
-        });
+        progress.report({ message: 'Installing graphics.h files...', increment: 5 });
 
         const resourcesPath = path.join(extensionPath, 'resources', 'graphics');
         const includeDir = path.join(mingwPath, 'include');
@@ -195,7 +167,6 @@ export class WindowsDownloader {
                 throw new Error(`Bundled file ${file.name} not found in extension resources`);
             }
 
-            // Create target directory if it doesn't exist
             if (!fs.existsSync(file.targetDir)) {
                 fs.mkdirSync(file.targetDir, { recursive: true });
             }
@@ -207,13 +178,9 @@ export class WindowsDownloader {
             }
         }
 
-        progress.report({
-            message: "✓ Graphics.h files installed",
-            increment: 5
-        });
+        progress.report({ message: '✓ Graphics.h files installed', increment: 5 });
     }
 
-    // Main download and installation function for Windows
     async download(targetPath: string, extensionPath: string): Promise<boolean> {
         if (this.downloadPromise) {
             return this.downloadPromise;
@@ -222,111 +189,91 @@ export class WindowsDownloader {
         this.isDownloading = true;
 
         this.downloadPromise = new Promise<boolean>((resolve) => {
-            vscode.window.withProgress({
-                location: vscode.ProgressLocation.Notification,
-                title: "Graphics.h Toolchain Setup (Windows)",
-                cancellable: false
-            }, async (progress) => {
-                const tempZip = path.join(targetPath, 'mingw32_temp.zip');
+            vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: 'Graphics.h Toolchain Setup (Windows)',
+                    cancellable: false
+                },
+                async (progress) => {
+                    const tempZip = path.join(targetPath, 'mingw32_temp.zip');
 
-                try {
-                    // Create target directory
-                    progress.report({ 
-                        message: "Preparing installation...",
-                        increment: 5
-                    });
-                    
-                    if (!fs.existsSync(targetPath)) {
-                        fs.mkdirSync(targetPath, { recursive: true });
-                    }
+                    try {
+                        progress.report({ message: 'Preparing installation...', increment: 5 });
 
-                    // Download MinGW32
-                    await this.downloadFromUrl(this.MINGW_CONFIG.url, tempZip, progress);
+                        if (!fs.existsSync(targetPath)) {
+                            fs.mkdirSync(targetPath, { recursive: true });
+                        }
 
-                    // Extract MinGW32
-                    progress.report({ 
-                        message: "Extracting MinGW32 toolchain...",
-                        increment: 30
-                    });
+                        await this.downloadFromUrl(this.MINGW_CONFIG.url, tempZip, progress);
 
-                    const zip = new AdmZip(tempZip);
-                    zip.extractAllTo(path.dirname(targetPath), true);
+                        progress.report({ message: 'Extracting MinGW32 toolchain...', increment: 30 });
 
-                    // Clean up zip file
-                    if (fs.existsSync(tempZip)) {
-                        fs.unlinkSync(tempZip);
-                    }
+                        const zip = new AdmZip(tempZip);
+                        zip.extractAllTo(path.dirname(targetPath), true);
 
-                    // Copy bundled graphics.h files
-                    this.copyBundledGraphicsFiles(targetPath, extensionPath, progress);
-
-                    // Verify installation
-                    progress.report({ 
-                        message: "Verifying installation...",
-                        increment: 10
-                    });
-
-                    const gppPath = path.join(targetPath, 'bin', 'g++.exe');
-                    if (!fs.existsSync(gppPath)) {
-                        throw new Error('MinGW installation verification failed');
-                    }
-
-                    progress.report({ 
-                        message: "Complete!",
-                        increment: 5
-                    });
-
-                    vscode.window.showInformationMessage('✓ Graphics.h toolchain installed successfully!');
-
-                    this.isDownloading = false;
-                    this.downloadPromise = null;
-                    resolve(true);
-
-                } catch (error) {
-                    this.isDownloading = false;
-                    this.downloadPromise = null;
-
-                    if (fs.existsSync(tempZip)) {
-                        try {
+                        if (fs.existsSync(tempZip)) {
                             fs.unlinkSync(tempZip);
-                        } catch (cleanupError) {
-                            console.error('Failed to delete partial zip:', cleanupError);
                         }
+
+                        this.copyBundledGraphicsFiles(targetPath, extensionPath, progress);
+
+                        progress.report({ message: 'Verifying installation...', increment: 10 });
+
+                        const gppPath = path.join(targetPath, 'bin', 'g++.exe');
+                        if (!fs.existsSync(gppPath)) {
+                            throw new Error('MinGW installation verification failed');
+                        }
+
+                        progress.report({ message: 'Complete!', increment: 5 });
+
+                        vscode.window.showInformationMessage('✓ Graphics.h toolchain installed successfully!');
+
+                        this.isDownloading = false;
+                        this.downloadPromise = null;
+                        resolve(true);
+
+                    } catch (error) {
+                        this.isDownloading = false;
+                        this.downloadPromise = null;
+
+                        if (fs.existsSync(tempZip)) {
+                            try { fs.unlinkSync(tempZip); } catch { /* ignore */ }
+                        }
+
+                        const errorMsg = error instanceof Error ? error.message : String(error);
+
+                        vscode.window.showErrorMessage(
+                            `Toolchain setup failed: ${errorMsg}`,
+                            'Retry',
+                            'Report Issue'
+                        ).then(choice => {
+                            if (choice === 'Retry') {
+                                this.downloadPromise = null;
+                                this.download(targetPath, extensionPath);
+                            } else if (choice === 'Report Issue') {
+                                vscode.env.openExternal(
+                                    vscode.Uri.parse('https://github.com/AlbatrossC/graphics-h-compiler/issues')
+                                );
+                            }
+                        });
+
+                        console.error('Installation error:', error);
+                        resolve(false);
                     }
-
-                    const errorMsg = error instanceof Error ? error.message : String(error);
-                    
-                    vscode.window.showErrorMessage(
-                        `Toolchain setup failed: ${errorMsg}`,
-                        'Retry',
-                        'Report Issue'
-                    ).then(choice => {
-                        if (choice === 'Retry') {
-                            this.downloadPromise = null;
-                            this.download(targetPath, extensionPath);
-                        } else if (choice === 'Report Issue') {
-                            vscode.env.openExternal(
-                                vscode.Uri.parse('https://github.com/AlbatrossC/graphics-h-compiler/issues')
-                            );
-                        }
-                    });
-
-                    console.error('Installation error:', error);
-                    resolve(false);
                 }
-            });
+            );
         });
 
         return this.downloadPromise;
     }
 
-    // Prompt user for permission to download
     async promptForPermission(): Promise<boolean> {
         const choice = await vscode.window.showInformationMessage(
-            `⚙️ Graphics.h Compiler setup required\n\n` +
-            `To compile graphics programs, a one-time setup is needed.\n` +
-            `📦 ~220MB download, ~770MB disk space\n\n` +
-            `Download and continue?`,
+            '⚙️ Graphics.h Compiler setup required\n\n' +
+            'To compile graphics programs, a one-time setup is needed.\n' +
+            '📦 ~220MB download, ~770MB disk space\n\n' +
+            'Download and continue?',
             { modal: true },
             'Download',
             'Cancel'
@@ -335,7 +282,6 @@ export class WindowsDownloader {
         return choice === 'Download';
     }
 
-    // Update download configuration
     updateConfig(config: Partial<DownloadConfig>): void {
         Object.assign(this.MINGW_CONFIG, config);
     }
