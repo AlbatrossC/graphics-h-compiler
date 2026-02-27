@@ -2,6 +2,9 @@
 .vercel
 .env*.local
 
+__pycache__/
+*.pyc
+
 worker/node_modules/
 worker/.wrangler/
 worker/dist/
