@@ -2,7 +2,7 @@
   "name": "graphics-h-compiler",
   "displayName": "Graphics.h Compiler",
   "description": "Compile and run C++ graphics.h programs with one click. Includes automatic MinGW setup and WinBGIM library for Windows.",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "publisher": "AlbatrossC",
   "icon": "assets/icon.png",
   "repository": {
@@ -55,7 +55,19 @@
     "commands": [
       {
         "command": "graphics-h-compiler.compileAndRun",
-        "title": "Run Graphics Program",
+        "title": "Run Graphics (WinBGI)",
+        "category": "Graphics.h",
+        "icon": "$(play)"
+      },
+      {
+        "command": "graphics-h-compiler.compileAndRunWinBGI",
+        "title": "Run Graphics (WinBGI)",
+        "category": "Graphics.h",
+        "icon": "$(play)"
+      },
+      {
+        "command": "graphics-h-compiler.compileAndRunTurboC",
+        "title": "Run Graphics (Turbo C)",
         "category": "Graphics.h",
         "icon": "$(play)"
       },
@@ -104,21 +116,49 @@
       "editor/title/run": [
         {
           "when": "resourceExtname == .cpp || resourceExtname == .c++",
-          "command": "graphics-h-compiler.compileAndRun",
+          "command": "graphics-h-compiler.compileAndRunTurboC",
           "group": "navigation@1"
+        },
+        {
+          "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "command": "graphics-h-compiler.compileAndRunWinBGI",
+          "group": "navigation@2"
+        },
+        {
+          "when": "false",
+          "command": "graphics-h-compiler.compileAndRun",
+          "group": "navigation@3"
         }
       ],
       "editor/context": [
         {
           "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "command": "graphics-h-compiler.compileAndRunTurboC",
+          "group": "navigation@1"
+        },
+        {
+          "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "command": "graphics-h-compiler.compileAndRunWinBGI",
+          "group": "navigation@2"
+        },
+        {
+          "when": "false",
           "command": "graphics-h-compiler.compileAndRun",
-          "group": "navigation"
+          "group": "navigation@3"
         }
       ],
       "commandPalette": [
         {
-          "command": "graphics-h-compiler.compileAndRun",
+          "command": "graphics-h-compiler.compileAndRunWinBGI",
           "when": "editorLangId == cpp || resourceExtname == .c++"
+        },
+        {
+          "command": "graphics-h-compiler.compileAndRunTurboC",
+          "when": "editorLangId == cpp || resourceExtname == .c++"
+        },
+        {
+          "command": "graphics-h-compiler.compileAndRun",
+          "when": "false"
         },
         {
           "command": "graphics-h-compiler.compileOnly",

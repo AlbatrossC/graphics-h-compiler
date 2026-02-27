@@ -23,6 +23,7 @@ resources/**/*.zip
 
 !dist/**
 !resources/graphics/**
+!resources/turboc/**
 
 # Docs
 !.gitignore

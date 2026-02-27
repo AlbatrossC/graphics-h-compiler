@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026
+
+### Added
+- **Turbo C (DOSBox) compilation mode** — compile and run graphics.h programs inside a DOSBox emulator rendered directly in a VS Code Webview tab, powered by js-dos and WebAssembly
+- `graphics-h-compiler.compileAndRunTurboC` command — triggers the Turbo C DOSBox workflow
+- `graphics-h-compiler.compileAndRunWinBGI` command — explicit alias for the existing WinBGI native compilation flow
+- `turbocrunner.ts` module — manages the VS Code Webview panel, fresh in-memory ZIP creation, and communication with the DOSBox runtime
+- Bundled Turbo C resources in `resources/turboc/` — includes `tc-v1.zip`, `js-dos.js`, `wdosbox.js`, and `wdosbox.wasm.js`
+- Editor title run menu now shows both **Run Graphics (Turbo C)** and **Run Graphics (WinBGI)** for `.cpp` / `.c++` files
+- Editor context menu now shows both Turbo C and WinBGI run options
+- Error panel below the DOS canvas displays compilation errors when using Turbo C mode
+
+### Changed
+- Version bumped to **2.0.0** (major update)
+- Existing `compileAndRun` command renamed to **Run Graphics (WinBGI)** in UI; the original command ID is kept as a hidden alias for backward compatibility
+- `.vscodeignore` updated to include `resources/turboc/**` so that Turbo C files are bundled in the VSIX
+
+### Design Notes
+- **Fresh ZIP per run** — every execution creates a new in-memory copy of `tc-v1.zip` with the user's source code injected via `adm-zip`. The original ZIP on disk is never modified. This guarantees a clean DOS environment on every run, which is critical because Turbo C is unreliable when reusing a previously-used DOS state.
+- The Turbo C mode requires **no external toolchain** — everything runs inside the browser engine via WebAssembly, making it cross-platform (Windows, Linux, macOS).
+
+---
+
 ## [1.0.6] - 2025
 
 ### Fixed

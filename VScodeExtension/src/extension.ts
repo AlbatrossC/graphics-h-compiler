@@ -3,11 +3,13 @@ import { PathManager, OperatingSystem } from './paths';
 import { WindowsDownloader } from './windowsDownloader';
 import { UbuntuDownloader } from './ubuntuDownloader';
 import { GraphicsCompiler } from './compiler';
+import { TurboCRunner } from './turbocrunner';
 
 let pathManager: PathManager;
 let windowsDownloader: WindowsDownloader | null = null;
 let ubuntuDownloader: UbuntuDownloader | null = null;
 let compiler: GraphicsCompiler;
+let turboCRunner: TurboCRunner;
 let statusBarItem: vscode.StatusBarItem;
 let statusBarInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -24,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     compiler = new GraphicsCompiler(pathManager);
+    turboCRunner = new TurboCRunner(context);
 
     const osName = pathManager.getOSDisplayName();
     console.log(`Detected OS: ${osName}`);
@@ -68,6 +71,20 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             'graphics-h-compiler.compileAndRun',
             handleCompileAndRun
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.compileAndRunWinBGI',
+            handleCompileAndRun
+        )
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            'graphics-h-compiler.compileAndRunTurboC',
+            handleCompileAndRunTurboC
         )
     );
 
@@ -269,6 +286,37 @@ async function handleCompileAndRun(): Promise<void> {
         const errorMsg = error instanceof Error ? error.message : String(error);
         vscode.window.showErrorMessage(`Compilation failed: ${errorMsg}`);
         console.error('Compilation error:', error);
+    }
+}
+
+async function handleCompileAndRunTurboC(): Promise<void> {
+    try {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showErrorMessage('No file is currently open');
+            return;
+        }
+
+        const filePath = editor.document.uri.fsPath;
+
+        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
+            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
+            return;
+        }
+
+        if (editor.document.isDirty) {
+            const saved = await editor.document.save();
+            if (!saved) {
+                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
+                return;
+            }
+        }
+
+        await turboCRunner.compileAndRun(filePath);
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        vscode.window.showErrorMessage(`Turbo C Compilation failed: ${errorMsg}`);
+        console.error('Turbo C Compilation error:', error);
     }
 }
 
