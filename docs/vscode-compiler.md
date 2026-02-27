@@ -62,15 +62,21 @@ code --install-extension graphics-h-compiler-*.vsix
 VScodeExtension/
 ├── src/
 │   ├── extension.ts          # Entry point, command registration
-│   ├── compiler.ts           # Compilation and execution engine
+│   ├── compiler.ts           # WinBGI compilation and execution engine
+│   ├── turbocrunner.ts       # Turbo C DOSBox webview runner
 │   ├── paths.ts              # OS detection, path resolution
 │   ├── windowsDownloader.ts  # Windows toolchain installer
 │   └── ubuntuDownloader.ts   # Linux setup coordinator
 ├── resources/
-│   └── graphics/             # Bundled graphics files
-│       ├── graphics.h        # Modified BGI header (ISO C++ compliant)
-│       ├── winbgim.h         # Windows BGI implementation
-│       └── libbgi.a          # Static BGI library (i686)
+│   ├── graphics/             # Bundled WinBGI graphics files
+│   │   ├── graphics.h        # Modified BGI header (ISO C++ compliant)
+│   │   ├── winbgim.h         # Windows BGI implementation
+│   │   └── libbgi.a          # Static BGI library (i686)
+│   └── turboc/               # Bundled Turbo C DOSBox runtime
+│       ├── tc-v1.zip          # Turbo C 3.0 filesystem image
+│       ├── js-dos.js          # js-dos emulator core
+│       ├── wdosbox.js         # DOSBox WASM loader
+│       └── wdosbox.wasm.js    # DOSBox compiled to WebAssembly
 ├── assets/                   # Extension icons
 ├── dist/                     # Compiled JavaScript output
 ├── node_modules/             # npm dependencies
@@ -213,11 +219,13 @@ curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compil
 
 | Command ID | Description | Default Shortcut |
 |-----------|-------------|------------------|
-| `graphics-h-compiler.compileAndRun` | Compile and run current file | `Ctrl+Alt+N` |
-| `graphics-h-compiler.compileOnly` | Compile without running | `Ctrl+Alt+B` |
-| `graphics-h-compiler.setupToolchain` | Install/reinstall toolchain | - |
-| `graphics-h-compiler.stopProgram` | Stop running program | `Ctrl+Alt+K` |
-| `graphics-h-compiler.checkDependencies` | Verify installation | - |
+| `graphics-h-compiler.compileAndRun` | Compile and run (WinBGI) — legacy alias, hidden from menus | `Ctrl+Alt+N` |
+| `graphics-h-compiler.compileAndRunWinBGI` | Compile and run (WinBGI) | `Ctrl+Alt+N` |
+| `graphics-h-compiler.compileAndRunTurboC` | Compile and run (Turbo C DOSBox) | — |
+| `graphics-h-compiler.compileOnly` | Compile without running (WinBGI) | `Ctrl+Alt+B` |
+| `graphics-h-compiler.setupToolchain` | Install/reinstall WinBGI toolchain | — |
+| `graphics-h-compiler.stopProgram` | Stop running program (WinBGI) | `Ctrl+Alt+K` |
+| `graphics-h-compiler.checkDependencies` | Verify installation | — |
 
 ### Status Bar Button
 
@@ -234,7 +242,50 @@ All commands available via `Ctrl+Shift+P` under the `Graphics.h` category.
 
 ## Compilation Workflow
 
-### Compile Command (Both Platforms)
+### Turbo C (DOSBox) Mode
+
+The `compileAndRunTurboC` command triggers `TurboCRunner.compileAndRun(filePath)`. The workflow is:
+
+1. **Read source file** from disk
+2. **Create a fresh ZIP in memory** using `adm-zip` — the bundled `tc-v1.zip` is loaded, and two files are injected:
+   - `TURBOC3/BIN/USER.CPP` — the user's source code
+   - `AUTOEXEC.BAT` — batch script that invokes TCC and handles error reporting
+3. **Encode the ZIP as base64** and send it to the webview via `postMessage`
+4. **Inside the webview**, the base64 is decoded, converted to a Blob URL, and passed to `Dos()` (js-dos) which extracts it into the DOSBox virtual filesystem
+5. **DOSBox boots**, runs `AUTOEXEC.BAT`, which:
+   - Compiles with `TCC.EXE`
+   - If compilation fails, writes `FAIL.TXT` and displays errors
+   - If compilation succeeds, runs the resulting `USER.EXE`
+6. **Error polling** — a `setInterval` in the webview polls the DOSBox filesystem for `ERR.TXT` and `FAIL.TXT` to detect compilation errors and display them in an error panel below the canvas
+
+**Critical design: Fresh ZIP per run.** The original `tc-v1.zip` on disk is never modified. Every run creates a new in-memory copy. This ensures DOSBox always starts with a clean Turbo C filesystem — critical because Turbo C is unreliable when reusing a DOS environment.
+
+**Batch script:**
+```batch
+@ECHO OFF
+CD TURBOC3\BIN
+IF EXIST USER.EXE DEL USER.EXE
+IF EXIST ERR.TXT DEL ERR.TXT
+IF EXIST FAIL.TXT DEL FAIL.TXT
+TCC -I..\INCLUDE -L..\LIB -n. USER.CPP ..\LIB\GRAPHICS.LIB > ERR.TXT
+IF EXIST USER.EXE GOTO SUCCESS
+ECHO COMPILE_FAILED > FAIL.TXT
+CLS
+ECHO ========================================
+ECHO COMPILATION ERRORS:
+ECHO ========================================
+TYPE ERR.TXT
+PAUSE
+EXIT
+:SUCCESS
+CLS
+USER.EXE
+PAUSE
+```
+
+### WinBGI (Native) Mode
+
+#### Compile Command (Both Platforms)
 
 The compiler is invoked via `spawn(command, args[])` directly on both Windows and Linux — no shell interpolation is used, which prevents shell injection from filenames containing special characters.
 
@@ -338,9 +389,26 @@ Responsibilities:
 Key notes:
 - The `setInterval` for status bar polling is stored and cleared in `deactivate()` to prevent leaks
 - Both `handleCompileAndRun` and `handleCompileOnly` use `vscode.window.withProgress({ cancellable: true })` and pass the cancellation token to the compiler
+- `handleCompileAndRunTurboC` validates the file, auto-saves if dirty, and delegates to `TurboCRunner.compileAndRun()`
 - Status bar activates for both `languageId === 'cpp'` and filenames ending in `.c++`
 
-#### compiler.ts — Compilation Engine
+#### turbocrunner.ts — Turbo C DOSBox Runner
+
+Responsibilities:
+- Create a VS Code Webview panel displaying only the DOSBox canvas
+- Load bundled `js-dos.js` and `wdosbox.js` from `resources/turboc/`
+- Create a fresh in-memory ZIP per run using `adm-zip`
+- Inject user source code and batch script into the ZIP
+- Send the base64-encoded ZIP to the webview
+- Webview handles DOSBox lifecycle, error detection, and canvas rendering
+
+Key design decisions:
+- The webview is created once and reused (panel is revealed if already open)
+- `retainContextWhenHidden: true` keeps the DOSBox state alive when the tab is in the background
+- `localResourceRoots` is restricted to the `resources/turboc/` directory
+- Error detection is done by polling the DOSBox virtual filesystem for `FAIL.TXT` and `ERR.TXT`
+
+#### compiler.ts — WinBGI Compilation Engine
 
 Responsibilities:
 - Source file validation
@@ -502,3 +570,5 @@ npx vsce publish
 - MinGW-w64: ZPL 2.1
 - graphics.h / winbgim.h: Public domain (WinBGIm project)
 - libbgi.a: Modified BSD
+- js-dos: GPL v3 (https://js-dos.com)
+- DOSBox: GPL v2
