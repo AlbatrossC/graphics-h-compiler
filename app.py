@@ -50,6 +50,16 @@ def maintenance():
 def docs():
     return render_template('docs.html')
 
+@app.route('/embed')
+@app.route('/embed.html')
+def embed():
+    return render_template('embed.html')
+
+@app.route('/embed-docs')
+@app.route('/embed-docs.html')
+def embed_docs():
+    return render_template('embed-docs.html')
+
 # Static assets
 @app.route('/static/<path:path>')
 def serve_static(path):

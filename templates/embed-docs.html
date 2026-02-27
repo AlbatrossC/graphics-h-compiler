@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed API Documentation — graphics.h Online Compiler</title>
+    <meta name="description"
+        content="Official documentation for embedding graphics.h compiler in your website with a single iframe and postMessage.">
+
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #111111;
+            --surface-low: #0d0d0d;
+            --surface-high: #1a1a1a;
+            --accent: #00ff88;
+            --border: #1f1f1f;
+            --border-highlight: #333333;
+            --text-main: #f0f0f0;
+            --text-dim: #999999;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            /* Subtle grid background to fill empty sides without gradients */
+            background-image: radial-gradient(circle at 2px 2px, #1a1a1a 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            color: var(--text-main);
+            border-color: var(--text-dim);
+            background: var(--surface-high);
+        }
+
+        /* ==================== CONTENT LAYOUT ==================== */
+        .layout-grid {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 2rem;
+            padding: 8rem 2rem 4rem;
+        }
+
+        @media (max-width: 1100px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+                padding-top: 6rem;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar {
+            position: sticky;
+            top: 7rem;
+            height: fit-content;
+            padding-right: 1.5rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .sidebar-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .sidebar-item {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            padding: 0.6rem 0.8rem;
+            transition: var(--transition);
+            display: block;
+            border-radius: 6px;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        /* ==================== MAIN CONTENT ==================== */
+        main {
+            max-width: 960px;
+            /* Limit line length for readability within the wider grid */
+        }
+
+        main section {
+            margin-bottom: 5rem;
+            scroll-margin-top: 8rem;
+        }
+
+        .section-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+        }
+
+        h1 span {
+            color: var(--accent);
+        }
+
+        .hero-desc {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            margin-bottom: 3rem;
+            max-width: 700px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        p {
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        /* ==================== CONTENT BLOCKS ==================== */
+        .card {
+            background: var(--surface-low);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-highlight);
+        }
+
+        .feature-icon {
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        /* ==================== CODE BLOCKS ==================== */
+        .code-block-wrapper {
+            margin: 1.5rem 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #000;
+        }
+
+        .code-header {
+            background: var(--surface);
+            padding: 0.6rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-lang {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .copy-btn {
+            background: var(--surface-high);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+        }
+
+        .copy-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-dim);
+        }
+
+        pre {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            color: #e0e0e0;
+            line-height: 1.7;
+        }
+
+        .keyword {
+            color: #ff7b72;
+        }
+
+        .string {
+            color: #a5d6ff;
+        }
+
+        .comment {
+            color: #8b949e;
+        }
+
+        .function {
+            color: #d2a8ff;
+        }
+
+        .builtin {
+            color: var(--accent);
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 0.8rem 1.6rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            font-family: inherit;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #00e87a;
+            transform: translateY(-1px);
+        }
+
+        /* ==================== EMBED WRAPPER ==================== */
+        #embed-demo-container {
+            margin-top: 2rem;
+            display: none;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-highlight);
+            width: fit-content;
+            line-height: 0;
+        }
+
+        /* ==================== STEPS ==================== */
+        .step-list {
+            margin: 2rem 0;
+        }
+
+        .step-item {
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .step-num {
+            height: 48px;
+            width: 48px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* ==================== TABLE ==================== */
+        .table-container {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--surface);
+            padding: 1rem;
+            text-align: left;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-dim);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        code.inline {
+            background: var(--surface-high);
+            color: var(--accent);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .copyright {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            footer {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <span>[</span>graphics.h<span>]</span> Online Compiler
+            </a>
+            <a href="/" class="nav-link">
+                <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+                Back to Home
+            </a>
+        </div>
+    </header>
+
+    <div class="layout-grid">
+        <aside class="sidebar">
+            <p class="sidebar-title">API Reference</p>
+            <nav class="sidebar-nav">
+                <a href="#introduction" class="sidebar-item active">Introduction</a>
+                <a href="#quick-start" class="sidebar-item">Quick Start</a>
+                <a href="#demo" class="sidebar-item">Interactive Demo</a>
+                <a href="#parameters" class="sidebar-item">Message API</a>
+                <a href="#customization" class="sidebar-item">Customization</a>
+            </nav>
+        </aside>
+
+        <main>
+            <section id="introduction">
+                <span class="section-tag">Embed API</span>
+                <h1>Supercharge your <span>Docs</span>.</h1>
+                <p class="hero-desc">Embed a full Turbo C graphics environment in your website with one line of code.
+                    Perfect for tutorials, blogs, and educational resources.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <i data-lucide="zap" class="feature-icon"></i>
+                        <h3>Zero Config</h3>
+                        <p style="font-size: 0.9rem; margin-bottom: 0;">No complex NPM packages or dependencies. Just a
+                            standard HTML iframe.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i data-lucide="terminal" class="feature-icon"></i>
+                        <h3>Full Runner</h3>
+                        <p style="font-size: 0.9rem; margin-bottom: 0;">Access a complete graphics.h environment
+                            including Borland BGI fonts.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i data-lucide="message-square" class="feature-icon"></i>
+                        <h3>PostMessage API</h3>
+                        <p style="font-size: 0.9rem; margin-bottom: 0;">Send code snippets directly from your page logic
+                            via standard messaging.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quick-start">
+                <h2>Quick Start</h2>
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-num">01</div>
+                        <div class="step-content">
+                            <h3>Initialize the Iframe</h3>
+                            <p>Place this hidden iframe in your page. Use <code>/embed</code> as the source.</p>
+                            <div class="code-block-wrapper">
+                                <div class="code-header"><span class="code-lang">html</span><button class="copy-btn"
+                                        onclick="copyCode(this)"><i data-lucide="copy"
+                                            style="width: 12px; height: 12px;"></i> Copy</button></div>
+                                <pre><code>&lt;iframe id=<span class="string">"gh-embed"</span> 
+        src=<span class="string">"/embed"</span> 
+        width=<span class="string">"640"</span> height=<span class="string">"480"</span> 
+        style=<span class="string">"border:0; background:#000; display:none;"</span>&gt;
+&lt;/iframe&gt;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-item">
+                        <div class="step-num">02</div>
+                        <div class="step-content">
+                            <h3>Trigger the Execution</h3>
+                            <p>Show the iframe and send the code snippet using <code>postMessage</code>.</p>
+                            <div class="code-block-wrapper">
+                                <div class="code-header"><span class="code-lang">javascript</span><button
+                                        class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"
+                                            style="width: 12px; height: 12px;"></i> Copy</button></div>
+                                <pre><code><span class="keyword">function</span> <span class="function">runCode</span>(code) {
+  <span class="keyword">const</span> embed = document.getElementById(<span class="string">'gh-embed'</span>);
+  embed.style.display = <span class="string">'block'</span>;
+  
+  <span class="comment">// Send code snippet</span>
+  embed.contentWindow.postMessage({
+    type: <span class="string">'RUN_SNIPPET'</span>,
+    snippet: code
+  }, <span class="string">'*'</span>);
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="demo">
+                <h2>Interactive Demo</h2>
+                <div class="card">
+                    <p>Edit the code below and hit the play button to see it run in a production-ready embed
+                        environment.</p>
+                    <div class="code-block-wrapper">
+                        <pre id="demo-editor" contenteditable="true" spellcheck="false"><code>setcolor(YELLOW);
+circle(320, 240, 100);
+setfillstyle(SOLID_FILL, RED);
+floodfill(320, 240, YELLOW);</code></pre>
+                    </div>
+                    <button class="btn btn-primary" onclick="executeDemo()">
+                        <i data-lucide="play" style="width: 18px; height: 18px;"></i>
+                        Execute Snippet
+                    </button>
+
+                    <div id="embed-demo-container">
+                        <iframe id="gh-demo-runner" src="/embed" width="640" height="480"
+                            style="border:0; background:black; display:block;"></iframe>
+                    </div>
+                </div>
+            </section>
+
+            <section id="parameters">
+                <h2>Message Interface</h2>
+                <p>The messaging API allows for both snippet-based (auto-wrapped) and full-program execution.</p>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Type</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code class="inline">type</code></td>
+                                <td>String</td>
+                                <td>Must be <code class="inline">"RUN_SNIPPET"</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code class="inline">snippet</code></td>
+                                <td>String</td>
+                                <td>Your C/C++ code.</td>
+                            </tr>
+                            <tr>
+                                <td><code class="inline">boilerplate</code></td>
+                                <td>Bool</td>
+                                <td>Optional. Set to <code class="inline">false</code> to disable <code>main()</code>
+                                    wrapping behavior.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card" style="margin-top: 1rem; border-left: 3px solid var(--accent);">
+                    <h3
+                        style="color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.85rem; text-transform: uppercase;">
+                        Pro Tip</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 0;">If <code>boilerplate</code> is true (default), the
+                        runner automatically injects <code>#include &lt;graphics.h&gt;</code> and initializes the BGI
+                        driver for you.</p>
+                </div>
+            </section>
+
+            <section id="customization">
+                <h2>Layout Customization</h2>
+                <p>The DOS canvas is fixed at 640x480. To integrate it into your site's responsive design, use CSS
+                    scaling on the container.</p>
+                <div class="code-block-wrapper">
+                    <div class="code-header"><span class="code-lang">css</span></div>
+                    <pre><code><span class="comment">/* Scalable wrapper example */</span>
+<span class="keyword">#embed-wrapper</span> {
+  <span class="keyword">--embed-scale</span>: <span class="keyword">0.8</span>; <span class="comment">/* 80% scale */</span>
+  <span class="keyword">width</span>: <span class="builtin">calc</span>(640px * <span class="keyword">var</span>(--embed-scale));
+  <span class="keyword">height</span>: <span class="builtin">calc</span>(480px * <span class="keyword">var</span>(--embed-scale));
+  <span class="keyword">overflow</span>: hidden;
+  <span class="keyword">border-radius</span>: 12px;
+}</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <div class="copyright">&copy; 2026 graphics.h Online Compiler</div>
+        <div style="display: flex; gap: 2rem;">
+            <a href="/" class="nav-link" style="border:none; padding:0;">Home</a>
+            <a href="/compiler" class="nav-link" style="border:none; padding:0;">Compiler</a>
+            <a href="/docs" class="nav-link" style="border:none; padding:0;">Documentation</a>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        function copyCode(btn) {
+            const code = btn.closest('.code-block-wrapper').querySelector('pre').innerText;
+            navigator.clipboard.writeText(code);
+            const original = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="check" style="width: 12px; height: 12px;"></i> Copied`;
+            lucide.createIcons();
+            setTimeout(() => {
+                btn.innerHTML = original;
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        function executeDemo() {
+            const embed = document.getElementById('gh-demo-runner');
+            const container = document.getElementById('embed-demo-container');
+            const code = document.getElementById('demo-editor').innerText;
+
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            embed.contentWindow.postMessage({
+                type: 'RUN_SNIPPET',
+                snippet: code,
+                boilerplate: true
+            }, '*');
+        }
+
+        // Sidebar active state logic
+        const sections = document.querySelectorAll('section');
+        const navItems = document.querySelectorAll('.sidebar-item');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('href').slice(1) === current) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

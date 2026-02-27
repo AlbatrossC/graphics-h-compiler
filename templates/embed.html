@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embed - Graphics.h</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #a9b1d6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #24283b;
+            border-top-color: #7aa2f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <!-- Load resources (wdosbox, zip) nicely like compiler does -->
+    <script src="/static/resource-loader.js"></script>
+</head>
+
+<body>
+    <div id="loading" class="hidden">
+        <div class="spinner"></div>
+        <div id="loading-text">Starting DOS...</div>
+    </div>
+
+    <!-- We reuse the existing DOS runner without editor/UI wrappers -->
+    <iframe id="dos-iframe" src="/static/dos-runner.html" tabindex="-1"></iframe>
+
+    <script>
+        const iframe = document.getElementById('dos-iframe');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loading-text');
+
+        let wdosboxUrl = '';
+        let tcZipUrl = '';
+        let iframeReady = false;
+        let pendingRun = null; // { snippet, boilerplate }
+
+        // Load correct URLs based on online/offline state via resource-loader.js
+        async function init() {
+            await ResourceLoader.init();
+            wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
+            tcZipUrl = await ResourceLoader.getResourceUrl('assets', 'tc-zip');
+        }
+
+        // Standard batch script to compile and run silent
+        const batchScript = `@ECHO OFF
+CD TURBOC3\\BIN
+IF EXIST USER.EXE DEL USER.EXE
+IF EXIST ERR.TXT DEL ERR.TXT
+IF EXIST FAIL.TXT DEL FAIL.TXT
+TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
+IF EXIST USER.EXE GOTO SUCCESS
+ECHO COMPILE_FAILED > FAIL.TXT
+COPY ERR.TXT C:\\ERR.TXT >NUL
+COPY FAIL.TXT C:\\FAIL.TXT >NUL
+CLS
+ECHO ========================================
+ECHO COMPILATION ERRORS:
+ECHO ========================================
+TYPE ERR.TXT
+ECHO.
+PAUSE
+EXIT
+:SUCCESS
+CLS
+USER.EXE
+PAUSE
+`;
+
+        async function runSnippet(snippet, useBoilerplate = true) {
+            loading.classList.remove('hidden');
+            loadingText.textContent = "Loading compiler...";
+
+            try {
+                // Fetch compiler zip, convert to blob to keep local logic identical to core system
+                const response = await fetch(tcZipUrl);
+                if (!response.ok) throw new Error("Failed to download compiler");
+                const blob = await response.blob();
+                const zipObjUrl = URL.createObjectURL(blob);
+
+                // When boilerplate=true (default), wrap snippet in main() + initgraph().
+                // When boilerplate=false, send the full program as-is.
+                const fullCode = useBoilerplate
+                    ? `#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n\n    ${snippet}\n\n    getch();\n    closegraph();\n    return 0;\n}`
+                    : snippet;
+
+                iframe.contentWindow.postMessage({ type: 'STOP_DOS' }, '*');
+
+                // Slight delay to ensure prev process clears
+                setTimeout(() => {
+                    iframe.contentWindow.postMessage({
+                        type: 'INIT_DOS',
+                        payload: {
+                            wdosboxUrl: wdosboxUrl,
+                            zipUrl: zipObjUrl,
+                            code: fullCode,
+                            batchScript: batchScript,
+                            cycles: 'max'
+                        }
+                    }, '*');
+                }, 150);
+            } catch (err) {
+                loadingText.textContent = "Failed to load compiler";
+                console.error(err);
+            }
+        }
+
+        // Listener for parent window messages and inner dos-runner messages
+        window.addEventListener('message', (e) => {
+            // Parent sending snippet
+            if (e.data && e.data.type === 'RUN_SNIPPET') {
+                const snippet = e.data.snippet || '';
+                // boilerplate defaults to true when not provided
+                const boilerplate = e.data.boilerplate !== false;
+
+                if (!iframeReady || !wdosboxUrl) {
+                    pendingRun = { snippet, boilerplate }; // Queue it up
+                } else {
+                    runSnippet(snippet, boilerplate);
+                }
+            }
+
+            // Frame reporting status
+            if (e.source === iframe.contentWindow) {
+                const data = e.data || {};
+
+                if (data.type === 'IFRAME_READY') {
+                    iframeReady = true;
+                    if (pendingRun && wdosboxUrl) {
+                        runSnippet(pendingRun.snippet, pendingRun.boilerplate);
+                        pendingRun = null;
+                    }
+                }
+                else if (data.type === 'STATUS') {
+                    if (data.status === 'RUNNING') {
+                        loading.classList.add('hidden'); // Clear loader on start
+                    } else if (data.status === 'STARTING') {
+                        loadingText.textContent = 'Initializing DOS...';
+                    } else if (data.status === 'EXTRACTING') {
+                        loadingText.textContent = 'Extracting compiler files...';
+                    } else if (data.status === 'WRITING_CODE') {
+                        loadingText.textContent = 'Compiling...';
+                    }
+                }
+                else if (data.type === 'COMPILATION_ERROR') {
+                    loadingText.textContent = 'Compilation Error';
+                    console.error("Compilation error in embed:", data.content);
+                    // Minimal styling applied to the error via iframe output inside DOS box, 
+                    // or we could show it here if desired. The DOS script already echoes ERR.TXT so it'll print.
+                    loading.classList.add('hidden');
+                }
+            }
+        });
+
+        // Start initialization
+        init().then(() => {
+            if (iframeReady && pendingRun) {
+                runSnippet(pendingRun.snippet, pendingRun.boilerplate);
+                pendingRun = null;
+            }
+        });
+    </script>
+</body>
+
+</html>
