@@ -52,6 +52,12 @@ function isMobileView() {
 function switchMobileTab(tab) {
     if (!_mobileTabEditor || !_mobileTabOutput) return;
 
+    // Close the sidebar if it is open when a tab is clicked
+    if (isMobileView() && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+    }
+
     document.body.classList.remove('mobile-tab-output', 'mobile-tab-explorer');
     _mobileTabEditor.classList.remove('active');
     _mobileTabOutput.classList.remove('active');
@@ -128,12 +134,16 @@ function toggleEditorFullscreen(forceState) {
         isEditorFullscreen = !isEditorFullscreen;
     }
 
+    const svgIcon = document.querySelector('#fullscreen-editor-btn svg');
+
     if (isEditorFullscreen) {
         editorWrapper.classList.add('fullscreen');
         terminalWrapper.classList.add('hidden');
+        if (svgIcon) svgIcon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
     } else {
         editorWrapper.classList.remove('fullscreen');
         terminalWrapper.classList.remove('hidden');
+        if (svgIcon) svgIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
     }
 
     setTimeout(() => {
@@ -143,12 +153,7 @@ function toggleEditorFullscreen(forceState) {
     }, 100);
 }
 
-const fullscreenEditorBtn = document.getElementById('fullscreen-editor-btn');
-if (fullscreenEditorBtn) {
-    fullscreenEditorBtn.addEventListener('click', () => {
-        toggleEditorFullscreen();
-    });
-}
+
 
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
@@ -161,6 +166,8 @@ if (fullscreenTerminalBtn) {
         if (isTerminalFullscreen) {
             terminalWrapper.classList.add('fullscreen');
             editorWrapper.classList.add('hidden');
+            const svgIcon = document.querySelector('#fullscreen-terminal-btn svg');
+            if (svgIcon) svgIcon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
             currentTerminalZoom = 1.2;
             updateTerminalZoom(0);
             if (terminalZoomControls) {
@@ -170,6 +177,8 @@ if (fullscreenTerminalBtn) {
         } else {
             terminalWrapper.classList.remove('fullscreen');
             editorWrapper.classList.remove('hidden');
+            const svgIcon = document.querySelector('#fullscreen-terminal-btn svg');
+            if (svgIcon) svgIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
             if (terminalZoomControls) {
                 terminalZoomControls.classList.add('hidden');
                 terminalZoomControls.style.display = 'none';
@@ -614,6 +623,13 @@ window.addEventListener('beforeunload', (event) => {
 // ==================== RESPONSIVE HANDLING ====================
 
 function handleResize() {
+    if (!isMobileView()) {
+        document.body.classList.remove('mobile-tab-output', 'mobile-tab-explorer', 'mobile-tab-editor');
+        if (isEditorFullscreen) {
+            toggleEditorFullscreen(false);
+        }
+    }
+
     if (editor && editor.requestMeasure) {
         editor.requestMeasure();
     }

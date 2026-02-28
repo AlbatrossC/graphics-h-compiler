@@ -28,8 +28,8 @@
 
     --border-color: #262626;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --header-height: 56px;
-    --layout-gap: 10px;
+    --header-height: 64px;
+    --layout-gap: 12px;
     --panel-radius: 8px;
 
     /* Performance optimization */
@@ -120,7 +120,7 @@ header {
 
 /* Logo */
 .logo {
-    font-size: 0.9375rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.02em;
@@ -158,12 +158,12 @@ header {
 .demo-dropdown,
 .save-indicator,
 .theme-toggle {
-    height: 34px;
+    height: 38px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 500;
     transition: all var(--transition-fast);
     border: 1px solid var(--border-color);
@@ -180,13 +180,13 @@ header {
 }
 
 .btn {
-    padding: 0 14px;
-    gap: 6px;
+    padding: 0 16px;
+    gap: 8px;
 }
 
 .btn svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 /* Button Variants */
@@ -239,14 +239,14 @@ header {
 
 /* Icon Buttons */
 .icon-btn {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
     padding: 0;
 }
 
 .icon-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 .icon-btn:hover {
@@ -256,8 +256,8 @@ header {
 }
 
 .theme-toggle {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
     padding: 0;
 }
 
@@ -268,8 +268,8 @@ header {
 }
 
 .theme-toggle svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 /* Demo Selector */
@@ -2352,7 +2352,6 @@ header {
     .save-indicator,
     .editor-mode,
     .logo-full,
-    #settings-header-btn,
     #theme-toggle {
         display: none !important;
     }
@@ -2385,7 +2384,8 @@ header {
         display: none !important;
     }
 
-    #save-btn {
+    #save-btn,
+    #settings-header-btn {
         display: inline-flex !important;
         width: 40px !important;
         height: 40px;
@@ -2398,12 +2398,14 @@ header {
         color: var(--text-primary);
     }
 
-    #save-btn svg {
+    #save-btn svg,
+    #settings-header-btn svg {
         width: 18px;
         height: 18px;
     }
 
-    #save-btn .btn-text {
+    #save-btn .btn-text,
+    #settings-header-btn .btn-text {
         display: none !important;
     }
 
@@ -2441,7 +2443,8 @@ header {
 
     #sidebar-toggle:hover,
     #back-btn:hover,
-    #save-btn:hover {
+    #save-btn:hover,
+    #settings-header-btn:hover {
         background: var(--vscode-sidebar);
         border-color: var(--text-primary);
     }
