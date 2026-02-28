@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}} 'nonce-{{nonce}}' 'unsafe-eval' 'wasm-unsafe-eval' blob:; connect-src {{cspSource}} data: blob:; img-src {{cspSource}} data: blob:; worker-src {{cspSource}} blob:;">
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+
+        #dos-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 0;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            image-rendering: pixelated;
+        }
+
+        #error-panel {
+            display: none;
+            background: #220000;
+            color: #ff5555;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            width: 100%;
+            box-sizing: border-box;
+            border-top: 2px solid #ff0000;
+            overflow-y: auto;
+            max-height: 35vh;
+            flex-shrink: 0;
+        }
+
+        #error-panel-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-family: sans-serif;
+            color: #ff8888;
+        }
+    </style>
+    <script nonce="{{nonce}}" src="{{jsDosUrl}}"></script>
+</head>
+
+<body>
+    <div id="dos-container">
+        <canvas id="canvas"></canvas>
+    </div>
+    <div id="error-panel">
+        <div id="error-panel-title">Compilation Errors</div>
+        <div id="error-content"></div>
+    </div>
+    <script nonce="{{nonce}}">
+        const canvas = document.getElementById('canvas');
+        const errorPanel = document.getElementById('error-panel');
+        const errorContent = document.getElementById('error-content');
+        let dosInstance = null;
+        let activeErrorPollTimer = null;
+        let isRunning = false; // Run lock
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'RUN_NATIVE') {
+                runDos(message.zipData);
+            }
+        });
+
+        // ==================== CONSOLE FILTER ====================
+        const originalLog = console.log;
+        const originalInfo = console.info;
+        const originalWarn = console.warn;
+
+        const shouldBlock = (msg) => {
+            if (typeof msg !== 'string') return false;
+            if (msg.includes('extracting:')) return true;
+            if (msg.includes('js-dos version')) return true;
+            if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
+            if (msg.startsWith('CONFIG:')) return true;
+            if (msg.startsWith('MIDI:')) return true;
+            if (msg.startsWith('SHELL:')) return true;
+            if (msg.includes('%') && msg.match(/[a-f0-9-]{36}/)) return true;
+            if (msg.startsWith('[INFO]') && msg.match(/[a-f0-9-]{36}/)) return true;
+            if (msg.includes('Resolving DosBox')) return true;
+            if (msg.includes('DosBox resolved')) return true;
+            if (msg.trim() === '---') return true;
+            return false;
+        };
+
+        console.log = function (...args) {
+            if (args.length > 0 && shouldBlock(args[0])) return;
+            originalLog.apply(console, args);
+        };
+        console.info = function (...args) {
+            if (args.length > 0 && shouldBlock(args[0])) return;
+            originalInfo.apply(console, args);
+        };
+        console.warn = function (...args) {
+            if (args.length > 0 && shouldBlock(args[0])) return;
+            originalWarn.apply(console, args);
+        };
+
+        function base64ToUint8Array(base64) {
+            const binary_string = window.atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        function readTextFile(fs, filePath) {
+            try {
+                // Emscripten FS returns a Uint8Array; decode it simply
+                const bytes = fs.readFile(filePath);
+                return new TextDecoder().decode(bytes) || '';
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function disposeDosInstance() {
+            if (activeErrorPollTimer) {
+                clearInterval(activeErrorPollTimer);
+                activeErrorPollTimer = null;
+            }
+            if (dosInstance) {
+                try { dosInstance.exit(); } catch (e) { }
+                dosInstance = null;
+            }
+        }
+
+        async function runDos(zipData) {
+            if (isRunning) return; // Prevent double-run race conditions
+            isRunning = true;
+
+            disposeDosInstance();
+
+            errorPanel.style.display = 'none';
+            errorContent.textContent = '';
+
+            const zipArray = base64ToUint8Array(zipData);
+            const blob = new Blob([zipArray], { type: 'application/zip' });
+            const zipUrl = URL.createObjectURL(blob);
+
+            try {
+                const runner = Dos(canvas, {
+                    wdosboxUrl: "{{wdosboxUrl}}",
+                    cycles: 'max',
+                    autolock: false
+                });
+
+                runner.ready((fs, main) => {
+                    fs.extract(zipUrl).then(() => {
+                        URL.revokeObjectURL(zipUrl); // Prevent memory leaks
+
+                        main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT']).then(dos => {
+                            dosInstance = dos;
+                            isRunning = false; // Successfully booted, unlock run
+
+                            // Start polling for errors
+                            activeErrorPollTimer = setInterval(() => {
+                                if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) return;
+                                const FS = dosInstance.em.FS;
+
+                                const errPath = 'TURBOC3/BIN/ERR.TXT';
+                                const failPath = 'TURBOC3/BIN/FAIL.TXT';
+                                const userExePath = 'TURBOC3/BIN/USER.EXE';
+
+                                let hasFailMarker = false;
+                                let hasUserExe = false;
+                                try { FS.stat(failPath); hasFailMarker = true; } catch (e) { }
+                                try { FS.stat(userExePath); hasUserExe = true; } catch (e) { }
+
+                                if (hasUserExe && !hasFailMarker) {
+                                    clearInterval(activeErrorPollTimer);
+                                    return;
+                                }
+
+                                let content = '';
+                                try { if (FS.stat(errPath)) content = readTextFile(FS, errPath); } catch (e) { }
+                                const trimmed = content.trim();
+
+                                if (!hasFailMarker && !trimmed) return;
+
+                                const lower = trimmed.toLowerCase();
+                                const looksLikeError =
+                                    hasFailMarker ||
+                                    /(^|\b)(error|fatal|undefined|unable|unresolved|not found)(\b|:)/i.test(trimmed) ||
+                                    (!hasUserExe && lower.length > 0);
+
+                                if (looksLikeError) {
+                                    clearInterval(activeErrorPollTimer);
+                                    errorPanel.style.display = 'block';
+                                    errorContent.textContent = trimmed || 'Compilation failed. Check your code and try again.';
+                                }
+                            }, 400);
+                        }).catch(e => {
+                            console.error('DOS main error:', e);
+                            URL.revokeObjectURL(zipUrl);
+                            isRunning = false;
+                        });
+                    }).catch(e => {
+                        console.error('Extract error:', e);
+                        URL.revokeObjectURL(zipUrl);
+                        isRunning = false;
+                    });
+                });
+            } catch (e) {
+                console.error(e);
+                URL.revokeObjectURL(zipUrl);
+                isRunning = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

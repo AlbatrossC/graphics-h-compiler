@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0] - 2026
 
+### Refactored & Optimized (Turbo C Architecture)
+- **External Webview HTML** — The large inline HTML string in `turbocrunner.ts` has been extracted to an external file at `resources/webview/index.html` for better maintainability.
+- **Content Security Policy (CSP)** — Implemented strict CSP in the webview with dynamically injected nonces to ensure only trusted scripts (`js-dos.js`, `wdosbox.js`) are executed.
+- **Binary Payload Transfer** — Maintained use of Base64 encoded payload transfers to `postMessage` which are converted back internally inside the webview to reconstruct the `Uint8Array` ZIP binary for compatibility across all VS Code OS rendering backends.
+- **Race Condition Prevention** — Added a run lock (`isRunning`) in the webview to prevent rapid double-clicks from spawning parallel DOS wrappers.
+- **Memory Leak Fixes** — Properly implemented `URL.revokeObjectURL()` after the ZIP extraction, and ensured the `dosInstance` and `activeErrorPollTimer` are fully neutralized before a fresh run is initialized.
+- **Native TextDecoder** — Replaced fallbacks with a robust native `TextDecoder()` directly decoding the `Uint8Array` from Emscripten's filesystem during error polling.
+
 ### Added
 - **Turbo C (DOSBox) compilation mode** — compile and run graphics.h programs inside a DOSBox emulator rendered directly in a VS Code Webview tab, powered by js-dos and WebAssembly
 - `graphics-h-compiler.compileAndRunTurboC` command — triggers the Turbo C DOSBox workflow

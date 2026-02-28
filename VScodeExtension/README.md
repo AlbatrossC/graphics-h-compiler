@@ -60,6 +60,7 @@ Runs your graphics.h code inside an emulated Turbo C 3.0 environment via DOSBox,
 - **No external toolchain required** — the Turbo C compiler, js-dos runtime, and DOSBox WASM binary are bundled with the extension
 - **Fresh ZIP per run** — every execution creates a new in-memory copy of the Turbo C bundle with your source code injected, ensuring a clean DOS environment
 - **DOS canvas output** — only the DOSBox canvas is shown; if compilation fails, an error panel appears below the canvas
+- **Secure and Performant** — Uses strict Content Security Policy (CSP) and dynamic nonces for safe execution, while transferring the in-memory compiler ZIP seamlessly as a Base64 payload.
 - Works on **all platforms** (Windows, Linux, macOS) since it runs entirely in the browser engine
 
 ### WinBGI (Native) Mode

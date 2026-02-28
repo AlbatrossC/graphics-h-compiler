@@ -251,7 +251,7 @@ The `compileAndRunTurboC` command triggers `TurboCRunner.compileAndRun(filePath)
    - `TURBOC3/BIN/USER.CPP` — the user's source code
    - `AUTOEXEC.BAT` — batch script that invokes TCC and handles error reporting
 3. **Encode the ZIP as base64** and send it to the webview via `postMessage`
-4. **Inside the webview**, the base64 is decoded, converted to a Blob URL, and passed to `Dos()` (js-dos) which extracts it into the DOSBox virtual filesystem
+4. **Inside the webview**, the base64 is decoded, converted to a Blob URL, and passed to `Dos()` (js-dos) which extracts it into the DOSBox virtual filesystem and then the memory is freed with `URL.revokeObjectURL()`
 5. **DOSBox boots**, runs `AUTOEXEC.BAT`, which:
    - Compiles with `TCC.EXE`
    - If compilation fails, writes `FAIL.TXT` and displays errors
@@ -396,11 +396,10 @@ Key notes:
 
 Responsibilities:
 - Create a VS Code Webview panel displaying only the DOSBox canvas
-- Load bundled `js-dos.js` and `wdosbox.js` from `resources/turboc/`
-- Create a fresh in-memory ZIP per run using `adm-zip`
-- Inject user source code and batch script into the ZIP
-- Send the base64-encoded ZIP to the webview
-- Webview handles DOSBox lifecycle, error detection, and canvas rendering
+- Load the external webview template from `resources/webview/index.html` and conditionally inject dynamic CSP nonces and URLs
+- Create a fresh in-memory ZIP per run using `adm-zip` and encode it as a Base64 string
+- Send the Base64 payload directly utilizing VS Code's `postMessage`
+- Webview handles Base64 decoding, DOSBox lifecycle (locks to avoid double runs), safe native `TextDecoder` for error detection, and URL garbage collection (`revokeObjectURL`)
 
 Key design decisions:
 - The webview is created once and reused (panel is revealed if already open)
