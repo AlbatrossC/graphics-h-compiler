@@ -21,6 +21,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- JS SDK -->
+    <script src="/sdk.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -197,11 +200,11 @@
         }
 
         h1 {
-            font-size: clamp(2.5rem, 5vw, 3.5rem);
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            line-height: 1.2;
+            margin-bottom: 1rem;
             font-weight: 700;
-            letter-spacing: -0.04em;
+            letter-spacing: -0.02em;
         }
 
         h1 span {
@@ -209,24 +212,24 @@
         }
 
         .hero-desc {
-            font-size: 1.25rem;
+            font-size: 1.05rem;
             color: var(--text-dim);
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             max-width: 700px;
         }
 
         h2 {
-            font-size: 2rem;
-            margin-bottom: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.75rem;
         }
 
         h3 {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
             font-weight: 600;
             color: #fff;
         }
@@ -234,15 +237,15 @@
         p {
             color: var(--text-dim);
             margin-bottom: 1.5rem;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         /* ==================== CONTENT BLOCKS ==================== */
         .card {
             background: var(--surface-low);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 2rem;
+            border-radius: 8px;
+            padding: 1.5rem;
             margin-bottom: 2rem;
         }
 
@@ -273,19 +276,25 @@
         /* ==================== CODE BLOCKS ==================== */
         .code-block-wrapper {
             margin: 1.5rem 0;
-            border-radius: 10px;
+            border-radius: 8px;
             overflow: hidden;
-            border: 1px solid var(--border);
-            background: #000;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0d1117;
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.2s;
+        }
+
+        .code-block-wrapper:hover {
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .code-header {
-            background: var(--surface);
+            background: rgba(0, 0, 0, 0.2);
             padding: 0.6rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .code-lang {
@@ -296,8 +305,8 @@
         }
 
         .copy-btn {
-            background: var(--surface-high);
-            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-dim);
             cursor: pointer;
             transition: var(--transition);
@@ -305,26 +314,45 @@
             align-items: center;
             gap: 0.4rem;
             font-size: 0.7rem;
-            padding: 0.3rem 0.6rem;
-            border-radius: 4px;
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
         }
 
         .copy-btn:hover {
             color: var(--text-main);
-            border-color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         pre {
-            padding: 1.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
+            padding: 1.25rem 1.5rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.825rem;
             overflow-x: auto;
-            color: #e0e0e0;
-            line-height: 1.7;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        pre::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        pre::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        pre::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        pre::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .keyword {
             color: #ff7b72;
+            font-weight: 500;
         }
 
         .string {
@@ -333,6 +361,7 @@
 
         .comment {
             color: #8b949e;
+            font-style: italic;
         }
 
         .function {
@@ -340,7 +369,15 @@
         }
 
         .builtin {
-            color: var(--accent);
+            color: #79c0ff;
+        }
+
+        .number {
+            color: #d19a66;
+        }
+
+        .operator {
+            color: #ff7b72;
         }
 
         /* ==================== BUTTONS ==================== */
@@ -373,14 +410,16 @@
 
         /* ==================== EMBED WRAPPER ==================== */
         #embed-demo-container {
-            margin-top: 2rem;
             display: none;
             background: #000;
-            border-radius: 12px;
             overflow: hidden;
-            border: 1px solid var(--border-highlight);
-            width: fit-content;
-            line-height: 0;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        #demo-editor:focus {
+            background: #111827 !important;
         }
 
         /* ==================== STEPS ==================== */
@@ -412,7 +451,7 @@
         /* ==================== TABLE ==================== */
         .table-container {
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
             margin: 2rem 0;
         }
@@ -500,166 +539,170 @@
                 <a href="#introduction" class="sidebar-item active">Introduction</a>
                 <a href="#quick-start" class="sidebar-item">Quick Start</a>
                 <a href="#demo" class="sidebar-item">Interactive Demo</a>
-                <a href="#parameters" class="sidebar-item">Message API</a>
+                <a href="#sdk-reference" class="sidebar-item">SDK Reference</a>
                 <a href="#customization" class="sidebar-item">Customization</a>
             </nav>
         </aside>
 
         <main>
             <section id="introduction">
-                <span class="section-tag">Embed API</span>
-                <h1>Supercharge your <span>Docs</span>.</h1>
-                <p class="hero-desc">Embed a full Turbo C graphics environment in your website with one line of code.
-                    Perfect for tutorials, blogs, and educational resources.</p>
+                <h1>Embed API</h1>
+                <p class="hero-desc">The Embed API allows you to integrate the graphics.h Turbo C runtime into any
+                    website using a standard iframe.<br>
+                    Supports snippet execution, full program execution, URL-based autorun, and JavaScript SDK
+                    integration.</p>
 
-                <div class="feature-grid">
-                    <div class="feature-card">
-                        <i data-lucide="zap" class="feature-icon"></i>
-                        <h3>Zero Config</h3>
-                        <p style="font-size: 0.9rem; margin-bottom: 0;">No complex NPM packages or dependencies. Just a
-                            standard HTML iframe.</p>
-                    </div>
-                    <div class="feature-card">
-                        <i data-lucide="terminal" class="feature-icon"></i>
-                        <h3>Full Runner</h3>
-                        <p style="font-size: 0.9rem; margin-bottom: 0;">Access a complete graphics.h environment
-                            including Borland BGI fonts.</p>
-                    </div>
-                    <div class="feature-card">
-                        <i data-lucide="message-square" class="feature-icon"></i>
-                        <h3>PostMessage API</h3>
-                        <p style="font-size: 0.9rem; margin-bottom: 0;">Send code snippets directly from your page logic
-                            via standard messaging.</p>
-                    </div>
-                </div>
+                <ul style="color: var(--text-dim); margin-bottom: 2rem; padding-left: 1.5rem; line-height: 1.8;">
+                    <li>No installation required</li>
+                    <li>No package dependencies</li>
+                    <li>Runs entirely in the browser</li>
+                </ul>
             </section>
 
             <section id="quick-start">
                 <h2>Quick Start</h2>
-                <div class="step-list">
-                    <div class="step-item">
-                        <div class="step-num">01</div>
-                        <div class="step-content">
-                            <h3>Initialize the Iframe</h3>
-                            <p>Place this hidden iframe in your page. Use <code>/embed</code> as the source.</p>
-                            <div class="code-block-wrapper">
-                                <div class="code-header"><span class="code-lang">html</span><button class="copy-btn"
-                                        onclick="copyCode(this)"><i data-lucide="copy"
-                                            style="width: 12px; height: 12px;"></i> Copy</button></div>
-                                <pre><code>&lt;iframe id=<span class="string">"gh-embed"</span> 
-        src=<span class="string">"/embed"</span> 
-        width=<span class="string">"640"</span> height=<span class="string">"480"</span> 
-        style=<span class="string">"border:0; background:#000; display:none;"</span>&gt;
-&lt;/iframe&gt;</code></pre>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="step-item">
-                        <div class="step-num">02</div>
-                        <div class="step-content">
-                            <h3>Trigger the Execution</h3>
-                            <p>Show the iframe and send the code snippet using <code>postMessage</code>.</p>
-                            <div class="code-block-wrapper">
-                                <div class="code-header"><span class="code-lang">javascript</span><button
-                                        class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy"
-                                            style="width: 12px; height: 12px;"></i> Copy</button></div>
-                                <pre><code><span class="keyword">function</span> <span class="function">runCode</span>(code) {
-  <span class="keyword">const</span> embed = document.getElementById(<span class="string">'gh-embed'</span>);
-  embed.style.display = <span class="string">'block'</span>;
-  
-  <span class="comment">// Send code snippet</span>
-  embed.contentWindow.postMessage({
-    type: <span class="string">'RUN_SNIPPET'</span>,
-    snippet: code
-  }, <span class="string">'*'</span>);
-}</code></pre>
-                            </div>
-                        </div>
-                    </div>
+                <ol style="margin-bottom: 1.5rem; padding-left: 1.2rem; color: var(--text-main); font-weight: 500;">
+                    <li>Include SDK script</li>
+                    <li>Create container element</li>
+                    <li>Initialize and run</li>
+                </ol>
+
+                <div class="code-block-wrapper">
+                    <div class="code-header"><span class="code-lang">html</span><button class="copy-btn"
+                            onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i>
+                            Copy</button></div>
+                    <pre><code><span class="comment">&lt;!-- 1. Include SDK --&gt;</span>
+<span class="keyword">&lt;script</span> <span class="builtin">src</span>=<span class="string">"https://graphics-h-compiler.vercel.app/sdk.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+
+<span class="comment">&lt;!-- 2. Create container --&gt;</span>
+<span class="keyword">&lt;div</span> <span class="builtin">id</span>=<span class="string">"gh-container"</span> <span class="builtin">style</span>=<span class="string">"width: 480px; height: 360px"</span><span class="keyword">&gt;&lt;/div&gt;</span>
+
+<span class="comment">&lt;!-- 3. Initialize and run --&gt;</span>
+<span class="keyword">&lt;script&gt;</span>
+  <span class="comment">// Use scale: 0.75 for tight doc spaces, or scale: 1.0 for large academic layouts.</span>
+  <span class="keyword">const</span> gh = <span class="keyword">new</span> <span class="function">GraphicsHEmbed</span>(<span class="string">"#gh-container"</span>, { scale: 0.75 });
+  gh.<span class="function">runSnippet</span>(<span class="string">"setcolor(YELLOW); circle(320, 240, 100);"</span>);
+<span class="keyword">&lt;/script&gt;</span></code></pre>
                 </div>
             </section>
 
             <section id="demo">
                 <h2>Interactive Demo</h2>
-                <div class="card">
-                    <p>Edit the code below and hit the play button to see it run in a production-ready embed
-                        environment.</p>
-                    <div class="code-block-wrapper">
-                        <pre id="demo-editor" contenteditable="true" spellcheck="false"><code>setcolor(YELLOW);
+                <p>Test the JS SDK directly from this page. Edit the code below and run it to see the output.</p>
+
+                <div class="card"
+                    style="background: var(--surface); padding: 0; overflow: hidden; border-color: var(--border-highlight);">
+                    <div class="code-block-wrapper" style="margin: 0; border: none; border-radius: 0;">
+                        <div class="code-header" style="justify-content: flex-start; gap: 1rem;">
+                            <span class="code-lang" style="flex: 1;">Live Editor</span>
+                            <select id="demo-scale" onchange="updateScale()"
+                                style="background: rgba(255,255,255,0.05); color: #e0e0e0; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 0.3rem 0.5rem; font-size: 0.75rem; cursor: pointer; outline: none;">
+                                <option value="1">Scale: 100%</option>
+                                <option value="0.75" selected>Scale: 75%</option>
+                                <option value="0.5">Scale: 50%</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="executeDemo()"
+                                style="padding: 0.4rem 1rem; font-size: 0.75rem; border-radius: 4px;">
+                                <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+                                Run Code
+                            </button>
+                        </div>
+                        <pre id="demo-editor" contenteditable="true" spellcheck="false"
+                            style="min-height: 150px; outline: none; background: #0d1117;"><code>setcolor(YELLOW);
 circle(320, 240, 100);
 setfillstyle(SOLID_FILL, RED);
 floodfill(320, 240, YELLOW);</code></pre>
                     </div>
-                    <button class="btn btn-primary" onclick="executeDemo()">
-                        <i data-lucide="play" style="width: 18px; height: 18px;"></i>
-                        Execute Snippet
-                    </button>
+                </div>
 
-                    <div id="embed-demo-container">
-                        <iframe id="gh-demo-runner" src="/embed" width="640" height="480"
-                            style="border:0; background:black; display:block;"></iframe>
-                    </div>
+                <!-- DOS output — separate from the card so it isn't clipped -->
+                <div id="embed-demo-container" style="display: none; margin-top: 1.5rem; justify-content: center;">
+                    <div id="demo-sdk-container"></div>
                 </div>
             </section>
 
-            <section id="parameters">
-                <h2>Message Interface</h2>
-                <p>The messaging API allows for both snippet-based (auto-wrapped) and full-program execution.</p>
+            <section id="sdk-reference">
+                <h2>SDK Reference</h2>
+                <p>Detailed documentation for the <code>GraphicsHEmbed</code> class.</p>
 
+                <h3>Constructor</h3>
                 <div class="table-container">
                     <table>
                         <thead>
                             <tr>
-                                <th>Property</th>
+                                <th>Parameter</th>
                                 <th>Type</th>
-                                <th>Details</th>
+                                <th>Description</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><code class="inline">type</code></td>
-                                <td>String</td>
-                                <td>Must be <code class="inline">"RUN_SNIPPET"</code>.</td>
+                                <td><code>selector</code></td>
+                                <td><code>string</code></td>
+                                <td>CSS selector for the container element (e.g. <code>"#id"</code> or
+                                    <code>".class"</code>)
+                                </td>
                             </tr>
                             <tr>
-                                <td><code class="inline">snippet</code></td>
-                                <td>String</td>
-                                <td>Your C/C++ code.</td>
-                            </tr>
-                            <tr>
-                                <td><code class="inline">boilerplate</code></td>
-                                <td>Bool</td>
-                                <td>Optional. Set to <code class="inline">false</code> to disable <code>main()</code>
-                                    wrapping behavior.</td>
+                                <td><code>options</code></td>
+                                <td><code>object</code></td>
+                                <td>Optional. Configure <code>baseUrl</code>, <code>scale</code>, or <code>theme</code>.
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="card" style="margin-top: 1rem; border-left: 3px solid var(--accent);">
-                    <h3
-                        style="color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.85rem; text-transform: uppercase;">
-                        Pro Tip</h3>
-                    <p style="font-size: 0.9rem; margin-bottom: 0;">If <code>boilerplate</code> is true (default), the
-                        runner automatically injects <code>#include &lt;graphics.h&gt;</code> and initializes the BGI
-                        driver for you.</p>
+                <h3>Methods</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Arguments</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>runSnippet</code></td>
+                                <td><code>code, boilerplate</code></td>
+                                <td>Compiles and runs graphics code. <code>boilerplate</code> defaults to
+                                    <code>true</code>.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>setScale</code></td>
+                                <td><code>scale</code></td>
+                                <td>Dynamically resizes the visual DOS output. (e.g. <code>0.8</code> or
+                                    <code>1.5</code>).
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
 
             <section id="customization">
                 <h2>Layout Customization</h2>
-                <p>The DOS canvas is fixed at 640x480. To integrate it into your site's responsive design, use CSS
-                    scaling on the container.</p>
+                <p>Modern responsive design ensures the embed scales perfectly to fit any container.</p>
                 <div class="code-block-wrapper">
-                    <div class="code-header"><span class="code-lang">css</span></div>
-                    <pre><code><span class="comment">/* Scalable wrapper example */</span>
-<span class="keyword">#embed-wrapper</span> {
-  <span class="keyword">--embed-scale</span>: <span class="keyword">0.8</span>; <span class="comment">/* 80% scale */</span>
-  <span class="keyword">width</span>: <span class="builtin">calc</span>(640px * <span class="keyword">var</span>(--embed-scale));
-  <span class="keyword">height</span>: <span class="builtin">calc</span>(480px * <span class="keyword">var</span>(--embed-scale));
-  <span class="keyword">overflow</span>: hidden;
-  <span class="keyword">border-radius</span>: 12px;
+                    <div class="code-header"><span class="code-lang">css</span><button class="copy-btn"
+                            onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i>
+                            Copy</button></div>
+                    <pre><code>/* Responsive Example */
+.embed-container {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 4 / 3;
+}
+
+.embed-container iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
 }</code></pre>
                 </div>
             </section>
@@ -690,19 +733,30 @@ floodfill(320, 240, YELLOW);</code></pre>
             }, 2000);
         }
 
+        let ghDemo = null;
+        function updateScale() {
+            if (ghDemo) {
+                ghDemo.setScale(document.getElementById('demo-scale').value);
+            }
+        }
+
         function executeDemo() {
-            const embed = document.getElementById('gh-demo-runner');
             const container = document.getElementById('embed-demo-container');
             const code = document.getElementById('demo-editor').innerText;
+            const scale = document.getElementById('demo-scale').value;
 
-            container.style.display = 'block';
+            container.style.display = 'flex';
             container.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            embed.contentWindow.postMessage({
-                type: 'RUN_SNIPPET',
-                snippet: code,
-                boilerplate: true
-            }, '*');
+            if (!ghDemo) {
+                ghDemo = new GraphicsHEmbed("#demo-sdk-container", {
+                    baseUrl: window.location.origin,
+                    scale: scale
+                });
+            } else {
+                ghDemo.setScale(scale);
+            }
+            ghDemo.runSnippet(code);
         }
 
         // Sidebar active state logic

@@ -131,7 +131,7 @@ PAUSE
                     ? `#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n\n    ${snippet}\n\n    getch();\n    closegraph();\n    return 0;\n}`
                     : snippet;
 
-                iframe.contentWindow.postMessage({ type: 'STOP_DOS' }, '*');
+                iframe.contentWindow.postMessage({ type: 'STOP_DOS' }, window.location.origin);
 
                 // Slight delay to ensure prev process clears
                 setTimeout(() => {
@@ -144,7 +144,7 @@ PAUSE
                             batchScript: batchScript,
                             cycles: 'max'
                         }
-                    }, '*');
+                    }, window.location.origin);
                 }, 150);
             } catch (err) {
                 loadingText.textContent = "Failed to load compiler";
@@ -152,10 +152,22 @@ PAUSE
             }
         }
 
+        const ALLOWED_ORIGINS = [
+            'https://graphics-h-compiler.vercel.app',
+            'http://localhost:5000',
+            'http://127.0.0.1:5000'
+        ];
+
         // Listener for parent window messages and inner dos-runner messages
         window.addEventListener('message', (e) => {
             // Parent sending snippet
             if (e.data && e.data.type === 'RUN_SNIPPET') {
+                // Verify origin
+                if (!ALLOWED_ORIGINS.includes(e.origin)) {
+                    console.warn('Blocked RUN_SNIPPET from untrusted origin:', e.origin);
+                    return;
+                }
+
                 const snippet = e.data.snippet || '';
                 // boilerplate defaults to true when not provided
                 const boilerplate = e.data.boilerplate !== false;
@@ -173,6 +185,10 @@ PAUSE
 
                 if (data.type === 'IFRAME_READY') {
                     iframeReady = true;
+                    // Tell the SDK parent that this embed is ready to receive snippets
+                    if (window.parent !== window) {
+                        window.parent.postMessage({ type: 'EMBED_READY' }, '*');
+                    }
                     if (pendingRun && wdosboxUrl) {
                         runSnippet(pendingRun.snippet, pendingRun.boilerplate);
                         pendingRun = null;
@@ -201,7 +217,31 @@ PAUSE
 
         // Start initialization
         init().then(() => {
-            if (iframeReady && pendingRun) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlCode = urlParams.get('code');
+            const boilerplate = urlParams.get('boilerplate') !== 'false';
+
+            // Handle optional styling params
+            const theme = urlParams.get('theme');
+            if (theme === 'light') {
+                document.body.style.background = '#fff';
+            }
+
+            const scale = urlParams.get('scale');
+            if (scale) {
+                document.body.style.transform = `scale(${scale})`;
+                document.body.style.transformOrigin = 'top left';
+                document.body.style.width = `${100 / parseFloat(scale)}%`;
+                document.body.style.height = `${100 / parseFloat(scale)}%`;
+            }
+
+            if (urlCode) {
+                if (!iframeReady || !wdosboxUrl) {
+                    pendingRun = { snippet: urlCode, boilerplate };
+                } else {
+                    runSnippet(urlCode, boilerplate);
+                }
+            } else if (iframeReady && pendingRun) {
                 runSnippet(pendingRun.snippet, pendingRun.boilerplate);
                 pendingRun = null;
             }

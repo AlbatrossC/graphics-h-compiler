@@ -73,6 +73,10 @@ def robots_txt():
 def sitemap_xml():
     return send_from_directory('static', 'sitemap.xml', mimetype='application/xml')
 
+@app.route('/sdk.js')
+def serve_sdk():
+    return send_from_directory('static', 'sdk.js', mimetype='application/javascript')
+
 @app.route('/libs/<path:filename>')
 def serve_libs(filename):
     return send_from_directory('compiler-assets/libs', filename)
