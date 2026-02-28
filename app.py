@@ -45,10 +45,26 @@ def compiler():
 def maintenance():
     return render_template('maintenance.html')
 
+
+
+from flask import render_template
+from jinja2 import TemplateNotFound
+
 @app.route('/docs')
+@app.route('/docs/')
 @app.route('/docs.html')
-def docs():
+def docs_index():
     return render_template('docs.html')
+
+@app.route('/docs/<path:path>')
+def docs(path):
+    try:
+        if path.endswith('.html'):
+            return render_template(f'docs/{path}')
+        return render_template(f'docs/{path}.html')
+    except TemplateNotFound:
+        return render_template('docs.html')
+
 
 @app.route('/embed')
 @app.route('/embed.html')

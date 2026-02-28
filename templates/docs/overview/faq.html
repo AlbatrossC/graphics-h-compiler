@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Documentation — graphics.h Online Compiler</title>
+    <title>FAQ — graphics.h Online Compiler</title>
     <meta name="description"
         content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
     <meta name="keywords"
@@ -668,7 +668,85 @@
 
         <main class="main-content" id="main-content">
             <div id="content-area">
-                <!-- Injected via JS -->
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Frequently Asked Questions</h1>
+                        <p class="doc-subtitle">History, relevance, and technical details about the Turbo C graphics library.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">History & Popularity</h2>
+                        <div class="category-grid">
+                            <div class="category-card">
+                                <div class="card-body">
+                                    <h3>Why was graphics.h created?</h3>
+                                    <p>Created in the late 80s as part of Borland Graphics Interface (BGI) to provide a simple, hardware-independent API for drawing shapes on DOS systems.</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-body">
+                                    <h3>What exactly is BGI?</h3>
+                                    <p>BGI is the subsystem that abstracts hardware-specific display drivers. graphics.h is the C header that exposes these BGI functions.</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-body">
+                                    <h3>Why is it so popular in education?</h3>
+                                    <p>It bundled with Turbo C, required zero setup, and allowed students to see visual output immediately—making it perfect for teaching logic.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Modern Context</h2>
+                        <div class="category-card" style="margin-bottom: 1rem; width: 100%;">
+                            <div class="card-body">
+                                <h3>Why doesn’t it work in modern compilers (GCC/Clang)?</h3>
+                                <p>Modern systems no longer support 16-bit DOS mode or the BGI architecture. Modern graphics use OS-level APIs (DirectX/Metal/Vulkan) rather than direct hardware access.</p>
+                            </div>
+                        </div>
+                        <div class="category-card" style="margin-bottom: 1rem; width: 100%;">
+                            <div class="card-body">
+                                <h3>Is it still relevant today?</h3>
+                                <p>Professionally? No. Educationally? Yes. It's a foundational tool for learning how coordinate systems, drawing buffers, and color palettes work without the overhead of modern engines.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Troubleshooting & Tips</h2>
+                        <div class="param-list">
+                            <div class="param-item">
+                                <div class="param-name">Why is my screen closing instantly?</div>
+                                <div class="param-desc">You likely forgot <code>getch()</code>. Without it, the program finishes execution and closes the graphics window before you can see the result.</div>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-name">What coordinate system does it use?</div>
+                                <div class="param-desc">BGI uses a (0,0) origin at the top-left of the screen. X increases to the right, and Y increases downwards.</div>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-name">How does this online compiler work?</div>
+                                <div class="param-desc">We emulate a 16-bit DOS environment inside the browser, allowing original BGI drivers and logic to function exactly as they did in the 90s.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Modern Alternatives</h2>
+                        <p class="doc-paragraph">If you are moving beyond education, consider these modern libraries:</p>
+                        <div class="category-grid">
+                            <div class="category-card"><div class="card-body"><h3>SDL / SFML</h3><p>Cross-platform C++</p></div></div>
+                            <div class="category-card"><div class="card-body"><h3>OpenGL</h3><p>Industry Standard 3D</p></div></div>
+                            <div class="category-card"><div class="card-body"><h3>HTML5 Canvas</h3><p>High-level Web Graphics</p></div></div>
+                        </div>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="help-circle" style="width: 18px; height: 18px;"></i>
+                        <p><strong>Summary:</strong> graphics.h is a legacy educational library. While not used in modern production, it remains a brilliant tool for foundational graphics understanding.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

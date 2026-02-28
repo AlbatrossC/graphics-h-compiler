@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Documentation — graphics.h Online Compiler</title>
+    <title>circle() — graphics.h Online Compiler</title>
     <meta name="description"
         content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
     <meta name="keywords"
@@ -668,7 +668,90 @@
 
         <main class="main-content" id="main-content">
             <div id="content-area">
-                <!-- Injected via JS -->
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">circle()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Primitive Component</div>
+                            <div class="doc-meta-item">Drawing Function</div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">
+                            The <code>circle()</code> function draws a circular boundary with a defined radius at a specific center point. 
+                            The circle is drawn using the current drawing color (default is WHITE) and line style.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void circle(int x, int y, int radius);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Parameters</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">x</div>
+                                <div class="param-desc">The x-coordinate of the center point (horizontal position).</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">y</div>
+                                <div class="param-desc">The y-coordinate of the center point (vertical position).</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">radius</div>
+                                <div class="param-desc">The radius of the circle in coordinate units (pixels).</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Example Implementation</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Draw three concentric circles
+    setcolor(YELLOW);
+    circle(320, 240, 50);
+    circle(320, 240, 75);
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Visual Output</h2>
+                        <div class="output-preview">
+                            <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                            <span>Simulation Preview Pending</span>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <p>Note: To draw a filled circle, use <code>fillellipse()</code> with identical X and Y radii, or follow the <code>circle()</code> call with <code>floodfill()</code>.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

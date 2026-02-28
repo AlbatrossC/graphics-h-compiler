@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Documentation — graphics.h Online Compiler</title>
+    <title>Getting Started — graphics.h Online Compiler</title>
     <meta name="description"
         content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
     <meta name="keywords"
@@ -668,7 +668,120 @@
 
         <main class="main-content" id="main-content">
             <div id="content-area">
-                <!-- Injected via JS -->
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Getting Started</h1>
+                        <p class="doc-subtitle">Learn how to write and run your first graphics program using the BGI library.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Introduction</h2>
+                        <p class="doc-paragraph">
+                            This guide explains how to write and run a basic graphics program using the Turbo C BGI graphics.h library.
+                        </p>
+                        <div class="note-box">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <p><strong>Note:</strong> This documentation is specifically for the original Turbo C implementation and our online Turbo C runtime. It does not apply to WinBGI or modern C++ graphics libraries.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Required Header Files</h2>
+                        <p class="doc-paragraph">To create a graphics program in Turbo C, you must include:</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;</code></pre>
+                        </div>
+                        
+                        <div class="category-grid">
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="file-code"></i></div>
+                                <div class="card-body">
+                                    <h3>Why graphics.h?</h3>
+                                    <p>Provides all graphics functions. Enables drawing shapes, text, colors, and viewport control.</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="keyboard"></i></div>
+                                <div class="card-body">
+                                    <h3>Why conio.h?</h3>
+                                    <p>Required for <code>getch()</code> — waits for a key press. Prevents the graphics window from closing immediately.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Initializing the Graphics Driver</h2>
+                        <p class="doc-paragraph">Before drawing anything, you must initialize the graphics system. Turbo C uses a graphics driver and graphics mode combination.</p>
+                        
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">int gd = DETECT, gm;
+initgraph(&amp;gd, &amp;gm, "");</code></pre>
+                        </div>
+                        
+                        <p class="doc-paragraph">
+                            <strong>gd →</strong> Graphics driver. <br>
+                            <strong>gm →</strong> Graphics mode. <br>
+                            <strong>DETECT →</strong> Automatically detects the appropriate driver.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Exiting the Graphics Mode</h2>
+                        <p class="doc-paragraph">To smoothly exit your graphics application, you need to use two essential functions from <code>conio.h</code> and <code>graphics.h</code>:</p>
+                        
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">getch();
+closegraph();</code></pre>
+                        </div>
+                        
+                        <p class="doc-paragraph">
+                            <strong>getch() →</strong> Short for "get character". At the end of a graphics program, it pauses the execution and waits for a key press. This ensures the graphics window stays open so you can see your drawing before the program terminates. <br>
+                            <strong>closegraph() →</strong> Deallocates all graphics-related memory, shuts down the graphics system, and switches the display back to standard text mode.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Complete Minimal Structure</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Drawing functions go here
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <p><strong>Pro Tip:</strong> In our online compiler, driver files are bundled internally, so using a blank string <code>""</code> in <code>initgraph</code> is perfectly fine.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

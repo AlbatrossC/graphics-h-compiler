@@ -6,41 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Documentation — graphics.h Online Compiler</title>
+    <title>Intro — graphics.h Online Compiler</title>
     <meta name="description"
-        content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
+        content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming.">
     <meta name="keywords"
-        content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics, computer graphics basics">
+        content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics">
     <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow">
-
-    <!-- Structured Data (JSON-LD) for SEO -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebPage",
-      "name": "Documentation — graphics.h Online Compiler",
-      "description": "Comprehensive documentation for Turbo C graphics.h (BGI) including getting started guides, constants, functions, and FAQ.",
-      "publisher": {
-        "@type": "Organization",
-        "name": "AlbatrossC"
-      },
-      "breadcrumb": {
-        "@type": "BreadcrumbList",
-        "itemListElement": [{
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Home",
-          "item": "https://graphics-h-online.vercel.app/"
-        },{
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Documentation",
-          "item": "https://graphics-h-online.vercel.app/docs"
-        }]
-      }
-    }
-    </script>
 
     <!-- Favicon -->
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
@@ -249,23 +221,12 @@
         }
 
         .nav-group-header {
-            padding: 1.25rem 1.25rem 0.5rem;
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: #fff;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.15em;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-group-header::before {
-            content: '';
-            width: 12px;
-            height: 2px;
-            background: var(--accent);
-            opacity: 0.5;
+            letter-spacing: 0.1em;
         }
 
         .nav-link {
@@ -638,6 +599,10 @@
                     <i data-lucide="home"></i>
                     <span>Home</span>
                 </a>
+                <a href="/docs/getting-started" class="btn-nav" style="margin-left: 0.5rem;">
+                    <i data-lucide="rocket"></i>
+                    <span>Start</span>
+                </a>
             </div>
             <div class="header-center">
                 <div class="header-title">
@@ -668,7 +633,631 @@
 
         <main class="main-content" id="main-content">
             <div id="content-area">
-                <!-- Injected via JS -->
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Welcome to graphics.h Documentation</h1>
+                        <p class="doc-subtitle">Here you can find everything — from every function use-case and parameter detail to complete integration examples.</p>
+                    </div>
+                    
+                    <div class="doc-section">
+                        <h2 class="section-heading">Introduction</h2>
+                        <p class="doc-paragraph">
+                            <code>graphics.h</code> is a BGI (Borland Graphics Interface) library that allows you to draw shapes, lines, and text in C++ using simple, high-level function calls. 
+                            Created by <strong>Borland International</strong>, it was originally bundled with the legendary Turbo C++ compiler to make graphics programming accessible on DOS. 
+                            Today, while original BGI is legacy, it remains alive through modern ports like WinBGIm and is fully supported right here in our online compiler.
+                        </p>
+                        
+                        <div class="note-box">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <p><strong>Note:</strong> This is a dedicated documentation for Turbo C style <code>graphics.h</code> (BGI). If you are looking for MinGW/GCC specific implementations like GDI+, those follow different paradigms.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">What you can do</h2>
+                        <div class="category-grid">
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="shapes"></i></div>
+                                <div class="card-body">
+                                    <h3>Drawing shapes</h3>
+                                    <p>lines, circles, rectangles, polygons</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="palette"></i></div>
+                                <div class="card-body">
+                                    <h3>Colors & fill</h3>
+                                    <p>flood fill, patterns, background colors</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="type"></i></div>
+                                <div class="card-body">
+                                    <h3>Text rendering</h3>
+                                    <p>custom fonts, sizes, alignment</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="maximize"></i></div>
+                                <div class="card-body">
+                                    <h3>Viewport control</h3>
+                                    <p>clipping regions, clearing screen</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <p>All function references in the sidebar provide detailed syntax and syntax highlighting for easy learning.</p>
+                    </div>
+                </div>
+            `,
+            'getting-started': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Getting Started</h1>
+                        <p class="doc-subtitle">Learn how to write and run your first graphics program using the BGI library.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Introduction</h2>
+                        <p class="doc-paragraph">
+                            This guide explains how to write and run a basic graphics program using the Turbo C BGI graphics.h library.
+                        </p>
+                        <div class="note-box">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <p><strong>Note:</strong> This documentation is specifically for the original Turbo C implementation and our online Turbo C runtime. It does not apply to WinBGI or modern C++ graphics libraries.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Required Header Files</h2>
+                        <p class="doc-paragraph">To create a graphics program in Turbo C, you must include:</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;</code></pre>
+                        </div>
+                        
+                        <div class="category-grid">
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="file-code"></i></div>
+                                <div class="card-body">
+                                    <h3>Why graphics.h?</h3>
+                                    <p>Provides all graphics functions. Enables drawing shapes, text, colors, and viewport control.</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="keyboard"></i></div>
+                                <div class="card-body">
+                                    <h3>Why conio.h?</h3>
+                                    <p>Required for <code>getch()</code> — waits for a key press. Prevents the graphics window from closing immediately.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Initializing the Graphics Driver</h2>
+                        <p class="doc-paragraph">Before drawing anything, you must initialize the graphics system. Turbo C uses a graphics driver and graphics mode combination.</p>
+                        
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">int gd = DETECT, gm;
+initgraph(&amp;gd, &amp;gm, "");</code></pre>
+                        </div>
+                        
+                        <p class="doc-paragraph">
+                            <strong>gd →</strong> Graphics driver. <br>
+                            <strong>gm →</strong> Graphics mode. <br>
+                            <strong>DETECT →</strong> Automatically detects the appropriate driver.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Exiting the Graphics Mode</h2>
+                        <p class="doc-paragraph">To smoothly exit your graphics application, you need to use two essential functions from <code>conio.h</code> and <code>graphics.h</code>:</p>
+                        
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">getch();
+closegraph();</code></pre>
+                        </div>
+                        
+                        <p class="doc-paragraph">
+                            <strong>getch() →</strong> Short for "get character". At the end of a graphics program, it pauses the execution and waits for a key press. This ensures the graphics window stays open so you can see your drawing before the program terminates. <br>
+                            <strong>closegraph() →</strong> Deallocates all graphics-related memory, shuts down the graphics system, and switches the display back to standard text mode.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Complete Minimal Structure</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Drawing functions go here
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <p><strong>Pro Tip:</strong> In our online compiler, driver files are bundled internally, so using a blank string <code>""</code> in <code>initgraph</code> is perfectly fine.</p>
+                    </div>
+                </div>
+            `,
+            'circle': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">circle()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Primitive Component</div>
+                            <div class="doc-meta-item">Drawing Function</div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">
+                            The <code>circle()</code> function draws a circular boundary with a defined radius at a specific center point. 
+                            The circle is drawn using the current drawing color (default is WHITE) and line style.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void circle(int x, int y, int radius);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Parameters</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">x</div>
+                                <div class="param-desc">The x-coordinate of the center point (horizontal position).</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">y</div>
+                                <div class="param-desc">The y-coordinate of the center point (vertical position).</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">radius</div>
+                                <div class="param-desc">The radius of the circle in coordinate units (pixels).</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Example Implementation</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Draw three concentric circles
+    setcolor(YELLOW);
+    circle(320, 240, 50);
+    circle(320, 240, 75);
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Visual Output</h2>
+                        <div class="output-preview">
+                            <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                            <span>Simulation Preview Pending</span>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <p>Note: To draw a filled circle, use <code>fillellipse()</code> with identical X and Y radii, or follow the <code>circle()</code> call with <code>floodfill()</code>.</p>
+                    </div>
+                </div>
+            `,
+            'constants': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Constants in Turbo C graphics.h</h1>
+                        <p class="doc-subtitle">A comprehensive list of symbolic constants for colors, styles, fonts, and drivers.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Overview</h2>
+                        <p class="doc-paragraph">
+                            The Turbo C <code>graphics.h</code> library defines a set of predefined constants used to configure colors, line styles, fill patterns, fonts, graphics drivers, and error handling. These make programs easier to read and maintain by replacing raw numeric values with meaningful identifiers.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Why Constants Are Used</h2>
+                        <p class="doc-paragraph">Many graphics functions require specific predefined values. Using constants prevents mistakes and makes your code self-documenting.</p>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <span class="param-name">setcolor()</span>
+                                <span class="param-desc">Requires a color constant (e.g., <code>RED</code>)</span>
+                            </li>
+                            <li class="param-item">
+                                <span class="param-name">setfillstyle()</span>
+                                <span class="param-desc">Requires a fill pattern constant</span>
+                            </li>
+                            <li class="param-item">
+                                <span class="param-name">setlinestyle()</span>
+                                <span class="param-desc">Requires a line style constant</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Color Constants</h2>
+                        <p class="doc-paragraph">Turbo C BGI supports 16 standard VGA colors (0-15).</p>
+                        <div class="category-grid">
+                            <div class="category-card" style="border-left: 4px solid #000;"><div class="card-body"><h3>BLACK (0)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #0000AA;"><div class="card-body"><h3>BLUE (1)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #00AA00;"><div class="card-body"><h3>GREEN (2)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #00AAAA;"><div class="card-body"><h3>CYAN (3)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AA0000;"><div class="card-body"><h3>RED (4)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AA00AA;"><div class="card-body"><h3>MAGENTA (5)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AA5500;"><div class="card-body"><h3>BROWN (6)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AAAAAA;"><div class="card-body"><h3>LIGHTGRAY (7)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #555555;"><div class="card-body"><h3>DARKGRAY (8)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #5555FF;"><div class="card-body"><h3>LIGHTBLUE (9)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #55FF55;"><div class="card-body"><h3>LIGHTGREEN (10)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #55FFFF;"><div class="card-body"><h3>LIGHTCYAN (11)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FF5555;"><div class="card-body"><h3>LIGHTRED (12)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FF55FF;"><div class="card-body"><h3>LIGHTMAGENTA (13)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FFFF55;"><div class="card-body"><h3>YELLOW (14)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FFFFFF;"><div class="card-body"><h3>WHITE (15)</h3></div></div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Fill Style Constants</h2>
+                        <div class="code-well">
+                            <pre><code class="language-c">EMPTY_FILL, SOLID_FILL, LINE_FILL, LTSLASH_FILL, 
+SLASH_FILL, BKSLASH_FILL, HATCH_FILL, XHATCH_FILL, 
+INTERLEAVE_FILL, WIDE_DOT_FILL, CLOSE_DOT_FILL, USER_FILL</code></pre>
+                        </div>
+                        <p class="doc-paragraph">Note: <code>USER_FILL</code> allows custom fill patterns defined using <code>setfillpattern()</code>.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Line Style Constants</h2>
+                        <div class="code-well">
+                            <pre><code class="language-c">SOLID_LINE, DOTTED_LINE, CENTER_LINE, DASHED_LINE, USERBIT_LINE</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Font Constants</h2>
+                        <div class="code-well">
+                            <pre><code class="language-c">DEFAULT_FONT, TRIPLEX_FONT, SMALL_FONT, SANS_SERIF_FONT, 
+GOTHIC_FONT, SCRIPT_FONT, SIMPLEX_FONT, TRIPLEX_SCR_FONT, 
+COMPLEX_FONT, EUROPEAN_FONT, BOLD_FONT</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Text Direction</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <span class="param-name">HORIZ_DIR</span>
+                                <span class="param-desc">Draws text left to right (Default).</span>
+                            </li>
+                            <li class="param-item">
+                                <span class="param-name">VERT_DIR</span>
+                                <span class="param-desc">Draws text bottom to top (Vertical).</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Driver & Error Constants</h2>
+                        <p class="doc-paragraph">Common driver constants include <code>DETECT, CGA, MCGA, EGA, VGA</code>.</p>
+                        <p class="doc-paragraph">Common error codes: <code>grOk, grNoInitGraph, grFileNotFound, grInvalidDriver</code>.</p>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                        <p>These constants are specific to the Turbo C BGI implementation. Behavior may differ in WinBGI or modern graphics ports.</p>
+                    </div>
+                </div>
+            `,
+            'examples': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Code Examples</h1>
+                        <p class="doc-subtitle">Practical graphics programs demonstrating common usage patterns.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Introduction</h2>
+                        <p class="doc-paragraph">This section provides practical examples demonstrating how to use the Turbo C <code>graphics.h</code> library. Each example follows the standard graphics program structure: Initialize graphics mode, draw shapes or text, wait for a key press, and close graphics mode.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">1. Drawing a Line</h2>
+                        <p class="doc-paragraph">A simple program to draw a basic line connecting two sets of (x, y) coordinates.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    line(100, 100, 300, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">2. Drawing a Circle</h2>
+                        <p class="doc-paragraph">Draws a circle at a specified center point with a defined radius.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    circle(200, 200, 80);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">3. Rectangle with Fill</h2>
+                        <p class="doc-paragraph">Demonstrates drawing a rectangle and filling it using <code>setfillstyle</code> and <code>floodfill</code>.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    rectangle(150, 100, 350, 250);
+
+    // Set fill to BLUE
+    setfillstyle(SOLID_FILL, BLUE);
+    floodfill(200, 150, WHITE);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">4. Drawing Text</h2>
+                        <p class="doc-paragraph">Demonstrates text rendering with custom layout using <code>outtextxy</code>.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    outtextxy(150, 200, "Hello Graphics");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">5. Multiple Shapes</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    circle(200, 150, 50);
+    rectangle(100, 250, 300, 350);
+    line(50, 50, 400, 50);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">6. Checking for Errors</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    int errorcode = graphresult();
+    if (errorcode != grOk) {
+        printf("Graphics error: %s", grapherrormsg(errorcode));
+        getch();
+        return 1;
+    }
+
+    circle(200, 200, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                        <p>In our online compiler, the BGI path parameter should be an empty string <code>""</code>. <code>getch()</code> is required to prevent the screen from closing immediately.</p>
+                    </div>
+                </div>
+            `,
+            'faq': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Frequently Asked Questions</h1>
+                        <p class="doc-subtitle">History, relevance, and technical details about the Turbo C graphics library.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">History & Popularity</h2>
+                        <div class="category-grid">
+                            <div class="category-card">
+                                <div class="card-body">
+                                    <h3>Why was graphics.h created?</h3>
+                                    <p>Created in the late 80s as part of Borland Graphics Interface (BGI) to provide a simple, hardware-independent API for drawing shapes on DOS systems.</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-body">
+                                    <h3>What exactly is BGI?</h3>
+                                    <p>BGI is the subsystem that abstracts hardware-specific display drivers. graphics.h is the C header that exposes these BGI functions.</p>
+                                </div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-body">
+                                    <h3>Why is it so popular in education?</h3>
+                                    <p>It bundled with Turbo C, required zero setup, and allowed students to see visual output immediately—making it perfect for teaching logic.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Modern Context</h2>
+                        <div class="category-card" style="margin-bottom: 1rem; width: 100%;">
+                            <div class="card-body">
+                                <h3>Why doesn’t it work in modern compilers (GCC/Clang)?</h3>
+                                <p>Modern systems no longer support 16-bit DOS mode or the BGI architecture. Modern graphics use OS-level APIs (DirectX/Metal/Vulkan) rather than direct hardware access.</p>
+                            </div>
+                        </div>
+                        <div class="category-card" style="margin-bottom: 1rem; width: 100%;">
+                            <div class="card-body">
+                                <h3>Is it still relevant today?</h3>
+                                <p>Professionally? No. Educationally? Yes. It's a foundational tool for learning how coordinate systems, drawing buffers, and color palettes work without the overhead of modern engines.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Troubleshooting & Tips</h2>
+                        <div class="param-list">
+                            <div class="param-item">
+                                <div class="param-name">Why is my screen closing instantly?</div>
+                                <div class="param-desc">You likely forgot <code>getch()</code>. Without it, the program finishes execution and closes the graphics window before you can see the result.</div>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-name">What coordinate system does it use?</div>
+                                <div class="param-desc">BGI uses a (0,0) origin at the top-left of the screen. X increases to the right, and Y increases downwards.</div>
+                            </div>
+                            <div class="param-item">
+                                <div class="param-name">How does this online compiler work?</div>
+                                <div class="param-desc">We emulate a 16-bit DOS environment inside the browser, allowing original BGI drivers and logic to function exactly as they did in the 90s.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Modern Alternatives</h2>
+                        <p class="doc-paragraph">If you are moving beyond education, consider these modern libraries:</p>
+                        <div class="category-grid">
+                            <div class="category-card"><div class="card-body"><h3>SDL / SFML</h3><p>Cross-platform C++</p></div></div>
+                            <div class="category-card"><div class="card-body"><h3>OpenGL</h3><p>Industry Standard 3D</p></div></div>
+                            <div class="category-card"><div class="card-body"><h3>HTML5 Canvas</h3><p>High-level Web Graphics</p></div></div>
+                        </div>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="help-circle" style="width: 18px; height: 18px;"></i>
+                        <p><strong>Summary:</strong> graphics.h is a legacy educational library. While not used in modern production, it remains a brilliant tool for foundational graphics understanding.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -679,10 +1268,10 @@
                 title: 'Overview',
                 links: [
                     { id: 'intro', path: '/docs', label: 'Introduction' },
-                    { id: 'getting-started', path: '/docs/overview/getting-started', label: 'Getting Started' },
-                    { id: 'constants', path: '/docs/overview/constants', label: 'Constants & Types' },
-                    { id: 'examples', path: '/docs/overview/examples', label: 'Code Examples' },
-                    { id: 'faq', path: '/docs/overview/faq', label: 'FAQ' }
+                    { id: 'getting-started', path: '/docs/getting-started', label: 'Getting Started' },
+                    { id: 'constants', path: '/docs/constants', label: 'Constants & Types' },
+                    { id: 'examples', path: '/docs/examples', label: 'Code Examples' },
+                    { id: 'faq', path: '/docs/faq', label: 'FAQ' }
                 ]
             },
             'initialization': {
@@ -735,68 +1324,60 @@
             'intro': `
                 <div class="fade-in">
                     <div class="doc-header">
-                        <h1 class="doc-title">Master the Art of BGI Graphics</h1>
-                        <p class="doc-subtitle">Explore historical programming through the <code>graphics.h</code> library. From basics to complex rendering—everything you need is here.</p>
+                        <h1 class="doc-title">Welcome to graphics.h Documentation</h1>
+                        <p class="doc-subtitle">Here you can find everything — from every function use-case and parameter detail to complete integration examples.</p>
                     </div>
                     
                     <div class="doc-section">
                         <h2 class="section-heading">Introduction</h2>
                         <p class="doc-paragraph">
-                            <code>graphics.h</code> is the gateway to <strong>Borland Graphics Interface (BGI)</strong>—a library that revolutionized graphics programming in the early 90s. 
-                            While classic, it remains a foundation of modern graphics logic. Our compiler emulates this legacy environment with near-perfect accuracy.
+                            <code>graphics.h</code> is a BGI (Borland Graphics Interface) library that allows you to draw shapes, lines, and text in C++ using simple, high-level function calls. 
+                            Created by <strong>Borland International</strong>, it was originally bundled with the legendary Turbo C++ compiler to make graphics programming accessible on DOS. 
+                            Today, while original BGI is legacy, it remains alive through modern ports like WinBGIm and is fully supported right here in our online compiler.
                         </p>
+                        
+                        <div class="note-box">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <p><strong>Note:</strong> This is a dedicated documentation for Turbo C style <code>graphics.h</code> (BGI). If you are looking for MinGW/GCC specific implementations like GDI+, those follow different paradigms.</p>
+                        </div>
                     </div>
 
                     <div class="doc-section">
-                        <h2 class="section-heading">Explore Documentation</h2>
+                        <h2 class="section-heading">What you can do</h2>
                         <div class="category-grid">
-                            <a href="/docs/overview/getting-started" class="category-card">
-                                <div class="card-icon"><i data-lucide="book-open"></i></div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="shapes"></i></div>
                                 <div class="card-body">
-                                    <h3>Getting Started</h3>
-                                    <p>Fundamental guide to set up your first graphics program.</p>
+                                    <h3>Drawing shapes</h3>
+                                    <p>lines, circles, rectangles, polygons</p>
                                 </div>
-                            </a>
-                            <a href="/docs/overview/constants" class="category-card">
-                                <div class="card-icon"><i data-lucide="hash"></i></div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="palette"></i></div>
                                 <div class="card-body">
-                                    <h3>Constants & Styles</h3>
-                                    <p>Look up color codes, fill patterns, and line styles.</p>
+                                    <h3>Colors & fill</h3>
+                                    <p>flood fill, patterns, background colors</p>
                                 </div>
-                            </a>
-                            <a href="/docs/initgraph" class="category-card">
-                                <div class="card-icon"><i data-lucide="power"></i></div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="type"></i></div>
                                 <div class="card-body">
-                                    <h3>Lifecycle Functions</h3>
-                                    <p>Master initgraph, closegraph, and graphresult.</p>
+                                    <h3>Text rendering</h3>
+                                    <p>custom fonts, sizes, alignment</p>
                                 </div>
-                            </a>
-                            <a href="/docs/line" class="category-card">
-                                <div class="card-icon"><i data-lucide="edit-3"></i></div>
+                            </div>
+                            <div class="category-card">
+                                <div class="card-icon"><i data-lucide="maximize"></i></div>
                                 <div class="card-body">
-                                    <h3>Drawing API</h3>
-                                    <p>Comprehensive reference for over 50+ drawing functions.</p>
+                                    <h3>Viewport control</h3>
+                                    <p>clipping regions, clearing screen</p>
                                 </div>
-                            </a>
-                            <a href="/docs/overview/examples" class="category-card">
-                                <div class="card-icon"><i data-lucide="code"></i></div>
-                                <div class="card-body">
-                                    <h3>Practical Examples</h3>
-                                    <p>Ready-to-run snippets for inspiration and learning.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/overview/faq" class="category-card">
-                                <div class="card-icon"><i data-lucide="help-circle"></i></div>
-                                <div class="card-body">
-                                    <h3>Support & FAQ</h3>
-                                    <p>Answers to common legacy systems questions.</p>
-                                </div>
-                            </a>
+                            </div>
                         </div>
                     </div>
 
                     <div class="tip-box">
-                        <p><strong>Note:</strong> All function references in the sidebar provide detailed syntax and syntax highlighting for easy learning.</p>
+                        <p>All function references in the sidebar provide detailed syntax and syntax highlighting for easy learning.</p>
                     </div>
                 </div>
             `,

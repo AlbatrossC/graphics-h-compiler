@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Documentation — graphics.h Online Compiler</title>
+    <title>Code Examples — graphics.h Online Compiler</title>
     <meta name="description"
         content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
     <meta name="keywords"
@@ -668,7 +668,180 @@
 
         <main class="main-content" id="main-content">
             <div id="content-area">
-                <!-- Injected via JS -->
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Code Examples</h1>
+                        <p class="doc-subtitle">Practical graphics programs demonstrating common usage patterns.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Introduction</h2>
+                        <p class="doc-paragraph">This section provides practical examples demonstrating how to use the Turbo C <code>graphics.h</code> library. Each example follows the standard graphics program structure: Initialize graphics mode, draw shapes or text, wait for a key press, and close graphics mode.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">1. Drawing a Line</h2>
+                        <p class="doc-paragraph">A simple program to draw a basic line connecting two sets of (x, y) coordinates.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    line(100, 100, 300, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">2. Drawing a Circle</h2>
+                        <p class="doc-paragraph">Draws a circle at a specified center point with a defined radius.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    circle(200, 200, 80);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">3. Rectangle with Fill</h2>
+                        <p class="doc-paragraph">Demonstrates drawing a rectangle and filling it using <code>setfillstyle</code> and <code>floodfill</code>.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    rectangle(150, 100, 350, 250);
+
+    // Set fill to BLUE
+    setfillstyle(SOLID_FILL, BLUE);
+    floodfill(200, 150, WHITE);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">4. Drawing Text</h2>
+                        <p class="doc-paragraph">Demonstrates text rendering with custom layout using <code>outtextxy</code>.</p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    outtextxy(150, 200, "Hello Graphics");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">5. Multiple Shapes</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    circle(200, 150, 50);
+    rectangle(100, 250, 300, 350);
+    line(50, 50, 400, 50);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">6. Checking for Errors</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    int errorcode = graphresult();
+    if (errorcode != grOk) {
+        printf("Graphics error: %s", grapherrormsg(errorcode));
+        getch();
+        return 1;
+    }
+
+    circle(200, 200, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                        <p>In our online compiler, the BGI path parameter should be an empty string <code>""</code>. <code>getch()</code> is required to prevent the screen from closing immediately.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>

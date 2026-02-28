@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Documentation — graphics.h Online Compiler</title>
+    <title>Constants & Types — graphics.h Online Compiler</title>
     <meta name="description"
         content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
     <meta name="keywords"
@@ -668,7 +668,112 @@
 
         <main class="main-content" id="main-content">
             <div id="content-area">
-                <!-- Injected via JS -->
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">Constants in Turbo C graphics.h</h1>
+                        <p class="doc-subtitle">A comprehensive list of symbolic constants for colors, styles, fonts, and drivers.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Overview</h2>
+                        <p class="doc-paragraph">
+                            The Turbo C <code>graphics.h</code> library defines a set of predefined constants used to configure colors, line styles, fill patterns, fonts, graphics drivers, and error handling. These make programs easier to read and maintain by replacing raw numeric values with meaningful identifiers.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Why Constants Are Used</h2>
+                        <p class="doc-paragraph">Many graphics functions require specific predefined values. Using constants prevents mistakes and makes your code self-documenting.</p>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <span class="param-name">setcolor()</span>
+                                <span class="param-desc">Requires a color constant (e.g., <code>RED</code>)</span>
+                            </li>
+                            <li class="param-item">
+                                <span class="param-name">setfillstyle()</span>
+                                <span class="param-desc">Requires a fill pattern constant</span>
+                            </li>
+                            <li class="param-item">
+                                <span class="param-name">setlinestyle()</span>
+                                <span class="param-desc">Requires a line style constant</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Color Constants</h2>
+                        <p class="doc-paragraph">Turbo C BGI supports 16 standard VGA colors (0-15).</p>
+                        <div class="category-grid">
+                            <div class="category-card" style="border-left: 4px solid #000;"><div class="card-body"><h3>BLACK (0)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #0000AA;"><div class="card-body"><h3>BLUE (1)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #00AA00;"><div class="card-body"><h3>GREEN (2)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #00AAAA;"><div class="card-body"><h3>CYAN (3)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AA0000;"><div class="card-body"><h3>RED (4)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AA00AA;"><div class="card-body"><h3>MAGENTA (5)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AA5500;"><div class="card-body"><h3>BROWN (6)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #AAAAAA;"><div class="card-body"><h3>LIGHTGRAY (7)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #555555;"><div class="card-body"><h3>DARKGRAY (8)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #5555FF;"><div class="card-body"><h3>LIGHTBLUE (9)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #55FF55;"><div class="card-body"><h3>LIGHTGREEN (10)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #55FFFF;"><div class="card-body"><h3>LIGHTCYAN (11)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FF5555;"><div class="card-body"><h3>LIGHTRED (12)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FF55FF;"><div class="card-body"><h3>LIGHTMAGENTA (13)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FFFF55;"><div class="card-body"><h3>YELLOW (14)</h3></div></div>
+                            <div class="category-card" style="border-left: 4px solid #FFFFFF;"><div class="card-body"><h3>WHITE (15)</h3></div></div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Fill Style Constants</h2>
+                        <div class="code-well">
+                            <pre><code class="language-c">EMPTY_FILL, SOLID_FILL, LINE_FILL, LTSLASH_FILL, 
+SLASH_FILL, BKSLASH_FILL, HATCH_FILL, XHATCH_FILL, 
+INTERLEAVE_FILL, WIDE_DOT_FILL, CLOSE_DOT_FILL, USER_FILL</code></pre>
+                        </div>
+                        <p class="doc-paragraph">Note: <code>USER_FILL</code> allows custom fill patterns defined using <code>setfillpattern()</code>.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Line Style Constants</h2>
+                        <div class="code-well">
+                            <pre><code class="language-c">SOLID_LINE, DOTTED_LINE, CENTER_LINE, DASHED_LINE, USERBIT_LINE</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Font Constants</h2>
+                        <div class="code-well">
+                            <pre><code class="language-c">DEFAULT_FONT, TRIPLEX_FONT, SMALL_FONT, SANS_SERIF_FONT, 
+GOTHIC_FONT, SCRIPT_FONT, SIMPLEX_FONT, TRIPLEX_SCR_FONT, 
+COMPLEX_FONT, EUROPEAN_FONT, BOLD_FONT</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Text Direction</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <span class="param-name">HORIZ_DIR</span>
+                                <span class="param-desc">Draws text left to right (Default).</span>
+                            </li>
+                            <li class="param-item">
+                                <span class="param-name">VERT_DIR</span>
+                                <span class="param-desc">Draws text bottom to top (Vertical).</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Driver & Error Constants</h2>
+                        <p class="doc-paragraph">Common driver constants include <code>DETECT, CGA, MCGA, EGA, VGA</code>.</p>
+                        <p class="doc-paragraph">Common error codes: <code>grOk, grNoInitGraph, grFileNotFound, grInvalidDriver</code>.</p>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                        <p>These constants are specific to the Turbo C BGI implementation. Behavior may differ in WinBGI or modern graphics ports.</p>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
