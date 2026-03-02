@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>circle() — graphics.h Online Compiler</title>
+    <title>circle() Function in graphics.h | Draw Circles in Turbo C Graphics</title>
     <meta name="description"
-        content="Official documentation for graphics.h online. API reference, guides, and examples for C graphics programming. Learn how to draw shapes, lines, and text in DOS-style environments.">
+        content="Master the circle() function in graphics.h library. Complete guide to drawing circles in BGI graphics with Turbo C. Learn circle drawing with center coordinates and radius, colors, and styles in DOS graphics programming.">
     <meta name="keywords"
-        content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics, computer graphics basics">
+        content="circle, graphics.h, draw circle Turbo C, BGI graphics, C graphics programming, circle function, graphics.h circle, Borland Graphics Interface, DOS graphics, draw circle C, graphics primitives, filled circle">
     <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow">
 
@@ -62,6 +62,9 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js" defer></script>
+
+    <!-- JS SDK -->
+    <script src="/sdk.js"></script>
 
     <style>
         * {
@@ -482,6 +485,62 @@
             gap: 1rem;
         }
 
+        /* Live Preview Container */
+        .live-preview-container {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        .live-preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .live-preview-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .live-preview-container iframe {
+            display: block;
+            border: 0;
+            width: 100%;
+            background: #000;
+        }
+
+        .run-btn {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: var(--transition);
+        }
+
+        .run-btn:hover {
+            background: #00ff9d;
+            transform: translateY(-1px);
+        }
+
         .tip-box {
             background: rgba(0, 255, 136, 0.04);
             border-left: 3px solid var(--accent);
@@ -741,10 +800,36 @@ int main() {
                     </div>
 
                     <div class="doc-section">
-                        <h2 class="section-heading">Visual Output</h2>
-                        <div class="output-preview">
-                            <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
-                            <span>Simulation Preview Pending</span>
+                        <h2 class="section-heading">Live Example</h2>
+                        <p class="doc-paragraph">
+                            Try this interactive example. Click "Run Code" to see the output:
+                        </p>
+                        
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">Example Code</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">setcolor(CYAN);
+circle(320, 240, 100);</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
+                                    Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCircleExample()">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+                                    Run Code
+                                </button>
+                            </div>
+                            <div id="circle-embed" style="padding: 1rem; display: flex; justify-content: center; background: #000;">
+                                <div style="color: #666; font-family: 'Space Mono', monospace; font-size: 0.85rem; padding: 2rem;">
+                                    Click "Run Code" to see the output
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1009,11 +1094,17 @@ int main() {
                         </div>
                     </div>
 
+                    <p class="doc-paragraph" style="font-size: 1.1rem; color: #aaa; margin-bottom: 2rem;">
+                        The <a href="/docs/circle">circle()</a> function in <a href="/docs">graphics.h</a> is used to draw circular outlines using center coordinates and radius in <a href="/docs">Turbo C</a> BGI graphics.
+                        It works with <a href="/docs/setcolor">setcolor()</a> for outline colors and pairs with <a href="/docs/floodfill">floodfill()</a> for creating filled circles,
+                        making it essential for graphics drawings in <a href="/docs">DOS environments</a>.
+                    </p>
+
                     <div class="doc-section">
                         <h2 class="section-heading">Description</h2>
                         <p class="doc-paragraph">
-                            The <code>circle()</code> function draws a circular boundary with a defined radius at a specific center point. 
-                            The circle is drawn using the current drawing color (default is WHITE) and line style.
+                            The <code>circle()</code> function draws a circular boundary with a defined radius at a specific center point.
+                            The circle is drawn using the current <a href="/docs/setcolor">drawing color</a> (default is WHITE) and <a href="/docs/setlinestyle">line style</a>.
                         </p>
                     </div>
 
@@ -1082,6 +1173,35 @@ int main() {
 
                     <div class="tip-box">
                         <p>Note: To draw a filled circle, use <code>fillellipse()</code> with identical X and Y radii, or follow the <code>circle()</code> call with <code>floodfill()</code>.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Frequently Asked Questions</h2>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">How do I draw a filled circle in graphics.h?</h3>
+                            <p class="doc-paragraph">To draw a filled circle, use the fillellipse() function with identical x-radius and y-radius values. Alternatively, you can call circle() to draw the outline and then use floodfill() to fill the interior with the current fill color and pattern.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">What parameters does the circle() function require?</h3>
+                            <p class="doc-paragraph">The circle() function requires three parameters: x (the x-coordinate of the center), y (the y-coordinate of the center), and radius (the radius of the circle in pixels). The circle is drawn as an outline using the current drawing color.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">How do I change the color of a circle?</h3>
+                            <p class="doc-paragraph">Use the setcolor() function before calling circle() to set the outline color. For filled circles using fillellipse(), use setfillstyle() to set the fill pattern and color before drawing.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">What's the difference between circle() and ellipse()?</h3>
+                            <p class="doc-paragraph">circle() draws a perfect circle with a single radius value. ellipse() draws an oval shape with separate x-radius and y-radius values, allowing you to create stretched or compressed circular shapes.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">Can I draw concentric circles with circle()?</h3>
+                            <p class="doc-paragraph">Yes, simply call circle() multiple times with the same center coordinates (x, y) but different radius values. This creates concentric circles sharing the same center point, useful for creating targets, ripples, or decorative patterns.</p>
+                        </div>
                     </div>
                 </div>
             `,
@@ -1574,6 +1694,23 @@ int main() {
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy: ', err);
+            }
+        }
+
+        let circleEmbed = null;
+
+        function runCircleExample() {
+            const container = document.getElementById('circle-embed');
+            if (container) {
+                container.innerHTML = '';
+                
+                circleEmbed = new GraphicsHEmbed('#circle-embed', {
+                    scale: 0.7,
+                    baseUrl: window.location.origin
+                });
+                
+                // Simple 1-line snippet that produces visible output
+                circleEmbed.runSnippet(`setcolor(CYAN);\ncircle(320, 240, 100);`);
             }
         }
 

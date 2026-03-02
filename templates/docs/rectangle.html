@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>rectangle() Function in graphics.h | Draw Rectangles in Turbo C Graphics</title>
+    <meta name="description"
+        content="Learn to use rectangle() function in graphics.h library. Complete guide to drawing rectangles in BGI graphics with Turbo C. Master rectangle drawing with two-point coordinates, colors, and styles in DOS graphics programming.">
+    <meta name="keywords"
+        content="rectangle, graphics.h, draw rectangle Turbo C, BGI graphics, C graphics programming, rectangle function, graphics.h rectangle, Borland Graphics Interface, DOS graphics, draw box C, graphics primitives, filled rectangle">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow">
+
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "rectangle() — graphics.h Online Compiler",
+      "description": "Comprehensive documentation for the rectangle() function in Turbo C graphics.h (BGI).",
+      "publisher": {
+        "@type": "Organization",
+        "name": "AlbatrossC"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [{
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://graphics-h-online.vercel.app/"
+        },{
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Documentation",
+          "item": "https://graphics-h-online.vercel.app/docs"
+        },{
+          "@type": "ListItem",
+          "position": 3,
+          "name": "rectangle()",
+          "item": "https://graphics-h-online.vercel.app/docs/rectangle"
+        }]
+      }
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS (deferred) -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <!-- Lucide Icons (deferred) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <!-- Highlight.js -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js" defer></script>
+
+    <!-- JS SDK -->
+    <script src="/sdk.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-sidebar: #0f0f0f;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.15);
+            --border: #1a1a1a;
+            --text-muted: #888888;
+            --text-main: #e0e0e0;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            background: rgba(10, 10, 10, 0.8);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+        }
+
+        .header-content {
+            height: 100%;
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            align-items: center;
+            padding: 0 1.5rem;
+        }
+
+        .header-left {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .header-center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .header-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .header-title {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-title .bracket {
+            color: var(--accent);
+        }
+
+        .btn-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn-nav:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-nav i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-compiler {
+            background: var(--accent);
+            color: var(--bg-dark);
+            font-weight: 700;
+            border-color: var(--accent);
+        }
+
+        .btn-compiler:hover {
+            background: #00ff9d;
+            border-color: #00ff9d;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        /* ==================== LAYOUT ==================== */
+        .docs-layout {
+            display: flex;
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            flex-shrink: 0;
+            padding-bottom: 2rem;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-search-container {
+            padding: 1.5rem 1.25rem 1rem;
+            position: sticky;
+            top: 0;
+            background: var(--bg-sidebar);
+            z-index: 10;
+        }
+
+        .search-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 0.65rem 0.8rem;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: var(--transition);
+        }
+
+        .search-field:focus-within {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .search-field input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            outline: none;
+            width: 100%;
+        }
+
+        .nav-group {
+            margin-top: 1.5rem;
+        }
+
+        .nav-group-header {
+            padding: 1.25rem 1.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-group-header::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.45rem 1.25rem;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            border-left: 2px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-link.active {
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+            border-left-color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            background: var(--bg-dark);
+            overflow-y: auto;
+            padding: 4rem 3rem 6rem;
+            scroll-behavior: smooth;
+        }
+
+        .content-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* Documentation Component Styling */
+        .doc-section {
+            margin-bottom: 4rem;
+        }
+
+        .doc-header {
+            margin-bottom: 3.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+        }
+
+        .doc-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.75rem;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        .doc-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .doc-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+
+        .doc-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        h2.section-heading {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            margin-top: 3.5rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2.section-heading::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .doc-paragraph {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #bbb;
+            margin-bottom: 1.5rem;
+        }
+
+        .code-well {
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-well-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-lang-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .btn-copy-code {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.3rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: var(--transition);
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .btn-copy-code:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-copy-code.copied {
+            color: var(--accent);
+        }
+
+        .code-well pre {
+            margin: 0;
+            padding: 1.25rem;
+            overflow-x: auto;
+        }
+
+        .code-well pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        .code-well pre code.hljs {
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        .param-list {
+            list-style: none;
+        }
+
+        .param-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .param-name {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .param-desc {
+            font-size: 0.95rem;
+            color: #999;
+        }
+
+        /* Live Preview Container */
+        .live-preview-container {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        .live-preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .live-preview-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .live-preview-container iframe {
+            display: block;
+            border: 0;
+            width: 100%;
+            background: #000;
+        }
+
+        .run-btn {
+            background: var(--accent);
+            color: var(--bg-dark);
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: var(--transition);
+        }
+
+        .run-btn:hover {
+            background: #00ff9d;
+            transform: translateY(-1px);
+        }
+
+        .tip-box {
+            background: rgba(0, 255, 136, 0.04);
+            border-left: 3px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 2.5rem 0;
+        }
+
+        .tip-box p {
+            margin: 0;
+            color: #bbb;
+            font-size: 0.95rem;
+        }
+
+        /* Animation */
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .header-content {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .header-center {
+                display: none;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Pagination */
+        .next-page-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: #ccc;
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .next-page-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .next-page-link i {
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="btn-nav">
+                    <i data-lucide="home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="header-center">
+                <div class="header-title">
+                    <span class="bracket"><</span>graphics.h documentation<span class="bracket">/></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="/compiler" class="btn-nav btn-compiler">
+                    <i data-lucide="terminal"></i>
+                    <span>Compiler</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="docs-layout">
+        <aside class="sidebar">
+            <div class="sidebar-search-container">
+                <div class="search-field">
+                    <i data-lucide="search" style="opacity: 0.4; width: 14px;"></i>
+                    <input type="text" placeholder="Search API Reference..." id="docs-search">
+                </div>
+            </div>
+            <nav id="sidebar-nav">
+                <!-- Injected via JS -->
+            </nav>
+        </aside>
+
+        <main class="main-content" id="main-content">
+            <div id="content-area">
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">rectangle()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Drawing Function</div>
+                            <div class="doc-meta-item">Primitive</div>
+                        </div>
+                    </div>
+
+                    <p class="doc-paragraph" style="font-size: 1.1rem; color: #aaa; margin-bottom: 2rem;">
+                        The <a href="/docs/rectangle">rectangle()</a> function in <a href="/docs">graphics.h</a> is used to draw rectangles using two opposite corner coordinates in <a href="/docs">Turbo C</a> BGI graphics.
+                        It pairs with <a href="/docs/setcolor">setcolor()</a> for border colors and <a href="/docs/floodfill">floodfill()</a> for filling,
+                        making it essential for creating boxes, borders, and shapes in <a href="/docs">DOS graphics programming</a>.
+                    </p>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">
+                            The <code>rectangle()</code> function draws a rectangle outline using the current <a href="/docs/setcolor">drawing color</a> and <a href="/docs/setlinestyle">line style</a>.
+                            The rectangle is defined by two opposite corners: the top-left corner (left, top) and the bottom-right corner (right, bottom),
+                            making it a fundamental shape primitive for <a href="/docs">BGI graphics programs</a>.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void rectangle(int left, int top, int right, int bottom);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Parameters</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">left</div>
+                                <div class="param-desc">The x-coordinate of the top-left corner.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">top</div>
+                                <div class="param-desc">The y-coordinate of the top-left corner.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">right</div>
+                                <div class="param-desc">The x-coordinate of the bottom-right corner.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">bottom</div>
+                                <div class="param-desc">The y-coordinate of the bottom-right corner.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Live Example</h2>
+                        <p class="doc-paragraph">
+                            Try this interactive example. Click "Run Code" to see the output:
+                        </p>
+                        
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">Example Code</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">setcolor(GREEN);
+rectangle(150, 100, 490, 320);</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
+                                    Live Output
+                                </span>
+                                <button class="run-btn" onclick="runRectangleExample()">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+                                    Run Code
+                                </button>
+                            </div>
+                            <div id="rectangle-embed" style="padding: 1rem; display: flex; justify-content: center; background: #000;">
+                                <div style="color: #666; font-family: 'Space Mono', monospace; font-size: 0.85rem; padding: 2rem;">
+                                    Click "Run Code" to see the output
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Complete Example</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include <graphics.h>
+#include <conio.h>
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+    
+    // Draw a green rectangle
+    setcolor(GREEN);
+    rectangle(150, 100, 490, 320);
+    
+    // Draw a smaller red rectangle inside
+    setcolor(RED);
+    rectangle(200, 150, 440, 270);
+    
+    // Draw a blue rectangle outline
+    setcolor(BLUE);
+    rectangle(250, 180, 390, 240);
+    
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <p><strong>Tip:</strong> To draw a filled rectangle, use <code>bar()</code> for a 2D filled rectangle or <code>bar3d()</code> for a 3D filled rectangle with depth.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Frequently Asked Questions</h2>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">How do I draw a filled rectangle in graphics.h?</h3>
+                            <p class="doc-paragraph">To draw a filled rectangle, use the bar() function which draws a filled rectangular bar using the current fill style and color. For 3D filled rectangles with depth, use bar3d(). Alternatively, you can use rectangle() followed by floodfill() to fill the interior with a color.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">What coordinates does rectangle() use?</h3>
+                            <p class="doc-paragraph">The rectangle() function uses four integer parameters: left (x-coordinate of top-left corner), top (y-coordinate of top-left corner), right (x-coordinate of bottom-right corner), and bottom (y-coordinate of bottom-right corner). The rectangle is drawn as an outline only, not filled.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">How do I change the border color of a rectangle?</h3>
+                            <p class="doc-paragraph">Use the setcolor() function before calling rectangle() to set the border color. For example, setcolor(YELLOW) will make the rectangle border appear in yellow. The default border color is WHITE.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">What's the difference between rectangle() and bar()?</h3>
+                            <p class="doc-paragraph">rectangle() draws only the outline/border of a rectangle using the current line color. bar() draws a solid filled rectangle using the current fill style and fill color. Use rectangle() for outlined boxes and bar() for filled areas.</p>
+                        </div>
+                        
+                        <div class="faq-item" style="margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">Can I draw rectangles with rounded corners using rectangle()?</h3>
+                            <p class="doc-paragraph">No, the rectangle() function only draws rectangles with sharp 90-degree corners. To draw rounded rectangles, you would need to combine multiple arc() or ellipse() calls at the corners with line() calls for the sides.</p>
+                        </div>
+                    </div>
+
+                    <a href="/docs/arc" class="next-page-link">
+                        Next: arc()
+                        <i data-lucide="arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const NAVIGATION = {
+            'overview': {
+                title: 'Overview',
+                links: [
+                    { id: 'intro', path: '/docs', label: 'Introduction' },
+                    { id: 'getting-started', path: '/docs/overview/getting-started', label: 'Getting Started' },
+                    { id: 'constants', path: '/docs/overview/constants', label: 'Constants & Types' },
+                    { id: 'examples', path: '/docs/overview/examples', label: 'Code Examples' },
+                    { id: 'faq', path: '/docs/overview/faq', label: 'FAQ' }
+                ]
+            },
+            'initialization': {
+                title: 'Lifecycle',
+                links: [
+                    { id: 'initgraph', path: '/docs/initgraph', label: 'initgraph()' },
+                    { id: 'closegraph', path: '/docs/closegraph', label: 'closegraph()' },
+                    { id: 'detectgraph', path: '/docs/detectgraph', label: 'detectgraph()' }
+                ]
+            },
+            'drawing': {
+                title: 'Drawing',
+                links: [
+                    { id: 'line', path: '/docs/line', label: 'line()' },
+                    { id: 'circle', path: '/docs/circle', label: 'circle()' },
+                    { id: 'rectangle', path: '/docs/rectangle', label: 'rectangle()' },
+                    { id: 'arc', path: '/docs/arc', label: 'arc()' },
+                    { id: 'ellipse', path: '/docs/ellipse', label: 'ellipse()' },
+                    { id: 'putpixel', path: '/docs/putpixel', label: 'putpixel()' },
+                    { id: 'drawpoly', path: '/docs/drawpoly', label: 'drawpoly()' },
+                    { id: 'linerel', path: '/docs/linerel', label: 'linerel()' },
+                    { id: 'lineto', path: '/docs/lineto', label: 'lineto()' },
+                    { id: 'moveto', path: '/docs/moveto', label: 'moveto()' }
+                ]
+            },
+            'setters': {
+                title: 'Style & Color',
+                links: [
+                    { id: 'setcolor', path: '/docs/setcolor', label: 'setcolor()' },
+                    { id: 'setbkcolor', path: '/docs/setbkcolor', label: 'setbkcolor()' },
+                    { id: 'setfillstyle', path: '/docs/setfillstyle', label: 'setfillstyle()' },
+                    { id: 'setlinestyle', path: '/docs/setlinestyle', label: 'setlinestyle()' },
+                    { id: 'floodfill', path: '/docs/floodfill', label: 'floodfill()' }
+                ]
+            },
+            'utility': {
+                title: 'Query & Utility',
+                links: [
+                    { id: 'getmaxx', path: '/docs/getmaxx', label: 'getmaxx()' },
+                    { id: 'getmaxy', path: '/docs/getmaxy', label: 'getmaxy()' },
+                    { id: 'getpixel', path: '/docs/getpixel', label: 'getpixel()' },
+                    { id: 'imagesize', path: '/docs/imagesize', label: 'imagesize()' },
+                    { id: 'getimage', path: '/docs/getimage', label: 'getimage()' },
+                    { id: 'putimage', path: '/docs/putimage', label: 'putimage()' }
+                ]
+            }
+        };
+
+        let rectangleEmbed = null;
+
+        // Render sidebar navigation
+        function renderSidebar() {
+            const navContainer = document.getElementById('sidebar-nav');
+            let html = '';
+            
+            for (const [key, section] of Object.entries(NAVIGATION)) {
+                html += `
+                    <div class="nav-group">
+                        <div class="nav-group-header">${section.title}</div>
+                        ${section.links.map(link => `
+                            <a href="${link.path}" class="nav-link ${link.id === 'rectangle' ? 'active' : ''}" data-id="${link.id}">
+                                ${link.label}
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            navContainer.innerHTML = html;
+        }
+
+        // Copy code function
+        function copyCode(btn) {
+            const code = btn.closest('.code-well').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check"></i><span>Copied!</span>';
+                btn.classList.add('copied');
+                lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                    btn.classList.remove('copied');
+                    lucide.createIcons();
+                }, 2000);
+            });
+        }
+
+        // Run rectangle example
+        function runRectangleExample() {
+            const container = document.getElementById('rectangle-embed');
+            container.innerHTML = '';
+            
+            rectangleEmbed = new GraphicsHEmbed('#rectangle-embed', {
+                scale: 0.7,
+                baseUrl: window.location.origin
+            });
+            
+            // Simple 1-line snippet that produces visible output
+            rectangleEmbed.runSnippet(`setcolor(GREEN);\nrectangle(150, 100, 440, 280);`);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSidebar();
+            lucide.createIcons();
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>initgraph() Function in graphics.h | BGI Graphics Initialization Guide</title>
+    <meta name="description"
+        content="Learn how to use initgraph() function in graphics.h to initialize BGI graphics mode in Turbo C. Complete guide with examples, parameters, and error handling for graphics programming.">
+    <meta name="keywords"
+        content="initgraph, graphics.h, initgraph function, BGI graphics, Turbo C graphics, graphics initialization, graphics driver, graphics mode, C graphics programming, BGI setup, DETECT, VGA, EGA">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow">
+
+    <!-- Structured Data (JSON-LD) for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "initgraph() — graphics.h Online Compiler",
+      "description": "Comprehensive documentation for the initgraph() function in Turbo C graphics.h (BGI).",
+      "publisher": {
+        "@type": "Organization",
+        "name": "AlbatrossC"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [{
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://graphics-h-online.vercel.app/"
+        },{
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Documentation",
+          "item": "https://graphics-h-online.vercel.app/docs"
+        },{
+          "@type": "ListItem",
+          "position": 3,
+          "name": "initgraph()",
+          "item": "https://graphics-h-online.vercel.app/docs/initgraph"
+        }]
+      }
+    }
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS (deferred) -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    <!-- Lucide Icons (deferred) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <!-- Highlight.js -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js" defer></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-sidebar: #0f0f0f;
+            --accent: #00ff88;
+            --accent-glow: rgba(0, 255, 136, 0.15);
+            --border: #1a1a1a;
+            --text-muted: #888888;
+            --text-main: #e0e0e0;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ==================== HEADER ==================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            background: rgba(10, 10, 10, 0.8);
+            border-bottom: 1px solid var(--border);
+            height: 64px;
+        }
+
+        .header-content {
+            height: 100%;
+            display: grid;
+            grid-template-columns: 280px 1fr 280px;
+            align-items: center;
+            padding: 0 1.5rem;
+        }
+
+        .header-left {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .header-center {
+            display: flex;
+            justify-content: center;
+        }
+
+        .header-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .header-title {
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-title .bracket {
+            color: var(--accent);
+        }
+
+        .btn-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .btn-nav:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .btn-nav i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-compiler {
+            background: var(--accent);
+            color: var(--bg-dark);
+            font-weight: 700;
+            border-color: var(--accent);
+        }
+
+        .btn-compiler:hover {
+            background: #00ff9d;
+            border-color: #00ff9d;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        /* ==================== LAYOUT ==================== */
+        .docs-layout {
+            display: flex;
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            flex-shrink: 0;
+            padding-bottom: 2rem;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-search-container {
+            padding: 1.5rem 1.25rem 1rem;
+            position: sticky;
+            top: 0;
+            background: var(--bg-sidebar);
+            z-index: 10;
+        }
+
+        .search-field {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 0.65rem 0.8rem;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.85rem;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: var(--transition);
+        }
+
+        .search-field:focus-within {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .search-field input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            outline: none;
+            width: 100%;
+        }
+
+        .nav-group {
+            margin-top: 1.5rem;
+        }
+
+        .nav-group-header {
+            padding: 1.25rem 1.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-group-header::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--accent);
+            opacity: 0.5;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.45rem 1.25rem;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            border-left: 2px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-link.active {
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.05);
+            border-left-color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            background: var(--bg-dark);
+            overflow-y: auto;
+            padding: 4rem 3rem 6rem;
+            scroll-behavior: smooth;
+        }
+
+        .content-inner {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* Documentation Component Styling */
+        .doc-section {
+            margin-bottom: 4rem;
+        }
+
+        .doc-header {
+            margin-bottom: 3.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2rem;
+        }
+
+        .doc-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.75rem;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        .doc-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .doc-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+
+        .doc-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        h2.section-heading {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            margin-top: 3.5rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h2.section-heading::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .doc-paragraph {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #bbb;
+            margin-bottom: 1.5rem;
+        }
+
+        .code-well {
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-well-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-lang-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .btn-copy-code {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.3rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: var(--transition);
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        .btn-copy-code:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-copy-code.copied {
+            color: var(--accent);
+        }
+
+        .code-well pre {
+            margin: 0;
+            padding: 1.25rem;
+            overflow-x: auto;
+        }
+
+        .code-well pre code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        .code-well pre code.hljs {
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        .param-list {
+            list-style: none;
+        }
+
+        .param-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .param-name {
+            font-family: 'Space Mono', monospace;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .param-desc {
+            font-size: 0.95rem;
+            color: #999;
+        }
+
+        .output-preview {
+            aspect-ratio: 16/9;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            gap: 1rem;
+        }
+
+        .tip-box {
+            background: rgba(0, 255, 136, 0.04);
+            border-left: 3px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 2.5rem 0;
+        }
+
+        .tip-box p {
+            margin: 0;
+            color: #bbb;
+            font-size: 0.95rem;
+        }
+
+        .note-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .note-box i {
+            color: var(--accent);
+            margin-top: 0.2rem;
+        }
+
+        .note-box p {
+            margin: 0;
+            color: #999;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Animation */
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .header-content {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .header-center {
+                display: none;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        /* Pagination */
+        .next-page-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: #ccc;
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .next-page-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .next-page-link i {
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/" class="btn-nav">
+                    <i data-lucide="home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="header-center">
+                <div class="header-title">
+                    <span class="bracket"><</span>graphics.h documentation<span class="bracket">/></span>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="/compiler" class="btn-nav btn-compiler">
+                    <i data-lucide="terminal"></i>
+                    <span>Compiler</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="docs-layout">
+        <aside class="sidebar">
+            <div class="sidebar-search-container">
+                <div class="search-field">
+                    <i data-lucide="search" style="opacity: 0.4; width: 14px;"></i>
+                    <input type="text" placeholder="Search API Reference..." id="docs-search">
+                </div>
+            </div>
+            <nav id="sidebar-nav">
+                <!-- Injected via JS -->
+            </nav>
+        </aside>
+
+        <main class="main-content" id="main-content">
+            <div id="content-area">
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">initgraph()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Lifecycle Function</div>
+                            <div class="doc-meta-item">Initialization</div>
+                        </div>
+                    </div>
+
+                    <p class="doc-paragraph" style="font-size: 1.1rem; color: #aaa; margin-bottom: 2rem;">
+                        The <code>initgraph()</code> function in <a href="/docs" style="color: var(--accent); text-decoration: none;">graphics.h</a> is used to initialize the BGI graphics system in Turbo C programming. 
+                        It loads the graphics driver and switches the display to graphics mode, enabling you to use drawing functions like <a href="/docs/line" style="color: var(--accent); text-decoration: none;">line()</a>, 
+                        <a href="/docs/circle" style="color: var(--accent); text-decoration: none;">circle()</a>, and <a href="/docs/rectangle" style="color: var(--accent); text-decoration: none;">rectangle()</a>.
+                    </p>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">
+                            The <code>initgraph()</code> function initializes the graphics system by loading a graphics driver from disk and putting the system into graphics mode. 
+                            This function must be called before any other graphics operations can be performed. It sets up the video mode, allocates memory for the graphics buffer,
+                            and prepares the drawing environment.
+                        </p>
+                        <p class="doc-paragraph">
+                            When <code>DETECT</code> is specified as the graphics driver, the function automatically detects the best available graphics driver and mode for the hardware.
+                            Always pair <code>initgraph()</code> with <a href="/docs/closegraph" style="color: var(--accent); text-decoration: none;">closegraph()</a> to properly release graphics resources when done.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void initgraph(int *graphdriver, int *graphmode, const char *pathtodriver);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Parameters</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">graphdriver</div>
+                                <div class="param-desc">Pointer to an integer that specifies the graphics driver to use. Use <code>DETECT</code> for automatic detection, or specify a driver constant (CGA, EGA, VGA, etc.). After the call, this variable contains the actual driver that was loaded.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">graphmode</div>
+                                <div class="param-desc">Pointer to an integer that specifies the graphics mode. If <code>DETECT</code> is used, this is set to the highest available mode for the detected driver. Otherwise, specify a mode constant (VGALO, VGAMED, VGAHI, etc.).</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">pathtodriver</div>
+                                <div class="param-desc">String specifying the directory path where BGI driver files are located. Use an empty string <code>""</code> if drivers are in the current directory.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Return Value</h2>
+                        <p class="doc-paragraph">
+                            This function does not return a value. If initialization fails, an error code can be retrieved using <code>graphresult()</code>.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Graphics Drivers</h2>
+                        <p class="doc-paragraph">
+                            Common graphics driver constants:
+                        </p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">DETECT      /* Automatic detection */
+CGA         /* Color Graphics Adapter */
+MCGA        /* Multi-Color Graphics Array */
+EGA         /* Enhanced Graphics Adapter */
+EGA64       /* EGA 64KB */
+EGAMONO     /* EGA Monochrome */
+VGA         /* Video Graphics Array */
+HERCMONO    /* Hercules Monochrome */
+ATT400      /* AT&T 400 line */
+PC3270      /* IBM 3270 PC */
+IBM8514     /* IBM 8514/a */</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Graphics Modes</h2>
+                        <p class="doc-paragraph">
+                            Common graphics mode constants for VGA driver:
+                        </p>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">VGALO   /* 640x200, 16 colors, 4 pages */
+VGAMED  /* 640x350, 16 colors, 2 pages */
+VGAHI   /* 640x480, 16 colors, 1 page */</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Example Implementation</h2>
+                        <div class="code-well">
+                            <div class="code-well-header">
+                                <span class="code-lang-label">C</span>
+                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">#include <graphics.h>
+#include <conio.h>
+#include <stdio.h>
+
+int main() {
+    int gd = DETECT, gm;
+    char driverPath[] = "";
+    
+    // Initialize graphics mode
+    initgraph(&gd, &gm, driverPath);
+    
+    // Check for initialization errors
+    int error = graphresult();
+    if (error != grOk) {
+        printf("Graphics error: %s\n", grapherrormsg(error));
+        return 1;
+    }
+    
+    // Display information about the graphics mode
+    setcolor(WHITE);
+    outtextxy(10, 10, "Graphics initialized successfully!");
+    
+    // Draw a simple rectangle
+    rectangle(100, 100, 540, 380);
+    
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Error Handling</h2>
+                        <p class="doc-paragraph">
+                            Always check for errors after calling <code>initgraph()</code>. Common error codes include:
+                        </p>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">grOk (0)</div>
+                                <div class="param-desc">No error - graphics initialized successfully.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">grNoInitGraph (-1)</div>
+                                <div class="param-desc">Graphics not initialized - BGI not installed.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">grNotDetected (-2)</div>
+                                <div class="param-desc">Graphics hardware not detected.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">grFileNotFound (-3)</div>
+                                <div class="param-desc">Driver file not found - check the path parameter.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">grInvalidDriver (-4)</div>
+                                <div class="param-desc">Invalid driver number specified.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">grNoLoadMem (-5)</div>
+                                <div class="param-desc">Not enough memory to load driver.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-box">
+                        <p><strong>Best Practice:</strong> Always pair <code>initgraph()</code> with <code>closegraph()</code> to properly release graphics resources. Use <code>getch()</code> or similar before <code>closegraph()</code> to keep the graphics window visible.</p>
+                    </div>
+
+                    <div class="note-box">
+                        <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                        <p><strong>Note:</strong> When using <code>DETECT</code>, the function modifies the values pointed to by <code>graphdriver</code> and <code>graphmode</code> to reflect the detected hardware configuration.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Frequently Asked Questions</h2>
+                        
+                        <div class="param-item" style="margin-bottom: 1.5rem;">
+                            <div class="param-name">What happens if I don't call initgraph()?</div>
+                            <div class="param-desc">Without calling <code>initgraph()</code>, your program remains in text mode and all graphics functions will fail. The graphics system must be initialized before using any drawing functions like <a href="/docs/line" style="color: var(--accent);">line()</a>, <a href="/docs/circle" style="color: var(--accent);">circle()</a>, or <a href="/docs/rectangle" style="color: var(--accent);">rectangle()</a>.</div>
+                        </div>
+
+                        <div class="param-item" style="margin-bottom: 1.5rem;">
+                            <div class="param-name">What is DETECT in initgraph?</div>
+                            <div class="param-desc"><code>DETECT</code> is a constant that tells initgraph to automatically detect the best available graphics driver on your system. It will choose VGA, EGA, or CGA based on what's available.</div>
+                        </div>
+
+                        <div class="param-item" style="margin-bottom: 1.5rem;">
+                            <div class="param-name">Do I need to call closegraph() after initgraph()?</div>
+                            <div class="param-desc">Yes, always pair <code>initgraph()</code> with <a href="/docs/closegraph" style="color: var(--accent);">closegraph()</a> to properly release graphics resources and return to text mode. Failing to do so may cause memory leaks or leave the display in graphics mode.</div>
+                        </div>
+
+                        <div class="param-item" style="margin-bottom: 1.5rem;">
+                            <div class="param-name">What graphics drivers are supported?</div>
+                            <div class="param-desc">BGI supports CGA, MCGA, EGA, EGA64, EGAMONO, VGA, HERCMONO, ATT400, PC3270, and IBM8514. VGA is the most commonly used and provides 640x480 resolution with 16 colors.</div>
+                        </div>
+
+                        <div class="param-item" style="margin-bottom: 1.5rem;">
+                            <div class="param-name">How do I check if initgraph() failed?</div>
+                            <div class="param-desc">Use <code>graphresult()</code> immediately after initgraph() to check for errors. If it returns <code>grOk</code> (0), initialization was successful. Other values indicate specific errors like missing drivers or insufficient memory.</div>
+                        </div>
+                    </div>
+
+                    <a href="/docs/closegraph" class="next-page-link">
+                        Next: closegraph()
+                        <i data-lucide="arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const NAVIGATION = {
+            'overview': {
+                title: 'Overview',
+                links: [
+                    { id: 'intro', path: '/docs', label: 'Introduction' },
+                    { id: 'getting-started', path: '/docs/overview/getting-started', label: 'Getting Started' },
+                    { id: 'constants', path: '/docs/overview/constants', label: 'Constants & Types' },
+                    { id: 'examples', path: '/docs/overview/examples', label: 'Code Examples' },
+                    { id: 'faq', path: '/docs/overview/faq', label: 'FAQ' }
+                ]
+            },
+            'initialization': {
+                title: 'Lifecycle',
+                links: [
+                    { id: 'initgraph', path: '/docs/initgraph', label: 'initgraph()' },
+                    { id: 'closegraph', path: '/docs/closegraph', label: 'closegraph()' },
+                    { id: 'detectgraph', path: '/docs/detectgraph', label: 'detectgraph()' }
+                ]
+            },
+            'drawing': {
+                title: 'Drawing',
+                links: [
+                    { id: 'line', path: '/docs/line', label: 'line()' },
+                    { id: 'circle', path: '/docs/circle', label: 'circle()' },
+                    { id: 'rectangle', path: '/docs/rectangle', label: 'rectangle()' },
+                    { id: 'arc', path: '/docs/arc', label: 'arc()' },
+                    { id: 'ellipse', path: '/docs/ellipse', label: 'ellipse()' },
+                    { id: 'putpixel', path: '/docs/putpixel', label: 'putpixel()' },
+                    { id: 'drawpoly', path: '/docs/drawpoly', label: 'drawpoly()' },
+                    { id: 'linerel', path: '/docs/linerel', label: 'linerel()' },
+                    { id: 'lineto', path: '/docs/lineto', label: 'lineto()' },
+                    { id: 'moveto', path: '/docs/moveto', label: 'moveto()' }
+                ]
+            },
+            'setters': {
+                title: 'Style & Color',
+                links: [
+                    { id: 'setcolor', path: '/docs/setcolor', label: 'setcolor()' },
+                    { id: 'setbkcolor', path: '/docs/setbkcolor', label: 'setbkcolor()' },
+                    { id: 'setfillstyle', path: '/docs/setfillstyle', label: 'setfillstyle()' },
+                    { id: 'setlinestyle', path: '/docs/setlinestyle', label: 'setlinestyle()' },
+                    { id: 'floodfill', path: '/docs/floodfill', label: 'floodfill()' }
+                ]
+            },
+            'utility': {
+                title: 'Query & Utility',
+                links: [
+                    { id: 'getmaxx', path: '/docs/getmaxx', label: 'getmaxx()' },
+                    { id: 'getmaxy', path: '/docs/getmaxy', label: 'getmaxy()' },
+                    { id: 'getpixel', path: '/docs/getpixel', label: 'getpixel()' },
+                    { id: 'imagesize', path: '/docs/imagesize', label: 'imagesize()' },
+                    { id: 'getimage', path: '/docs/getimage', label: 'getimage()' },
+                    { id: 'putimage', path: '/docs/putimage', label: 'putimage()' }
+                ]
+            }
+        };
+
+        // Render sidebar navigation
+        function renderSidebar() {
+            const navContainer = document.getElementById('sidebar-nav');
+            let html = '';
+            
+            for (const [key, section] of Object.entries(NAVIGATION)) {
+                html += `
+                    <div class="nav-group">
+                        <div class="nav-group-header">${section.title}</div>
+                        ${section.links.map(link => `
+                            <a href="${link.path}" class="nav-link ${link.id === 'initgraph' ? 'active' : ''}" data-id="${link.id}">
+                                ${link.label}
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            navContainer.innerHTML = html;
+        }
+
+        // Copy code function
+        function copyCode(btn) {
+            const code = btn.closest('.code-well').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check"></i><span>Copied!</span>';
+                btn.classList.add('copied');
+                lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                    btn.classList.remove('copied');
+                    lucide.createIcons();
+                }, 2000);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSidebar();
+            lucide.createIcons();
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+
+</html>
