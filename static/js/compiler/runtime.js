@@ -891,8 +891,6 @@ async function prefetchDemoFiles() {
 
     const loaded = await loadAllScripts();
     if (loaded) {
-        await initializeEditor();
-
         // Start warmup after editor is ready
         warmupJSDOS();
         updateCacheStatus();

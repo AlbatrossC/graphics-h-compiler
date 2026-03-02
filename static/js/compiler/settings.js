@@ -4,8 +4,7 @@
 (function () {
     'use strict';
 
-    const themeEnginePromise = import('/static/js/compiler/theme-engine.js');
-
+    // Removed duplicate bundle import here, using global cmModules instead.
     const SETTINGS_DEFAULTS = (typeof APP_SETTINGS_DEFAULTS !== 'undefined')
         ? {
             uiTheme: APP_SETTINGS_DEFAULTS.uiTheme,
@@ -163,7 +162,8 @@
         if (!cmView || !themeCompartment) return;
 
         try {
-            const themeEngine = await themeEnginePromise;
+            if (typeof cmModules === 'undefined' || !cmModules.themeEngine) return;
+            const themeEngine = cmModules.themeEngine;
             const resolvedTheme = themeName || themeEngine.THEME_VSCODE_DARK;
             themeEngine.applyTheme(cmView, themeCompartment, resolvedTheme);
 
@@ -250,10 +250,21 @@
 
     function applyAutocomplete(enabled, save = true) {
         if (!cmView || !autocompleteCompartment || !cmModules) return;
-        const { closeBrackets } = cmModules.autocomplete;
+        const { closeBrackets, autocompletion } = cmModules.autocomplete;
+
+        const extensions = [];
+        if (enabled) {
+            extensions.push(closeBrackets());
+            if (window.customCompletionSource) {
+                extensions.push(autocompletion({
+                    activateOnTyping: true,
+                    override: [window.customCompletionSource]
+                }));
+            }
+        }
 
         cmView.dispatch({
-            effects: autocompleteCompartment.reconfigure(enabled ? closeBrackets() : [])
+            effects: autocompleteCompartment.reconfigure(extensions)
         });
 
         currentSettings = {

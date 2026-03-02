@@ -1,6 +1,6 @@
-import { EditorView } from 'https://esm.sh/@codemirror/view@6';
-import { HighlightStyle, syntaxHighlighting } from 'https://esm.sh/@codemirror/language@6';
-import { tags } from 'https://esm.sh/@lezer/highlight@1';
+import { EditorView } from '@codemirror/view';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 
 export const THEME_VSCODE_DARK = 'vscode-dark';
 export const THEME_VSCODE_LIGHT = 'vscode-light';

@@ -2,82 +2,80 @@
 // Lightweight code editor with basic C++ syntax highlighting
 // and auto-close brackets. No heavy IDE features.
 
-// ==================== CODEMIRROR CDN LOADING ====================
+// ==================== CODEMIRROR LOCAL BUNDLE LOADING ====================
 
-// We load CodeMirror modules from esm.sh CDN
-// IMPORTANT: Do NOT use ?bundle — it causes each package to inline its own
-// copy of @codemirror/state, breaking instanceof checks.
 let cmModules = null;
 
 async function loadCodeMirror() {
-    Logger.info('Loading CodeMirror via ESM CDN...');
+    Logger.info('Loading CodeMirror via local bundle...');
     updateLoadingProgress(30);
 
     try {
-        // Import all needed CodeMirror modules from CDN
-        // Without ?bundle, esm.sh deduplicates shared dependencies via consistent URLs
-        const [
-            cm,
-            cmView,
-            cmState,
-            cmLanguage,
-            cmCpp,
-            cmCommands,
-            cmAutocomplete,
-            cmSearch,
-            cmHighlight
-        ] = await Promise.all([
-            import('https://esm.sh/codemirror@6'),
-            import('https://esm.sh/@codemirror/view@6'),
-            import('https://esm.sh/@codemirror/state@6'),
-            import('https://esm.sh/@codemirror/language@6'),
-            import('https://esm.sh/@codemirror/lang-cpp@6'),
-            import('https://esm.sh/@codemirror/commands@6'),
-            import('https://esm.sh/@codemirror/autocomplete@6'),
-            import('https://esm.sh/@codemirror/search@6'),
-            import('https://esm.sh/@lezer/highlight@1')
-        ]);
+        const bundle = await import('/static/js/codemirror.bundle.v1.js');
 
         cmModules = {
-            cm: cm,
-            view: cmView,
-            state: cmState,
-            language: cmLanguage,
-            cpp: cmCpp,
-            commands: cmCommands,
-            autocomplete: cmAutocomplete,
-            search: cmSearch,
-            highlight: cmHighlight
+            cm: bundle.cmCore,
+            view: bundle.cmView,
+            state: bundle.cmCore,
+            language: bundle.cmLanguage,
+            cpp: bundle.cmCpp,
+            commands: bundle.cmCommands,
+            autocomplete: bundle.cmAutocomplete,
+            search: bundle.cmSearch,
+            highlight: bundle.lezerHighlight,
+            themeEngine: bundle.themeEngine
         };
 
-        Logger.success('CodeMirror modules loaded');
+        Logger.success('CodeMirror bundle loaded');
         updateLoadingProgress(70);
         return true;
     } catch (error) {
-        Logger.error('Failed to load CodeMirror from ESM CDN', error);
+        Logger.error('Failed to load CodeMirror bundle', error);
         throw error;
     }
 }
 
 async function loadAllScripts() {
     try {
-        Logger.info('Loading dependencies...');
+        Logger.info('Loading dependencies with optimized flow...');
         updateLoadingProgress(10);
 
         // Initialize resources from manifest first
         await initializeResourcesFromManifest();
 
-        // Load JS-DOS using ResourceLoader
-        await ResourceLoader.loadScript('libs', 'jsdos');
-        scriptsLoaded.jsdos = true;
-        updateLoadingProgress(20);
-
-        // Load CodeMirror via ESM imports
+        // Load CodeMirror bundle immediately (Phase 2)
         await loadCodeMirror();
         scriptsLoaded.codemirror = true;
-        updateLoadingProgress(100);
+        updateLoadingProgress(50);
 
-        Logger.success('All dependencies loaded');
+        // Initialize editor immediately, do not wait for JS-DOS
+        initializeEditor();
+
+        // Load JS-DOS and Prefetch TC in background in parallel (Phase 3)
+        Promise.all([
+            (async () => {
+                try {
+                    await ResourceLoader.loadScript('libs', 'jsdos');
+                    scriptsLoaded.jsdos = true;
+                    Logger.info('JS-DOS loaded in background');
+                } catch (e) {
+                    Logger.warn('Failed to load JS-DOS', e);
+                }
+            })(),
+            (async () => {
+                try {
+                    Logger.info('Prefetching TC.zip in background...');
+                    await getTCZip();
+                    Logger.success('TC.zip prefetched');
+                } catch (e) {
+                    Logger.warn('TC.zip prefetch skipped', e);
+                }
+            })()
+        ]).then(() => {
+            updateLoadingProgress(100);
+            Logger.success('All background dependencies loaded');
+        });
+
         return true;
     } catch (error) {
         Logger.error('Failed to load dependencies', error);
@@ -315,7 +313,7 @@ async function initializeEditor() {
     };
 
     const initialFontSize = Math.max(10, Math.min(32, Number.parseInt(initialEditorSettings.fontSize, 10) || defaultEditorSettings.fontSize));
-    const themeEngine = await import('/static/js/compiler/theme-engine.js');
+    const themeEngine = cmModules.themeEngine;
     const initialThemeName = initialEditorSettings.theme || THEME_VSCODE_DARK;
 
     // Create compartments for dynamic reconfiguration
@@ -326,22 +324,58 @@ async function initializeEditor() {
     autocompleteCompartment = new Compartment();
     bracketMatchCompartment = new Compartment();
     activeLineCompartment = new Compartment();
+    const heavyFeaturesCompartment = new Compartment();
 
-    // Build extensions
+    // Autocomplete Source configuration
+    const BGI_FUNCTIONS = ["arc", "bar", "bar3d", "circle", "cleardevice", "clearviewport", "closegraph", "delay", "detectgraph", "drawpoly", "ellipse", "fillellipse", "fillpoly", "floodfill", "getarccoords", "getbkcolor", "getcolor", "getdefaultpalette", "getdrivername", "getimage", "getlinesettings", "getmaxcolor", "getmaxmode", "getmaxx", "getmaxy", "getmodename", "getmoderange", "getpalette", "getpalettesize", "getpixel", "gettextsettings", "getviewsettings", "getx", "gety", "graphdefaults", "grapherrormsg", "graphresult", "imagesize", "initgraph", "initwindow", "installuserdriver", "installuserfont", "line", "linerel", "lineto", "moverel", "moveto", "outtext", "outtextxy", "pieslice", "putimage", "putpixel", "rectangle", "registerbgidriver", "registerbgifont", "restorecrtmode", "sector", "setactivepage", "setallpalette", "setbkcolor", "setcolor", "setfillpattern", "setfillstyle", "setgraphbufsize", "setgraphmode", "setlinestyle", "setpalette", "settextjustify", "settextstyle", "setusercharsize", "setviewport", "setvisualpage", "swapbuffers", "textheight", "textwidth"];
+    const BGI_CONSTANTS = ["BLACK", "BLUE", "GREEN", "CYAN", "RED", "MAGENTA", "BROWN", "LIGHTGRAY", "DARKGRAY", "LIGHTBLUE", "LIGHTGREEN", "LIGHTCYAN", "LIGHTRED", "LIGHTMAGENTA", "YELLOW", "WHITE"];
+    const CPP_KEYWORDS = ["alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "compl", "concept", "const", "consteval", "constexpr", "constinit", "const_cast", "continue", "co_await", "co_return", "co_yield", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected", "public", "register", "reinterpret_cast", "requires", "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"];
+
+    function customCompletionSource(context) {
+        const { snippetCompletion } = cmModules.autocomplete;
+        let word = context.matchBefore(/\w*/);
+        if (!word || (word.from === word.to && !context.explicit)) return null;
+
+        let options = [];
+        let lower = word.text.toLowerCase();
+
+        for (let fn of BGI_FUNCTIONS) {
+            if (fn.toLowerCase().startsWith(lower)) options.push({ label: fn, type: "function", apply: fn + "()" });
+        }
+        for (let c of BGI_CONSTANTS) {
+            if (c.toLowerCase().startsWith(lower)) options.push({ label: c, type: "constant" });
+        }
+        for (let kw of CPP_KEYWORDS) {
+            if (kw.toLowerCase().startsWith(lower)) options.push({ label: kw, type: "keyword" });
+        }
+
+        if ("main".startsWith(lower)) {
+            options.push(snippetCompletion("#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, (char*)\"\");\n\n    ${1}\n\n    getch();\n    closegraph();\n    return 0;\n}", {
+                label: "main",
+                detail: "graphics boilerplate",
+                type: "snippet"
+            }));
+        }
+
+        return {
+            from: word.from,
+            options: options,
+            validFor: /^\w*$/
+        };
+    }
+
+    // Export to global scope for settings panel to re-apply the exact same source
+    window.customCompletionSource = customCompletionSource;
+
+    // Build initial essential extensions only
     const extensions = [
         lineNumbersCompartment.of(initialEditorSettings.lineNumbers ? lineNumbers() : []),
         activeLineCompartment.of(initialEditorSettings.activeLine ? [highlightActiveLine(), highlightActiveLineGutter()] : []),
         drawSelection(),
         indentOnInput(),
-        bracketMatchCompartment.of(initialEditorSettings.bracketMatching ? bracketMatching() : []),
-        autocompleteCompartment.of(initialEditorSettings.autocomplete ? closeBrackets() : []),
-        history(),
-        highlightSelectionMatches(),
         cpp(),
         keymap.of([
-            ...closeBracketsKeymap,
             ...defaultKeymap,
-            ...historyKeymap,
             indentWithTab,
         ]),
         themeCompartment.of([]),
@@ -351,21 +385,14 @@ async function initializeEditor() {
             })
         ),
         EditorView.theme({
-            '.cm-content': {
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-            },
-            '.cm-gutters': {
-                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-            },
-            '&': {
-                height: '100%',
-            },
-            '.cm-scroller': {
-                overflow: 'auto',
-            }
+            '.cm-content': { fontFamily: "'JetBrains Mono', 'Fira Code', monospace" },
+            '.cm-gutters': { fontFamily: "'JetBrains Mono', 'Fira Code', monospace" },
+            '&': { height: '100%' },
+            '.cm-scroller': { overflow: 'auto' }
         }),
         EditorState.tabSize.of(4),
         wordWrapCompartment.of(initialEditorSettings.wordWrap ? EditorView.lineWrapping : []),
+        heavyFeaturesCompartment.of([]), // Placeholder for delayed extensions
     ];
 
     // Create the editor view
@@ -456,7 +483,43 @@ async function initializeEditor() {
         });
     }
 
-    await loadDefaultCode();
+    loadDefaultCode(); // Fire and forget. Editor will not block.
+
+    // Delay heavy features to keep editor instant
+    const executeHeavyFeatures = () => {
+        const { history, historyKeymap } = cmModules.commands;
+        const { closeBrackets, closeBracketsKeymap, autocompletion } = cmModules.autocomplete;
+        const { highlightSelectionMatches } = cmModules.search;
+        const { bracketMatching } = cmModules.language;
+
+        const heavyExtensions = [
+            bracketMatchCompartment.of(initialEditorSettings.bracketMatching ? bracketMatching() : []),
+            autocompleteCompartment.of(initialEditorSettings.autocomplete ? [
+                closeBrackets(),
+                autocompletion({
+                    activateOnTyping: true,
+                    override: [customCompletionSource]
+                })
+            ] : []),
+            history(),
+            highlightSelectionMatches(),
+            keymap.of([
+                ...closeBracketsKeymap,
+                ...historyKeymap
+            ])
+        ];
+
+        cmView.dispatch({
+            effects: heavyFeaturesCompartment.reconfigure(heavyExtensions)
+        });
+        Logger.info('Heavy editor extensions loaded via idle callback');
+    };
+
+    if (window.requestIdleCallback) {
+        window.requestIdleCallback(executeHeavyFeatures);
+    } else {
+        setTimeout(executeHeavyFeatures, 300);
+    }
 
     // Change listener — using CodeMirror's updateListener
     let uiUpdateTimer = null;
