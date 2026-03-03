@@ -11,6 +11,35 @@ app = Flask(__name__, static_folder='static', template_folder='templates')
 VIDEOS_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'videos')
 os.makedirs(VIDEOS_FOLDER, exist_ok=True)
 
+DOCS_SLUG_TO_TEMPLATE = {
+    'what-is-graphicsh': 'docs/getting-started/what-is-graphicsh.html',
+    'what-is-graphics': 'docs/getting-started/what-is-graphicsh.html',
+    'where-to-run': 'docs/getting-started/where-to-run.html',
+    'hello-graphics': 'docs/getting-started/hello-graphics.html',
+    'graphics-initialization': 'docs/initialization/graphics-initialization.html',
+    'line-and-movement': 'docs/drawing/line-and-movement.html',
+    'line': 'docs/drawing/line.html',
+    'circle': 'docs/drawing/circle.html',
+    'rectangle': 'docs/drawing/rectangle.html',
+    'bar': 'docs/drawing/bar.html',
+    'bar3d': 'docs/drawing/bar3d.html',
+    'arc': 'docs/drawing/arc.html',
+    'ellipse': 'docs/drawing/ellipse.html',
+    'pieslice': 'docs/drawing/pieslice.html',
+    'sector': 'docs/drawing/sector.html',
+    'polygons-and-fill': 'docs/polygons/polygons-and-fill.html',
+    'colors-and-palette': 'docs/colors/colors-and-palette.html',
+    'fill-and-patterns': 'docs/fill/fill-and-patterns.html',
+    'viewport-and-screen': 'docs/viewport/viewport-and-screen.html',
+    'text-and-fonts': 'docs/text/text-and-fonts.html',
+    'image-handling': 'docs/image/image-handling.html',
+    'drivers-and-modes': 'docs/drivers/drivers-and-modes.html',
+    'advanced-functions': 'docs/advanced/advanced-functions.html',
+    'error-codes': 'docs/errors/error-codes.html',
+}
+
+DEFAULT_DOCS_SLUG = 'what-is-graphicsh'
+
 # Maintenance mode check
 def is_maintenance_mode():
     return os.getenv('MAINTENANCE_MODE', 'false').lower() == 'true'
@@ -55,6 +84,26 @@ def embed():
 @app.route('/embed-docs.html')
 def embed_docs():
     return render_template('embed-docs.html')
+
+
+@app.route('/docs')
+def docs_landing():
+    return render_template('docs.html')
+
+
+@app.route('/docs/<slug>')
+def docs(slug):
+    if slug not in DOCS_SLUG_TO_TEMPLATE:
+        return jsonify({'error': 'Doc not found'}), 404
+    return render_template('base.html')
+
+
+@app.route('/docs-content/<slug>')
+def docs_content(slug):
+    template_name = DOCS_SLUG_TO_TEMPLATE.get(slug)
+    if not template_name:
+        return jsonify({'error': 'Doc not found'}), 404
+    return render_template(template_name)
 
 # Static assets
 @app.route('/static/<path:path>')

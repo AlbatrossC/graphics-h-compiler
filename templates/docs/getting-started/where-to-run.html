@@ -1,0 +1,485 @@
+<article class="wtr-page" itemscope itemtype="https://schema.org/TechArticle">
+  <style>
+    .wtr-page {
+      max-width: 1100px;
+      color: #1b2a3a;
+      line-height: 1.72;
+      font-size: 1.01rem;
+    }
+
+    .wtr-page h1,
+    .wtr-page h2,
+    .wtr-page h3 {
+      color: #102132;
+      line-height: 1.3;
+    }
+
+    .wtr-page h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 2.7vw, 2.4rem);
+    }
+
+    .wtr-page h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.12rem, 1.7vw, 1.45rem);
+    }
+
+    .wtr-page p {
+      margin: 0 0 12px;
+      color: #3a4e64;
+    }
+
+    .wtr-kicker {
+      margin: 0 0 16px;
+      color: #416255;
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .wtr-intro {
+      border: 1px solid #c9dfd3;
+      background: #f4fbf7;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 20px rgba(17, 42, 69, 0.06);
+    }
+
+    .wtr-quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+
+    .wtr-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border: 1px solid #c5dbcf;
+      background: #f4fbf7;
+      color: #1b5f44;
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .wtr-btn:hover {
+      background: #eaf6f0;
+      text-decoration: none;
+    }
+
+    .wtr-toc {
+      border: 1px solid #d1e2da;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 14px 16px;
+      margin: 0 0 18px;
+      box-shadow: 0 8px 20px rgba(17, 42, 69, 0.05);
+    }
+
+    .wtr-toc h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.02rem;
+    }
+
+    .wtr-toc ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .wtr-toc li {
+      margin: 5px 0;
+    }
+
+    .wtr-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .wtr-option {
+      border: 1px solid #d3e1d9;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 14px 16px;
+      box-shadow: 0 8px 20px rgba(17, 42, 69, 0.05);
+    }
+
+    .wtr-option.recommended {
+      border-color: #bddccc;
+      background: #f5fcf8;
+    }
+
+    .wtr-badge {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #1a6a4b;
+      background: #dff2e8;
+      border: 1px solid #c1e2d1;
+      border-radius: 999px;
+      padding: 2px 8px;
+      vertical-align: middle;
+    }
+
+    .wtr-page ul {
+      margin: 0 0 10px;
+      padding-left: 22px;
+      color: #374d64;
+    }
+
+    .wtr-page li {
+      margin: 6px 0;
+    }
+
+    .wtr-page a {
+      color: #176d4c;
+      text-decoration: none;
+    }
+
+    .wtr-page a:hover {
+      text-decoration: underline;
+    }
+
+    .wtr-code {
+      margin: 8px 0 12px;
+      border: 1px solid #d0e0d8;
+      border-radius: 12px;
+      background: #f8fcfa;
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      color: #224438;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .wtr-code-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .wtr-copy {
+      align-self: stretch;
+      min-width: 122px;
+      border: 1px solid #c5dbcf;
+      background: #eff8f3;
+      border-radius: 10px;
+      color: #1b5f44;
+      padding: 9px 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .wtr-copy:hover {
+      background: #e6f4ec;
+    }
+
+    .wtr-note {
+      border-left: 4px solid #ef9f27;
+      background: #fff9ef;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin: 12px 0;
+      color: #5a4725;
+    }
+
+    .wtr-footer {
+      margin-top: 14px;
+      border: 1px solid #cde2d5;
+      background: #eef9f3;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    .wtr-faq {
+      margin-top: 14px;
+      border: 1px solid #d3e1d9;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 14px 16px;
+      box-shadow: 0 8px 20px rgba(17, 42, 69, 0.05);
+    }
+
+    .wtr-faq h2 {
+      margin-top: 0;
+    }
+
+    .wtr-faq details {
+      border-top: 1px solid #e2ece7;
+      padding: 10px 0;
+    }
+
+    .wtr-faq details:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .wtr-faq summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #18354f;
+    }
+
+    .wtr-faq p {
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 760px) {
+      .wtr-code-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <p class="wtr-kicker">Getting Started</p>
+  <h1 itemprop="headline">Where to Run graphics.h</h1>
+
+  <p class="wtr-intro" itemprop="description">
+    There are multiple ways to run graphics.h programs today. Some are easier for students, while others are more traditional or setup-heavy. This guide explains each path clearly so you can pick the right one.
+  </p>
+
+  <div class="wtr-quick" aria-label="Quick actions">
+    <a class="wtr-btn" href="/compiler">Open Online Compiler</a>
+    <a class="wtr-btn" href="/docs/what-is-graphicsh">Read graphics.h basics</a>
+    <a class="wtr-btn" href="#option-2">Jump to VS Code setup</a>
+  </div>
+
+  <nav class="wtr-toc" aria-label="On this page">
+    <h2>On This Page</h2>
+    <ul>
+      <li><a href="#option-1">Option 1: Online Compiler (Recommended)</a></li>
+      <li><a href="#option-2">Option 2: VS Code Extension</a></li>
+      <li><a href="#option-3">Option 3: Turbo C + DOSBox</a></li>
+      <li><a href="#option-4">Option 4: Ubuntu Manual Setup</a></li>
+      <li><a href="#option-5">Option 5: Dev C++ and Code::Blocks</a></li>
+      <li><a href="#important-notes">Important Notes</a></li>
+    </ul>
+  </nav>
+
+  <div class="wtr-grid">
+    <section id="option-1" class="wtr-option recommended" aria-labelledby="option-1-title">
+      <h2 id="option-1-title">Option 1: Online Compiler <span class="wtr-badge">Recommended</span></h2>
+      <p>
+        The easiest way to run graphics.h programs is the online compiler available on this website.
+      </p>
+      <ul>
+        <li>No installation required.</li>
+        <li>Works directly in your browser.</li>
+        <li>Designed specifically for graphics.h.</li>
+        <li>Suitable for academic assignments.</li>
+        <li>Fast and beginner-friendly.</li>
+      </ul>
+      <p>
+        This is the best option for most students because it avoids DOSBox setup issues, driver errors, and compatibility problems.
+      </p>
+      <p>
+        Access it at: <a href="/compiler"><code>/compiler</code></a>
+      </p>
+    </section>
+
+    <section id="option-2" class="wtr-option" aria-labelledby="option-2-title">
+      <h2 id="option-2-title">Option 2: VS Code Extension (Windows and Ubuntu)</h2>
+      <p>
+        You can also run graphics.h programs using the VS Code extension for a local workflow.
+      </p>
+      <ul>
+        <li>Works on Windows and Ubuntu.</li>
+        <li>Supports Turbo C environment.</li>
+        <li>Supports MinGW environment.</li>
+        <li>Modern editor experience.</li>
+        <li>Easier debugging and file management.</li>
+      </ul>
+      <p>
+        On Ubuntu, the extension can use an installation script to configure the environment:
+      </p>
+      <div class="wtr-code-row">
+        <pre id="ubuntu-script" class="wtr-code">curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/Installers/ubuntu_install.sh | bash</pre>
+        <button class="wtr-copy" type="button" data-copy-target="ubuntu-script" aria-label="Copy Ubuntu setup command">Copy Command</button>
+      </div>
+      <p>
+        This sets up required dependencies so graphics.h programs run properly on Ubuntu.
+      </p>
+      <p>
+        Direct installer link:
+        <a href="https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/main/compiler-assets/Installers/ubuntu_install.sh" target="_blank" rel="noopener noreferrer">Open ubuntu_install.sh</a>
+      </p>
+      <p class="wtr-note">
+        Note: A more streamlined installation script and setup flow is currently in progress.
+      </p>
+    </section>
+
+    <section id="option-3" class="wtr-option" aria-labelledby="option-3-title">
+      <h2 id="option-3-title">Option 3: Turbo C with DOSBox (Traditional Method)</h2>
+      <p>
+        This is the traditional way graphics.h was originally used.
+      </p>
+      <p>Typical steps:</p>
+      <ul>
+        <li>Install DOSBox.</li>
+        <li>Install Turbo C.</li>
+        <li>Configure the BGI directory.</li>
+        <li>Compile and run in the Turbo C IDE.</li>
+      </ul>
+      <p>
+        It is still used in many institutions, but it is outdated, requires manual setup, and runs in a 16-bit DOS environment.
+      </p>
+    </section>
+
+    <section id="option-4" class="wtr-option" aria-labelledby="option-4-title">
+      <h2 id="option-4-title">Option 4: Ubuntu Manual Setup</h2>
+      <p>
+        If you prefer manual configuration on Ubuntu, this community thread is useful:
+      </p>
+      <p>
+        <a href="https://askubuntu.com/questions/525051/how-do-i-use-graphics-h-in-ubuntu" target="_blank" rel="noopener noreferrer">https://askubuntu.com/questions/525051/how-do-i-use-graphics-h-in-ubuntu</a>
+      </p>
+      <p>
+        It explains multiple approaches for getting graphics.h support on Ubuntu.
+      </p>
+      <p class="wtr-note">
+        Note: A simplified Ubuntu installer is under development to reduce manual steps.
+      </p>
+    </section>
+
+    <section id="option-5" class="wtr-option" aria-labelledby="option-5-title">
+      <h2 id="option-5-title">Option 5: Dev C++ and Code::Blocks</h2>
+      <p>
+        Some students use graphics.h with Dev C++ or Code::Blocks.
+      </p>
+      <p>This usually requires:</p>
+      <ul>
+        <li>Installing a compatible BGI implementation.</li>
+        <li>Configuring include and library paths correctly.</li>
+        <li>Using MinGW with additional compatibility layers.</li>
+      </ul>
+      <p>
+        Setup steps vary by OS and version. Useful search keywords:
+      </p>
+      <ul>
+        <li><code>graphics.h Dev C++ setup</code></li>
+        <li><code>graphics.h Code::Blocks configuration</code></li>
+        <li><code>graphics.h MinGW tutorial</code></li>
+      </ul>
+      <p>
+        Many practical, step-by-step video guides are available on YouTube.
+      </p>
+    </section>
+  </div>
+
+  <section id="important-notes" class="wtr-option" aria-labelledby="important-notes-title">
+    <h2 id="important-notes-title">Important Notes</h2>
+    <ul>
+      <li>graphics.h is not part of standard C.</li>
+      <li>It is primarily used in academic syllabi.</li>
+      <li>Modern professional C/C++ development does not use graphics.h.</li>
+      <li>For real projects, prefer SDL, SFML, OpenGL, or Qt.</li>
+    </ul>
+    <p class="wtr-footer">
+      This documentation and tooling are focused on helping students complete academic requirements and learn graphics fundamentals without struggling with outdated environments.
+      Continue with <a href="/docs/what-is-graphicsh">What is graphics.h?</a> or begin drawing with <a href="/docs/line">line()</a>.
+    </p>
+  </section>
+
+  <section class="wtr-faq" aria-labelledby="faq-title">
+    <h2 id="faq-title">Frequently Asked Questions</h2>
+    <details>
+      <summary>What is the easiest way to run graphics.h right now?</summary>
+      <p>Use the <a href="/compiler">online compiler</a>. It avoids local installation and is the most student-friendly path.</p>
+    </details>
+    <details>
+      <summary>Is graphics.h part of standard C?</summary>
+      <p>No. graphics.h is not part of standard C and is mostly used for academic coursework and legacy environments.</p>
+    </details>
+    <details>
+      <summary>Which libraries should I learn for modern graphics development?</summary>
+      <p>For modern work, start with SDL or SFML, then explore OpenGL, GLFW, or Qt depending on your goals.</p>
+    </details>
+  </section>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Where to Run graphics.h",
+      "description": "Practical options to run graphics.h programs: online compiler, VS Code extension, DOSBox, Ubuntu setup, and IDE alternatives.",
+      "author": {
+        "@type": "Organization",
+        "name": "Graphics.h Community"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Graphics.h Documentation & Reference",
+        "url": "/docs"
+      },
+      "about": ["graphics.h", "Turbo C", "DOSBox", "VS Code", "MinGW", "Ubuntu"]
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the easiest way to run graphics.h right now?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Use the online compiler on this website because it requires no setup and runs in your browser."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is graphics.h part of standard C?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. graphics.h is not part of standard C and is mostly used in academic or legacy environments."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which modern alternatives should students learn after graphics.h?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SDL, SFML, OpenGL, GLFW, and Qt are common modern alternatives for practical development."
+          }
+        }
+      ]
+    }
+  </script>
+  <script>
+    (function () {
+      var copyButtons = document.querySelectorAll('.wtr-copy');
+      if (!copyButtons.length) return;
+      copyButtons.forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var targetId = btn.getAttribute('data-copy-target');
+          var target = targetId ? document.getElementById(targetId) : null;
+          if (!target) return;
+          var text = target.textContent.trim();
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = 'Copy Command'; }, 1400);
+          } catch (err) {
+            btn.textContent = 'Copy failed';
+            setTimeout(function () { btn.textContent = 'Copy Command'; }, 1400);
+          }
+        });
+      });
+    })();
+  </script>
+</article>
