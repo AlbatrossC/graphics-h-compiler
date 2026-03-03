@@ -1,7 +1,12 @@
 (function () {
   const content = document.getElementById('content');
   const body = document.body;
+  const root = document.documentElement;
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const themeToggle = document.getElementById('theme-toggle');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
   const SITE_TITLE = body.dataset.siteTitle || 'Graphics.h Documentation';
+  const mobileQuery = window.matchMedia('(max-width: 900px)');
   const DOC_TITLES = {
     'what-is-graphicsh': 'What is graphics.h',
     'what-is-graphics': 'What is graphics.h',
@@ -50,6 +55,57 @@
         oldScript.parentNode.replaceChild(newScript, oldScript);
       }
     }
+  }
+
+  function applyTheme(theme) {
+    root.setAttribute('data-theme', theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
+      themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+    }
+  }
+
+  function initTheme() {
+    let initial = 'light';
+    try {
+      const saved = localStorage.getItem('docs-theme');
+      if (saved === 'dark' || saved === 'light') {
+        initial = saved;
+      } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        initial = 'dark';
+      }
+    } catch (e) {
+      initial = 'light';
+    }
+    applyTheme(initial);
+  }
+
+  function updateSidebarUi(open) {
+    const isMobile = mobileQuery.matches;
+    if (isMobile) {
+      body.classList.toggle('sidebar-open', open);
+      body.classList.remove('sidebar-collapsed');
+      if (sidebarBackdrop) {
+        sidebarBackdrop.hidden = !open;
+      }
+      if (sidebarToggle) {
+        sidebarToggle.setAttribute('aria-expanded', String(open));
+      }
+      return;
+    }
+
+    body.classList.remove('sidebar-open');
+    if (sidebarBackdrop) {
+      sidebarBackdrop.hidden = true;
+    }
+    body.classList.toggle('sidebar-collapsed', !open);
+    if (sidebarToggle) {
+      sidebarToggle.setAttribute('aria-expanded', String(open));
+    }
+  }
+
+  function initSidebarState() {
+    updateSidebarUi(!mobileQuery.matches);
   }
 
   function slugFromPath(pathname) {
@@ -133,6 +189,42 @@
     event.preventDefault();
     const slug = href.slice('/docs/'.length);
     loadSlug(slug, true);
+    if (mobileQuery.matches) {
+      updateSidebarUi(false);
+    }
+  });
+
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function () {
+      const isMobile = mobileQuery.matches;
+      if (isMobile) {
+        const nextOpen = !body.classList.contains('sidebar-open');
+        updateSidebarUi(nextOpen);
+      } else {
+        const nextOpen = body.classList.contains('sidebar-collapsed');
+        updateSidebarUi(nextOpen);
+      }
+    });
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', function () {
+      updateSidebarUi(false);
+    });
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      try {
+        localStorage.setItem('docs-theme', next);
+      } catch (e) {}
+      applyTheme(next);
+    });
+  }
+
+  mobileQuery.addEventListener('change', function () {
+    initSidebarState();
   });
 
   window.addEventListener('popstate', function () {
@@ -140,6 +232,8 @@
   });
 
   const initialSlug = slugFromPath(window.location.pathname);
+  initTheme();
+  initSidebarState();
   setActiveLink(initialSlug);
   setDocumentTitle(initialSlug, body.dataset.docTitle || undefined);
 

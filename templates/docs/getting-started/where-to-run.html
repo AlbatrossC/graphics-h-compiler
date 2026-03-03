@@ -239,9 +239,93 @@
     }
 
     @media (max-width: 760px) {
+      .wtr-page {
+        font-size: 0.95rem;
+      }
+
+      .wtr-page h1 {
+        font-size: clamp(1.45rem, 7vw, 1.9rem);
+      }
+
+      .wtr-page h2 {
+        font-size: 1.08rem;
+      }
+
+      .wtr-kicker {
+        font-size: 0.8rem;
+      }
+
+      .wtr-intro,
+      .wtr-toc,
+      .wtr-option,
+      .wtr-faq,
+      .wtr-footer {
+        padding: 12px;
+        border-radius: 12px;
+      }
+
+      .wtr-btn {
+        width: 100%;
+      }
+
       .wtr-code-row {
         grid-template-columns: 1fr;
       }
+
+      .wtr-copy {
+        width: 100%;
+        min-width: 0;
+        align-self: auto;
+      }
+    }
+
+    html[data-theme="dark"] .wtr-page {
+      color: #dbe8f5;
+    }
+
+    html[data-theme="dark"] .wtr-page h1,
+    html[data-theme="dark"] .wtr-page h2,
+    html[data-theme="dark"] .wtr-page h3,
+    html[data-theme="dark"] .wtr-faq summary {
+      color: #f2f7ff;
+    }
+
+    html[data-theme="dark"] .wtr-page p,
+    html[data-theme="dark"] .wtr-page li,
+    html[data-theme="dark"] .wtr-faq p {
+      color: #b4c6da;
+    }
+
+    html[data-theme="dark"] .wtr-kicker {
+      color: #8eb3a2;
+    }
+
+    html[data-theme="dark"] .wtr-intro,
+    html[data-theme="dark"] .wtr-toc,
+    html[data-theme="dark"] .wtr-option,
+    html[data-theme="dark"] .wtr-faq,
+    html[data-theme="dark"] .wtr-footer,
+    html[data-theme="dark"] .wtr-code,
+    html[data-theme="dark"] .wtr-btn,
+    html[data-theme="dark"] .wtr-copy {
+      background: #1a2635;
+      border-color: #30465f;
+      color: #dbe8f5;
+    }
+
+    html[data-theme="dark"] .wtr-option.recommended {
+      background: #1a2e30;
+      border-color: #365a5e;
+    }
+
+    html[data-theme="dark"] .wtr-note {
+      background: #3a2c1c;
+      color: #ffe3b5;
+      border-left-color: #f0b24f;
+    }
+
+    html[data-theme="dark"] .wtr-page a {
+      color: #7dd9b2;
     }
   </style>
 

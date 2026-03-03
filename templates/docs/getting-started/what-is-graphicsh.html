@@ -164,6 +164,77 @@
         grid-template-columns: 1fr;
       }
     }
+
+    @media (max-width: 640px) {
+      .wg-page {
+        font-size: 0.95rem;
+      }
+
+      .wg-page h1 {
+        font-size: clamp(1.45rem, 7vw, 1.9rem);
+      }
+
+      .wg-page h2 {
+        margin: 22px 0 10px;
+        font-size: 1.15rem;
+      }
+
+      .wg-lead,
+      .wg-toc,
+      .wg-page section,
+      .wg-card,
+      .wg-cta {
+        padding: 12px;
+        border-radius: 12px;
+      }
+
+      .wg-kicker {
+        font-size: 0.8rem;
+      }
+
+      .wg-page ul {
+        padding-left: 18px;
+      }
+    }
+
+    html[data-theme="dark"] .wg-page {
+      color: #dbe8f5;
+    }
+
+    html[data-theme="dark"] .wg-page h1,
+    html[data-theme="dark"] .wg-page h2,
+    html[data-theme="dark"] .wg-page h3 {
+      color: #f2f7ff;
+    }
+
+    html[data-theme="dark"] .wg-page p,
+    html[data-theme="dark"] .wg-page li {
+      color: #b4c6da;
+    }
+
+    html[data-theme="dark"] .wg-kicker {
+      color: #8eb3a2;
+    }
+
+    html[data-theme="dark"] .wg-lead,
+    html[data-theme="dark"] .wg-toc,
+    html[data-theme="dark"] .wg-page section,
+    html[data-theme="dark"] .wg-card,
+    html[data-theme="dark"] .wg-alt-list li,
+    html[data-theme="dark"] .wg-cta {
+      background: #1a2635;
+      border-color: #30465f;
+    }
+
+    html[data-theme="dark"] .wg-note {
+      background: #3a2c1c;
+      color: #ffe3b5;
+      border-left-color: #f0b24f;
+    }
+
+    html[data-theme="dark"] .wg-page a {
+      color: #7dd9b2;
+    }
   </style>
 
   <p class="wg-kicker">Getting Started</p>

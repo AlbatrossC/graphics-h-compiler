@@ -256,9 +256,109 @@
     }
 
     @media (max-width: 760px) {
+      .hg-page {
+        font-size: 0.95rem;
+      }
+
+      .hg-page h1 {
+        font-size: clamp(1.45rem, 7vw, 1.9rem);
+      }
+
+      .hg-page h2 {
+        font-size: 1.08rem;
+      }
+
+      .hg-kicker {
+        font-size: 0.8rem;
+      }
+
+      .hg-intro,
+      .hg-toc,
+      .hg-section,
+      .hg-faq {
+        padding: 12px;
+        border-radius: 12px;
+      }
+
       .hg-code-wrap {
         grid-template-columns: 1fr;
       }
+
+      .hg-copy,
+      .hg-run {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .hg-run-toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .hg-run-toolbar a {
+        text-align: center;
+      }
+
+      .hg-embed {
+        min-height: 260px;
+      }
+    }
+
+    html[data-theme="dark"] .hg-page {
+      color: #dbe8f5;
+    }
+
+    html[data-theme="dark"] .hg-page h1,
+    html[data-theme="dark"] .hg-page h2,
+    html[data-theme="dark"] .hg-page h3,
+    html[data-theme="dark"] .hg-faq summary {
+      color: #f2f7ff;
+    }
+
+    html[data-theme="dark"] .hg-page p,
+    html[data-theme="dark"] .hg-page li,
+    html[data-theme="dark"] .hg-faq p {
+      color: #b4c6da;
+    }
+
+    html[data-theme="dark"] .hg-kicker {
+      color: #8eb3a2;
+    }
+
+    html[data-theme="dark"] .hg-intro,
+    html[data-theme="dark"] .hg-toc,
+    html[data-theme="dark"] .hg-section,
+    html[data-theme="dark"] .hg-faq,
+    html[data-theme="dark"] .hg-step {
+      background: #1a2635;
+      border-color: #30465f;
+    }
+
+    html[data-theme="dark"] .hg-code {
+      background: #0f1722;
+      border-color: #2f4156;
+    }
+
+    html[data-theme="dark"] .hg-run,
+    html[data-theme="dark"] .hg-copy {
+      background: #1e7b59;
+      border-color: #2a9a71;
+      color: #f3fff9;
+    }
+
+    html[data-theme="dark"] .hg-embed-shell {
+      border-color: #2f4156;
+      background: #0a0f15;
+    }
+
+    html[data-theme="dark"] .hg-note {
+      background: #3a2c1c;
+      color: #ffe3b5;
+      border-left-color: #f0b24f;
+    }
+
+    html[data-theme="dark"] .hg-page a {
+      color: #7dd9b2;
     }
   </style>
 

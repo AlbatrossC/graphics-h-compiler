@@ -14,6 +14,18 @@
   --shadow: 0 10px 25px rgba(15, 30, 54, 0.08);
 }
 
+html[data-theme="dark"] {
+  --bg: #121a24;
+  --surface: #182331;
+  --surface-alt: #14202d;
+  --text: #e8f1fb;
+  --muted: #a9bacd;
+  --border: #2b3d51;
+  --accent: #3dc995;
+  --accent-soft: #1b2f27;
+  --shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -25,14 +37,19 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: space-between;
+  gap: 10px;
   background: rgba(255, 255, 255, 0.97);
   border-bottom: 1px solid var(--border);
-  padding: 10px 18px;
-  min-height: 64px;
+  padding: 9px 14px;
+  min-height: 58px;
+  white-space: nowrap;
+}
+
+html[data-theme="dark"] .docs-header {
+  background: rgba(24, 35, 49, 0.95);
 }
 
 .header-left,
@@ -40,6 +57,8 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .header-right {
@@ -49,8 +68,28 @@ body {
 .header-title {
   margin: 0;
   text-align: center;
-  font-size: 1.08rem;
+  font-size: 1.02rem;
   letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 48vw;
+}
+
+.header-icon-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 10px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.header-icon-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .header-link {
@@ -89,6 +128,11 @@ body {
   grid-template-columns: 320px minmax(0, 1fr);
   min-height: calc(100vh - 64px);
   width: 100%;
+  transition: grid-template-columns 0.2s ease;
+}
+
+body.sidebar-collapsed .layout {
+  grid-template-columns: 0 minmax(0, 1fr);
 }
 
 .sidebar {
@@ -96,6 +140,15 @@ body {
   border-right: 1px solid var(--border);
   padding: 18px 16px 28px;
   overflow-y: auto;
+  transition: transform 0.2s ease, opacity 0.2s ease, padding 0.2s ease;
+}
+
+body.sidebar-collapsed .sidebar {
+  transform: translateX(-100%);
+  opacity: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right: 0;
 }
 
 .sidebar h2 {
@@ -141,6 +194,7 @@ body {
   padding: 24px clamp(16px, 2.2vw, 34px) 36px;
   display: flex;
   justify-content: center;
+  min-width: 0;
 }
 
 #content > * {
@@ -156,6 +210,33 @@ body {
   color: var(--muted);
 }
 
+#content h1,
+#content h2,
+#content h3,
+#content h4,
+#content h5,
+#content h6 {
+  color: var(--text);
+}
+
+#content li,
+#content strong,
+#content label,
+#content summary {
+  color: var(--text);
+}
+
+#content code {
+  color: var(--text);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 58px 0 0;
+  background: rgba(2, 12, 20, 0.45);
+  z-index: 18;
+}
+
 @media (max-width: 1060px) {
   .layout {
     grid-template-columns: 280px minmax(0, 1fr);
@@ -163,36 +244,85 @@ body {
 }
 
 @media (max-width: 900px) {
+  .docs-header {
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .header-left,
+  .header-right {
+    gap: 6px;
+  }
+
+  .header-title {
+    font-size: 0.96rem;
+    max-width: 44vw;
+  }
+
   .layout {
     grid-template-columns: 1fr;
   }
 
   .sidebar {
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-    max-height: 44vh;
+    position: fixed;
+    left: 0;
+    top: 58px;
+    bottom: 0;
+    width: min(82vw, 320px);
+    z-index: 19;
+    border-right: 1px solid var(--border);
+    max-height: none;
+    padding: 12px 12px 16px;
+    transform: translateX(-100%);
+    opacity: 1;
   }
 
-  .docs-header {
-    grid-template-columns: 1fr;
-    gap: 9px;
-    text-align: center;
-    padding: 10px 12px;
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
   }
 
-  .header-left,
-  .header-right {
-    justify-content: center;
+  body.sidebar-collapsed .sidebar {
+    transform: translateX(-100%);
+    opacity: 1;
+    padding: 12px 12px 16px;
+    border-right: 1px solid var(--border);
   }
 
-  .header-title {
-    order: -1;
+  #content {
+    padding: 14px 10px 20px;
+  }
+
+  #content > * {
+    border-radius: 12px;
+    padding: 14px 12px;
   }
 }
 
 @media (max-width: 560px) {
+  .header-title {
+    font-size: 0.89rem;
+    max-width: 38vw;
+  }
+
+  .header-left .header-link {
+    display: none;
+  }
+
   .header-link {
     padding: 6px 10px;
     font-size: 0.84rem;
+  }
+
+  .sidebar h2 {
+    font-size: 0.74rem;
+  }
+
+  .sidebar h3 {
+    font-size: 0.79rem;
+  }
+
+  .sidebar a {
+    font-size: 0.86rem;
+    padding: 6px 8px;
   }
 }
