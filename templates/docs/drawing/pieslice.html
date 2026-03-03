@@ -1,2 +1,187 @@
-<h1>pieslice()</h1>
-<p>Documentation main content is coming soon.</p>
+<article class="ps-page" itemscope itemtype="https://schema.org/TechArticle">
+  <style>
+    .ps-page{max-width:1020px;color:#1b2a3a;line-height:1.72;font-size:1.01rem}
+    .ps-page h1,.ps-page h2,.ps-page h3{color:#102132;line-height:1.3}
+    .ps-page h1{margin:0 0 10px;font-size:clamp(1.8rem,2.7vw,2.4rem)}
+    .ps-page h2{margin:0 0 8px;font-size:clamp(1.12rem,1.7vw,1.45rem)}
+    .ps-page p{margin:0 0 12px;color:#3a4e64}
+    .ps-kicker{margin:0 0 16px;color:#416255;font-size:.92rem;letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+    .ps-intro,.ps-section,.ps-toc{border:1px solid #d3e1d9;border-radius:14px;background:#fff;padding:14px 16px;box-shadow:0 8px 20px rgba(17,42,69,.05);margin-bottom:14px}
+    .ps-intro{border-color:#c9dfd3;background:#f4fbf7}
+    .ps-page ul{margin:0 0 10px;padding-left:22px;color:#374d64}
+    .ps-page li{margin:6px 0}
+    .ps-page a{color:#176d4c;text-decoration:none}
+    .ps-page a:hover{text-decoration:underline}
+    .ps-syntax,.ps-mini{margin:8px 0 10px;border:1px solid #d0e0d8;border-radius:10px;background:#f8fcfa;padding:9px 11px;font-family:Consolas,"Courier New",monospace;color:#224438;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+    .ps-code-wrap{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;margin-top:8px}
+    .ps-code{margin:0;border:1px solid #d0e0d8;border-radius:12px;background:#0f1722;padding:12px 14px;overflow-x:auto;font-family:Consolas,"Courier New",monospace;font-size:.9rem;color:#d8f0e4;white-space:pre}
+    .ps-copy{border:1px solid #1e7e59;background:#176b4c;color:#f2fff8;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;min-width:124px}
+    .ps-copy:hover{background:#1f825c}
+    .ps-run-wrap{margin-top:10px;border:1px solid #d0e0d8;border-radius:10px;background:#f8fcfa;padding:10px}
+    .ps-run-btn{border:1px solid #1e7e59;background:#176b4c;color:#f2fff8;border-radius:8px;padding:7px 10px;font-weight:700;cursor:pointer;font-size:.88rem}
+    .ps-run-btn:hover{background:#1f825c}
+    .ps-embed{margin-top:8px;min-height:210px;background:transparent;border-radius:8px;overflow:hidden;display:flex;justify-content:center;align-items:flex-start}
+    .ps-embed-note{margin:0;padding:8px;color:#9fb4aa;font-family:Consolas,"Courier New",monospace;font-size:.82rem}
+    .ps-note{border-left:4px solid #ef9f27;background:#fff9ef;padding:12px 14px;border-radius:10px;margin:12px 0;color:#5a4725}
+    @media (max-width:760px){.ps-page{font-size:.95rem}.ps-page h1{font-size:clamp(1.45rem,7vw,1.9rem)}.ps-page h2{font-size:1.08rem}.ps-intro,.ps-section,.ps-toc{padding:12px}.ps-code-wrap{grid-template-columns:1fr}.ps-copy,.ps-run-btn{width:100%;min-width:0}.ps-embed{min-height:170px}}
+    html[data-theme="dark"] .ps-page{color:#dbe8f5}
+    html[data-theme="dark"] .ps-page h1,html[data-theme="dark"] .ps-page h2,html[data-theme="dark"] .ps-page h3{color:#f2f7ff}
+    html[data-theme="dark"] .ps-page p,html[data-theme="dark"] .ps-page li{color:#b4c6da}
+    html[data-theme="dark"] .ps-intro,html[data-theme="dark"] .ps-section,html[data-theme="dark"] .ps-toc,html[data-theme="dark"] .ps-syntax,html[data-theme="dark"] .ps-mini{background:#1a2635;border-color:#30465f;color:#dbe8f5}
+    html[data-theme="dark"] .ps-run-wrap{background:#1a2635;border-color:#30465f}
+    html[data-theme="dark"] .ps-note{background:#3a2c1c;color:#ffe3b5;border-left-color:#f0b24f}
+    html[data-theme="dark"] .ps-page a{color:#7dd9b2}
+  </style>
+
+  <p class="ps-kicker">Basic Shapes</p>
+  <h1 itemprop="headline">pieslice() in graphics.h</h1>
+  <p class="ps-intro" itemprop="description"><code>pieslice()</code> draws a wedge from a circle, bounded by two radii and an arc. Use it when you need a filled chart slice or angular region from a center point.</p>
+
+  <section class="ps-toc">
+    <h2>On This Page</h2>
+    <ul>
+      <li><a href="#syntax">Syntax</a></li>
+      <li><a href="#parameters">Parameters</a></li>
+      <li><a href="#full-program">Full Program</a></li>
+      <li><a href="#mistakes">Common Mistakes</a></li>
+    </ul>
+  </section>
+
+  <section id="syntax" class="ps-section">
+    <h2>Syntax</h2>
+    <pre class="ps-syntax">void pieslice(int x, int y, int stangle, int endangle, int radius);</pre>
+    <p>Draws and fills a pie-shaped slice centered at <code>(x, y)</code> using the specified angle range and radius.</p>
+  </section>
+
+  <section id="parameters" class="ps-section">
+    <h2>Parameters</h2>
+    <ul>
+      <li><code>x, y</code>: center coordinates</li>
+      <li><code>stangle, endangle</code>: start and end angle in degrees</li>
+      <li><code>radius</code>: slice radius</li>
+    </ul>
+    <pre class="ps-mini">pieslice(240, 220, 30, 150, 120);</pre>
+    <p>The filled pattern and color depend on the active settings from <code>setfillstyle()</code> and <code>setcolor()</code>.</p>
+  </section>
+
+  <section id="full-program" class="ps-section">
+    <h2>Full Program</h2>
+    <div class="ps-code-wrap">
+      <pre id="ps-code" class="ps-code"><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    setcolor(WHITE);
+    setfillstyle(SOLID_FILL, GREEN);
+    pieslice(220, 220, 20, 140, 120);
+
+    setfillstyle(SOLID_FILL, RED);
+    pieslice(420, 220, 210, 320, 90);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+      <button class="ps-copy" type="button" data-copy-target="ps-code">Copy Code</button>
+    </div>
+    <div class="ps-run-wrap">
+      <button id="ps-run-btn" class="ps-run-btn" type="button">Run (DOS)</button>
+      <div id="ps-embed" class="ps-embed"><p class="ps-embed-note">Click Run (DOS) to test this quickly.</p></div>
+    </div>
+  </section>
+
+  <section id="mistakes" class="ps-section">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Not setting fill style/color before calling <code>pieslice()</code>.</li>
+      <li>Using an invalid angle sequence and expecting a different wedge direction.</li>
+      <li>Drawing slices partially outside the screen due to large radius.</li>
+    </ul>
+    <p class="ps-note">Next: <a href="/docs/sector">sector()</a> for elliptical sectors and <a href="/docs/arc">arc()</a> for unfilled arcs.</p>
+  </section>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "pieslice() in graphics.h",
+      "description": "Learn graphics.h pieslice() syntax, parameters, and examples for drawing pie-shaped filled slices.",
+      "author": {"@type": "Organization", "name": "Graphics.h Community"},
+      "isPartOf": {"@type": "WebSite", "name": "Graphics.h online compiler Documentation", "url": "/docs"},
+      "about": ["graphics.h", "pieslice()", "computer graphics"]
+    }
+  </script>
+  <script>
+    (function () {
+      var copyBtn = document.querySelector('.ps-copy');
+      var runBtn = document.getElementById('ps-run-btn');
+      var embedContainer = document.getElementById('ps-embed');
+      var embedInstance = null;
+      var target = document.getElementById('ps-code');
+      if (!target) return;
+      var code = target.textContent.trim();
+
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async function () {
+          try {
+            await navigator.clipboard.writeText(code);
+            copyBtn.textContent = 'Copied';
+            setTimeout(function () { copyBtn.textContent = 'Copy Code'; }, 1400);
+          } catch (e) {
+            copyBtn.textContent = 'Copy failed';
+            setTimeout(function () { copyBtn.textContent = 'Copy Code'; }, 1400);
+          }
+        });
+      }
+
+      function ensureSdkLoaded() {
+        if (window.GraphicsHEmbed) return Promise.resolve();
+        return new Promise(function (resolve, reject) {
+          var existing = document.querySelector('script[data-sdk="graphicsh"]');
+          if (existing) {
+            existing.addEventListener('load', resolve, { once: true });
+            existing.addEventListener('error', reject, { once: true });
+            return;
+          }
+          var s = document.createElement('script');
+          s.src = '/sdk.js';
+          s.async = true;
+          s.dataset.sdk = 'graphicsh';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      if (runBtn) {
+        runBtn.addEventListener('click', async function () {
+          runBtn.disabled = true;
+          runBtn.textContent = 'Starting...';
+          try {
+            await ensureSdkLoaded();
+            if (!embedInstance) {
+              embedContainer.innerHTML = '';
+              embedInstance = new window.GraphicsHEmbed('#ps-embed', { baseWidth: 640, baseHeight: 480, scale: 0.62, boilerplate: false });
+            }
+            embedInstance.runProgram(code);
+            runBtn.textContent = 'Run Again';
+          } catch (e) {
+            runBtn.textContent = 'Run failed';
+          } finally {
+            runBtn.disabled = false;
+          }
+        });
+      }
+
+      window.__docsCleanup = function () {
+        if (embedInstance && typeof embedInstance.destroy === 'function') {
+          embedInstance.destroy();
+        }
+        embedInstance = null;
+      };
+    })();
+  </script>
+</article>

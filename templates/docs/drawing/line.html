@@ -1,2 +1,191 @@
-<h1>line()</h1>
-<p>Documentation main content is coming soon.</p>
+<article class="ln-page" itemscope itemtype="https://schema.org/TechArticle">
+  <style>
+    .ln-page { max-width: 1020px; color: #1b2a3a; line-height: 1.72; font-size: 1.01rem; }
+    .ln-page h1, .ln-page h2, .ln-page h3 { color: #102132; line-height: 1.3; }
+    .ln-page h1 { margin: 0 0 10px; font-size: clamp(1.8rem, 2.7vw, 2.4rem); }
+    .ln-page h2 { margin: 0 0 8px; font-size: clamp(1.12rem, 1.7vw, 1.45rem); }
+    .ln-page p { margin: 0 0 12px; color: #3a4e64; }
+    .ln-kicker { margin: 0 0 16px; color: #416255; font-size: 0.92rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; }
+    .ln-intro, .ln-section, .ln-toc { border: 1px solid #d3e1d9; border-radius: 14px; background: #ffffff; padding: 14px 16px; box-shadow: 0 8px 20px rgba(17, 42, 69, 0.05); margin-bottom: 14px; }
+    .ln-intro { border-color: #c9dfd3; background: #f4fbf7; }
+    .ln-page ul { margin: 0 0 10px; padding-left: 22px; color: #374d64; }
+    .ln-page li { margin: 6px 0; }
+    .ln-page a { color: #176d4c; text-decoration: none; }
+    .ln-page a:hover { text-decoration: underline; }
+    .ln-syntax, .ln-mini { margin: 8px 0 10px; border: 1px solid #d0e0d8; border-radius: 10px; background: #f8fcfa; padding: 9px 11px; font-family: Consolas, "Courier New", monospace; color: #224438; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+    .ln-code-wrap { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin-top: 8px; }
+    .ln-code { margin: 0; border: 1px solid #d0e0d8; border-radius: 12px; background: #0f1722; padding: 12px 14px; overflow-x: auto; font-family: Consolas, "Courier New", monospace; font-size: 0.9rem; color: #d8f0e4; white-space: pre; }
+    .ln-copy { border: 1px solid #1e7e59; background: #176b4c; color: #f2fff8; border-radius: 10px; padding: 10px 12px; font-weight: 700; cursor: pointer; min-width: 124px; }
+    .ln-copy:hover { background: #1f825c; }
+    .ln-run-wrap { margin-top: 10px; border: 1px solid #d0e0d8; border-radius: 10px; background: #f8fcfa; padding: 10px; }
+    .ln-run-btn { border: 1px solid #1e7e59; background: #176b4c; color: #f2fff8; border-radius: 8px; padding: 7px 10px; font-weight: 700; cursor: pointer; font-size: 0.88rem; }
+    .ln-run-btn:hover { background: #1f825c; }
+    .ln-embed { margin-top: 8px; min-height: 210px; background: transparent; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; }
+    .ln-embed-note { margin: 0; padding: 8px; color: #9fb4aa; font-family: Consolas, "Courier New", monospace; font-size: 0.82rem; }
+    .ln-note { border-left: 4px solid #ef9f27; background: #fff9ef; padding: 12px 14px; border-radius: 10px; margin: 12px 0; color: #5a4725; }
+    @media (max-width: 760px) { .ln-page{font-size:.95rem;} .ln-page h1{font-size:clamp(1.45rem,7vw,1.9rem);} .ln-page h2{font-size:1.08rem;} .ln-intro,.ln-section,.ln-toc{padding:12px;} .ln-code-wrap{grid-template-columns:1fr;} .ln-copy,.ln-run-btn{width:100%;min-width:0;} .ln-embed{min-height:170px;} }
+    html[data-theme="dark"] .ln-page { color:#dbe8f5; }
+    html[data-theme="dark"] .ln-page h1, html[data-theme="dark"] .ln-page h2, html[data-theme="dark"] .ln-page h3 { color:#f2f7ff; }
+    html[data-theme="dark"] .ln-page p, html[data-theme="dark"] .ln-page li { color:#b4c6da; }
+    html[data-theme="dark"] .ln-intro, html[data-theme="dark"] .ln-section, html[data-theme="dark"] .ln-toc, html[data-theme="dark"] .ln-syntax, html[data-theme="dark"] .ln-mini { background:#1a2635; border-color:#30465f; color:#dbe8f5; }
+    html[data-theme="dark"] .ln-run-wrap { background:#1a2635; border-color:#30465f; }
+    html[data-theme="dark"] .ln-note { background:#3a2c1c; color:#ffe3b5; border-left-color:#f0b24f; }
+    html[data-theme="dark"] .ln-page a { color:#7dd9b2; }
+  </style>
+
+  <p class="ln-kicker">Basic Shapes</p>
+  <h1 itemprop="headline">line() in graphics.h</h1>
+  <p class="ln-intro" itemprop="description">The <code>line()</code> function draws a straight line between two points. It is one of the most fundamental drawing functions in graphics.h.</p>
+
+  <section class="ln-toc" aria-label="On this page">
+    <h2>On This Page</h2>
+    <ul>
+      <li><a href="#syntax">Syntax</a></li>
+      <li><a href="#parameters">Parameters</a></li>
+      <li><a href="#example">Example</a></li>
+      <li><a href="#full-program">Full Program</a></li>
+      <li><a href="#mistakes">Common Mistakes</a></li>
+    </ul>
+  </section>
+
+  <section id="syntax" class="ln-section">
+    <h2>Syntax</h2>
+    <pre class="ln-syntax">void line(int x1, int y1, int x2, int y2);</pre>
+    <p>Draws a line from <code>(x1, y1)</code> to <code>(x2, y2)</code>.</p>
+  </section>
+
+  <section id="parameters" class="ln-section">
+    <h2>Parameters</h2>
+    <ul>
+      <li><code>x1, y1</code>: starting point</li>
+      <li><code>x2, y2</code>: ending point</li>
+    </ul>
+    <p>Coordinates are absolute screen coordinates (not relative movement).</p>
+    <p>Because <code>line()</code> uses absolute points, it is ideal when you already know exact coordinates for edges, axes, or static layout boundaries.</p>
+  </section>
+
+  <section id="example" class="ln-section">
+    <h2>Simple Example</h2>
+    <pre class="ln-mini">line(100, 100, 300, 100);</pre>
+    <p>This draws a horizontal line 200 pixels long.</p>
+  </section>
+
+  <section id="full-program" class="ln-section">
+    <h2>Full Program</h2>
+    <div class="ln-code-wrap">
+      <pre id="ln-code" class="ln-code"><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    line(100, 100, 300, 100);
+    line(100, 100, 100, 250);
+    line(100, 250, 300, 250);
+    line(300, 100, 300, 250);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+      <button class="ln-copy" type="button" data-copy-target="ln-code">Copy Code</button>
+    </div>
+    <div class="ln-run-wrap">
+      <button id="ln-run-btn" class="ln-run-btn" type="button">Run (DOS)</button>
+      <div id="ln-embed" class="ln-embed"><p class="ln-embed-note">Click Run (DOS) to quickly test this program.</p></div>
+    </div>
+  </section>
+
+  <section id="mistakes" class="ln-section">
+    <h2>Common Mistakes</h2>
+    <ul>
+      <li>Calling <code>line()</code> before <code>initgraph()</code>.</li>
+      <li>Using coordinates outside visible screen bounds.</li>
+      <li>Forgetting <code>closegraph()</code> before program exit.</li>
+    </ul>
+    <p class="ln-note">Next: continue with <a href="/docs/circle">circle()</a> and <a href="/docs/rectangle">rectangle()</a>.</p>
+  </section>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "line() in graphics.h",
+      "description": "Learn graphics.h line() syntax, parameters, and examples with a complete program.",
+      "author": {"@type": "Organization", "name": "Graphics.h Community"},
+      "isPartOf": {"@type": "WebSite", "name": "Graphics.h Documentation & Reference", "url": "/docs"},
+      "about": ["graphics.h", "line()", "computer graphics"]
+    }
+  </script>
+  <script>
+    (function () {
+      var copyBtn = document.querySelector('.ln-copy');
+      var runBtn = document.getElementById('ln-run-btn');
+      var embedContainer = document.getElementById('ln-embed');
+      var embedInstance = null;
+      var target = document.getElementById('ln-code');
+      if (!target) return;
+      var code = target.textContent.trim();
+
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async function () {
+          try {
+            await navigator.clipboard.writeText(code);
+            copyBtn.textContent = 'Copied';
+            setTimeout(function () { copyBtn.textContent = 'Copy Code'; }, 1400);
+          } catch (e) {
+            copyBtn.textContent = 'Copy failed';
+            setTimeout(function () { copyBtn.textContent = 'Copy Code'; }, 1400);
+          }
+        });
+      }
+
+      function ensureSdkLoaded() {
+        if (window.GraphicsHEmbed) return Promise.resolve();
+        return new Promise(function (resolve, reject) {
+          var existing = document.querySelector('script[data-sdk="graphicsh"]');
+          if (existing) {
+            existing.addEventListener('load', resolve, { once: true });
+            existing.addEventListener('error', reject, { once: true });
+            return;
+          }
+          var s = document.createElement('script');
+          s.src = '/sdk.js';
+          s.async = true;
+          s.dataset.sdk = 'graphicsh';
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      if (runBtn) {
+        runBtn.addEventListener('click', async function () {
+          runBtn.disabled = true;
+          runBtn.textContent = 'Starting...';
+          try {
+            await ensureSdkLoaded();
+            if (!embedInstance) {
+              embedContainer.innerHTML = '';
+              embedInstance = new window.GraphicsHEmbed('#ln-embed', { baseWidth: 640, baseHeight: 480, scale: 0.62, boilerplate: false });
+            }
+            embedInstance.runProgram(code);
+            runBtn.textContent = 'Run Again';
+          } catch (e) {
+            runBtn.textContent = 'Run failed';
+          } finally {
+            runBtn.disabled = false;
+          }
+        });
+      }
+
+      window.__docsCleanup = function () {
+        if (embedInstance && typeof embedInstance.destroy === 'function') {
+          embedInstance.destroy();
+        }
+        embedInstance = null;
+      };
+    })();
+  </script>
+</article>
