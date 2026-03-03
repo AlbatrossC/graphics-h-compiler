@@ -226,7 +226,7 @@ body.sidebar-collapsed .sidebar {
   color: var(--text);
 }
 
-#content code {
+#content :not(pre) > code {
   color: var(--text);
 }
 

@@ -127,6 +127,15 @@
     document.title = pageTitle + ' | ' + SITE_TITLE;
   }
 
+  function setMetaDescription(explicitDescription) {
+    const fallback = 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.';
+    const description = explicitDescription || body.dataset.docDescription || fallback;
+    const meta = document.getElementById('meta-description');
+    if (meta) {
+      meta.setAttribute('content', description);
+    }
+  }
+
   function hasServerRenderedContent() {
     const text = content.textContent.trim();
     return text && text !== 'Loading...';
@@ -155,13 +164,16 @@
 
       const docTitle = response.headers.get('X-Doc-Title');
       const canonicalSlug = response.headers.get('X-Doc-Slug') || slug;
+      const docDescription = response.headers.get('X-Doc-Description');
       const html = await response.text();
       content.innerHTML = html;
       await executeContentScripts(content);
       setActiveLink(canonicalSlug);
       setDocumentTitle(canonicalSlug, docTitle);
+      setMetaDescription(docDescription || undefined);
       body.dataset.docSlug = canonicalSlug;
       body.dataset.docTitle = docTitle || DOC_TITLES[canonicalSlug] || '';
+      body.dataset.docDescription = docDescription || '';
 
       if (shouldPush) {
         history.pushState({ slug: canonicalSlug }, '', '/docs/' + canonicalSlug);
@@ -236,6 +248,7 @@
   initSidebarState();
   setActiveLink(initialSlug);
   setDocumentTitle(initialSlug, body.dataset.docTitle || undefined);
+  setMetaDescription(body.dataset.docDescription || undefined);
 
   if (!hasServerRenderedContent()) {
     loadSlug(initialSlug, false);

@@ -1,2 +1,439 @@
-<h1>Graphics Initialization</h1>
-<p>Documentation main content is coming soon.</p>
+<article class="gi-page" itemscope itemtype="https://schema.org/TechArticle">
+  <style>
+    .gi-page {
+      max-width: 1100px;
+      color: #1b2a3a;
+      line-height: 1.72;
+      font-size: 1.01rem;
+    }
+
+    .gi-page h1,
+    .gi-page h2,
+    .gi-page h3 {
+      color: #102132;
+      line-height: 1.3;
+    }
+
+    .gi-page h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 2.7vw, 2.4rem);
+    }
+
+    .gi-page h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.12rem, 1.7vw, 1.45rem);
+    }
+
+    .gi-page p {
+      margin: 0 0 12px;
+      color: #3a4e64;
+    }
+
+    .gi-kicker {
+      margin: 0 0 16px;
+      color: #416255;
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .gi-intro {
+      border: 1px solid #c9dfd3;
+      background: #f4fbf7;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(17, 42, 69, 0.06);
+    }
+
+    .gi-toc,
+    .gi-section {
+      border: 1px solid #d3e1d9;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 14px 16px;
+      box-shadow: 0 8px 20px rgba(17, 42, 69, 0.05);
+      margin-bottom: 14px;
+    }
+
+    .gi-toc h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.02rem;
+    }
+
+    .gi-page ul,
+    .gi-page ol {
+      margin: 0 0 10px;
+      padding-left: 22px;
+      color: #374d64;
+    }
+
+    .gi-page li {
+      margin: 6px 0;
+    }
+
+    .gi-page a {
+      color: #176d4c;
+      text-decoration: none;
+    }
+
+    .gi-page a:hover {
+      text-decoration: underline;
+    }
+
+    .gi-syntax {
+      margin: 8px 0 10px;
+      border: 1px solid #d0e0d8;
+      border-radius: 10px;
+      background: #f8fcfa;
+      padding: 9px 11px;
+      font-family: Consolas, "Courier New", monospace;
+      color: #224438;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .gi-code-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+      margin-top: 8px;
+    }
+
+    .gi-code {
+      margin: 0;
+      border: 1px solid #d0e0d8;
+      border-radius: 12px;
+      background: #0f1a14;
+      padding: 12px 14px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      color: #d8f0e4;
+      white-space: pre;
+    }
+
+    .gi-copy {
+      border: 1px solid #1e7e59;
+      background: #176b4c;
+      color: #f2fff8;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 124px;
+    }
+
+    .gi-copy:hover {
+      background: #1f825c;
+    }
+
+    .gi-note {
+      border-left: 4px solid #ef9f27;
+      background: #fff9ef;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin: 12px 0;
+      color: #5a4725;
+    }
+
+    .gi-next {
+      border: 1px solid #cde2d5;
+      background: #eef9f3;
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+
+    @media (max-width: 760px) {
+      .gi-page {
+        font-size: 0.95rem;
+      }
+
+      .gi-page h1 {
+        font-size: clamp(1.45rem, 7vw, 1.9rem);
+      }
+
+      .gi-page h2 {
+        font-size: 1.08rem;
+      }
+
+      .gi-kicker {
+        font-size: 0.8rem;
+      }
+
+      .gi-intro,
+      .gi-toc,
+      .gi-section,
+      .gi-next {
+        padding: 12px;
+      }
+
+      .gi-code-wrap {
+        grid-template-columns: 1fr;
+      }
+
+      .gi-copy {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    html[data-theme="dark"] .gi-page {
+      color: #dbe8f5;
+    }
+
+    html[data-theme="dark"] .gi-page h1,
+    html[data-theme="dark"] .gi-page h2,
+    html[data-theme="dark"] .gi-page h3 {
+      color: #f2f7ff;
+    }
+
+    html[data-theme="dark"] .gi-page p,
+    html[data-theme="dark"] .gi-page li {
+      color: #b4c6da;
+    }
+
+    html[data-theme="dark"] .gi-kicker {
+      color: #8eb3a2;
+    }
+
+    html[data-theme="dark"] .gi-intro,
+    html[data-theme="dark"] .gi-toc,
+    html[data-theme="dark"] .gi-section,
+    html[data-theme="dark"] .gi-next,
+    html[data-theme="dark"] .gi-syntax {
+      background: #1a2635;
+      border-color: #30465f;
+      color: #dbe8f5;
+    }
+
+    html[data-theme="dark"] .gi-code {
+      background: #0f1722;
+      border-color: #2f4156;
+    }
+
+    html[data-theme="dark"] .gi-note {
+      background: #3a2c1c;
+      color: #ffe3b5;
+      border-left-color: #f0b24f;
+    }
+
+    html[data-theme="dark"] .gi-page a {
+      color: #7dd9b2;
+    }
+  </style>
+
+  <p class="gi-kicker">Initialization</p>
+  <h1 itemprop="headline">Graphics Initialization</h1>
+
+  <p class="gi-intro" itemprop="description">
+    Before drawing anything using graphics.h, you must initialize the graphics system properly. Initialization switches the program from text mode to graphics mode and loads the required graphics driver.
+  </p>
+
+  <section class="gi-toc" aria-label="On this page">
+    <h2>On This Page</h2>
+    <ul>
+      <li><a href="#initgraph">initgraph()</a></li>
+      <li><a href="#detectgraph">detectgraph()</a></li>
+      <li><a href="#graphresult">graphresult()</a></li>
+      <li><a href="#grapherrormsg">grapherrormsg()</a></li>
+      <li><a href="#closegraph">closegraph()</a></li>
+      <li><a href="#restorecrtmode">restorecrtmode()</a></li>
+      <li><a href="#flow">Typical initialization flow</a></li>
+      <li><a href="#errors">Common initialization errors</a></li>
+    </ul>
+  </section>
+
+  <section id="initgraph" class="gi-section" aria-labelledby="initgraph-title">
+    <h2 id="initgraph-title">initgraph()</h2>
+    <p><strong>Syntax</strong></p>
+    <pre class="gi-syntax">void initgraph(int *graphdriver, int *graphmode, const char *pathtodriver);</pre>
+    <p><strong>Description</strong></p>
+    <p>
+      Initializes graphics mode, loads the driver, and prepares the display for drawing operations.
+    </p>
+    <p><strong>Parameters</strong></p>
+    <ul>
+      <li><code>graphdriver</code>: pointer to graphics driver variable.</li>
+      <li><code>graphmode</code>: pointer to graphics mode variable.</li>
+      <li><code>pathtodriver</code>: path to BGI drivers. In many modern/online setups, <code>""</code> works.</li>
+    </ul>
+    <p>In student programs, using <code>DETECT</code> with <code>initgraph()</code> is usually enough.</p>
+  </section>
+
+  <section class="gi-section" aria-labelledby="init-example-title">
+    <h2 id="init-example-title">Example</h2>
+    <div class="gi-code-wrap">
+      <pre id="gi-basic-code" class="gi-code"><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+
+    initgraph(&gd, &gm, "");
+    circle(200, 200, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+      <button class="gi-copy" type="button" data-copy-target="gi-basic-code">Copy Code</button>
+    </div>
+  </section>
+
+  <section id="detectgraph" class="gi-section" aria-labelledby="detectgraph-title">
+    <h2 id="detectgraph-title">detectgraph()</h2>
+    <p><strong>Syntax</strong></p>
+    <pre class="gi-syntax">void detectgraph(int *graphdriver, int *graphmode);</pre>
+    <p>
+      Detects driver and mode without initializing graphics. Useful if you want to inspect availability before calling <code>initgraph()</code>.
+    </p>
+    <pre class="gi-syntax">int gd, gm;
+detectgraph(&gd, &gm);
+initgraph(&gd, &gm, "");</pre>
+  </section>
+
+  <section id="graphresult" class="gi-section" aria-labelledby="graphresult-title">
+    <h2 id="graphresult-title">graphresult()</h2>
+    <p><strong>Syntax</strong></p>
+    <pre class="gi-syntax">int graphresult(void);</pre>
+    <p>
+      Returns status of the last graphics operation. You should check it after <code>initgraph()</code>.
+    </p>
+    <p>If return value is <code>grOk</code>, initialization succeeded.</p>
+  </section>
+
+  <section id="grapherrormsg" class="gi-section" aria-labelledby="grapherrormsg-title">
+    <h2 id="grapherrormsg-title">grapherrormsg()</h2>
+    <p><strong>Syntax</strong></p>
+    <pre class="gi-syntax">char *grapherrormsg(int errorcode);</pre>
+    <p>
+      Converts a graphics error code into a readable message. Typically used with <code>graphresult()</code>.
+    </p>
+  </section>
+
+  <section id="closegraph" class="gi-section" aria-labelledby="closegraph-title">
+    <h2 id="closegraph-title">closegraph()</h2>
+    <p><strong>Syntax</strong></p>
+    <pre class="gi-syntax">void closegraph(void);</pre>
+    <p>
+      Shuts down graphics mode and restores text mode.
+    </p>
+    <p class="gi-note">Always call <code>closegraph()</code> before program termination.</p>
+  </section>
+
+  <section id="restorecrtmode" class="gi-section" aria-labelledby="restorecrtmode-title">
+    <h2 id="restorecrtmode-title">restorecrtmode()</h2>
+    <p><strong>Syntax</strong></p>
+    <pre class="gi-syntax">void restorecrtmode(void);</pre>
+    <p>
+      Restores text mode without fully closing graphics. Rare in beginner programs.
+    </p>
+  </section>
+
+  <section id="flow" class="gi-section" aria-labelledby="flow-title">
+    <h2 id="flow-title">Typical Initialization Flow</h2>
+    <ol>
+      <li>Declare driver/mode variables.</li>
+      <li>Call <code>initgraph()</code>.</li>
+      <li>Check <code>graphresult()</code>.</li>
+      <li>Run drawing operations.</li>
+      <li>Wait for input.</li>
+      <li>Call <code>closegraph()</code>.</li>
+    </ol>
+  </section>
+
+  <section class="gi-section" aria-labelledby="error-handling-title">
+    <h2 id="error-handling-title">Example with Error Handling</h2>
+    <div class="gi-code-wrap">
+      <pre id="gi-safe-code" class="gi-code"><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+
+    initgraph(&gd, &gm, "");
+
+    int errorcode = graphresult();
+    if (errorcode != grOk) {
+        printf("Graphics error: %s\n", grapherrormsg(errorcode));
+        return 1;
+    }
+
+    circle(200, 200, 100);
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+      <button class="gi-copy" type="button" data-copy-target="gi-safe-code">Copy Code</button>
+    </div>
+  </section>
+
+  <section id="errors" class="gi-section" aria-labelledby="errors-title">
+    <h2 id="errors-title">Common Initialization Errors</h2>
+    <ul>
+      <li>BGI driver not found.</li>
+      <li>Incorrect BGI path in older Turbo C setups.</li>
+      <li>Running graphics.h in unsupported compilers.</li>
+      <li>Missing graphics drivers.</li>
+      <li>Incorrect graphics mode selection.</li>
+    </ul>
+    <p>
+      Important reminders: graphics.h is not part of standard C, initialization must happen before drawing, and <code>closegraph()</code> must be called before exit.
+    </p>
+  </section>
+
+  <section class="gi-next" aria-label="Next step">
+    <strong>Next Step</strong>
+    After initialization, continue with
+    <a href="/docs/line-and-movement">Line &amp; Cursor Movement</a>,
+    <a href="/docs/line">Basic Shapes</a>, and
+    <a href="/docs/colors-and-palette">Colors &amp; Fill</a>.
+  </section>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Graphics Initialization",
+      "description": "How to initialize graphics.h correctly using initgraph, detectgraph, graphresult, grapherrormsg, closegraph, and restorecrtmode.",
+      "author": {
+        "@type": "Organization",
+        "name": "Graphics.h Community"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Graphics.h Documentation & Reference",
+        "url": "/docs"
+      },
+      "about": ["graphics.h", "initgraph", "graphresult", "closegraph", "BGI"]
+    }
+  </script>
+  <script>
+    (function () {
+      var buttons = document.querySelectorAll('.gi-copy');
+      if (!buttons.length) return;
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          var targetId = btn.getAttribute('data-copy-target');
+          var target = targetId ? document.getElementById(targetId) : null;
+          if (!target) return;
+          var text = target.textContent.trim();
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = 'Copy Code'; }, 1400);
+          } catch (err) {
+            btn.textContent = 'Copy failed';
+            setTimeout(function () { btn.textContent = 'Copy Code'; }, 1400);
+          }
+        });
+      });
+    })();
+  </script>
+</article>

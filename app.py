@@ -39,7 +39,7 @@ DOCS_SLUG_TO_TEMPLATE = {
 }
 
 DEFAULT_DOCS_SLUG = 'what-is-graphicsh'
-DOCS_SITE_TITLE = 'Graphics.h Documentation'
+DOCS_SITE_TITLE = 'graphics.h online compiler docs'
 DOCS_SLUG_TO_TITLE = {
     'what-is-graphicsh': 'What is graphics.h',
     'what-is-graphics': 'What is graphics.h',
@@ -66,6 +66,32 @@ DOCS_SLUG_TO_TITLE = {
     'advanced-functions': 'Advanced Functions',
     'error-codes': 'Error Codes',
 }
+DOCS_SLUG_TO_DESCRIPTION = {
+    'what-is-graphicsh': 'Learn what graphics.h is, why it is still taught, and which modern alternatives like SDL and SFML are better for real-world development.',
+    'what-is-graphics': 'Learn what graphics.h is, why it is still taught, and which modern alternatives like SDL and SFML are better for real-world development.',
+    'where-to-run': 'Compare the best ways to run graphics.h programs: online compiler, VS Code extension, Turbo C with DOSBox, and Ubuntu setup options.',
+    'hello-graphics': 'Build and run your first graphics.h hello graphics program with step-by-step explanation, code sample, and DOS output preview.',
+    'graphics-initialization': 'Understand graphics.h initialization using initgraph, detectgraph, graphresult, grapherrormsg, closegraph, and restorecrtmode.',
+    'line-and-movement': 'Learn line drawing and cursor movement concepts in graphics.h with beginner-friendly examples.',
+    'line': 'Explore graphics.h line() function syntax, parameters, and usage examples.',
+    'circle': 'Explore graphics.h circle() function syntax, parameters, and usage examples.',
+    'rectangle': 'Explore graphics.h rectangle() function syntax, parameters, and usage examples.',
+    'bar': 'Explore graphics.h bar() function syntax, parameters, and usage examples.',
+    'bar3d': 'Explore graphics.h bar3d() function syntax, parameters, and usage examples.',
+    'arc': 'Explore graphics.h arc() function syntax, parameters, and usage examples.',
+    'ellipse': 'Explore graphics.h ellipse() function syntax, parameters, and usage examples.',
+    'pieslice': 'Explore graphics.h pieslice() function syntax, parameters, and usage examples.',
+    'sector': 'Explore graphics.h sector() function syntax, parameters, and usage examples.',
+    'polygons-and-fill': 'Learn polygon drawing and fill operations in graphics.h with practical examples.',
+    'colors-and-palette': 'Understand graphics.h color constants, palette usage, and fill color behavior.',
+    'fill-and-patterns': 'Learn fill styles and patterns in graphics.h for area shading and visual effects.',
+    'viewport-and-screen': 'Understand graphics.h viewport, coordinate clipping, and screen handling basics.',
+    'text-and-fonts': 'Learn text rendering functions and font styling in graphics.h.',
+    'image-handling': 'Learn graphics.h image and pixel operations including putpixel, getimage, and putimage.',
+    'drivers-and-modes': 'Understand graphics.h drivers, graphics modes, and compatibility concerns.',
+    'advanced-functions': 'Explore advanced graphics.h functions and practical usage tips.',
+    'error-codes': 'Learn graphics.h error codes and debugging techniques for initialization and drawing issues.',
+}
 
 
 def resolve_doc_template(slug):
@@ -74,6 +100,13 @@ def resolve_doc_template(slug):
 
 def resolve_doc_title(slug):
     return DOCS_SLUG_TO_TITLE.get(slug, 'Documentation')
+
+
+def resolve_doc_description(slug):
+    if slug in DOCS_SLUG_TO_DESCRIPTION:
+        return DOCS_SLUG_TO_DESCRIPTION[slug]
+    title = resolve_doc_title(slug)
+    return f'{title} guide for graphics.h online compiler documentation with examples and student-friendly explanations.'
 
 # Maintenance mode check
 def is_maintenance_mode():
@@ -133,12 +166,14 @@ def docs(slug):
         return jsonify({'error': 'Doc not found'}), 404
     content_html = render_template(template_name)
     page_title = resolve_doc_title(slug)
+    meta_description = resolve_doc_description(slug)
     return render_template(
         'base.html',
         content_html=content_html,
         current_slug=slug,
         page_title=page_title,
-        site_title=DOCS_SITE_TITLE
+        site_title=DOCS_SITE_TITLE,
+        meta_description=meta_description
     )
 
 
@@ -150,6 +185,7 @@ def docs_content(slug):
     response = make_response(render_template(template_name))
     response.headers['X-Doc-Title'] = resolve_doc_title(slug)
     response.headers['X-Doc-Slug'] = slug
+    response.headers['X-Doc-Description'] = resolve_doc_description(slug)
     return response
 
 # Static assets

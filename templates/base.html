@@ -3,17 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'Graphics.h Documentation' }}</title>
+  <title>{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'graphics.h online compiler docs' }}</title>
+  <meta name="description" id="meta-description" content="{{ meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' }}">
+  <meta property="og:title" content="{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'graphics.h online compiler docs' }}">
+  <meta property="og:description" content="{{ meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' }}">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'graphics.h online compiler docs' }}">
+  <meta name="twitter:description" content="{{ meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' }}">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="/static/docs.css">
 </head>
-<body data-doc-slug="{{ current_slug if current_slug else '' }}" data-doc-title="{{ page_title if page_title else '' }}" data-site-title="{{ site_title if site_title else 'Graphics.h Documentation' }}">
+<body data-doc-slug="{{ current_slug if current_slug else '' }}" data-doc-title="{{ page_title if page_title else '' }}" data-doc-description="{{ meta_description if meta_description else '' }}" data-site-title="{{ site_title if site_title else 'graphics.h online compiler docs' }}">
   <header class="docs-header">
     <div class="header-left">
       <button id="sidebar-toggle" class="header-icon-btn" type="button" aria-label="Toggle sidebar" aria-expanded="true">☰</button>
       <a class="header-link" href="/">Home</a>
       <a class="header-link" href="/docs">Docs</a>
     </div>
-    <h1 class="header-title">Graphics.h Documentation</h1>
+    <div class="header-title">Graphics.h Documentation</div>
     <div class="header-right">
       <button id="theme-toggle" class="header-icon-btn" type="button" aria-label="Toggle dark theme" aria-pressed="false">☾</button>
       <a class="header-link header-link-primary" href="/compiler">Compiler</a>
