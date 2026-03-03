@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Introduction — graphics.h Online Compiler</title>
-    <meta name="description" content="Master the art of BGI graphics. Explore the graphics.h library from basics to complex rendering.">
+    <title>putpixel() — graphics.h Online Compiler</title>
+    <meta name="description" content="Color individual dots on the screen with micro-level drawing control.">
     <meta name="keywords"
         content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics, computer graphics basics">
     <meta name="author" content="AlbatrossC">
@@ -18,8 +18,8 @@
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Introduction — graphics.h Online Compiler",
-      "description": "Master the art of BGI graphics. Explore the graphics.h library from basics to complex rendering.",
+      "name": "putpixel() — graphics.h Online Compiler",
+      "description": "Color individual dots on the screen with micro-level drawing control.",
       "publisher": {
         "@type": "Organization",
         "name": "AlbatrossC"
@@ -740,68 +740,85 @@
             <article class="content-inner" id="content-area">
                 <div class="fade-in">
                     <div class="doc-header">
-                        <h1 class="doc-title">Master the Art of BGI Graphics</h1>
-                        <p class="doc-subtitle">Explore historical programming through the <code>graphics.h</code> library. From basics to complex rendering—everything you need is here.</p>
+                        <h1 class="doc-title">putpixel()</h1>
+                        <p class="doc-subtitle">A micro-level drawing instruction to color individual dots on the screen.</p>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Atomic Drawing API</div>
+                        </div>
                     </div>
-                    
+
                     <div class="doc-section">
-                        <h2 class="section-heading">Introduction</h2>
+                        <h2 class="section-heading">Purpose & Functionality</h2>
                         <p class="doc-paragraph">
-                            <code>graphics.h</code> is the gateway to <strong>Borland Graphics Interface (BGI)</strong>—a library that revolutionized graphics programming in the early 90s. 
-                            While classic, it remains a foundation of modern graphics logic. Our compiler emulates this legacy environment with near-perfect accuracy.
+                            At its core, all graphics rendering eventually boils down to assigning colors to pixels. The <code>putpixel()</code> function gives you direct, explicit access to manipulate the color of a single pixel located at exactly (x, y) on the display surface. It is often utilized in loops to generate custom gradients, starry skies, or complex fractals that aren't natively supported by basic shapes like <a href="/docs/rectangle">rectangle()</a> or <a href="/docs/line">line()</a>.
                         </p>
                     </div>
 
                     <div class="doc-section">
-                        <h2 class="section-heading">Explore Documentation</h2>
-                        <div class="category-grid">
-                            <a href="/docs/getting-started" class="category-card">
-                                <div class="card-icon"><i data-lucide="book-open"></i></div>
-                                <div class="card-body">
-                                    <h3>Getting Started</h3>
-                                    <p>Fundamental guide to set up your first graphics program.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/constants" class="category-card">
-                                <div class="card-icon"><i data-lucide="hash"></i></div>
-                                <div class="card-body">
-                                    <h3>Constants & Styles</h3>
-                                    <p>Look up color codes, fill patterns, and line styles.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/initgraph" class="category-card">
-                                <div class="card-icon"><i data-lucide="power"></i></div>
-                                <div class="card-body">
-                                    <h3>Lifecycle Functions</h3>
-                                    <p>Master initgraph, closegraph, and graphresult.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/line" class="category-card">
-                                <div class="card-icon"><i data-lucide="edit-3"></i></div>
-                                <div class="card-body">
-                                    <h3>Drawing API</h3>
-                                    <p>Comprehensive reference for over 50+ drawing functions.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/examples" class="category-card">
-                                <div class="card-icon"><i data-lucide="code"></i></div>
-                                <div class="card-body">
-                                    <h3>Practical Examples</h3>
-                                    <p>Ready-to-run snippets for inspiration and learning.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/faq" class="category-card">
-                                <div class="card-icon"><i data-lucide="help-circle"></i></div>
-                                <div class="card-body">
-                                    <h3>Support & FAQ</h3>
-                                    <p>Answers to common legacy systems questions.</p>
-                                </div>
-                            </a>
+                        <h2 class="section-heading">Syntax Structure</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void putpixel(int x, int y, int color);</code></pre>
                         </div>
                     </div>
 
+                    <div class="doc-section">
+                        <h2 class="section-heading">Argument Breakdown</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">x</div>
+                                <div class="param-desc">The horizontal grid index ranging from 0 up to getmaxx().</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">y</div>
+                                <div class="param-desc">The vertical grid index starting at 0 reaching up to getmaxy().</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">color</div>
+                                <div class="param-desc">The specific color value or macro (e.g., RED, BLUE, 15, 2) to illuminate the dot.</div>
+                            </li>
+                        </ul>
+                    </div>
+
                     <div class="tip-box">
-                        <p><strong>Note:</strong> All function references in the sidebar provide detailed syntax and syntax highlighting for easy learning.</p>
+                        <p><strong>Performance Warning:</strong> Plotting thousands of pixels manually with <code>putpixel()</code> inside nested loops can be somewhat computationally expensive compared to leveraging built-in optimized functions like <code>bar()</code> or <code>rectangle()</code> for solid fills.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Snippet: Drawing a Starfield</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">Snippet</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">// Paint 500 randomized stars
+for (int i = 0; i &lt; 500; i++) {
+    int xPos = rand() % getmaxx();
+    int yPos = rand() % getmaxy();
+    putpixel(xPos, yPos, WHITE);
+}</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('putpixel', 'for (int i = 0; i < 500; i++) { int x = rand() % 640; int y = rand() % 480; putpixel(x, y, 15); }')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="putpixel-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="putpixel-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </article>

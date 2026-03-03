@@ -56,14 +56,26 @@ from jinja2 import TemplateNotFound
 def docs_index():
     return render_template('docs.html')
 
+from flask import redirect
+import os
+
 @app.route('/docs/<path:path>')
 def docs(path):
-    try:
-        if path.endswith('.html'):
-            return render_template(f'docs/{path}')
-        return render_template(f'docs/{path}.html')
-    except TemplateNotFound:
-        return render_template('docs.html')
+    slug = path.split('/')[-1]
+    if slug.endswith('.html'):
+        slug = slug[:-5]
+        
+    if '/' in path:
+        return redirect(f'/docs/{slug}')
+        
+    docs_dir = os.path.join(app.template_folder, 'docs')
+    for root, dirs, files in os.walk(docs_dir):
+        if f"{slug}.html" in files:
+            rel_dir = os.path.relpath(root, app.template_folder)
+            template_path = os.path.join(rel_dir, f"{slug}.html").replace('\\', '/')
+            return render_template(template_path)
+            
+    return render_template('docs.html')
 
 
 @app.route('/embed')

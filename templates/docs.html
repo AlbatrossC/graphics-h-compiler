@@ -58,10 +58,12 @@
     <!-- Lucide Icons (deferred) -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <!-- Highlight.js -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
+
+    <!-- SDK -->
+    <script src="/sdk.js"></script>
 
     <style>
         * {
@@ -71,20 +73,23 @@
         }
 
         :root {
-            --bg-dark: #0a0a0a;
-            --bg-sidebar: #0f0f0f;
+            --bg: #0a0a0a;
+            --surface: #111111;
+            --surface-low: #0d0d0d;
+            --surface-high: #1a1a1a;
             --accent: #00ff88;
-            --accent-glow: rgba(0, 255, 136, 0.15);
-            --border: #1a1a1a;
-            --text-muted: #888888;
-            --text-main: #e0e0e0;
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-glow: rgba(0, 255, 136, 0.12);
+            --border: #1f1f1f;
+            --text-main: #f0f0f0;
+            --text-dim: #999999;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --header-h: 64px;
         }
 
         html,
         body {
             height: 100%;
-            background: var(--bg-dark);
+            background: var(--bg);
             color: var(--text-main);
             font-family: 'IBM Plex Sans', -apple-system, sans-serif;
             overflow: hidden;
@@ -98,11 +103,11 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 10, 0.85);
             border-bottom: 1px solid var(--border);
-            height: 64px;
+            height: var(--header-h);
         }
 
         .header-content {
@@ -193,7 +198,7 @@
         /* Sidebar */
         .sidebar {
             width: 280px;
-            background: var(--bg-sidebar);
+            background: var(--surface-low);
             border-right: 1px solid var(--border);
             overflow-y: auto;
             flex-shrink: 0;
@@ -205,14 +210,14 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .sidebar-search-container {
             padding: 1.5rem 1.25rem 1rem;
             position: sticky;
             top: 0;
-            background: var(--bg-sidebar);
+            background: var(--surface-low);
             z-index: 10;
         }
 
@@ -294,7 +299,7 @@
         /* Main Content */
         .main-content {
             flex-grow: 1;
-            background: var(--bg-dark);
+            background: var(--bg);
             overflow-y: auto;
             padding: 4rem 3rem 6rem;
             scroll-behavior: smooth;
@@ -372,72 +377,68 @@
             margin-bottom: 1.5rem;
         }
 
-        .code-well {
-            background: #111;
-            border: 1px solid var(--border);
-            border-radius: 10px;
+        /* Code Block Styling */
+        .code-block-wrapper {
             margin: 1.5rem 0;
-            position: relative;
+            border-radius: 10px;
             overflow: hidden;
+            border: 1px solid var(--border);
+            background: #0d1117;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .code-well-header {
+        .code-header {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.6rem 1rem;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0.5rem 0.75rem 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
+            align-items: center;
             border-bottom: 1px solid var(--border);
         }
 
-        .code-lang-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--text-muted);
+        .code-lang {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.05em;
         }
 
-        .btn-copy-code {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 0.3rem 0.5rem;
-            border-radius: 5px;
-            font-size: 0.72rem;
-            font-weight: 500;
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-dim);
             cursor: pointer;
+            transition: var(--transition);
             display: flex;
             align-items: center;
-            gap: 0.35rem;
-            transition: var(--transition);
-            font-family: 'IBM Plex Sans', sans-serif;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
         }
 
-        .btn-copy-code:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.06);
+        .copy-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
         }
 
-        .btn-copy-code.copied {
+        .copy-btn.copied {
             color: var(--accent);
         }
 
-        .code-well pre {
+        pre {
             margin: 0;
-            padding: 1.25rem;
+            padding: 1.25rem !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.84rem !important;
             overflow-x: auto;
+            line-height: 1.65 !important;
+            background: #0d1117 !important;
         }
 
-        .code-well pre code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.88rem;
-            line-height: 1.7;
-            background: transparent !important;
-            padding: 0 !important;
-        }
-
-        .code-well pre code.hljs {
+        pre code {
             background: transparent !important;
             padding: 0 !important;
         }
@@ -466,57 +467,75 @@
             color: #999;
         }
 
-        .output-preview {
-            aspect-ratio: 16/9;
-            background: #000;
+        /* Live Preview Container */
+        .live-preview-container {
+            background: var(--surface-low);
             border: 1px solid var(--border);
             border-radius: 12px;
-            margin-top: 1.5rem;
+            margin: 1.5rem 0;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .live-preview-header {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .live-preview-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sdk-output-container {
+            background: #000;
+            padding: 1.5rem;
+            display: flex;
             justify-content: center;
-            color: #444;
+            min-height: 300px;
+        }
+
+        .sdk-placeholder {
+            color: var(--text-dim);
             font-family: 'Space Mono', monospace;
             font-size: 0.85rem;
-            gap: 1rem;
-        }
-
-        .tip-box {
-            background: rgba(0, 255, 136, 0.04);
-            border-left: 3px solid var(--accent);
-            padding: 1.5rem;
-            border-radius: 0 12px 12px 0;
-            margin: 2.5rem 0;
-        }
-
-        .tip-box p {
-            margin: 0;
-            color: #bbb;
-            font-size: 0.95rem;
-        }
-
-        .note-box {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin: 2rem 0;
+            text-align: center;
             display: flex;
-            gap: 1rem;
-            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: center;
         }
 
-        .note-box i {
-            color: var(--accent);
-            margin-top: 0.2rem;
+        .run-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
         }
 
-        .note-box p {
-            margin: 0;
-            color: #999;
-            font-size: 0.9rem;
-            line-height: 1.5;
+        .run-btn:hover {
+            background: #00e87a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
 
         .category-grid {
@@ -604,23 +623,27 @@
         .next-page-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            background: rgba(255, 255, 255, 0.03);
+            gap: 1rem;
+            padding: 1.25rem 2rem;
+            background: var(--surface-low);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 16px;
             text-decoration: none;
             color: #ccc;
-            margin-top: 3rem;
-            font-size: 0.85rem;
-            font-weight: 500;
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            font-weight: 600;
             transition: var(--transition);
+            float: right;
+            clear: both;
         }
 
         .next-page-link:hover {
             border-color: var(--accent);
             color: var(--accent);
-            background: rgba(0, 255, 136, 0.04);
+            background: var(--surface-high);
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
 
         .next-page-link i {
@@ -679,10 +702,10 @@
                 title: 'Overview',
                 links: [
                     { id: 'intro', path: '/docs', label: 'Introduction' },
-                    { id: 'getting-started', path: '/docs/overview/getting-started', label: 'Getting Started' },
-                    { id: 'constants', path: '/docs/overview/constants', label: 'Constants & Types' },
-                    { id: 'examples', path: '/docs/overview/examples', label: 'Code Examples' },
-                    { id: 'faq', path: '/docs/overview/faq', label: 'FAQ' }
+                    { id: 'getting-started', path: '/docs/getting-started', label: 'Getting Started' },
+                    { id: 'constants', path: '/docs/constants', label: 'Constants & Types' },
+                    { id: 'examples', path: '/docs/examples', label: 'Code Examples' },
+                    { id: 'faq', path: '/docs/faq', label: 'FAQ' }
                 ]
             },
             'initialization': {
@@ -750,14 +773,14 @@
                     <div class="doc-section">
                         <h2 class="section-heading">Explore Documentation</h2>
                         <div class="category-grid">
-                            <a href="/docs/overview/getting-started" class="category-card">
+                            <a href="/docs/getting-started" class="category-card">
                                 <div class="card-icon"><i data-lucide="book-open"></i></div>
                                 <div class="card-body">
                                     <h3>Getting Started</h3>
                                     <p>Fundamental guide to set up your first graphics program.</p>
                                 </div>
                             </a>
-                            <a href="/docs/overview/constants" class="category-card">
+                            <a href="/docs/constants" class="category-card">
                                 <div class="card-icon"><i data-lucide="hash"></i></div>
                                 <div class="card-body">
                                     <h3>Constants & Styles</h3>
@@ -778,14 +801,14 @@
                                     <p>Comprehensive reference for over 50+ drawing functions.</p>
                                 </div>
                             </a>
-                            <a href="/docs/overview/examples" class="category-card">
+                            <a href="/docs/examples" class="category-card">
                                 <div class="card-icon"><i data-lucide="code"></i></div>
                                 <div class="card-body">
                                     <h3>Practical Examples</h3>
                                     <p>Ready-to-run snippets for inspiration and learning.</p>
                                 </div>
                             </a>
-                            <a href="/docs/overview/faq" class="category-card">
+                            <a href="/docs/faq" class="category-card">
                                 <div class="card-icon"><i data-lucide="help-circle"></i></div>
                                 <div class="card-body">
                                     <h3>Support & FAQ</h3>
@@ -821,10 +844,10 @@
                     <div class="doc-section">
                         <h2 class="section-heading">Required Header Files</h2>
                         <p class="doc-paragraph">To create a graphics program in Turbo C, you must include:</p>
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">C</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
                             </div>
                             <pre><code class="language-c">#include &lt;graphics.h&gt;
 #include &lt;conio.h&gt;</code></pre>
@@ -852,10 +875,10 @@
                         <h2 class="section-heading">Initializing the Graphics Driver</h2>
                         <p class="doc-paragraph">Before drawing anything, you must initialize the graphics system. Turbo C uses a graphics driver and graphics mode combination.</p>
                         
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">C</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
                             </div>
                             <pre><code class="language-c">int gd = DETECT, gm;
 initgraph(&amp;gd, &amp;gm, "");</code></pre>
@@ -872,27 +895,22 @@ initgraph(&amp;gd, &amp;gm, "");</code></pre>
                         <h2 class="section-heading">Exiting the Graphics Mode</h2>
                         <p class="doc-paragraph">To smoothly exit your graphics application, you need to use two essential functions from <code>conio.h</code> and <code>graphics.h</code>:</p>
                         
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">C</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
                             </div>
                             <pre><code class="language-c">getch();
 closegraph();</code></pre>
                         </div>
-                        
-                        <p class="doc-paragraph">
-                            <strong>getch() →</strong> Short for "get character". At the end of a graphics program, it pauses the execution and waits for a key press. This ensures the graphics window stays open so you can see your drawing before the program terminates. <br>
-                            <strong>closegraph() →</strong> Deallocates all graphics-related memory, shuts down the graphics system, and switches the display back to standard text mode.
-                        </p>
                     </div>
 
                     <div class="doc-section">
                         <h2 class="section-heading">Complete Minimal Structure</h2>
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">C</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
                             </div>
                             <pre><code class="language-c">#include &lt;graphics.h&gt;
 #include &lt;conio.h&gt;
@@ -1070,14 +1088,14 @@ INTERLEAVE_FILL, WIDE_DOT_FILL, CLOSE_DOT_FILL, USER_FILL</code></pre>
 
                     <div class="doc-section">
                         <h2 class="section-heading">Line Style Constants</h2>
-                        <div class="code-well">
+                        <div class="code-block-wrapper">
                             <pre><code class="language-c">SOLID_LINE, DOTTED_LINE, CENTER_LINE, DASHED_LINE, USERBIT_LINE</code></pre>
                         </div>
                     </div>
 
                     <div class="doc-section">
                         <h2 class="section-heading">Font Constants</h2>
-                        <div class="code-well">
+                        <div class="code-block-wrapper">
                             <pre><code class="language-c">DEFAULT_FONT, TRIPLEX_FONT, SMALL_FONT, SANS_SERIF_FONT, 
 GOTHIC_FONT, SCRIPT_FONT, SIMPLEX_FONT, TRIPLEX_SCR_FONT, 
 COMPLEX_FONT, EUROPEAN_FONT, BOLD_FONT</code></pre>
@@ -1366,8 +1384,373 @@ int main() {
                         <p><strong>Summary:</strong> graphics.h is a legacy educational library. While not used in modern production, it remains a brilliant tool for foundational graphics understanding.</p>
                     </div>
                 </div>
+            `,
+            'arc': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">arc()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Drawing Function</div>
+                            <div class="doc-meta-item">Curve Outline</div>
+                        </div>
+                    </div>
+
+                    <p class="doc-paragraph" style="font-size: 1.1rem; color: #aaa; margin-bottom: 2rem;">
+                        The <a href="/docs/arc">arc()</a> function in <a href="/docs">graphics.h</a> is a powerful curve drawing tool used to create a circular arc with a defined starting and ending angle. It operates perfectly alongside <a href="/docs/circle">circle()</a> and <a href="/docs/ellipse">ellipse()</a> to construct precise curved geometric boundaries in your graphics window.
+                    </p>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">
+                            The <code>arc()</code> function traces a portion of a circle's circumference. The arc originates at a specified center point (x, y) with a given radius. The drawn segment begins at the <code>stangle</code> (start angle) and continues counter-clockwise until the <code>endangle</code> is reached. Let's note that 0 degrees is located at 3 o'clock.
+                        </p>
+                        
+                        <div class="note-box">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <p><strong>Heads Up:</strong> To draw a completely full circle using the <code>arc()</code> function, you would set the starting angle to 0 and the ending angle to 360.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void arc(int x, int y, int stangle, int endangle, int radius);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Practical Example</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">setcolor(CYAN);
+arc(320, 240, 0, 180, 100);</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('arc', 'setcolor(CYAN); arc(320, 240, 0, 180, 100);')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="arc-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="arc-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'ellipse': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">ellipse()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Drawing Engine</div>
+                            <div class="doc-meta-item">Complex Shapes</div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Overview</h2>
+                        <p class="doc-paragraph">
+                            The <code>ellipse()</code> function allows you to sketch elliptical arcs and complete oval shapes anywhere on the screen. It is more versatile than the <a href="/docs/circle">circle()</a> function because it accepts both an x-radius and a y-radius to define its width and height independently, resulting in stretched circular graphics.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax & Footprint</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void ellipse(int x, int y, int stangle, int endangle, int xradius, int yradius);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Detailed Parameters</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">x, y</div>
+                                <div class="param-desc">Coordinates dictating where the absolute center of the ellipse is locked.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">stangle, endangle</div>
+                                <div class="param-desc">The start and end angles respectively. To render a whole ellipse, input 0 and 360.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">xradius</div>
+                                <div class="param-desc">The horizontal stretch or horizontal radius of the ellipse outline.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">yradius</div>
+                                <div class="param-desc">The vertical stretch or vertical radius of the ellipse.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Demonstration</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">// A wide ellipse (egg shape lying down)
+setcolor(LIGHTMAGENTA);
+ellipse(320, 240, 0, 360, 150, 75);
+
+// A tall elliptical arc
+setcolor(GREEN);
+ellipse(320, 240, 45, 315, 50, 180);</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('ellipse', 'setcolor(LIGHTMAGENTA); ellipse(320, 240, 0, 360, 150, 75); setcolor(GREEN); ellipse(320, 240, 45, 315, 50, 180);')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="ellipse-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="ellipse-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'putpixel': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">putpixel()</h1>
+                        <p class="doc-subtitle">A micro-level drawing instruction to color individual dots on the screen.</p>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Atomic Drawing API</div>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Purpose & Functionality</h2>
+                        <p class="doc-paragraph">
+                            At its core, all graphics rendering eventually boils down to assigning colors to pixels. The <code>putpixel()</code> function gives you direct, explicit access to manipulate the color of a single pixel located at exactly (x, y) on the display surface. It is often utilized in loops to generate custom gradients, starry skies, or complex fractals that aren't natively supported by basic shapes like <a href="/docs/rectangle">rectangle()</a> or <a href="/docs/line">line()</a>.
+                        </p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax Structure</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void putpixel(int x, int y, int color);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Argument Breakdown</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">x</div>
+                                <div class="param-desc">The horizontal grid index ranging from 0 up to getmaxx().</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">y</div>
+                                <div class="param-desc">The vertical grid index starting at 0 reaching up to getmaxy().</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">color</div>
+                                <div class="param-desc">The specific color value or macro (e.g., RED, BLUE, 15, 2) to illuminate the dot.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tip-box">
+                        <p><strong>Performance Warning:</strong> Plotting thousands of pixels manually with <code>putpixel()</code> inside nested loops can be somewhat computationally expensive compared to leveraging built-in optimized functions like <code>bar()</code> or <code>rectangle()</code> for solid fills.</p>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Snippet: Drawing a Starfield</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">Snippet</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">// Paint 500 randomized stars
+for (int i = 0; i &lt; 500; i++) {
+    int xPos = rand() % getmaxx();
+    int yPos = rand() % getmaxy();
+    putpixel(xPos, yPos, WHITE);
+}</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('putpixel', 'for (int i = 0; i < 500; i++) { int x = rand() % 640; int y = rand() % 480; putpixel(x, y, 15); }')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="putpixel-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="putpixel-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'initgraph': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">initgraph()</h1>
+                        <p class="doc-subtitle">Initialize the graphics system.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">Loads a graphics driver and puts the system into graphics mode.</p>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">Syntax</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void initgraph(int *graphdriver, int *graphmode, char *pathtodriver);</code></pre>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'closegraph': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">closegraph()</h1>
+                        <p class="doc-subtitle">Exit the graphics system.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">Unloads the graphics driver and returns the screen to text mode.</p>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">Syntax</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void closegraph();</code></pre>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'rectangle': `
+                <div class="fade-in">
+                    <div class="doc-header">
+                        <h1 class="doc-title">rectangle()</h1>
+                        <p class="doc-subtitle">Draw a rectangular outline.</p>
+                    </div>
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">Draws a rectangle with the current line color and style.</p>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">Syntax</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void rectangle(int left, int top, int right, int bottom);</code></pre>
+                        </div>
+                    </div>
+                    <div class="doc-section">
+                        <h2 class="section-heading">Interactive Example</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">setcolor(YELLOW);
+rectangle(150, 100, 450, 350);</code></pre>
+                        </div>
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('rect', 'setcolor(YELLOW); rectangle(150, 100, 450, 350);')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="rect-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="rect-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `
         };
+
+        const ghInstances = {};
+
+        function runCode(id, code) {
+            const container = document.getElementById(`${id}-sdk-container`);
+            const placeholder = document.getElementById(`${id}-placeholder`);
+
+            if (placeholder) placeholder.style.display = 'none';
+            if (container) container.style.display = 'block';
+
+            if (!ghInstances[id]) {
+                ghInstances[id] = new GraphicsHEmbed(`#${id}-sdk-container`, {
+                    baseUrl: window.location.origin,
+                    scale: 0.8
+                });
+            }
+
+            ghInstances[id].runSnippet(code);
+        }
+
+        async function copyCode(btn) {
+            const wrapper = btn.closest('.code-block-wrapper');
+            const codeEl = wrapper.querySelector('pre code') || wrapper.querySelector('pre');
+            const text = codeEl.innerText;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="check" style="width: 12px; height: 12px;"></i> Copied`;
+                btn.classList.add('copied');
+                if (window.lucide) lucide.createIcons();
+
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('copied');
+                    if (window.lucide) lucide.createIcons();
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
 
         function renderSidebar() {
             const sidebar = document.getElementById('sidebar-nav');
@@ -1415,9 +1798,12 @@ int main() {
             `;
 
             contentArea.innerHTML = `<div class="content-inner">${data}${renderNextPage(pageId)}</div>`;
+
+            // Apply syntax highlighting
             contentArea.querySelectorAll('pre code').forEach(block => {
                 if (window.hljs) hljs.highlightElement(block);
             });
+
             document.getElementById('main-content').scrollTop = 0;
 
             // Sync sidebar
@@ -1472,26 +1858,6 @@ int main() {
                 `;
             }
             return '';
-        }
-
-        async function copyCode(btn) {
-            const codeWell = btn.closest('.code-well');
-            const codeEl = codeWell.querySelector('pre code') || codeWell.querySelector('pre');
-            const text = codeEl.innerText;
-
-            try {
-                await navigator.clipboard.writeText(text);
-                const span = btn.querySelector('span');
-                span.innerText = 'Copied!';
-                btn.classList.add('copied');
-
-                setTimeout(() => {
-                    span.innerText = 'Copy';
-                    btn.classList.remove('copied');
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy: ', err);
-            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {

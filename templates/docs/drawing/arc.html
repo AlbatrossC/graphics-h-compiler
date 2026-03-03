@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Introduction — graphics.h Online Compiler</title>
-    <meta name="description" content="Master the art of BGI graphics. Explore the graphics.h library from basics to complex rendering.">
+    <title>arc() — graphics.h Online Compiler</title>
+    <meta name="description" content="Draw a circular arc with defined start and end angles.">
     <meta name="keywords"
         content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics, computer graphics basics">
     <meta name="author" content="AlbatrossC">
@@ -18,8 +18,8 @@
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Introduction — graphics.h Online Compiler",
-      "description": "Master the art of BGI graphics. Explore the graphics.h library from basics to complex rendering.",
+      "name": "arc() — graphics.h Online Compiler",
+      "description": "Draw a circular arc with defined start and end angles.",
       "publisher": {
         "@type": "Organization",
         "name": "AlbatrossC"
@@ -740,68 +740,68 @@
             <article class="content-inner" id="content-area">
                 <div class="fade-in">
                     <div class="doc-header">
-                        <h1 class="doc-title">Master the Art of BGI Graphics</h1>
-                        <p class="doc-subtitle">Explore historical programming through the <code>graphics.h</code> library. From basics to complex rendering—everything you need is here.</p>
-                    </div>
-                    
-                    <div class="doc-section">
-                        <h2 class="section-heading">Introduction</h2>
-                        <p class="doc-paragraph">
-                            <code>graphics.h</code> is the gateway to <strong>Borland Graphics Interface (BGI)</strong>—a library that revolutionized graphics programming in the early 90s. 
-                            While classic, it remains a foundation of modern graphics logic. Our compiler emulates this legacy environment with near-perfect accuracy.
-                        </p>
-                    </div>
-
-                    <div class="doc-section">
-                        <h2 class="section-heading">Explore Documentation</h2>
-                        <div class="category-grid">
-                            <a href="/docs/getting-started" class="category-card">
-                                <div class="card-icon"><i data-lucide="book-open"></i></div>
-                                <div class="card-body">
-                                    <h3>Getting Started</h3>
-                                    <p>Fundamental guide to set up your first graphics program.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/constants" class="category-card">
-                                <div class="card-icon"><i data-lucide="hash"></i></div>
-                                <div class="card-body">
-                                    <h3>Constants & Styles</h3>
-                                    <p>Look up color codes, fill patterns, and line styles.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/initgraph" class="category-card">
-                                <div class="card-icon"><i data-lucide="power"></i></div>
-                                <div class="card-body">
-                                    <h3>Lifecycle Functions</h3>
-                                    <p>Master initgraph, closegraph, and graphresult.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/line" class="category-card">
-                                <div class="card-icon"><i data-lucide="edit-3"></i></div>
-                                <div class="card-body">
-                                    <h3>Drawing API</h3>
-                                    <p>Comprehensive reference for over 50+ drawing functions.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/examples" class="category-card">
-                                <div class="card-icon"><i data-lucide="code"></i></div>
-                                <div class="card-body">
-                                    <h3>Practical Examples</h3>
-                                    <p>Ready-to-run snippets for inspiration and learning.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/faq" class="category-card">
-                                <div class="card-icon"><i data-lucide="help-circle"></i></div>
-                                <div class="card-body">
-                                    <h3>Support & FAQ</h3>
-                                    <p>Answers to common legacy systems questions.</p>
-                                </div>
-                            </a>
+                        <h1 class="doc-title">arc()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Drawing Function</div>
+                            <div class="doc-meta-item">Curve Outline</div>
                         </div>
                     </div>
 
-                    <div class="tip-box">
-                        <p><strong>Note:</strong> All function references in the sidebar provide detailed syntax and syntax highlighting for easy learning.</p>
+                    <p class="doc-paragraph" style="font-size: 1.1rem; color: #aaa; margin-bottom: 2rem;">
+                        The <a href="/docs/arc">arc()</a> function in <a href="/docs">graphics.h</a> is a powerful curve drawing tool used to create a circular arc with a defined starting and ending angle. It operates perfectly alongside <a href="/docs/circle">circle()</a> and <a href="/docs/ellipse">ellipse()</a> to construct precise curved geometric boundaries in your graphics window.
+                    </p>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Description</h2>
+                        <p class="doc-paragraph">
+                            The <code>arc()</code> function traces a portion of a circle's circumference. The arc originates at a specified center point (x, y) with a given radius. The drawn segment begins at the <code>stangle</code> (start angle) and continues counter-clockwise until the <code>endangle</code> is reached. Let's note that 0 degrees is located at 3 o'clock.
+                        </p>
+                        
+                        <div class="note-box">
+                            <i data-lucide="info" style="width: 18px; height: 18px;"></i>
+                            <p><strong>Heads Up:</strong> To draw a completely full circle using the <code>arc()</code> function, you would set the starting angle to 0 and the ending angle to 360.</p>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Syntax</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void arc(int x, int y, int stangle, int endangle, int radius);</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Practical Example</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">setcolor(CYAN);
+arc(320, 240, 0, 180, 100);</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('arc', 'setcolor(CYAN); arc(320, 240, 0, 180, 100);')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="arc-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="arc-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </article>

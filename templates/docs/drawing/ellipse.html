@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>Introduction — graphics.h Online Compiler</title>
-    <meta name="description" content="Master the art of BGI graphics. Explore the graphics.h library from basics to complex rendering.">
+    <title>ellipse() — graphics.h Online Compiler</title>
+    <meta name="description" content="Draw an elliptical arc or complete oval shape on the screen.">
     <meta name="keywords"
         content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics, computer graphics basics">
     <meta name="author" content="AlbatrossC">
@@ -18,8 +18,8 @@
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "Introduction — graphics.h Online Compiler",
-      "description": "Master the art of BGI graphics. Explore the graphics.h library from basics to complex rendering.",
+      "name": "ellipse() — graphics.h Online Compiler",
+      "description": "Draw an elliptical arc or complete oval shape on the screen.",
       "publisher": {
         "@type": "Organization",
         "name": "AlbatrossC"
@@ -740,68 +740,86 @@
             <article class="content-inner" id="content-area">
                 <div class="fade-in">
                     <div class="doc-header">
-                        <h1 class="doc-title">Master the Art of BGI Graphics</h1>
-                        <p class="doc-subtitle">Explore historical programming through the <code>graphics.h</code> library. From basics to complex rendering—everything you need is here.</p>
+                        <h1 class="doc-title">ellipse()</h1>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">Drawing Engine</div>
+                            <div class="doc-meta-item">Complex Shapes</div>
+                        </div>
                     </div>
-                    
+
                     <div class="doc-section">
-                        <h2 class="section-heading">Introduction</h2>
+                        <h2 class="section-heading">Overview</h2>
                         <p class="doc-paragraph">
-                            <code>graphics.h</code> is the gateway to <strong>Borland Graphics Interface (BGI)</strong>—a library that revolutionized graphics programming in the early 90s. 
-                            While classic, it remains a foundation of modern graphics logic. Our compiler emulates this legacy environment with near-perfect accuracy.
+                            The <code>ellipse()</code> function allows you to sketch elliptical arcs and complete oval shapes anywhere on the screen. It is more versatile than the <a href="/docs/circle">circle()</a> function because it accepts both an x-radius and a y-radius to define its width and height independently, resulting in stretched circular graphics.
                         </p>
                     </div>
 
                     <div class="doc-section">
-                        <h2 class="section-heading">Explore Documentation</h2>
-                        <div class="category-grid">
-                            <a href="/docs/getting-started" class="category-card">
-                                <div class="card-icon"><i data-lucide="book-open"></i></div>
-                                <div class="card-body">
-                                    <h3>Getting Started</h3>
-                                    <p>Fundamental guide to set up your first graphics program.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/constants" class="category-card">
-                                <div class="card-icon"><i data-lucide="hash"></i></div>
-                                <div class="card-body">
-                                    <h3>Constants & Styles</h3>
-                                    <p>Look up color codes, fill patterns, and line styles.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/initgraph" class="category-card">
-                                <div class="card-icon"><i data-lucide="power"></i></div>
-                                <div class="card-body">
-                                    <h3>Lifecycle Functions</h3>
-                                    <p>Master initgraph, closegraph, and graphresult.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/line" class="category-card">
-                                <div class="card-icon"><i data-lucide="edit-3"></i></div>
-                                <div class="card-body">
-                                    <h3>Drawing API</h3>
-                                    <p>Comprehensive reference for over 50+ drawing functions.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/examples" class="category-card">
-                                <div class="card-icon"><i data-lucide="code"></i></div>
-                                <div class="card-body">
-                                    <h3>Practical Examples</h3>
-                                    <p>Ready-to-run snippets for inspiration and learning.</p>
-                                </div>
-                            </a>
-                            <a href="/docs/faq" class="category-card">
-                                <div class="card-icon"><i data-lucide="help-circle"></i></div>
-                                <div class="card-body">
-                                    <h3>Support & FAQ</h3>
-                                    <p>Answers to common legacy systems questions.</p>
-                                </div>
-                            </a>
+                        <h2 class="section-heading">Syntax & Footprint</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">void ellipse(int x, int y, int stangle, int endangle, int xradius, int yradius);</code></pre>
                         </div>
                     </div>
 
-                    <div class="tip-box">
-                        <p><strong>Note:</strong> All function references in the sidebar provide detailed syntax and syntax highlighting for easy learning.</p>
+                    <div class="doc-section">
+                        <h2 class="section-heading">Detailed Parameters</h2>
+                        <ul class="param-list">
+                            <li class="param-item">
+                                <div class="param-name">x, y</div>
+                                <div class="param-desc">Coordinates dictating where the absolute center of the ellipse is locked.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">stangle, endangle</div>
+                                <div class="param-desc">The start and end angles respectively. To render a whole ellipse, input 0 and 360.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">xradius</div>
+                                <div class="param-desc">The horizontal stretch or horizontal radius of the ellipse outline.</div>
+                            </li>
+                            <li class="param-item">
+                                <div class="param-name">yradius</div>
+                                <div class="param-desc">The vertical stretch or vertical radius of the ellipse.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-section">
+                        <h2 class="section-heading">Demonstration</h2>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">C</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
+                            </div>
+                            <pre><code class="language-c">// A wide ellipse (egg shape lying down)
+setcolor(LIGHTMAGENTA);
+ellipse(320, 240, 0, 360, 150, 75);
+
+// A tall elliptical arc
+setcolor(GREEN);
+ellipse(320, 240, 45, 315, 50, 180);</code></pre>
+                        </div>
+
+                        <div class="live-preview-container">
+                            <div class="live-preview-header">
+                                <span class="live-preview-title">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Live Output
+                                </span>
+                                <button class="run-btn" onclick="runCode('ellipse', 'setcolor(LIGHTMAGENTA); ellipse(320, 240, 0, 360, 150, 75); setcolor(GREEN); ellipse(320, 240, 45, 315, 50, 180);')">
+                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i> Run Code
+                                </button>
+                            </div>
+                            <div class="sdk-output-container">
+                                <div id="ellipse-placeholder" class="sdk-placeholder">
+                                    <i data-lucide="monitor" style="opacity: 0.1; width: 48px; height: 48px;"></i>
+                                    <span>Click "Run Code" to see the output</span>
+                                </div>
+                                <div id="ellipse-sdk-container" style="display:none;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </article>

@@ -6,11 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>line() Function in graphics.h | Draw Lines in Turbo C Graphics</title>
-    <meta name="description"
-        content="Master the line() function in graphics.h library. Complete guide to drawing lines in BGI graphics with Turbo C. Learn to draw straight lines between two points using C graphics programming with code examples and syntax.">
+    <title>initgraph() — graphics.h Online Compiler</title>
+    <meta name="description" content="Initialize the graphics system by loading a graphics driver and setting graphics mode.">
     <meta name="keywords"
-        content="line, graphics.h, draw line Turbo C, BGI graphics, C graphics programming, line function, graphics.h line, Borland Graphics Interface, DOS graphics, draw straight line C, graphics primitives, Turbo C graphics tutorial">
+        content="graphics.h documentation, graphics.h online compiler, C graphics, BGI documentation, SPPU graphics, computer graphics basics">
     <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow">
 
@@ -19,8 +18,8 @@
     {
       "@context": "https://schema.org",
       "@type": "WebPage",
-      "name": "line() — graphics.h Online Compiler",
-      "description": "Comprehensive documentation for the line() function in Turbo C graphics.h (BGI).",
+      "name": "initgraph() — graphics.h Online Compiler",
+      "description": "Initialize the graphics system by loading a graphics driver and setting graphics mode.",
       "publisher": {
         "@type": "Organization",
         "name": "AlbatrossC"
@@ -37,11 +36,6 @@
           "position": 2,
           "name": "Documentation",
           "item": "https://graphics-h-online.vercel.app/docs"
-        },{
-          "@type": "ListItem",
-          "position": 3,
-          "name": "line()",
-          "item": "https://graphics-h-online.vercel.app/docs/line"
         }]
       }
     }
@@ -63,12 +57,11 @@
     <!-- Lucide Icons (deferred) -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <!-- Highlight.js -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/c.min.js"></script>
 
-    <!-- JS SDK -->
+    <!-- SDK -->
     <script src="/sdk.js"></script>
 
     <style>
@@ -79,20 +72,23 @@
         }
 
         :root {
-            --bg-dark: #0a0a0a;
-            --bg-sidebar: #0f0f0f;
+            --bg: #0a0a0a;
+            --surface: #111111;
+            --surface-low: #0d0d0d;
+            --surface-high: #1a1a1a;
             --accent: #00ff88;
-            --accent-glow: rgba(0, 255, 136, 0.15);
-            --border: #1a1a1a;
-            --text-muted: #888888;
-            --text-main: #e0e0e0;
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-glow: rgba(0, 255, 136, 0.12);
+            --border: #1f1f1f;
+            --text-main: #f0f0f0;
+            --text-dim: #999999;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --header-h: 64px;
         }
 
         html,
         body {
             height: 100%;
-            background: var(--bg-dark);
+            background: var(--bg);
             color: var(--text-main);
             font-family: 'IBM Plex Sans', -apple-system, sans-serif;
             overflow: hidden;
@@ -106,11 +102,11 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 10, 0.85);
             border-bottom: 1px solid var(--border);
-            height: 64px;
+            height: var(--header-h);
         }
 
         .header-content {
@@ -180,7 +176,7 @@
 
         .btn-compiler {
             background: var(--accent);
-            color: var(--bg-dark);
+            color: #0a0a0a;
             font-weight: 700;
             border-color: var(--accent);
         }
@@ -201,7 +197,7 @@
         /* Sidebar */
         .sidebar {
             width: 280px;
-            background: var(--bg-sidebar);
+            background: var(--surface-low);
             border-right: 1px solid var(--border);
             overflow-y: auto;
             flex-shrink: 0;
@@ -213,14 +209,14 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .sidebar-search-container {
             padding: 1.5rem 1.25rem 1rem;
             position: sticky;
             top: 0;
-            background: var(--bg-sidebar);
+            background: var(--surface-low);
             z-index: 10;
         }
 
@@ -302,7 +298,7 @@
         /* Main Content */
         .main-content {
             flex-grow: 1;
-            background: var(--bg-dark);
+            background: var(--bg);
             overflow-y: auto;
             padding: 4rem 3rem 6rem;
             scroll-behavior: smooth;
@@ -352,6 +348,10 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
+            background: var(--accent-glow);
+            padding: 0.3rem 0.75rem;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
         }
 
         h2.section-heading {
@@ -380,72 +380,88 @@
             margin-bottom: 1.5rem;
         }
 
-        .code-well {
-            background: #111;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            margin: 1.5rem 0;
-            position: relative;
-            overflow: hidden;
+        .doc-paragraph a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: var(--transition);
         }
 
-        .code-well-header {
+        .doc-paragraph a:hover {
+            border-bottom-color: var(--accent);
+        }
+
+        .doc-paragraph code {
+            background: var(--surface-high);
+            color: var(--accent);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88em;
+        }
+
+        /* Code Block Styling */
+        .code-block-wrapper {
+            margin: 1.5rem 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            background: #0d1117;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 0.6rem 1rem;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            padding: 0.5rem 0.75rem 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
+            align-items: center;
             border-bottom: 1px solid var(--border);
         }
 
-        .code-lang-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--text-muted);
+        .code-lang {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.68rem;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.05em;
         }
 
-        .btn-copy-code {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 0.3rem 0.5rem;
-            border-radius: 5px;
-            font-size: 0.72rem;
-            font-weight: 500;
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-dim);
             cursor: pointer;
+            transition: var(--transition);
             display: flex;
             align-items: center;
-            gap: 0.35rem;
-            transition: var(--transition);
-            font-family: 'IBM Plex Sans', sans-serif;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
         }
 
-        .btn-copy-code:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.06);
+        .copy-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent);
         }
 
-        .btn-copy-code.copied {
+        .copy-btn.copied {
             color: var(--accent);
         }
 
-        .code-well pre {
+        pre {
             margin: 0;
-            padding: 1.25rem;
+            padding: 1.25rem !important;
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.84rem !important;
             overflow-x: auto;
+            line-height: 1.65 !important;
+            background: #0d1117 !important;
         }
 
-        .code-well pre code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.88rem;
-            line-height: 1.7;
-            background: transparent !important;
-            padding: 0 !important;
-        }
-
-        .code-well pre code.hljs {
+        pre code {
             background: transparent !important;
             padding: 0 !important;
         }
@@ -460,6 +476,7 @@
             border-radius: 8px;
             margin-bottom: 0.75rem;
             border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
         }
 
         .param-name {
@@ -476,11 +493,12 @@
 
         /* Live Preview Container */
         .live-preview-container {
-            background: #000;
+            background: var(--surface-low);
             border: 1px solid var(--border);
             border-radius: 12px;
             margin: 1.5rem 0;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .live-preview-header {
@@ -488,13 +506,13 @@
             align-items: center;
             justify-content: space-between;
             padding: 0.75rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border-bottom: 1px solid var(--border);
         }
 
         .live-preview-title {
             font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--accent);
             text-transform: uppercase;
             letter-spacing: 0.1em;
@@ -503,45 +521,118 @@
             gap: 0.5rem;
         }
 
-        .live-preview-container iframe {
-            display: block;
-            border: 0;
-            width: 100%;
+        .sdk-output-container {
             background: #000;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            min-height: 300px;
+        }
+
+        .sdk-placeholder {
+            color: var(--text-dim);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: center;
+            justify-content: center;
         }
 
         .run-btn {
             background: var(--accent);
-            color: var(--bg-dark);
+            color: #000;
             border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.35rem;
+            gap: 0.5rem;
             transition: var(--transition);
         }
 
         .run-btn:hover {
-            background: #00ff9d;
+            background: #00e87a;
             transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .category-card:hover {
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.02);
+            transform: translateY(-4px);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 255, 136, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .card-body h3 {
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-body p {
+            font-size: 0.85rem;
+            color: #888;
+            margin: 0;
+        }
+
+        .tip-box,
+        .note-box {
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            display: flex;
+            gap: 1.25rem;
+            align-items: flex-start;
         }
 
         .tip-box {
             background: rgba(0, 255, 136, 0.04);
-            border-left: 3px solid var(--accent);
-            padding: 1.5rem;
-            border-radius: 0 12px 12px 0;
-            margin: 2.5rem 0;
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            color: #b0ffd0;
         }
 
-        .tip-box p {
-            margin: 0;
-            color: #bbb;
-            font-size: 0.95rem;
+        .note-box {
+            background: rgba(59, 130, 246, 0.04);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            color: #bfdbfe;
         }
 
         /* Animation */
@@ -561,6 +652,38 @@
             }
         }
 
+        /* Pagination */
+        .next-page-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 2rem;
+            background: var(--surface-low);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            text-decoration: none;
+            color: #ccc;
+            margin-top: 4rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: var(--transition);
+            float: right;
+            clear: both;
+        }
+
+        .next-page-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--surface-high);
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .next-page-link i {
+            width: 14px;
+            height: 14px;
+        }
+
         @media (max-width: 900px) {
             .header-content {
                 grid-template-columns: 1fr 1fr;
@@ -573,38 +696,6 @@
             .sidebar {
                 display: none;
             }
-
-            .main-content {
-                padding: 2rem 1.5rem;
-            }
-        }
-
-        /* Pagination */
-        .next-page-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            text-decoration: none;
-            color: #ccc;
-            margin-top: 3rem;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: var(--transition);
-        }
-
-        .next-page-link:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: rgba(0, 255, 136, 0.04);
-        }
-
-        .next-page-link i {
-            width: 14px;
-            height: 14px;
         }
     </style>
 </head>
@@ -620,7 +711,7 @@
             </div>
             <div class="header-center">
                 <div class="header-title">
-                    <span class="bracket"><</span>graphics.h documentation<span class="bracket">/></span>
+                    <span class="bracket">&lt;</span>graphics.h documentation<span class="bracket">/&gt;</span>
                 </div>
             </div>
             <div class="header-right">
@@ -646,169 +737,25 @@
         </aside>
 
         <main class="main-content" id="main-content">
-            <div id="content-area">
+            <article class="content-inner" id="content-area">
                 <div class="fade-in">
                     <div class="doc-header">
-                        <h1 class="doc-title">line()</h1>
-                        <div class="doc-meta">
-                            <div class="doc-meta-item">Drawing Function</div>
-                            <div class="doc-meta-item">Primitive</div>
-                        </div>
+                        <h1 class="doc-title">initgraph()</h1>
+                        <p class="doc-subtitle">Initialize the graphics system.</p>
                     </div>
-
-                    <p class="doc-paragraph" style="font-size: 1.1rem; color: #aaa; margin-bottom: 2rem;">
-                        The <a href="/docs/line">line()</a> function in <a href="/docs">graphics.h</a> is the fundamental drawing primitive used to draw straight lines between two points in <a href="/docs">Turbo C</a> graphics programs.
-                        It works with <a href="/docs/setcolor">setcolor()</a> to control line color and pairs with functions like <a href="/docs/circle">circle()</a> and <a href="/docs/rectangle">rectangle()</a>
-                        to create complex BGI graphics drawings.
-                    </p>
-
                     <div class="doc-section">
                         <h2 class="section-heading">Description</h2>
-                        <p class="doc-paragraph">
-                            The <code>line()</code> function draws a straight line between two specified points using the current <a href="/docs/setcolor">drawing color</a> and <a href="/docs/setlinestyle">line style</a>.
-                            The line includes both endpoints (x1, y1) and (x2, y2), making it ideal for creating precise graphics in <a href="/docs">BGI graphics programming</a>.
-                        </p>
-                    </div>
-
-                    <div class="doc-section">
-                        <h2 class="section-heading">Syntax</h2>
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">C</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
+                        <p class="doc-paragraph">Loads a graphics driver and puts the system into graphics mode.</p>
+                        <div class="code-block-wrapper">
+                            <div class="code-header">
+                                <span class="code-lang">Syntax</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i data-lucide="copy" style="width: 12px; height: 12px;"></i><span>Copy</span></button>
                             </div>
-                            <pre><code class="language-c">void line(int x1, int y1, int x2, int y2);</code></pre>
+                            <pre><code class="language-c">void initgraph(int *graphdriver, int *graphmode, char *pathtodriver);</code></pre>
                         </div>
                     </div>
-
-                    <div class="doc-section">
-                        <h2 class="section-heading">Parameters</h2>
-                        <ul class="param-list">
-                            <li class="param-item">
-                                <div class="param-name">x1</div>
-                                <div class="param-desc">The x-coordinate of the starting point.</div>
-                            </li>
-                            <li class="param-item">
-                                <div class="param-name">y1</div>
-                                <div class="param-desc">The y-coordinate of the starting point.</div>
-                            </li>
-                            <li class="param-item">
-                                <div class="param-name">x2</div>
-                                <div class="param-desc">The x-coordinate of the ending point.</div>
-                            </li>
-                            <li class="param-item">
-                                <div class="param-name">y2</div>
-                                <div class="param-desc">The y-coordinate of the ending point.</div>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="doc-section">
-                        <h2 class="section-heading">Live Example</h2>
-                        <p class="doc-paragraph">
-                            Try this interactive example. Click "Run Code" to see the output:
-                        </p>
-                        
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">Example Code</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
-                            </div>
-                            <pre><code class="language-c">setcolor(YELLOW);
-line(100, 100, 540, 380);</code></pre>
-                        </div>
-
-                        <div class="live-preview-container">
-                            <div class="live-preview-header">
-                                <span class="live-preview-title">
-                                    <i data-lucide="play-circle" style="width: 16px; height: 16px;"></i>
-                                    Live Output
-                                </span>
-                                <button class="run-btn" onclick="runLineExample()">
-                                    <i data-lucide="play" style="width: 14px; height: 14px;"></i>
-                                    Run Code
-                                </button>
-                            </div>
-                            <div id="line-embed" style="padding: 1rem; display: flex; justify-content: center; background: #000;">
-                                <div style="color: #666; font-family: 'Space Mono', monospace; font-size: 0.85rem; padding: 2rem;">
-                                    Click "Run Code" to see the output
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="doc-section">
-                        <h2 class="section-heading">Complete Example</h2>
-                        <div class="code-well">
-                            <div class="code-well-header">
-                                <span class="code-lang-label">C</span>
-                                <button class="btn-copy-code" onclick="copyCode(this)"><i data-lucide="clipboard"></i><span>Copy</span></button>
-                            </div>
-                            <pre><code class="language-c">#include <graphics.h>
-#include <conio.h>
-
-int main() {
-    int gd = DETECT, gm;
-    initgraph(&gd, &gm, "");
-    
-    // Draw a yellow diagonal line
-    setcolor(YELLOW);
-    line(100, 100, 540, 380);
-    
-    // Draw a red horizontal line
-    setcolor(RED);
-    line(100, 240, 540, 240);
-    
-    // Draw a green vertical line
-    setcolor(GREEN);
-    line(320, 50, 320, 430);
-    
-    getch();
-    closegraph();
-    return 0;
-}</code></pre>
-                        </div>
-                    </div>
-
-                    <div class="tip-box">
-                        <p><strong>Tip:</strong> Use <code>setcolor()</code> before calling <code>line()</code> to change the line color. The default color is WHITE.</p>
-                    </div>
-
-                    <div class="doc-section">
-                        <h2 class="section-heading">Frequently Asked Questions</h2>
-                        
-                        <div class="faq-item" style="margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">How do I change the color of a line in graphics.h?</h3>
-                            <p class="doc-paragraph">Use the setcolor() function before calling line() to set the drawing color. For example, setcolor(RED) or setcolor(YELLOW) will make subsequent lines appear in that color. The default color is WHITE if not specified.</p>
-                        </div>
-                        
-                        <div class="faq-item" style="margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">Does the line() function include both endpoints?</h3>
-                            <p class="doc-paragraph">Yes, the line() function draws a line that includes both the starting point (x1, y1) and the ending point (x2, y2). The pixels at both coordinates are part of the drawn line.</p>
-                        </div>
-                        
-                        <div class="faq-item" style="margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">Can I draw dashed or dotted lines using line()?</h3>
-                            <p class="doc-paragraph">The line style (solid, dashed, dotted, etc.) is controlled by setlinestyle() function, not by line() itself. Call setlinestyle() before line() to change the line pattern. The default is a solid line.</p>
-                        </div>
-                        
-                        <div class="faq-item" style="margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">How do I draw a line relative to the current position?</h3>
-                            <p class="doc-paragraph">Use the linerel() function to draw a line relative to the current graphics cursor position, or lineto() to draw a line from the current position to an absolute coordinate. The line() function always uses absolute coordinates.</p>
-                        </div>
-                        
-                        <div class="faq-item" style="margin-bottom: 1.5rem;">
-                            <h3 style="color: var(--accent); font-size: 1rem; margin-bottom: 0.5rem;">What happens if I draw a line outside the graphics window?</h3>
-                            <p class="doc-paragraph">Lines drawn partially outside the graphics window will be clipped to the visible area. However, coordinates far outside the valid range may produce unexpected results. It's best to keep coordinates within the range of 0 to getmaxx() for x and 0 to getmaxy() for y.</p>
-                        </div>
-                    </div>
-
-                    <a href="/docs/circle" class="next-page-link">
-                        Next: circle()
-                        <i data-lucide="arrow-right"></i>
-                    </a>
                 </div>
-            </div>
+            </article>
         </main>
     </div>
 
@@ -818,13 +765,13 @@ int main() {
                 title: 'Overview',
                 links: [
                     { id: 'intro', path: '/docs', label: 'Introduction' },
-                    { id: 'getting-started', path: '/docs/overview/getting-started', label: 'Getting Started' },
-                    { id: 'constants', path: '/docs/overview/constants', label: 'Constants & Types' },
-                    { id: 'examples', path: '/docs/overview/examples', label: 'Code Examples' },
-                    { id: 'faq', path: '/docs/overview/faq', label: 'FAQ' }
+                    { id: 'getting-started', path: '/docs/getting-started', label: 'Getting Started' },
+                    { id: 'constants', path: '/docs/constants', label: 'Constants & Types' },
+                    { id: 'examples', path: '/docs/examples', label: 'Code Examples' },
+                    { id: 'faq', path: '/docs/faq', label: 'FAQ' }
                 ]
             },
-            'initialization': {
+            'lifecycle': {
                 title: 'Lifecycle',
                 links: [
                     { id: 'initgraph', path: '/docs/initgraph', label: 'initgraph()' },
@@ -870,64 +817,105 @@ int main() {
             }
         };
 
-        let lineEmbed = null;
+        const ghInstances = {};
 
-        // Render sidebar navigation
+        function runCode(id, code) {
+            const container = document.getElementById(`${id}-sdk-container`);
+            const placeholder = document.getElementById(`${id}-placeholder`);
+
+            if (placeholder) placeholder.style.display = 'none';
+            if (container) container.style.display = 'block';
+
+            if (!ghInstances[id]) {
+                ghInstances[id] = new GraphicsHEmbed(`#${id}-sdk-container`, {
+                    baseUrl: window.location.origin,
+                    scale: 0.8
+                });
+            }
+
+            ghInstances[id].runSnippet(code);
+        }
+
+        async function copyCode(btn) {
+            const wrapper = btn.closest('.code-block-wrapper');
+            const codeEl = wrapper.querySelector('pre code') || wrapper.querySelector('pre');
+            const text = codeEl.innerText;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `<i data-lucide="check" style="width: 12px; height: 12px;"></i> Copied`;
+                btn.classList.add('copied');
+                if (window.lucide) lucide.createIcons();
+
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('copied');
+                    if (window.lucide) lucide.createIcons();
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
+
         function renderSidebar() {
-            const navContainer = document.getElementById('sidebar-nav');
+            const sidebar = document.getElementById('sidebar-nav');
             let html = '';
-            
-            for (const [key, section] of Object.entries(NAVIGATION)) {
+            for (const key in NAVIGATION) {
+                const group = NAVIGATION[key];
                 html += `
                     <div class="nav-group">
-                        <div class="nav-group-header">${section.title}</div>
-                        ${section.links.map(link => `
-                            <a href="${link.path}" class="nav-link ${link.id === 'line' ? 'active' : ''}" data-id="${link.id}">
+                        <div class="nav-group-header">${group.title}</div>
+                        ${group.links.map(link => `
+                            <a href="${link.path}" class="nav-link ${window.location.pathname === link.path ? 'active' : ''}" data-id="${link.id}">
                                 ${link.label}
                             </a>
                         `).join('')}
                     </div>
                 `;
             }
-            
-            navContainer.innerHTML = html;
+            sidebar.innerHTML = html;
+            if (window.lucide) lucide.createIcons();
+
+            syncActiveLink();
         }
 
-        // Copy code function
-        function copyCode(btn) {
-            const code = btn.closest('.code-well').querySelector('code').textContent;
-            navigator.clipboard.writeText(code).then(() => {
-                const original = btn.innerHTML;
-                btn.innerHTML = '<i data-lucide="check"></i><span>Copied!</span>';
-                btn.classList.add('copied');
-                lucide.createIcons();
-                setTimeout(() => {
-                    btn.innerHTML = original;
-                    btn.classList.remove('copied');
-                    lucide.createIcons();
-                }, 2000);
+        function syncActiveLink() {
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(el => {
+                const href = el.getAttribute('href');
+                el.classList.toggle('active', href === currentPath);
             });
         }
 
-        // Run line example
-        function runLineExample() {
-            const container = document.getElementById('line-embed');
-            container.innerHTML = '';
-            
-            lineEmbed = new GraphicsHEmbed('#line-embed', {
-                scale: 0.7,
-                baseUrl: window.location.origin
-            });
-            
-            // Simple 1-line snippet that produces visible output
-            lineEmbed.runSnippet(`setcolor(YELLOW);\nline(100, 100, 440, 280);`);
-        }
+        document.addEventListener('click', e => {
+            const link = e.target.closest('a');
+            const href = link?.getAttribute('href');
+            if (link && href?.startsWith('/docs')) {
+                if (link.target === '_blank' || e.metaKey || e.ctrlKey) return;
+                e.preventDefault();
+                window.location.href = href;
+            }
+        });
 
-        // Initialize
+        document.getElementById('docs-search').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const text = link.textContent.toLowerCase();
+                link.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+            document.querySelectorAll('.nav-group').forEach(group => {
+                const visible = group.querySelectorAll('.nav-link:not([style*="display: none"])');
+                group.style.display = visible.length > 0 ? 'block' : 'none';
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             renderSidebar();
-            lucide.createIcons();
-            hljs.highlightAll();
+            document.querySelectorAll('pre code').forEach(block => {
+                if (window.hljs) hljs.highlightElement(block);
+            });
+            if (window.lucide) lucide.createIcons();
         });
     </script>
 </body>
