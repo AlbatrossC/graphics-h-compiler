@@ -1,4 +1,4 @@
-from flask import Flask, send_file, send_from_directory, jsonify, request, Response, render_template
+from flask import Flask, send_file, send_from_directory, jsonify, request, Response, render_template, make_response
 from dotenv import load_dotenv
 import requests as req
 import os
@@ -39,6 +39,41 @@ DOCS_SLUG_TO_TEMPLATE = {
 }
 
 DEFAULT_DOCS_SLUG = 'what-is-graphicsh'
+DOCS_SITE_TITLE = 'Graphics.h Documentation'
+DOCS_SLUG_TO_TITLE = {
+    'what-is-graphicsh': 'What is graphics.h',
+    'what-is-graphics': 'What is graphics.h',
+    'where-to-run': 'Where to Run graphics.h',
+    'hello-graphics': 'Hello Graphics Program',
+    'graphics-initialization': 'Graphics Initialization',
+    'line-and-movement': 'Line and Cursor Movement',
+    'line': 'line()',
+    'circle': 'circle()',
+    'rectangle': 'rectangle()',
+    'bar': 'bar()',
+    'bar3d': 'bar3d()',
+    'arc': 'arc()',
+    'ellipse': 'ellipse()',
+    'pieslice': 'pieslice()',
+    'sector': 'sector()',
+    'polygons-and-fill': 'Polygons and Fill',
+    'colors-and-palette': 'Colors and Palette',
+    'fill-and-patterns': 'Fill and Patterns',
+    'viewport-and-screen': 'Viewport and Screen',
+    'text-and-fonts': 'Text and Fonts',
+    'image-handling': 'Image and Pixel Operations',
+    'drivers-and-modes': 'Drivers and Modes',
+    'advanced-functions': 'Advanced Functions',
+    'error-codes': 'Error Codes',
+}
+
+
+def resolve_doc_template(slug):
+    return DOCS_SLUG_TO_TEMPLATE.get(slug)
+
+
+def resolve_doc_title(slug):
+    return DOCS_SLUG_TO_TITLE.get(slug, 'Documentation')
 
 # Maintenance mode check
 def is_maintenance_mode():
@@ -93,17 +128,29 @@ def docs_landing():
 
 @app.route('/docs/<slug>')
 def docs(slug):
-    if slug not in DOCS_SLUG_TO_TEMPLATE:
+    template_name = resolve_doc_template(slug)
+    if not template_name:
         return jsonify({'error': 'Doc not found'}), 404
-    return render_template('base.html')
+    content_html = render_template(template_name)
+    page_title = resolve_doc_title(slug)
+    return render_template(
+        'base.html',
+        content_html=content_html,
+        current_slug=slug,
+        page_title=page_title,
+        site_title=DOCS_SITE_TITLE
+    )
 
 
 @app.route('/docs-content/<slug>')
 def docs_content(slug):
-    template_name = DOCS_SLUG_TO_TEMPLATE.get(slug)
+    template_name = resolve_doc_template(slug)
     if not template_name:
         return jsonify({'error': 'Doc not found'}), 404
-    return render_template(template_name)
+    response = make_response(render_template(template_name))
+    response.headers['X-Doc-Title'] = resolve_doc_title(slug)
+    response.headers['X-Doc-Slug'] = slug
+    return response
 
 # Static assets
 @app.route('/static/<path:path>')

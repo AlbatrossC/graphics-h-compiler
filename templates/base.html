@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Graphics.h Documentation</title>
+  <title>{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'Graphics.h Documentation' }}</title>
   <link rel="stylesheet" href="/static/docs.css">
 </head>
-<body>
+<body data-doc-slug="{{ current_slug if current_slug else '' }}" data-doc-title="{{ page_title if page_title else '' }}" data-site-title="{{ site_title if site_title else 'Graphics.h Documentation' }}">
   <header class="docs-header">
     <div class="header-left">
       <a class="header-link" href="/">Home</a>
@@ -99,7 +99,11 @@
     </aside>
 
     <main id="content">
-      Loading...
+      {% if content_html %}
+        {{ content_html | safe }}
+      {% else %}
+        Loading...
+      {% endif %}
     </main>
   </div>
 
