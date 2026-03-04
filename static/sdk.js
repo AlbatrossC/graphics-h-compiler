@@ -1,9 +1,17 @@
+const GRAPHICSH_SDK_ORIGIN = (() => {
+    const scriptEl = document.currentScript;
+    if (scriptEl && scriptEl.src) {
+        return new URL(scriptEl.src, window.location.href).origin;
+    }
+    return window.location.origin;
+})();
+
 class GraphicsHEmbed {
     constructor(selector, options = {}) {
         this.container = document.querySelector(selector);
         if (!this.container) throw new Error(`Container ${selector} not found`);
 
-        const baseUrl = options.baseUrl || 'https://graphics-h-compiler.vercel.app';
+        const baseUrl = options.baseUrl || GRAPHICSH_SDK_ORIGIN;
         const parsedBaseUrl = new URL(baseUrl, window.location.href);
         this.targetOrigin = parsedBaseUrl.origin;
         this.embedUrlBase = parsedBaseUrl.origin;

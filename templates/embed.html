@@ -204,13 +204,11 @@ int main() {
         }
 
         function isTrustedParentEvent(event) {
+            // Allow embedding from any website, but only trust the direct parent frame.
+            if (window.parent === window) return false;
             if (event.source !== window.parent) return false;
-            if (window.parent === window) return true;
-            if (!trustedParentOrigin) {
-                trustedParentOrigin = event.origin;
-                return true;
-            }
-            return event.origin === trustedParentOrigin;
+            trustedParentOrigin = event.origin || trustedParentOrigin;
+            return true;
         }
 
         window.addEventListener('message', (e) => {
