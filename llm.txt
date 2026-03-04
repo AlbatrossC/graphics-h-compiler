@@ -1126,20 +1126,20 @@ async function initializeEditor() {
         if (!word || (word.from === word.to && !context.explicit)) return null;
 
         let options = [];
-        let text = word.text;
+        let lower = word.text.toLowerCase();
 
         for (let fn of BGI_FUNCTIONS) {
-            if (fn.startsWith(text)) options.push({ label: fn, type: "function", apply: fn + "()" });
+            if (fn.toLowerCase().startsWith(lower)) options.push({ label: fn, type: "function", apply: fn + "()" });
         }
         for (let c of BGI_CONSTANTS) {
-            if (c.startsWith(text)) options.push({ label: c, type: "constant" });
+            if (c.toLowerCase().startsWith(lower)) options.push({ label: c, type: "constant" });
         }
         for (let kw of CPP_KEYWORDS) {
-            if (kw.startsWith(text)) options.push({ label: kw, type: "keyword" });
+            if (kw.toLowerCase().startsWith(lower)) options.push({ label: kw, type: "keyword" });
         }
 
-        if ("main".startsWith(text)) {
-            options.push(snippetCompletion("#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, (char*)\"\");\n\n    #{1}\n\n    getch();\n    closegraph();\n    return 0;\n}", {
+        if ("main".startsWith(lower)) {
+            options.push(snippetCompletion("#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, (char*)\"\");\n\n    ${1}\n\n    getch();\n    closegraph();\n    return 0;\n}", {
                 label: "main",
                 detail: "graphics boilerplate",
                 type: "snippet"
@@ -2596,14 +2596,19 @@ settings.js -> // ==================== SETTINGS PANEL ====================
         if (!cmView || !autocompleteCompartment || !cmModules) return;
         const { closeBrackets, autocompletion } = cmModules.autocomplete;
 
-        cmView.dispatch({
-            effects: autocompleteCompartment.reconfigure(enabled ? [
-                closeBrackets(),
-                window.customCompletionSource ? autocompletion({
+        const extensions = [];
+        if (enabled) {
+            extensions.push(closeBrackets());
+            if (window.customCompletionSource) {
+                extensions.push(autocompletion({
                     activateOnTyping: true,
                     override: [window.customCompletionSource]
-                }) : []
-            ] : [])
+                }));
+            }
+        }
+
+        cmView.dispatch({
+            effects: autocompleteCompartment.reconfigure(extensions)
         });
 
         currentSettings = {
