@@ -24,36 +24,53 @@
     .fp-embed-note{margin:0;padding:8px;color:#9fb4aa;font-family:Consolas,"Courier New",monospace;font-size:.82rem}
     .fp-note{border-left:4px solid #ef9f27;background:#fff9ef;padding:12px 14px;border-radius:10px;margin:12px 0;color:#5a4725}
     @media (max-width:760px){.fp-page{font-size:.95rem}.fp-page h1{font-size:clamp(1.45rem,7vw,1.9rem)}.fp-page h2{font-size:1.08rem}.fp-intro,.fp-section,.fp-toc{padding:12px}.fp-code-wrap{grid-template-columns:1fr}.fp-copy,.fp-run-btn{width:100%;min-width:0}.fp-embed{min-height:170px}}
-    html[data-theme="dark"] .fp-page{color:#dbe8f5}
-    html[data-theme="dark"] .fp-page h1,html[data-theme="dark"] .fp-page h2,html[data-theme="dark"] .fp-page h3{color:#f2f7ff}
-    html[data-theme="dark"] .fp-page p,html[data-theme="dark"] .fp-page li{color:#b4c6da}
-    html[data-theme="dark"] .fp-intro,html[data-theme="dark"] .fp-section,html[data-theme="dark"] .fp-toc,html[data-theme="dark"] .fp-mini{background:#1a2635;border-color:#30465f;color:#dbe8f5}
-    html[data-theme="dark"] .fp-run-wrap{background:#1a2635;border-color:#30465f}
-    html[data-theme="dark"] .fp-note{background:#3a2c1c;color:#ffe3b5;border-left-color:#f0b24f}
-    html[data-theme="dark"] .fp-page a{color:#7dd9b2}
+    html[data-theme="dark"] .fp-page{color:#e7ecf5}
+    html[data-theme="dark"] .fp-page h1,html[data-theme="dark"] .fp-page h2,html[data-theme="dark"] .fp-page h3{color:#f7fbff}
+    html[data-theme="dark"] .fp-page p,html[data-theme="dark"] .fp-page li{color:#b8c3d4}
+    html[data-theme="dark"] .fp-intro,html[data-theme="dark"] .fp-section,html[data-theme="dark"] .fp-toc,html[data-theme="dark"] .fp-mini{background:#202938;border-color:#3a475d;color:#e7ecf5}
+    html[data-theme="dark"] .fp-run-wrap{background:#202938;border-color:#3a475d}
+    html[data-theme="dark"] .fp-note{background:#3b3024;color:#ffd9a0;border-left-color:#ffb86b}
+    html[data-theme="dark"] .fp-page a{color:#8ec5ff}
   </style>
 
   <p class="fp-kicker">Fill and Patterns</p>
   <h1 itemprop="headline">Fill Styles &amp; Patterns in graphics.h</h1>
-  <p class="fp-intro" itemprop="description">Filling is controlled by style and color. This page shows how <code>setfillstyle()</code> and <code>setfillpattern()</code> affect <code>bar()</code>, <code>fillellipse()</code>, <code>fillpoly()</code>, and <code>floodfill()</code>.</p>
+  <p class="fp-intro" itemprop="description">In graphics.h, fills are state-based: you select a fill style and color, then every compatible shape uses those settings until you change them. This page explains <code>setfillstyle()</code>, <code>setfillpattern()</code>, and practical fill workflows.</p>
 
   <section class="fp-toc">
     <h2>On This Page</h2>
     <ul>
+      <li><a href="#how-fill-works">How Fill Settings Work</a></li>
       <li><a href="#setfillstyle">setfillstyle()</a></li>
       <li><a href="#styles">Common Fill Styles</a></li>
       <li><a href="#setfillpattern">setfillpattern()</a></li>
-      <li><a href="#example">Example Program</a></li>
-      <li><a href="#tips">Practical Tips</a></li>
+      <li><a href="#where-fill-applies">Where Fill Is Used</a></li>
+      <li><a href="#example">Complete Runnable Example</a></li>
+      <li><a href="#tips">Best Practices &amp; Debugging</a></li>
     </ul>
+  </section>
+
+  <section id="how-fill-works" class="fp-section">
+    <h2>How Fill Settings Work</h2>
+    <p>Fill behavior in graphics.h is global state. Once you call <code>setfillstyle()</code> or <code>setfillpattern()</code>, that fill setting stays active for future fill operations until another fill-setting call overrides it.</p>
+    <pre class="fp-mini">setfillstyle(SOLID_FILL, LIGHTGREEN);
+bar(60, 80, 220, 160);     // uses LIGHTGREEN solid
+
+setfillstyle(HATCH_FILL, YELLOW);
+fillellipse(340, 120, 70, 45); // now uses HATCH_FILL + YELLOW</pre>
+    <p>Because of this state model, it is safer to set fill style immediately before each filled shape.</p>
   </section>
 
   <section id="setfillstyle" class="fp-section">
     <h2>setfillstyle()</h2>
     <pre class="fp-mini">void setfillstyle(int pattern, int color);</pre>
-    <p>Sets the fill pattern and fill color for subsequent filled drawing operations.</p>
+    <p>Sets built-in fill pattern and fill color for subsequent filled drawing operations.</p>
     <pre class="fp-mini">setfillstyle(SOLID_FILL, LIGHTGREEN);
 bar(80, 80, 220, 180);</pre>
+    <ul>
+      <li><code>pattern</code>: One of the predefined fill constants (<code>SOLID_FILL</code>, <code>HATCH_FILL</code>, etc.).</li>
+      <li><code>color</code>: Fill color from graphics.h color constants.</li>
+    </ul>
   </section>
 
   <section id="styles" class="fp-section">
@@ -65,18 +82,31 @@ bar(80, 80, 220, 180);</pre>
       <li><code>WIDE_DOT_FILL</code>, <code>CLOSE_DOT_FILL</code>: dotted fills.</li>
       <li><code>USER_FILL</code>: custom pattern via <code>setfillpattern()</code>.</li>
     </ul>
+    <p>For teaching and demos, <code>SOLID_FILL</code> gives best visibility. For contrast between regions, use <code>HATCH_FILL</code> or <code>XHATCH_FILL</code>.</p>
   </section>
 
   <section id="setfillpattern" class="fp-section">
     <h2>setfillpattern()</h2>
     <pre class="fp-mini">void setfillpattern(char pattern[8], int color);</pre>
-    <p>Creates an 8x8 custom bit pattern. Each byte controls one row of pixels in the fill tile.</p>
+    <p>Defines a custom 8x8 tile pattern. Each byte represents one row in the tile, where each bit controls whether a pixel in that row is filled.</p>
     <pre class="fp-mini">char bricks[8] = {0xFF,0x81,0xBD,0x81,0xFF,0x81,0xBD,0x81};
 setfillpattern(bricks, LIGHTRED);</pre>
+    <p>Use this when predefined styles are not enough and you need your own texture.</p>
+  </section>
+
+  <section id="where-fill-applies" class="fp-section">
+    <h2>Where Fill Is Used</h2>
+    <p>Fill settings affect functions that paint areas, such as:</p>
+    <ul>
+      <li><code>bar()</code>, <code>bar3d()</code>, <code>fillellipse()</code>, <code>fillpoly()</code></li>
+      <li><code>floodfill()</code> (fills enclosed regions using current fill settings)</li>
+    </ul>
+    <p>Outline-only functions like <code>line()</code>, <code>rectangle()</code>, and <code>circle()</code> do not use fill style by themselves.</p>
   </section>
 
   <section id="example" class="fp-section">
-    <h2>Example Program</h2>
+    <h2>Complete Runnable Example</h2>
+    <p>This program compares three fill approaches: predefined solid fill, predefined hatch fill, and custom user pattern.</p>
     <div class="fp-code-wrap">
       <pre id="fp-code" class="fp-code"><code>#include &lt;graphics.h&gt;
 #include &lt;conio.h&gt;
@@ -87,12 +117,15 @@ int main() {
 
     setcolor(WHITE);
 
+    // 1) Solid fill on ellipse
     setfillstyle(SOLID_FILL, GREEN);
     fillellipse(120, 120, 60, 40);
 
+    // 2) Hatch fill on bar
     setfillstyle(HATCH_FILL, YELLOW);
     bar(220, 70, 360, 180);
 
+    // 3) Custom user pattern + floodfill
     char custom[8] = {0xAA,0x55,0xAA,0x55,0xAA,0x55,0xAA,0x55};
     setfillpattern(custom, LIGHTMAGENTA);
     rectangle(390, 70, 540, 180);
@@ -111,12 +144,14 @@ int main() {
   </section>
 
   <section id="tips" class="fp-section">
-    <h2>Practical Tips</h2>
+    <h2>Best Practices &amp; Debugging</h2>
     <ul>
-      <li>Set fill style just before the shape you fill to avoid accidental reuse.</li>
-      <li>Use strong outline color for <code>floodfill()</code> boundaries.</li>
-      <li>Prefer simpler patterns when drawing many shapes for better readability.</li>
+      <li>Set fill style immediately before each filled shape to avoid accidental carry-over.</li>
+      <li>For <code>floodfill()</code>, ensure boundary is fully closed and border color argument is exact.</li>
+      <li>If a region fills with unexpected style, another fill call probably changed global fill state.</li>
+      <li>Use simple patterns in beginner examples so shape boundaries remain readable.</li>
     </ul>
+    <p class="fp-note">If fill leaks outside a shape, first check for tiny gaps in borders and then verify the border color passed to <code>floodfill()</code>.</p>
     <p class="fp-note">Related: <a href="/docs/colors-and-palette">Colors &amp; Palette</a> and <a href="/docs/polygons-and-fill">Polygons &amp; Fill</a>.</p>
   </section>
 

@@ -1,26 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  {% set page_name = page_title if page_title else 'Documentation' %}
+  {% set docs_site_name = site_title if site_title else 'graphics.h online compiler docs' %}
+  {% set page_desc = meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' %}
+  {% set canonical_path = '/docs' ~ ('/' ~ current_slug if current_slug else '') %}
+  {% set canonical_url = 'https://graphics-h-compiler.vercel.app' ~ canonical_path %}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'graphics.h online compiler docs' }}</title>
-  <meta name="description" id="meta-description" content="{{ meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' }}">
-  <meta property="og:title" content="{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'graphics.h online compiler docs' }}">
-  <meta property="og:description" content="{{ meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' }}">
+  <title>{{ page_name }} | {{ docs_site_name }}</title>
+  <meta name="description" id="meta-description" content="{{ page_desc }}">
+  <meta name="keywords" content="graphics.h, graphics.h documentation, turbo c graphics, borland graphics, graphics.h functions, c graphics tutorial">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="author" content="Graphics.h Community">
+  <meta name="theme-color" content="#f3f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11151d" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" id="canonical-link" href="{{ canonical_url }}">
+  <meta property="og:title" id="meta-og-title" content="{{ page_name }} | {{ docs_site_name }}">
+  <meta property="og:description" id="meta-og-description" content="{{ page_desc }}">
   <meta property="og:type" content="article">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{{ page_title if page_title else 'Documentation' }} | {{ site_title if site_title else 'graphics.h online compiler docs' }}">
-  <meta name="twitter:description" content="{{ meta_description if meta_description else 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.' }}">
+  <meta property="og:site_name" content="{{ docs_site_name }}">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" id="meta-og-url" content="{{ canonical_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" id="meta-twitter-title" content="{{ page_name }} | {{ docs_site_name }}">
+  <meta name="twitter:description" id="meta-twitter-description" content="{{ page_desc }}">
+  <meta name="twitter:url" id="meta-twitter-url" content="{{ canonical_url }}">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="/static/docs.css">
+  <script type="application/ld+json" id="docs-structured-data">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": {{ page_name|tojson }},
+      "description": {{ page_desc|tojson }},
+      "url": {{ canonical_url|tojson }},
+      "inLanguage": "en",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": {{ docs_site_name|tojson }},
+        "url": "https://graphics-h-compiler.vercel.app/docs"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Graphics.h Community"
+      }
+    }
+  </script>
 </head>
-<body data-doc-slug="{{ current_slug if current_slug else '' }}" data-doc-title="{{ page_title if page_title else '' }}" data-doc-description="{{ meta_description if meta_description else '' }}" data-site-title="{{ site_title if site_title else 'graphics.h online compiler docs' }}">
+<body data-doc-slug="{{ current_slug if current_slug else '' }}" data-doc-title="{{ page_name }}" data-doc-description="{{ page_desc }}" data-site-title="{{ docs_site_name }}">
   <header class="docs-header">
     <div class="header-left">
       <button id="sidebar-toggle" class="header-icon-btn" type="button" aria-label="Toggle sidebar" aria-expanded="true">☰</button>
-      <a class="header-link" href="/">Home</a>
-      <a class="header-link" href="/docs">Docs</a>
+      <a class="header-link home-link" href="/">Home</a>
+      <a class="header-link docs-link" href="/docs">Docs</a>
     </div>
     <div class="header-title">Graphics.h Documentation</div>
     <div class="header-right">

@@ -59,7 +59,7 @@ class GraphicsHEmbed {
             ) {
                 this.isReady = true;
                 if (this.pendingRun) {
-                    this._send(this.pendingRun.code, this.pendingRun.boilerplate, true);
+                    this._send(this.pendingRun.code, this.pendingRun.boilerplate, this.pendingRun.focus);
                     this.pendingRun = null;
                 }
             }
@@ -69,21 +69,26 @@ class GraphicsHEmbed {
 
     runSnippet(code, options = {}) {
         let boilerplate = this.defaultBoilerplate;
+        let focus = false;
         if (typeof options === 'boolean') {
             boilerplate = options;
         } else if (options && typeof options === 'object' && Object.prototype.hasOwnProperty.call(options, 'boilerplate')) {
             boilerplate = options.boilerplate !== false;
+            if (Object.prototype.hasOwnProperty.call(options, 'focus')) {
+                focus = options.focus === true;
+            }
         }
 
         if (!this.isReady) {
-            this.pendingRun = { code, boilerplate };
+            this.pendingRun = { code, boilerplate, focus };
         } else {
-            this._send(code, boilerplate, true);
+            this._send(code, boilerplate, focus);
         }
     }
 
-    runProgram(fullCode) {
-        this.runSnippet(fullCode, { boilerplate: false });
+    runProgram(fullCode, options = {}) {
+        const focus = options && typeof options === 'object' && options.focus === true;
+        this.runSnippet(fullCode, { boilerplate: false, focus: focus });
     }
 
     _send(code, boilerplate, focus = false) {

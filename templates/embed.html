@@ -99,7 +99,7 @@
         const loadingText = document.getElementById('loading-text');
 
         let wdosboxUrl = '';
-        let tcZipUrl = '';
+        let tcZipSources = [];
         let iframeReady = false;
         let pendingRun = null; // { snippet, boilerplate, focus }
         let trustedParentOrigin = null;
@@ -108,7 +108,15 @@
         async function init() {
             await ResourceLoader.init();
             wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
-            tcZipUrl = await ResourceLoader.getResourceUrl('assets', 'tc-zip');
+            const tcZipConfig = await ResourceLoader.getAllUrls('assets', 'tc-zip');
+            tcZipSources = [];
+
+            if (!ResourceLoader.isOffline()) {
+                tcZipSources = tcZipSources.concat(tcZipConfig.urls || []);
+            }
+            if (tcZipConfig.localPath) {
+                tcZipSources.push(tcZipConfig.localPath);
+            }
         }
 
         // Standard batch script to compile and run silent
@@ -172,9 +180,21 @@ int main() {
             loadingText.textContent = "Loading compiler...";
 
             try {
-                const response = await fetch(tcZipUrl);
-                if (!response.ok) throw new Error("Failed to download compiler");
-                const blob = await response.blob();
+                let blob = null;
+                let downloadError = null;
+                for (const zipUrl of tcZipSources) {
+                    try {
+                        const response = await fetch(zipUrl);
+                        if (!response.ok) throw new Error("Failed to download compiler");
+                        blob = await response.blob();
+                        break;
+                    } catch (err) {
+                        downloadError = err;
+                    }
+                }
+                if (!blob) {
+                    throw downloadError || new Error("Failed to download compiler");
+                }
                 if (currentZipObjUrl) URL.revokeObjectURL(currentZipObjUrl);
                 currentZipObjUrl = URL.createObjectURL(blob);
 

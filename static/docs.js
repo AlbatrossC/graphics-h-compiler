@@ -136,6 +136,65 @@
     }
   }
 
+  function setCanonicalAndSocial(slug) {
+    const canonicalUrl = 'https://graphics-h-compiler.vercel.app/docs/' + slug;
+    const canonical = document.getElementById('canonical-link');
+    const ogUrl = document.getElementById('meta-og-url');
+    const twitterUrl = document.getElementById('meta-twitter-url');
+
+    if (canonical) canonical.setAttribute('href', canonicalUrl);
+    if (ogUrl) ogUrl.setAttribute('content', canonicalUrl);
+    if (twitterUrl) twitterUrl.setAttribute('content', canonicalUrl);
+  }
+
+  function setSocialTitleAndDescription(slug, explicitTitle, explicitDescription) {
+    const fallbackTitle = DOC_TITLES[slug] || body.dataset.docTitle || 'Documentation';
+    const title = (explicitTitle || fallbackTitle) + ' | ' + SITE_TITLE;
+    const fallbackDescription = 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.';
+    const description = explicitDescription || body.dataset.docDescription || fallbackDescription;
+
+    const ogTitle = document.getElementById('meta-og-title');
+    const ogDescription = document.getElementById('meta-og-description');
+    const twitterTitle = document.getElementById('meta-twitter-title');
+    const twitterDescription = document.getElementById('meta-twitter-description');
+
+    if (ogTitle) ogTitle.setAttribute('content', title);
+    if (twitterTitle) twitterTitle.setAttribute('content', title);
+    if (ogDescription) ogDescription.setAttribute('content', description);
+    if (twitterDescription) twitterDescription.setAttribute('content', description);
+  }
+
+  function setStructuredData(slug, explicitTitle, explicitDescription) {
+    const script = document.getElementById('docs-structured-data');
+    if (!script) return;
+
+    const fallbackTitle = DOC_TITLES[slug] || body.dataset.docTitle || 'Documentation';
+    const title = explicitTitle || fallbackTitle;
+    const fallbackDescription = 'Graphics.h online compiler documentation with function references, examples, and student-friendly guides.';
+    const description = explicitDescription || body.dataset.docDescription || fallbackDescription;
+    const url = 'https://graphics-h-compiler.vercel.app/docs/' + slug;
+
+    const payload = {
+      '@context': 'https://schema.org',
+      '@type': 'TechArticle',
+      headline: title,
+      description: description,
+      url: url,
+      inLanguage: 'en',
+      isPartOf: {
+        '@type': 'WebSite',
+        name: SITE_TITLE,
+        url: 'https://graphics-h-compiler.vercel.app/docs'
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Graphics.h Community'
+      }
+    };
+
+    script.textContent = JSON.stringify(payload);
+  }
+
   function hasServerRenderedContent() {
     const text = content.textContent.trim();
     return text && text !== 'Loading...';
@@ -171,6 +230,9 @@
       setActiveLink(canonicalSlug);
       setDocumentTitle(canonicalSlug, docTitle);
       setMetaDescription(docDescription || undefined);
+      setCanonicalAndSocial(canonicalSlug);
+      setSocialTitleAndDescription(canonicalSlug, docTitle, docDescription || undefined);
+      setStructuredData(canonicalSlug, docTitle, docDescription || undefined);
       body.dataset.docSlug = canonicalSlug;
       body.dataset.docTitle = docTitle || DOC_TITLES[canonicalSlug] || '';
       body.dataset.docDescription = docDescription || '';
@@ -188,6 +250,15 @@
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
       return;
     }
+    const runButton = event.target.closest('button');
+    if (runButton && /run\s*\(dos\)/i.test((runButton.textContent || '').trim())) {
+      const x = window.scrollX;
+      const y = window.scrollY;
+      setTimeout(function () {
+        window.scrollTo(x, y);
+      }, 220);
+    }
+
     const link = event.target.closest('a[data-link]');
     if (!link) {
       return;
@@ -249,6 +320,9 @@
   setActiveLink(initialSlug);
   setDocumentTitle(initialSlug, body.dataset.docTitle || undefined);
   setMetaDescription(body.dataset.docDescription || undefined);
+  setCanonicalAndSocial(initialSlug);
+  setSocialTitleAndDescription(initialSlug, body.dataset.docTitle || undefined, body.dataset.docDescription || undefined);
+  setStructuredData(initialSlug, body.dataset.docTitle || undefined, body.dataset.docDescription || undefined);
 
   if (!hasServerRenderedContent()) {
     loadSlug(initialSlug, false);

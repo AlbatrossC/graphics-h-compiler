@@ -40,7 +40,7 @@
       --line: #d8e1eb;
       --brand: #14a874;
       --brand-dark: #0d8159;
-      --hero-grad: linear-gradient(135deg, #0d8d62 0%, #12a673 52%, #1fbd84 100%);
+      --hero-bg: #127a58;
       --hero-text: #f4fffb;
       --hero-chip-bg: rgba(255, 255, 255, 0.14);
       --hero-chip-line: rgba(255, 255, 255, 0.5);
@@ -54,26 +54,26 @@
     }
 
     html[data-theme="dark"] {
-      --bg: #0f1722;
-      --bg-soft: #172334;
-      --surface: #182434;
-      --surface-soft: #1f2f42;
-      --text: #e9f1fb;
-      --muted: #a5b7ca;
-      --line: #2f4156;
-      --brand: #34d39a;
-      --brand-dark: #81e8c2;
-      --hero-grad: linear-gradient(135deg, #1d3552 0%, #24507a 52%, #2d6b98 100%);
-      --hero-text: #eef7ff;
-      --hero-chip-bg: rgba(255, 255, 255, 0.1);
-      --hero-chip-line: rgba(196, 226, 255, 0.42);
-      --search-bg: #203347;
-      --search-text: #eaf3ff;
-      --notice-bg: #1d2f3b;
-      --notice-border: #365367;
-      --notice-text: #c8e1f4;
-      --shadow: 0 14px 30px rgba(2, 8, 18, 0.45);
-      --shadow-strong: 0 18px 40px rgba(2, 8, 18, 0.6);
+      --bg: #11151d;
+      --bg-soft: #141b25;
+      --surface: #181f2a;
+      --surface-soft: #202938;
+      --text: #edf2fb;
+      --muted: #b2bfd3;
+      --line: #2a3444;
+      --brand: #62d0ff;
+      --brand-dark: #8ec5ff;
+      --hero-bg: #1a2433;
+      --hero-text: #f1f6ff;
+      --hero-chip-bg: rgba(98, 208, 255, 0.14);
+      --hero-chip-line: rgba(142, 197, 255, 0.46);
+      --search-bg: #1f2836;
+      --search-text: #edf2fb;
+      --notice-bg: #1c2634;
+      --notice-border: #3a475d;
+      --notice-text: #c8d3e5;
+      --shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+      --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.56);
     }
 
     * {
@@ -84,7 +84,7 @@
       margin: 0;
       font-family: "Segoe UI", "Inter", "Trebuchet MS", sans-serif;
       color: var(--text);
-      background: radial-gradient(circle at top, var(--bg-soft) 0%, var(--bg) 45%, var(--bg-soft) 100%);
+      background: var(--bg);
       line-height: 1.6;
       transition: background 0.25s ease, color 0.25s ease;
     }
@@ -95,7 +95,7 @@
     }
 
     .hero {
-      background: var(--hero-grad);
+      background: var(--hero-bg);
       color: var(--hero-text);
       padding: 30px 0 88px;
       position: relative;
