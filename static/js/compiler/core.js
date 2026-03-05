@@ -13,7 +13,7 @@ const APP_SETTINGS_DEFAULTS = Object.freeze({
     uiTheme: UI_THEME_DARK,
     editor: {
         theme: THEME_VSCODE_DARK,
-        fontSize: 14,
+        fontSize: 16,
         wordWrap: true,
         lineNumbers: true,
         autocomplete: true,

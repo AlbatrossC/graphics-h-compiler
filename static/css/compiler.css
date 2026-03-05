@@ -1332,6 +1332,47 @@ header {
     background: rgba(0, 0, 0, 0.08);
 }
 
+/* Explorer header button highlights (two solid colors, no gradients) */
+#refresh-btn {
+    background: rgba(0, 170, 255, 0.18);
+    color: #6fd3ff;
+}
+
+#refresh-btn:hover {
+    background: rgba(0, 170, 255, 0.28);
+    color: #cbefff;
+}
+
+#sidebar-collapse-btn {
+    background: rgba(0, 170, 255, 0.18);
+    color: #6fd3ff;
+}
+
+#sidebar-collapse-btn:hover {
+    background: rgba(0, 170, 255, 0.28);
+    color: #cbefff;
+}
+
+[data-theme="light"] #refresh-btn {
+    background: rgba(0, 120, 215, 0.14);
+    color: #005a9e;
+}
+
+[data-theme="light"] #refresh-btn:hover {
+    background: rgba(0, 120, 215, 0.22);
+    color: #003c70;
+}
+
+[data-theme="light"] #sidebar-collapse-btn {
+    background: rgba(0, 120, 215, 0.14);
+    color: #005a9e;
+}
+
+[data-theme="light"] #sidebar-collapse-btn:hover {
+    background: rgba(0, 120, 215, 0.22);
+    color: #003c70;
+}
+
 .sidebar-collapse-btn svg,
 .sidebar-action-btn svg {
     width: 16px;

@@ -322,7 +322,7 @@ async function initializeEditor() {
         ? APP_SETTINGS_DEFAULTS.editor
         : {
             theme: THEME_VSCODE_DARK,
-            fontSize: 14,
+            fontSize: 16,
             wordWrap: true,
             lineNumbers: true,
             autocomplete: true,

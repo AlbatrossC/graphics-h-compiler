@@ -14,7 +14,7 @@
             uiTheme: (typeof UI_THEME_DARK !== 'undefined' ? UI_THEME_DARK : 'dark'),
             editor: {
                 theme: (typeof THEME_VSCODE_DARK !== 'undefined' ? THEME_VSCODE_DARK : 'vscode-dark'),
-                fontSize: 14,
+                fontSize: 16,
                 wordWrap: true,
                 lineNumbers: true,
                 autocomplete: true,
