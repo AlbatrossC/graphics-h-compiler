@@ -968,10 +968,14 @@ async function signInWithGoogle() {
     }
 
     try {
-        // Normalize pathname: strip .html suffix so the redirect URL is always consistent
-        // (e.g. /compiler.html → /compiler). This prevents Supabase redirect mismatches.
-        const normalizedPath = window.location.pathname.replace(/\.html$/, '');
-        const redirectTo = `${window.location.origin}${normalizedPath}`;
+        // Supabase strictly checks the redirect URL against its whitelist.
+        // If the URL isn't whitelisted, it falls back to the default Site URL (localhost:3000).
+        // Since `/compiler.html` works but `/compiler` doesn't, we force the use of `.html`.
+        let pathname = window.location.pathname;
+        if (pathname.replace(/\/$/, '') === '/compiler') {
+            pathname = '/compiler.html';
+        }
+        const redirectTo = `${window.location.origin}${pathname}`;
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo }
