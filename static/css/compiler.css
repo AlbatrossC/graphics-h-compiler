@@ -607,6 +607,23 @@ header {
     background: rgba(0, 204, 106, 0.2) !important;
 }
 
+/* Selection matches */
+.cm-editor .cm-selectionMatch {
+    background: rgba(153, 255, 119, 0.22);
+}
+
+.cm-editor .cm-selectionMatch-main {
+    background: rgba(153, 255, 119, 0.3);
+}
+
+[data-theme="light"] .cm-editor .cm-selectionMatch {
+    background: rgba(0, 160, 80, 0.16);
+}
+
+[data-theme="light"] .cm-editor .cm-selectionMatch-main {
+    background: rgba(0, 160, 80, 0.24);
+}
+
 /* Matching Brackets */
 .cm-editor .cm-matchingBracket {
     background: rgba(0, 255, 136, 0.25);

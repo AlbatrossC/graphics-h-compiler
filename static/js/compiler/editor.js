@@ -274,6 +274,33 @@ function createEditorWrapper(view) {
     };
 }
 
+function createSelectedMatchHighlightExtension() {
+    const { Decoration, ViewPlugin } = cmModules.view;
+    const selectedMark = Decoration.mark({ class: 'cm-selectionMatch cm-selectionMatch-main' });
+
+    return ViewPlugin.fromClass(class {
+        constructor(view) {
+            this.decorations = this.buildDecorations(view);
+        }
+
+        update(update) {
+            if (update.selectionSet || update.docChanged) {
+                this.decorations = this.buildDecorations(update.view);
+            }
+        }
+
+        buildDecorations(view) {
+            const main = view.state.selection.main;
+            if (main.empty) {
+                return Decoration.none;
+            }
+            return Decoration.set([selectedMark.range(main.from, main.to)], true);
+        }
+    }, {
+        decorations: (plugin) => plugin.decorations
+    });
+}
+
 
 // ==================== EDITOR INITIALIZATION ====================
 
@@ -503,6 +530,7 @@ async function initializeEditor() {
             ] : []),
             history(),
             highlightSelectionMatches(),
+            createSelectedMatchHighlightExtension(),
             keymap.of([
                 ...closeBracketsKeymap,
                 ...historyKeymap
