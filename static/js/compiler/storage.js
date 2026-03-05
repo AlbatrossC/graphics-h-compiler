@@ -968,7 +968,10 @@ async function signInWithGoogle() {
     }
 
     try {
-        const redirectTo = `${window.location.origin}${window.location.pathname}`;
+        // Normalize pathname: strip .html suffix so the redirect URL is always consistent
+        // (e.g. /compiler.html → /compiler). This prevents Supabase redirect mismatches.
+        const normalizedPath = window.location.pathname.replace(/\.html$/, '');
+        const redirectTo = `${window.location.origin}${normalizedPath}`;
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo }
