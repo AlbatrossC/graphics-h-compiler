@@ -968,14 +968,18 @@ async function signInWithGoogle() {
     }
 
     try {
-        // Supabase strictly checks the redirect URL against its whitelist.
-        // If the URL isn't whitelisted, it falls back to the default Site URL (localhost:3000).
-        // Since `/compiler.html` works but `/compiler` doesn't, we force the use of `.html`.
-        let pathname = window.location.pathname;
-        if (pathname.replace(/\/$/, '') === '/compiler') {
-            pathname = '/compiler.html';
+        // Keep OAuth callback stable across local/test/prod so it matches Supabase allow-list.
+        // We intentionally force the callback to /compiler.html.
+        let callbackPath = '/compiler.html';
+        const normalizedPath = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '');
+
+        // Accept known typo route and normalize to compiler.html.
+        if (normalizedPath === '/compiloer' || normalizedPath === '/compiloer.html') {
+            callbackPath = '/compiler.html';
         }
-        const redirectTo = `${window.location.origin}${pathname}`;
+
+        const redirectTo = `${window.location.origin}${callbackPath}`;
+        Logger.info(`[Auth] OAuth redirectTo: ${redirectTo}`);
         const { error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: { redirectTo }

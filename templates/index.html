@@ -1757,6 +1757,19 @@
     <script src="static/analytics.js" async></script>
 
     <script>
+        // OAuth providers may return to "/" with tokens in the hash.
+        // Forward to compiler page so Supabase client can finalize session there.
+        (function forwardOAuthHashToCompiler() {
+            const hash = window.location.hash || '';
+            if (!/(^|[&#])access_token=/.test(hash)) return;
+
+            const isCompilerPath = /^\/compiler(?:\.html)?\/?$/i.test(window.location.pathname || '');
+            if (isCompilerPath) return;
+
+            const target = `/compiler.html${window.location.search || ''}${hash}`;
+            window.location.replace(target);
+        })();
+
         // Initialize Lucide icons after deferred scripts load
         function initIcons() {
             if (typeof lucide !== 'undefined') {
