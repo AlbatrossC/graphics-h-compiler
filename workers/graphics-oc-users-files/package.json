@@ -1,0 +1,19 @@
+{
+  "name": "graphics-oc-users-files",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker backend for graphics.h online compiler",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute graphics-compiler-db --file=schema.sql",
+    "db:migrate:local": "wrangler d1 execute graphics-compiler-db --local --file=schema.sql"
+  },
+  "dependencies": {
+    "better-auth": "^1.2.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.70.0"
+  }
+}
