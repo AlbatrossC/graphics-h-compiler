@@ -547,12 +547,6 @@ header {
     background: var(--vscode-line-bg);
 }
 
-@media (min-width: 769px) {
-    .text-action-btn svg {
-        display: none;
-    }
-}
-
 #terminal-wrapper .panel-title {
     text-transform: none;
     letter-spacing: 0.02em;
