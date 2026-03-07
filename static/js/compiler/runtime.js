@@ -170,7 +170,6 @@ let clarityMirrorTimer = null;
 let clarityMirrorRequestInFlight = false;
 let clarityMirrorSeq = 0;
 let isDosSessionRunning = false;
-let clarityMirrorObjectUrl = null;
 let clarityMirrorRequestTimeout = null;
 
 const fullscreenTerminalBtn = document.getElementById('fullscreen-terminal-btn');
@@ -262,10 +261,6 @@ function stopClarityMirrorCapture(clearFrame = false) {
     }
     if (clearFrame && clarityDosMirror) {
         clarityDosMirror.removeAttribute('src');
-    }
-    if (clarityMirrorObjectUrl) {
-        URL.revokeObjectURL(clarityMirrorObjectUrl);
-        clarityMirrorObjectUrl = null;
     }
 }
 
@@ -464,20 +459,7 @@ window.addEventListener('message', (event) => {
             }
             if (!clarityDosMirror) return;
             if (data.error) return;
-
-            if (data.blob instanceof Blob) {
-                const nextObjectUrl = URL.createObjectURL(data.blob);
-                const previousObjectUrl = clarityMirrorObjectUrl;
-                clarityMirrorObjectUrl = nextObjectUrl;
-                clarityDosMirror.src = nextObjectUrl;
-                if (previousObjectUrl) {
-                    URL.revokeObjectURL(previousObjectUrl);
-                }
-            } else if (data.dataUrl) {
-                if (clarityMirrorObjectUrl) {
-                    URL.revokeObjectURL(clarityMirrorObjectUrl);
-                    clarityMirrorObjectUrl = null;
-                }
+            if (data.dataUrl) {
                 clarityDosMirror.src = data.dataUrl;
             }
             return;
