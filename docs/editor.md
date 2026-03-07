@@ -126,7 +126,7 @@ Run from the project root:
 node esbuild.mjs
 ```
 
-**Output:** `static/js/codemirror.bundle.v1.js` (~300 KB minified)
+**Output:** `static/js/codemirror.bundle.v1.js` (~530 KB minified)
 
 ### NPM dependencies (`package.json`)
 
@@ -213,7 +213,7 @@ Reads saved settings from `localStorage` via `loadAppSettings()` (defined in `co
 | Setting           | Default    |
 |-------------------|------------|
 | `theme`           | `vscode-dark` |
-| `fontSize`        | `14`       |
+| `fontSize`        | `16`       |
 | `wordWrap`        | `true`     |
 | `lineNumbers`     | `true`     |
 | `autocomplete`    | `true`     |
@@ -323,16 +323,17 @@ To keep the editor interactive as fast as possible, expensive extensions are **n
 ```js
 const executeHeavyFeatures = () => {
     const heavyExtensions = [
-        bracketMatchCompartment.of(bracketMatching()),
-        autocompleteCompartment.of([
+        bracketMatchCompartment.of(initialEditorSettings.bracketMatching ? bracketMatching() : []),
+        autocompleteCompartment.of(initialEditorSettings.autocomplete ? [
             closeBrackets(),
             autocompletion({
                 activateOnTyping: true,
                 override: [customCompletionSource]
             })
-        ]),
+        ] : []),
         history(),
         highlightSelectionMatches(),
+        createSelectedMatchHighlightExtension(),  // Custom ViewPlugin for selected text highlighting
         keymap.of([
             ...closeBracketsKeymap,
             ...historyKeymap
@@ -351,9 +352,11 @@ if (window.requestIdleCallback) {
 }
 ```
 
+`createSelectedMatchHighlightExtension()` is a custom `ViewPlugin` defined in `editor.js` that decorates the currently selected text range with a highlight class (`cm-selectionMatch`). It rebuilds decorations on every selection or document change.
+
 This means:
 - The editor is **visible and editable** within milliseconds.
-- Autocomplete, history (undo/redo), bracket matching, and search highlighting activate ~300ms later when the browser is idle.
+- Autocomplete, history (undo/redo), bracket matching, selection match highlighting, and search highlighting activate ~300ms later when the browser is idle.
 
 ---
 
@@ -391,10 +394,10 @@ This is necessary because `settings.js` needs the exact same function reference 
 
 ### Snippet syntax
 
-CodeMirror 6 uses `${n}` for snippet tabstops (same as VS Code). Example:
+CodeMirror 6 uses `${n}` for snippet tabstops (same as VS Code). The `main` snippet expands into a complete graphics.h boilerplate:
 
 ```js
-snippetCompletion("int main() {\n    ${1}\n    return 0;\n}", {
+snippetCompletion("#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, (char*)\"\");\n\n    ${1}\n\n    getch();\n    closegraph();\n    return 0;\n}", {
     label: "main",
     detail: "graphics boilerplate",
     type: "snippet"

@@ -86,22 +86,61 @@ The fastest way to get started. Simply visit the online compiler and begin codin
 
 ---
 
-### Option 2: Local Installation
+### Option 2: Run Locally (For Developers)
 
-Clone the repository and run it locally on your machine:
+The web app is powered by **Flask** (Python). Follow these steps to run the full application on your machine:
+
+#### Prerequisites
+
+- **Python 3.8+** — [Download](https://www.python.org/downloads/)
+- **Node.js ≥ 16.x** and **npm ≥ 8.x** — [Download](https://nodejs.org/) (only needed if you want to rebuild the CodeMirror editor bundle)
+- **Git** — [Download](https://git-scm.com/)
+
+#### Steps
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/AlbatrossC/graphics-h-compiler.git
-
-# Navigate to the project directory
 cd graphics-h-compiler
 
-# Start a local server
-python -m http.server 8000
+# 2. Install Python dependencies
+pip install -r requirements.txt
+
+# 3. Create a .env file (see Environment Variables below)
+#    At minimum, you can start with an empty .env file for basic usage
+copy NUL .env          # Windows
+# touch .env           # macOS/Linux
+
+# 4. Start the Flask development server
+python app.py
 ```
 
-Then open your browser at **`http://localhost:8000`**
+The server starts on **`http://localhost:5000`**. Open your browser and navigate to:
+
+| Page | URL |
+|------|-----|
+| Landing page | `http://localhost:5000/` |
+| Compiler | `http://localhost:5000/compiler` or `http://localhost:5000/compiler.html` |
+| Documentation | `http://localhost:5000/docs` |
+| Embed widget | `http://localhost:5000/embed` |
+
+> **Note:** `python app.py` starts Flask on `0.0.0.0:5000` (accessible from all network interfaces). For local-only access, you can modify the `app.run()` call in `app.py`.
+
+#### Environment Variables
+
+Create a `.env` file in the project root. The app will run without these (with reduced functionality), but full features require them:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SUPABASE_URL` | For auth | Your Supabase project URL |
+| `SUPABASE_ANON_KEY` | For auth | Supabase public (anon) API key |
+| `STORAGE_WORKER_URL` | For cloud save | URL to the Cloudflare Worker that handles file storage |
+| `DISCORD_WEBHOOK_URL` | For contact form | Discord webhook URL for receiving contact form messages |
+| `MAINTENANCE_MODE` | Optional | Set to `true` to enable maintenance mode (redirects all pages to maintenance page) |
+
+Without these variables:
+- **No `.env` at all** — The compiler and editor work fully. Google Sign-In, cloud file save, and the contact form will be disabled.
+- **Only `SUPABASE_URL` + `SUPABASE_ANON_KEY`** — Google Sign-In works, but cloud file storage requires `STORAGE_WORKER_URL` as well.
 
 ---
 
@@ -128,10 +167,78 @@ code --install-extension AlbatrossC.graphics-h-compiler
 
 ---
 
+## 📁 Project Structure
+
+```
+graphics.h-online-compiler/
+├── app.py                        ← Flask entry point (routes, APIs, proxy)
+├── requirements.txt              ← Python dependencies (flask, python-dotenv, requests)
+├── .env                          ← Environment variables (not committed)
+├── vercel.json                   ← Vercel deployment config
+├── package.json                  ← Node.js dependencies (CodeMirror, esbuild)
+├── esbuild.mjs                   ← Bundles CodeMirror into a single JS file
+│
+├── templates/                    ← Jinja2 HTML templates served by Flask
+│   ├── index.html                ← Landing page
+│   ├── compiler.html             ← Main compiler page
+│   ├── embed.html                ← Embeddable compiler widget
+│   ├── embed-docs.html           ← Embeddable docs widget
+│   ├── docs.html                 ← Documentation hub page
+│   ├── base.html                 ← Base template for doc pages
+│   ├── maintenance.html          ← Maintenance mode page
+│   └── docs/                     ← Individual doc page templates
+│
+├── static/                       ← Static assets served at /static/
+│   ├── js/
+│   │   ├── compiler/             ← Source JS modules
+│   │   │   ├── core.js           ← Logger, constants, metrics
+│   │   │   ├── editor.js         ← CodeMirror 6 setup & extensions
+│   │   │   ├── runtime.js        ← iframe bridge, run/stop orchestration
+│   │   │   ├── storage.js        ← Auth, cloud storage, IndexedDB cache
+│   │   │   ├── theme-engine.js   ← Theme definitions & switching
+│   │   │   ├── settings.js       ← User settings panel
+│   │   │   └── cm-entry.js       ← esbuild entry point for CodeMirror
+│   │   └── codemirror.bundle.v1.js  ← Bundled CodeMirror (generated)
+│   ├── dos-runner.html           ← Sandboxed iframe for JS-DOS / DOSBox
+│   ├── css/                      ← Stylesheets
+│   ├── favicon.ico
+│   └── ...
+│
+├── compiler-assets/              ← Assets used by the compiler
+│   ├── libs/                     ← JS-DOS runtime files (js-dos.js, wdosbox.js, etc.)
+│   ├── Demo_files/               ← Sample .cpp demo programs
+│   ├── graphics/                 ← graphics.h, winbgim.h, libbgi.a
+│   ├── Installers/               ← Linux install script
+│   └── zip-files/                ← tc.zip (Turbo C environment)
+│
+├── TURBOC3/                      ← Turbo C++ 3.0 environment (BIN/, INCLUDE/, LIB/)
+│
+├── VScodeExtension/              ← VS Code extension source (TypeScript)
+│
+├── workers/                      ← Cloudflare Workers
+│   ├── graphics-oc-users-files/  ← File storage worker (R2 + JWT auth)
+│   ├── graphics-compiler-users-worker/  ← User management worker
+│   └── r2-public-assets/         ← Public asset serving
+│
+├── docs/                         ← Developer documentation (this folder)
+│   ├── readme.md                 ← This file
+│   ├── online-compiler.md        ← Online compiler technical docs
+│   ├── vscode-compiler.md        ← VS Code extension technical docs
+│   └── editor.md                 ← CodeMirror 6 editor architecture
+│
+└── data/                         ← Data files
+```
+
+---
+
 ## 📚 Documentation
 
-- **[online-compiler.md](online-compiler.md)** - Comprehensive guide to the browser-based compiler
-- **[vscode-compiler.md](vscode-compiler.md)** - VS Code extension setup and configuration
+| Document | Description |
+|----------|-------------|
+| **[readme.md](readme.md)** | This file — project overview, setup, and contributor guide |
+| **[online-compiler.md](online-compiler.md)** | Technical deep-dive into the browser-based compiler architecture |
+| **[vscode-compiler.md](vscode-compiler.md)** | VS Code extension internals, toolchain, and build process |
+| **[editor.md](editor.md)** | CodeMirror 6 editor setup, bundling, and theme system |
 
 ---
 
@@ -164,6 +271,90 @@ int main() {
 
 ---
 
+## 🔧 Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Backend** | Flask (Python) on Vercel Serverless |
+| **Templating** | Jinja2 |
+| **Code Editor** | CodeMirror 6 (bundled via esbuild) |
+| **DOS Emulator** | JS-DOS 6.22 + WebAssembly DOSBox |
+| **Compiler** | Turbo C++ 3.0 (`TCC.EXE`) inside emulated DOS |
+| **File Hosting** | Vercel Blob Storage (tc.zip) |
+| **Cloud Files** | Cloudflare Workers + R2 |
+| **Auth** | Supabase (Google OAuth) |
+| **Caching** | IndexedDB (tc.zip) · LocalStorage (code, demos) |
+| **Deployment** | Vercel (web app) · Cloudflare (workers) |
+
+---
+
+## 🛠️ Developer Guide
+
+### Rebuilding the CodeMirror Bundle
+
+The editor uses a pre-built CodeMirror bundle (`static/js/codemirror.bundle.v1.js`). If you modify any CodeMirror-related code (extensions, keybindings, etc.), rebuild it:
+
+```bash
+# Install Node.js dependencies (first time only)
+npm install
+
+# Run the esbuild bundler
+node esbuild.mjs
+```
+
+This reads `static/js/compiler/cm-entry.js` and outputs the minified bundle to `static/js/codemirror.bundle.v1.js`.
+
+### Flask Routes Overview
+
+All routes are defined in `app.py`. Key routes:
+
+| Route | Method | Handler |
+|-------|--------|---------|
+| `/` , `/index.html` | GET | Landing page |
+| `/compiler` , `/compiler.html` | GET | Compiler page |
+| `/docs` | GET | Documentation hub |
+| `/docs/<slug>` | GET | Individual doc page |
+| `/embed` , `/embed.html` | GET | Embeddable compiler |
+| `/api/auth/config` | GET | Returns Supabase credentials to frontend |
+| `/files/<path>` | GET/POST/DELETE | Proxies requests to Cloudflare storage worker |
+| `/api/contact` | POST | Forwards contact form submissions to Discord |
+| `/libs/<path>` | GET | Serves JS-DOS library files from `compiler-assets/libs/` |
+
+### Cloudflare Workers
+
+The project uses three Cloudflare Workers (in `workers/`):
+
+| Worker | Purpose |
+|--------|---------|
+| `graphics-oc-users-files` | File save/load/delete via R2 — JWT tokens are verified locally using HMAC-SHA256 |
+| `graphics-compiler-users-worker` | User account management |
+| `r2-public-assets` | Serves public assets from R2 (e.g., tc.zip) |
+
+To develop workers locally:
+
+```bash
+cd workers/graphics-oc-users-files
+npm install
+npx wrangler dev
+```
+
+Set secrets with `npx wrangler secret put <KEY>`.
+
+### Deployment
+
+**Web app (Vercel):**
+- Push to `main` → Vercel auto-deploys via `vercel.json`
+- Flask is deployed as a serverless function via `@vercel/python`
+- Static files are served directly via `@vercel/static`
+
+**Workers (Cloudflare):**
+```bash
+cd workers/graphics-oc-users-files
+npx wrangler deploy
+```
+
+---
+
 ## 👥 Who Is This For?
 
 **Students**  
@@ -174,17 +365,6 @@ Anyone learning graphics.h who wants to avoid complex configuration and focus on
 
 **Educators**  
 Instructors who want to provide students with modern, accessible development tools.
-
----
-
-## 🔧 Technical Details
-
-This compiler leverages **WebAssembly** technology to emulate the Turbo C graphics library environment. It enables `graphics.h` programs to run seamlessly in modern browsers and development tools without requiring DOS emulation or virtualization.
-
-**Core Technologies:**
-- WebAssembly for C/C++ compilation
-- Browser-based graphics rendering
-- Modern JavaScript framework integration
 
 ---
 

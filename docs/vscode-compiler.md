@@ -1,4 +1,4 @@
-# Graphics.h VS Code Extension - Developer Documentation
+# Graphics.h VS Code Extension — Developer Documentation
 
 **Technical reference for developers working on the Graphics.h Compiler extension**
 
@@ -6,6 +6,7 @@
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Installation Methods](#installation-methods)
 - [Extension Structure](#extension-structure)
 - [Prerequisites and Dependencies](#prerequisites-and-dependencies)
@@ -14,6 +15,22 @@
 - [Architecture Details](#architecture-details)
 - [Error Handling](#error-handling)
 - [Development Setup](#development-setup)
+- [Building and Publishing](#building-and-publishing)
+- [Relationship to the Online Compiler](#relationship-to-the-online-compiler)
+- [Licensing](#licensing)
+
+---
+
+## Overview
+
+The VS Code extension provides a native way to compile and run `graphics.h` programs without leaving the editor. It supports two compilation modes:
+
+| Mode | How It Works | Platform |
+|------|-------------|----------|
+| **WinBGI (Native)** | Uses MinGW-w64 (`g++`) to compile and run a native Windows `.exe` | Windows, Linux (via Wine) |
+| **Turbo C (DOSBox)** | Runs Turbo C++ 3.0 inside a DOSBox WebAssembly instance in a VS Code webview | Windows, Linux, macOS |
+
+The extension auto-downloads the MinGW toolchain on Windows. Linux users run a one-time install script.
 
 ---
 
@@ -72,11 +89,13 @@ VScodeExtension/
 │   │   ├── graphics.h        # Modified BGI header (ISO C++ compliant)
 │   │   ├── winbgim.h         # Windows BGI implementation
 │   │   └── libbgi.a          # Static BGI library (i686)
-│   └── turboc/               # Bundled Turbo C DOSBox runtime
-│       ├── tc-v1.zip          # Turbo C 3.0 filesystem image
-│       ├── js-dos.js          # js-dos emulator core
-│       ├── wdosbox.js         # DOSBox WASM loader
-│       └── wdosbox.wasm.js    # DOSBox compiled to WebAssembly
+│   ├── turboc/               # Bundled Turbo C DOSBox runtime
+│   │   ├── tc-v1.zip          # Turbo C 3.0 filesystem image
+│   │   ├── js-dos.js          # js-dos emulator core
+│   │   ├── wdosbox.js         # DOSBox WASM loader
+│   │   └── wdosbox.wasm.js    # DOSBox compiled to WebAssembly
+│   └── webview/
+│       └── index.html         # Webview template for Turbo C mode
 ├── assets/                   # Extension icons
 ├── dist/                     # Compiled JavaScript output
 ├── node_modules/             # npm dependencies
@@ -316,7 +335,7 @@ spawn('i686-w64-mingw32-g++', [
 ### Linked Libraries
 
 | Library | Purpose |
-|---------|---------|
+|---------|---------| 
 | `libbgi.a` | BGI graphics primitives |
 | `gdi32` | Windows GDI rendering |
 | `comdlg32` | Common dialogs |
@@ -537,7 +556,7 @@ cd graphics-h-compiler/VScodeExtension
 
 npm install
 npm run compile        # single build
-npm run watch          # watch mode
+npm run watch          # watch mode (auto-rebuild on save)
 
 npx vsce package       # produces graphics-h-compiler-x.x.x.vsix
 code --install-extension graphics-h-compiler-*.vsix
@@ -551,12 +570,59 @@ code --install-extension graphics-h-compiler-*.vsix
 4. Test commands in the debug instance
 5. Check the Debug Console for logs
 
-### Publishing
+### Common Development Tasks
+
+| Task | Command |
+|------|---------|
+| Single build | `npm run compile` |
+| Watch mode (auto-rebuild) | `npm run watch` |
+| Lint code | `npx eslint src/` |
+| Package into `.vsix` | `npx vsce package` |
+| Install local `.vsix` | `code --install-extension graphics-h-compiler-*.vsix` |
+| Publish to Marketplace | `npx vsce publish` |
+
+---
+
+## Building and Publishing
+
+### Package the Extension
 
 ```bash
-# Requires a Personal Access Token from marketplace.visualstudio.com
+cd VScodeExtension
+npm install
+npm run compile
+npx vsce package
+```
+
+This produces a `graphics-h-compiler-x.x.x.vsix` file that can be installed locally or shared.
+
+### Publish to VS Code Marketplace
+
+Go to the [VS Code Marketplace Management Page](https://marketplace.visualstudio.com/manage) and upload the `.vsix` file directly.
+
+Alternatively, you can publish via the command line:
+
+```bash
 npx vsce publish
 ```
+
+---
+
+## Relationship to the Online Compiler
+
+The VS Code extension and the online compiler share the same **Turbo C++ 3.0** environment and **DOSBox emulation** approach for the Turbo C mode, but they are otherwise independent codebases:
+
+| Aspect | Online Compiler | VS Code Extension |
+|--------|----------------|-------------------|
+| **Backend** | Flask (Python) on Vercel | None (runs locally) |
+| **Editor** | CodeMirror 6 in browser | VS Code's built-in editor |
+| **Turbo C mode** | JS-DOS in `<iframe>` | JS-DOS in VS Code Webview |
+| **WinBGI mode** | Not available | MinGW-w64 `g++` (native) |
+| **Toolchain** | Not needed (runs in browser) | Auto-downloaded MinGW-w64 |
+| **File storage** | Cloudflare R2 + Supabase auth | Local filesystem |
+| **Source location** | Project root (`app.py`, `static/`, `templates/`) | `VScodeExtension/` directory |
+
+The online compiler's source code lives in the project root and is documented in [online-compiler.md](online-compiler.md). The extension source lives in `VScodeExtension/` and is documented in this file.
 
 ---
 
