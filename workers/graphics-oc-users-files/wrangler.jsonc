@@ -9,7 +9,8 @@
 
   "vars": {
     "WORKER_URL": "https://graphics-oc-users-files.albatrossc.workers.dev",
-    "FRONTEND_URL": "http://localhost:5173"
+    "FRONTEND_URL": "http://localhost:5000",
+    "EXTRA_TRUSTED_ORIGINS": "https://graphics-h-compiler.vercel.app,https://graphics-h-online-compiler-git-test-albatrosscs-projects.vercel.app"
   },
 
   "d1_databases": [

@@ -21,9 +21,32 @@ function log(level, message, data = {}) {
   CORS Headers
 ==================================================
 */
-function corsHeaders(env) {
+function splitCsv(value = "") {
+  return String(value)
+    .split(",")
+    .map(v => v.trim())
+    .filter(Boolean)
+}
+
+function getAllowedOrigins(env) {
+  return Array.from(
+    new Set([
+      ...splitCsv(env.FRONTEND_URL),
+      ...splitCsv(env.EXTRA_TRUSTED_ORIGINS),
+      env.WORKER_URL
+    ].filter(Boolean))
+  )
+}
+
+function corsHeaders(env, request = null) {
+  const allowedOrigins = getAllowedOrigins(env)
+  const requestOrigin = request?.headers?.get("Origin") || ""
+  const allowOrigin = allowedOrigins.includes(requestOrigin)
+    ? requestOrigin
+    : (allowedOrigins[0] || "*")
+
   return {
-    "Access-Control-Allow-Origin": env.FRONTEND_URL,
+    "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, Cookie"
@@ -35,12 +58,12 @@ function corsHeaders(env) {
   JSON Response Helper
 ==================================================
 */
-function json(data, status = 200, env) {
+function json(data, status = 200, env, request = null) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
-      ...corsHeaders(env)
+      ...corsHeaders(env, request)
     }
   })
 }
@@ -67,10 +90,7 @@ function createAuth(env) {
     baseURL: env.WORKER_URL,
     basePath: "/auth",
 
-    trustedOrigins: [
-      env.FRONTEND_URL,
-      env.WORKER_URL
-    ],
+    trustedOrigins: getAllowedOrigins(env),
 
     socialProviders: {
       google: {
@@ -81,8 +101,51 @@ function createAuth(env) {
 
     account: {
       storeStateStrategy: "cookie"
+    },
+
+    advanced: {
+      defaultCookieAttributes: {
+        sameSite: "none",
+        secure: true,
+        httpOnly: true
+      }
     }
   })
+}
+
+function getPostLoginRedirectUrl(env) {
+  const frontend = (env.FRONTEND_URL || "").trim().replace(/\/+$/, "")
+  if (!frontend) return "/compiler.html"
+
+  // If FRONTEND_URL already includes a path, keep it.
+  if (/\/.+/.test(frontend.replace(/^https?:\/\/[^/]+/, ""))) {
+    return frontend
+  }
+
+  return `${frontend}/compiler.html`
+}
+
+function resolveLoginCallbackURL(request, env) {
+  const url = new URL(request.url)
+  const requested = url.searchParams.get("callbackURL")
+
+  if (requested) {
+    try {
+      const parsed = new URL(requested)
+      const allowedOrigins = getAllowedOrigins(env)
+      if (allowedOrigins.includes(parsed.origin)) {
+        return parsed.toString()
+      }
+      log("warn", "Rejected callbackURL origin", {
+        requestedOrigin: parsed.origin,
+        allowedOrigins
+      })
+    } catch {
+      log("warn", "Invalid callbackURL provided", { requested })
+    }
+  }
+
+  return getPostLoginRedirectUrl(env)
 }
 
 /*
@@ -101,15 +164,26 @@ function createAuth(env) {
 async function getUserFromSession(request, env, auth) {
 
   try {
+    const headers = new Headers(request.headers)
+    const authHeader = headers.get("Authorization")
+
+    // Cross-domain fix: Better Auth primarily looks for cookies.
+    // We always favor the Bearer token if provided to avoid stale cookie issues.
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7)
+      headers.set("Cookie", `better-auth.session_token=${token}`)
+    }
+
     const session = await auth.api.getSession({
-      headers: request.headers
+      headers: headers
     })
 
     log("debug", "Session response", {
       hasSession: !!session,
       hasUser: !!session?.user,
       sessionUserId: session?.user?.id || "none",
-      sessionUserEmail: session?.user?.email || "none"
+      sessionUserEmail: session?.user?.email || "none",
+      hasAuthHeader: !!authHeader
     })
 
     if (!session?.user) {
@@ -230,7 +304,7 @@ export default {
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(env)
+        headers: corsHeaders(env, request)
       })
     }
 
@@ -259,7 +333,7 @@ export default {
           "POST /files/save",
           "DELETE /files/:fileId"
         ]
-      }, 200, env)
+      }, 200, env, request)
     }
 
     /*
@@ -272,8 +346,12 @@ export default {
       log("info", "Login redirect requested")
 
       try {
+        const callbackURL = resolveLoginCallbackURL(request, env)
         const res = await auth.api.signInSocial({
-          body: { provider: "google" },
+          body: {
+            provider: "google",
+            callbackURL
+          },
           headers: request.headers,
           returnHeaders: true,
           returnStatus: true
@@ -283,7 +361,7 @@ export default {
         headers.set("Location", res.response.url)
 
         // Merge CORS headers
-        const cors = corsHeaders(env)
+        const cors = corsHeaders(env, request)
         for (const [k, v] of Object.entries(cors)) {
           headers.set(k, v)
         }
@@ -294,7 +372,7 @@ export default {
         })
       } catch (err) {
         log("error", "Login redirect failed", { error: err.message })
-        return json({ error: "Login failed" }, 500, env)
+        return json({ error: "Login failed" }, 500, env, request)
       }
     }
 
@@ -311,12 +389,13 @@ export default {
       const userId = await getUserFromSession(request, env, auth)
 
       if (!userId) {
-        return json({ error: "Unauthorized" }, 401, env)
+        // Return 200 with null user instead of 401 to avoid 'Failed to load resource' console errors
+        return json({ user_id: null, authenticated: false }, 200, env, request)
       }
 
       log("info", "GET /auth/me returning real user_id", { user_id: userId })
 
-      return json({ user_id: userId }, 200, env)
+      return json({ user_id: userId, authenticated: true }, 200, env, request)
     }
 
     /*
@@ -333,7 +412,29 @@ export default {
 
         // Add CORS headers to Better Auth responses
         const newHeaders = new Headers(response.headers)
-        const cors = corsHeaders(env)
+
+        // Cross-domain fix: Append session_token to the redirect URL
+        if ([301, 302, 303, 307, 308].includes(response.status)) {
+          const location = newHeaders.get("Location")
+          if (location) {
+            const cookies = newHeaders.getSetCookie ? newHeaders.getSetCookie() : []
+            log("debug", "Checking cookies for session token", { count: cookies.length })
+            for (const cookie of cookies) {
+              const match = cookie.match(/(?:^|;)\s*[a-zA-Z0-9._-]*session_token=([^;]+)/)
+              if (match) {
+                const token = match[1]
+                const joiner = location.includes("?") ? "&" : "?"
+                newHeaders.set("Location", location + joiner + "session_token=" + token)
+                log("info", "Appended session_token to redirect URL for cross-domain support", {
+                  location: location + joiner + "session_token=REDACTED"
+                })
+                break
+              }
+            }
+          }
+        }
+
+        const cors = corsHeaders(env, request)
         for (const [k, v] of Object.entries(cors)) {
           newHeaders.set(k, v)
         }
@@ -345,7 +446,7 @@ export default {
 
       } catch (err) {
         log("error", "Auth handler error", { error: err.message, path })
-        return json({ error: "Auth failed" }, 500, env)
+        return json({ error: "Auth failed" }, 500, env, request)
       }
     }
 
@@ -358,7 +459,7 @@ export default {
 
     if (!userId) {
       log("warn", "Unauthenticated request to protected route", { path })
-      return json({ error: "Unauthorized" }, 401, env)
+      return json({ error: "Unauthorized" }, 401, env, request)
     }
 
     log("info", "Authenticated user for protected route", { userId, path })
@@ -384,7 +485,7 @@ export default {
         count: results.length
       })
 
-      return json({ folders: results }, 200, env)
+      return json({ folders: results }, 200, env, request)
     }
 
     /*
@@ -412,7 +513,7 @@ export default {
         count: results.length
       })
 
-      return json({ files: results }, 200, env)
+      return json({ files: results }, 200, env, request)
     }
 
     /*
@@ -437,7 +538,7 @@ export default {
         count: results.length
       })
 
-      return json({ files: results }, 200, env)
+      return json({ files: results }, 200, env, request)
     }
 
     /*
@@ -452,7 +553,7 @@ export default {
       const filename = url.searchParams.get("filename")
 
       if (!folder || !filename) {
-        return json({ error: "Missing folder or filename" }, 400, env)
+        return json({ error: "Missing folder or filename" }, 400, env, request)
       }
 
       log("info", "Reading file by folder/filename", { folder, filename, userId })
@@ -466,7 +567,7 @@ export default {
 
       if (!file) {
         log("warn", "File not found in D1", { folder, filename, userId })
-        return json({ error: "File not found" }, 404, env)
+        return json({ error: "File not found" }, 404, env, request)
       }
 
       // Read from R2
@@ -476,7 +577,7 @@ export default {
         log("error", "File exists in D1 but missing from R2", {
           r2_key: file.r2_key
         })
-        return json({ error: "File content missing in R2" }, 404, env)
+        return json({ error: "File content missing in R2" }, 404, env, request)
       }
 
       const content = await obj.text()
@@ -491,7 +592,7 @@ export default {
       // Return raw text (frontend expects text/plain)
       const headers = {
         "Content-Type": "text/plain; charset=utf-8",
-        ...corsHeaders(env)
+        ...corsHeaders(env, request)
       }
 
       if (file.file_hash) {
@@ -512,7 +613,7 @@ export default {
       const fileId = path.split("/")[2]
 
       if (!fileId) {
-        return json({ error: "Missing file ID" }, 400, env)
+        return json({ error: "Missing file ID" }, 400, env, request)
       }
 
       log("info", "Reading file by ID", { fileId, userId })
@@ -520,7 +621,7 @@ export default {
       const check = await verifyFile(userId, fileId, env)
 
       if (check.error) {
-        return json({ error: check.error }, check.status, env)
+        return json({ error: check.error }, check.status, env, request)
       }
 
       const file = check.file
@@ -531,7 +632,7 @@ export default {
         log("error", "File exists in D1 but missing from R2", {
           r2_key: file.r2_key
         })
-        return json({ error: "File missing in R2" }, 404, env)
+        return json({ error: "File missing in R2" }, 404, env, request)
       }
 
       const content = await obj.text()
@@ -547,7 +648,7 @@ export default {
         filename: file.filename,
         project_id: file.project_id,
         content
-      }, 200, env)
+      }, 200, env, request)
     }
 
     /*
@@ -563,7 +664,7 @@ export default {
       const { folder, filename, content } = body
 
       if (!folder || !filename) {
-        return json({ error: "Missing folder or filename" }, 400, env)
+        return json({ error: "Missing folder or filename" }, 400, env, request)
       }
 
       log("info", "Saving file", { folder, filename, userId })
@@ -592,7 +693,7 @@ export default {
             file_id: existing.file_id,
             hash: newHash,
             skipped: true
-          }, 200, env)
+          }, 200, env, request)
         }
 
         // Update existing file
@@ -610,7 +711,7 @@ export default {
           file_id: existing.file_id,
           hash: newHash,
           skipped: false
-        }, 200, env)
+        }, 200, env, request)
 
       } else {
         // Create new file
@@ -640,7 +741,7 @@ export default {
           file_id: fileId,
           hash: newHash,
           skipped: false
-        }, 201, env)
+        }, 201, env, request)
       }
     }
 
@@ -657,7 +758,7 @@ export default {
       const { projectId, filename, content = "" } = body
 
       if (!projectId || !filename) {
-        return json({ error: "Missing projectId or filename" }, 400, env)
+        return json({ error: "Missing projectId or filename" }, 400, env, request)
       }
 
       log("info", "Creating file", { projectId, filename, userId })
@@ -670,7 +771,7 @@ export default {
         .first()
 
       if (existing) {
-        return json({ error: "File already exists", file_id: existing.file_id }, 409, env)
+        return json({ error: "File already exists", file_id: existing.file_id }, 409, env, request)
       }
 
       const fileId = crypto.randomUUID()
@@ -696,7 +797,7 @@ export default {
 
       log("info", "File created successfully", { file_id: fileId, r2Key })
 
-      return json({ file_id: fileId }, 201, env)
+      return json({ file_id: fileId }, 201, env, request)
     }
 
     /*
@@ -710,7 +811,7 @@ export default {
       const fileId = path.split("/")[2]
 
       if (!fileId) {
-        return json({ error: "Missing file ID" }, 400, env)
+        return json({ error: "Missing file ID" }, 400, env, request)
       }
 
       log("info", "Deleting file", { fileId, userId })
@@ -718,7 +819,7 @@ export default {
       const check = await verifyFile(userId, fileId, env)
 
       if (check.error) {
-        return json({ error: check.error }, check.status, env)
+        return json({ error: check.error }, check.status, env, request)
       }
 
       const file = check.file
@@ -742,7 +843,7 @@ export default {
 
       log("info", "File deleted", { fileId, filename: file.filename })
 
-      return json({ deleted: true }, 200, env)
+      return json({ deleted: true }, 200, env, request)
     }
 
     /*
@@ -756,7 +857,7 @@ export default {
       error: "Route not found",
       method,
       path
-    }, 404, env)
+    }, 404, env, request)
   }
 
 }
