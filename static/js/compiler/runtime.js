@@ -587,7 +587,8 @@ window.addEventListener('beforeunload', (event) => {
     // Always save to localStorage immediately (synchronous, reliable)
     try {
         localStorage.setItem('tc_code', code);
-        localStorage.setItem(`draft_${folder}_${filename}`, code);
+        const userId = sessionCache.user?.id || 'guest';
+        localStorage.setItem(`draft_${userId}_${folder}_${filename}`, code);
     } catch (e) {
         // localStorage might be full, ignore
     }

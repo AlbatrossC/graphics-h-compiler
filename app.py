@@ -411,4 +411,4 @@ def server_error(error):
     return jsonify({'error': 'Server error'}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
