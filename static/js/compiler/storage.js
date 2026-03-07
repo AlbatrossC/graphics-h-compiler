@@ -878,7 +878,7 @@ function updateSaveIndicator() {
 
         if (code === savedCode) {
             saveIndicator.classList.add('saved');
-            saveText.textContent = 'Saved locally';
+            saveText.textContent = 'Saved to browser';
         } else {
             saveIndicator.classList.remove('saved');
             saveText.textContent = 'Unsaved changes';
