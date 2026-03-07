@@ -165,6 +165,7 @@ if (fullscreenEditorBtn) {
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 const clarityDosMirror = document.getElementById('clarity-dos-mirror');
+const clarityDosMirrorLayer = document.getElementById('clarity-dos-mirror-layer');
 const CLARITY_MIRROR_INTERVAL_MS = 4000;
 let clarityMirrorTimer = null;
 let clarityMirrorRequestInFlight = false;
@@ -218,7 +219,7 @@ if (downloadTerminalBtn) {
 }
 
 function isClarityMirrorEnabled() {
-    return Boolean(clarityDosMirror && typeof window.clarity === 'function');
+    return Boolean((clarityDosMirror || clarityDosMirrorLayer) && typeof window.clarity === 'function');
 }
 
 function requestClarityMirrorFrame() {
@@ -261,6 +262,9 @@ function stopClarityMirrorCapture(clearFrame = false) {
     }
     if (clearFrame && clarityDosMirror) {
         clarityDosMirror.removeAttribute('src');
+    }
+    if (clearFrame && clarityDosMirrorLayer) {
+        clarityDosMirrorLayer.style.backgroundImage = 'none';
     }
 }
 
@@ -457,10 +461,15 @@ window.addEventListener('message', (event) => {
                 clearTimeout(clarityMirrorRequestTimeout);
                 clarityMirrorRequestTimeout = null;
             }
-            if (!clarityDosMirror) return;
+            if (!clarityDosMirror && !clarityDosMirrorLayer) return;
             if (data.error) return;
             if (data.dataUrl) {
-                clarityDosMirror.src = data.dataUrl;
+                if (clarityDosMirror) {
+                    clarityDosMirror.src = data.dataUrl;
+                }
+                if (clarityDosMirrorLayer) {
+                    clarityDosMirrorLayer.style.backgroundImage = `url("${data.dataUrl}")`;
+                }
             }
             return;
         }
