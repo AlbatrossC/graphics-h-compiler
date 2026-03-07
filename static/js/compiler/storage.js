@@ -651,6 +651,29 @@ async function openFile(folder, filename, options = {}) {
 
                 if (response.ok) {
                     const content = await response.text();
+                    const currentEditorContent = editor ? editor.getValue() : '';
+                    const shouldPreserveCurrentEditor = Boolean(
+                        options.preserveIfCloudEmpty &&
+                        typeof currentEditorContent === 'string' &&
+                        currentEditorContent.trim().length > 0 &&
+                        typeof content === 'string' &&
+                        content.trim().length === 0
+                    );
+
+                    if (shouldPreserveCurrentEditor) {
+                        const preservedHash = await computeSha256(currentEditorContent);
+                        setLocalDraftImmediate(folder, filename, currentEditorContent);
+                        setCachedFileContent(folder, filename, currentEditorContent, preservedHash);
+                        SAVE_STATE.cloudHash = null;
+                        DIRTY_FLAG.isDirty = true;
+                        updateSaveIndicator();
+                        highlightActiveFile();
+                        scheduleAutosave();
+                        Logger.warn(`[OpenFile] Preserved local editor content for ${filename} because cloud content was empty`);
+                        hideProgress();
+                        return;
+                    }
+
                     // Trust backend hash from ETag if available
                     const etag = response.headers.get('ETag');
                     const hash = etag || (await computeSha256(content));
@@ -913,7 +936,7 @@ async function initSupabaseAuth() {
                         refreshCloudFiles(true).then(() => {
                             const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
                             const [folder, filename] = activeKey.split('/');
-                            return openFile(folder, filename, { skipSave: true });
+                            return openFile(folder, filename, { skipSave: true, preserveIfCloudEmpty: true });
                         });
                     }
                 } else if (event === 'TOKEN_REFRESHED') {

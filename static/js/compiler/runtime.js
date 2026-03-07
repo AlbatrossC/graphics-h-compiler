@@ -153,6 +153,13 @@ function toggleEditorFullscreen(forceState) {
     }, 100);
 }
 
+const fullscreenEditorBtn = document.getElementById('fullscreen-editor-btn');
+if (fullscreenEditorBtn) {
+    fullscreenEditorBtn.addEventListener('click', () => {
+        toggleEditorFullscreen();
+    });
+}
+
 
 
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
@@ -172,7 +179,6 @@ if (fullscreenTerminalBtn) {
             updateTerminalZoom(0);
             if (terminalZoomControls) {
                 terminalZoomControls.classList.remove('hidden');
-                terminalZoomControls.style.display = 'flex';
             }
         } else {
             terminalWrapper.classList.remove('fullscreen');
@@ -181,7 +187,6 @@ if (fullscreenTerminalBtn) {
             if (svgIcon) svgIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
             if (terminalZoomControls) {
                 terminalZoomControls.classList.add('hidden');
-                terminalZoomControls.style.display = 'none';
             }
             resetTerminalZoom();
         }
@@ -229,6 +234,7 @@ function resetTerminalZoom() {
     const iframe = document.getElementById('dos-iframe');
     if (iframe) {
         iframe.style.transform = 'scale(1)';
+        iframe.style.transformOrigin = 'center center';
     }
 }
 

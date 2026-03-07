@@ -441,7 +441,16 @@ header {
 
 .panel-actions {
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.panel-inline-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 /* Panel Action Buttons */
@@ -452,8 +461,8 @@ header {
     gap: 5px;
     padding: 0 10px;
     height: 32px;
-    background: var(--vscode-line-bg);
-    border: 1px solid var(--border-color);
+    background: transparent;
+    border: 1px solid transparent;
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -500,6 +509,12 @@ header {
     padding: 0;
 }
 
+.resize-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .font-size-display {
     padding: 0 8px;
     font-size: 0.75rem;
@@ -524,6 +539,23 @@ header {
     /* Match container height */
     border: none;
     background: transparent;
+}
+
+.text-action-btn {
+    padding: 0 10px;
+    border-color: var(--border-color);
+    background: var(--vscode-line-bg);
+}
+
+@media (min-width: 769px) {
+    .text-action-btn svg {
+        display: none;
+    }
+}
+
+#terminal-wrapper .panel-title {
+    text-transform: none;
+    letter-spacing: 0.02em;
 }
 
 .font-controls .panel-action-btn:hover {
@@ -748,7 +780,7 @@ header {
     height: 100%;
     max-width: none;
     max-height: none;
-    transform: scale(1.2) !important;
+    transform-origin: center center;
 }
 
 /* Keyboard Blocker - Toast Mode */
@@ -1815,7 +1847,7 @@ header {
     transition: all var(--transition-fast);
     white-space: nowrap;
     position: relative;
-    min-width: 110px;
+    min-width: max-content;
 }
 
 .file-tab:hover {
@@ -1847,8 +1879,8 @@ header {
 .file-tab-name {
     font-family: "JetBrains Mono", monospace;
     letter-spacing: -0.02em;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .file-tab-close {
@@ -2734,6 +2766,10 @@ header {
     }
 
     .panel-action-btn span {
+        display: none;
+    }
+
+    .panel-inline-label {
         display: none;
     }
 
