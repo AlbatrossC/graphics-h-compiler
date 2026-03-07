@@ -749,7 +749,7 @@ header {
 #dos-iframe {
     width: 100%;
     height: 100%;
-    background: #000;
+    background: transparent;
     cursor: pointer;
     display: block;
     border: 0;
@@ -757,7 +757,8 @@ header {
     min-width: 0;
     min-height: 0;
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    outline: none;
 }
 
 .terminal-canvas-wrap {
@@ -777,20 +778,21 @@ header {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    opacity: 0.008;
+    opacity: 1;
     pointer-events: none;
-    z-index: 2;
+    z-index: 1;
+    border: none;
+    outline: none;
+    color: transparent;
+}
+
+.clarity-dos-mirror:not([src]),
+.clarity-dos-mirror[src=""] {
+    opacity: 0;
 }
 
 .clarity-dos-mirror-layer {
-    position: absolute;
-    inset: 0;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    opacity: 0.008;
-    pointer-events: none;
-    z-index: 3;
+    display: none;
 }
 
 #terminal-wrapper.fullscreen #dos-iframe {
