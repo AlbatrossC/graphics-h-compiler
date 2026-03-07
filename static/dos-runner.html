@@ -464,7 +464,12 @@
                 if (data.type === 'TAKE_SCREENSHOT') {
                     try {
                         const dataUrl = canvas.toDataURL('image/png');
-                        post({ type: 'SCREENSHOT_DATA', dataUrl: dataUrl });
+                        post({
+                            type: 'SCREENSHOT_DATA',
+                            dataUrl: dataUrl,
+                            purpose: data.purpose || 'download',
+                            requestId: data.requestId || null
+                        });
                     } catch (e) {
                         console.error('Failed to capture screenshot', e);
                     }

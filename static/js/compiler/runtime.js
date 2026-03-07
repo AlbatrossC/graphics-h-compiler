@@ -164,6 +164,12 @@ if (fullscreenEditorBtn) {
 
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
+const clarityDosMirror = document.getElementById('clarity-dos-mirror');
+const CLARITY_MIRROR_INTERVAL_MS = 4000;
+let clarityMirrorTimer = null;
+let clarityMirrorRequestInFlight = false;
+let clarityMirrorSeq = 0;
+let isDosSessionRunning = false;
 
 const fullscreenTerminalBtn = document.getElementById('fullscreen-terminal-btn');
 if (fullscreenTerminalBtn) {
@@ -205,9 +211,45 @@ if (downloadTerminalBtn) {
     downloadTerminalBtn.addEventListener('click', () => {
         const iframe = document.getElementById('dos-iframe');
         if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage({ type: 'TAKE_SCREENSHOT' }, '*');
+            iframe.contentWindow.postMessage({ type: 'TAKE_SCREENSHOT', purpose: 'download' }, '*');
         }
     });
+}
+
+function isClarityMirrorEnabled() {
+    return Boolean(clarityDosMirror && typeof window.clarity === 'function');
+}
+
+function requestClarityMirrorFrame() {
+    if (!isClarityMirrorEnabled() || document.hidden || clarityMirrorRequestInFlight) return;
+
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe || !iframe.contentWindow) return;
+
+    clarityMirrorRequestInFlight = true;
+    clarityMirrorSeq += 1;
+    iframe.contentWindow.postMessage({
+        type: 'TAKE_SCREENSHOT',
+        purpose: 'clarity',
+        requestId: `clarity_${clarityMirrorSeq}`
+    }, '*');
+}
+
+function startClarityMirrorCapture() {
+    if (!isClarityMirrorEnabled() || clarityMirrorTimer || !isDosSessionRunning) return;
+    requestClarityMirrorFrame();
+    clarityMirrorTimer = setInterval(requestClarityMirrorFrame, CLARITY_MIRROR_INTERVAL_MS);
+}
+
+function stopClarityMirrorCapture(clearFrame = false) {
+    if (clarityMirrorTimer) {
+        clearInterval(clarityMirrorTimer);
+        clarityMirrorTimer = null;
+    }
+    clarityMirrorRequestInFlight = false;
+    if (clearFrame && clarityDosMirror) {
+        clarityDosMirror.removeAttribute('src');
+    }
 }
 
 let currentTerminalZoom = 1.0;
@@ -330,6 +372,7 @@ window.addEventListener('message', (event) => {
             loadingText.textContent = 'Writing source code...';
             updateLoadingProgress(80);
         } else if (data.status === 'RUNNING') {
+            isDosSessionRunning = true;
             loadingText.textContent = 'Starting program...';
             updateLoadingProgress(100);
             loading.classList.remove('active');
@@ -347,14 +390,17 @@ window.addEventListener('message', (event) => {
             }
 
             setTimeout(focusTerminal, 500);
+            startClarityMirrorCapture();
             Logger.success('Program started successfully');
         }
     } else if (data.type === 'COMPILATION_ERROR') {
+        isDosSessionRunning = false;
         Logger.info('[Error Panel] Received COMPILATION_ERROR from iframe');
 
         if (downloadTerminalBtn) {
             downloadTerminalBtn.classList.add('hidden');
         }
+        stopClarityMirrorCapture();
 
         Logger.info('[Error Panel] Content: ' + (data.content || '').substring(0, 200));
         outputContent.textContent = data.content || '';
@@ -379,8 +425,10 @@ window.addEventListener('message', (event) => {
             focusEditor();
         }
     } else if (data.type === 'ERROR') {
+        isDosSessionRunning = false;
         const message = data.message || 'Unknown DOS error';
         Logger.error('DOS Error', message);
+        stopClarityMirrorCapture();
         alert('DOS Error: ' + message);
         loading.classList.remove('active');
         runBtn.disabled = false;
@@ -391,6 +439,14 @@ window.addEventListener('message', (event) => {
             currentTcZipObjectUrl = null;
         }
     } else if (data.type === 'SCREENSHOT_DATA') {
+        if (data.purpose === 'clarity') {
+            clarityMirrorRequestInFlight = false;
+            if (clarityDosMirror && data.dataUrl) {
+                clarityDosMirror.src = data.dataUrl;
+            }
+            return;
+        }
+
         const link = document.createElement('a');
         link.href = data.dataUrl;
 
@@ -479,6 +535,8 @@ async function runProgram() {
     }
     lastErrorContent = '';
     outputContent.textContent = '';
+    isDosSessionRunning = false;
+    stopClarityMirrorCapture(true);
 
     try {
         updateLoadingProgress(20);
@@ -538,6 +596,7 @@ PAUSE
         }, '*');
 
     } catch (error) {
+        stopClarityMirrorCapture();
         Logger.error('Failed to start DOS environment', error);
 
         if (error.message && (error.message.includes('Compiler URL') || error.message.includes('Failed to download compiler') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
@@ -577,6 +636,12 @@ window.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopClarityMirrorCapture();
+    } else {
+        startClarityMirrorCapture();
+    }
+
     if (document.hidden && isUserLoggedIn) {
         forceSaveActiveFile('exit').catch(() => { });
     }
