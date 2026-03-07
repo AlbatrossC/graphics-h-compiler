@@ -170,6 +170,8 @@ let clarityMirrorTimer = null;
 let clarityMirrorRequestInFlight = false;
 let clarityMirrorSeq = 0;
 let isDosSessionRunning = false;
+let clarityMirrorObjectUrl = null;
+let clarityMirrorRequestTimeout = null;
 
 const fullscreenTerminalBtn = document.getElementById('fullscreen-terminal-btn');
 if (fullscreenTerminalBtn) {
@@ -227,6 +229,13 @@ function requestClarityMirrorFrame() {
     if (!iframe || !iframe.contentWindow) return;
 
     clarityMirrorRequestInFlight = true;
+    if (clarityMirrorRequestTimeout) {
+        clearTimeout(clarityMirrorRequestTimeout);
+    }
+    clarityMirrorRequestTimeout = setTimeout(() => {
+        clarityMirrorRequestInFlight = false;
+        clarityMirrorRequestTimeout = null;
+    }, 2500);
     clarityMirrorSeq += 1;
     iframe.contentWindow.postMessage({
         type: 'TAKE_SCREENSHOT',
@@ -247,8 +256,16 @@ function stopClarityMirrorCapture(clearFrame = false) {
         clarityMirrorTimer = null;
     }
     clarityMirrorRequestInFlight = false;
+    if (clarityMirrorRequestTimeout) {
+        clearTimeout(clarityMirrorRequestTimeout);
+        clarityMirrorRequestTimeout = null;
+    }
     if (clearFrame && clarityDosMirror) {
         clarityDosMirror.removeAttribute('src');
+    }
+    if (clarityMirrorObjectUrl) {
+        URL.revokeObjectURL(clarityMirrorObjectUrl);
+        clarityMirrorObjectUrl = null;
     }
 }
 
@@ -441,14 +458,43 @@ window.addEventListener('message', (event) => {
     } else if (data.type === 'SCREENSHOT_DATA') {
         if (data.purpose === 'clarity') {
             clarityMirrorRequestInFlight = false;
-            if (clarityDosMirror && data.dataUrl) {
+            if (clarityMirrorRequestTimeout) {
+                clearTimeout(clarityMirrorRequestTimeout);
+                clarityMirrorRequestTimeout = null;
+            }
+            if (!clarityDosMirror) return;
+            if (data.error) return;
+
+            if (data.blob instanceof Blob) {
+                const nextObjectUrl = URL.createObjectURL(data.blob);
+                const previousObjectUrl = clarityMirrorObjectUrl;
+                clarityMirrorObjectUrl = nextObjectUrl;
+                clarityDosMirror.src = nextObjectUrl;
+                if (previousObjectUrl) {
+                    URL.revokeObjectURL(previousObjectUrl);
+                }
+            } else if (data.dataUrl) {
+                if (clarityMirrorObjectUrl) {
+                    URL.revokeObjectURL(clarityMirrorObjectUrl);
+                    clarityMirrorObjectUrl = null;
+                }
                 clarityDosMirror.src = data.dataUrl;
             }
             return;
         }
 
+        if (data.error) return;
+
+        let downloadUrl = null;
+        if (data.blob instanceof Blob) {
+            downloadUrl = URL.createObjectURL(data.blob);
+        } else if (data.dataUrl) {
+            downloadUrl = data.dataUrl;
+        }
+        if (!downloadUrl) return;
+
         const link = document.createElement('a');
-        link.href = data.dataUrl;
+        link.href = downloadUrl;
 
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -461,6 +507,9 @@ window.addEventListener('message', (event) => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        if (data.blob instanceof Blob) {
+            setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+        }
     }
 });
 

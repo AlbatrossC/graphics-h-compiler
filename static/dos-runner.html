@@ -462,16 +462,36 @@
                 }
 
                 if (data.type === 'TAKE_SCREENSHOT') {
+                    const purpose = data.purpose || 'download';
+                    const requestId = data.requestId || null;
+
                     try {
-                        const dataUrl = canvas.toDataURL('image/png');
-                        post({
-                            type: 'SCREENSHOT_DATA',
-                            dataUrl: dataUrl,
-                            purpose: data.purpose || 'download',
-                            requestId: data.requestId || null
-                        });
+                        if (typeof canvas.toBlob === 'function') {
+                            canvas.toBlob((blob) => {
+                                if (!blob) {
+                                    try {
+                                        const dataUrl = canvas.toDataURL('image/png');
+                                        post({ type: 'SCREENSHOT_DATA', dataUrl, purpose, requestId });
+                                    } catch (fallbackErr) {
+                                        post({ type: 'SCREENSHOT_DATA', error: 'capture_failed', purpose, requestId });
+                                    }
+                                    return;
+                                }
+
+                                post({
+                                    type: 'SCREENSHOT_DATA',
+                                    blob: blob,
+                                    mimeType: blob.type || 'image/png',
+                                    purpose: purpose,
+                                    requestId: requestId
+                                });
+                            }, 'image/png');
+                        } else {
+                            const dataUrl = canvas.toDataURL('image/png');
+                            post({ type: 'SCREENSHOT_DATA', dataUrl, purpose, requestId });
+                        }
                     } catch (e) {
-                        console.error('Failed to capture screenshot', e);
+                        post({ type: 'SCREENSHOT_DATA', error: 'capture_failed', purpose, requestId });
                     }
                 }
             });
