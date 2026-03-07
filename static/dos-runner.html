@@ -467,26 +467,6 @@
                     const requestId = data.requestId || null;
 
                     try {
-                        if (purpose === 'clarity') {
-                            const sourceW = canvas.width || 1;
-                            const sourceH = canvas.height || 1;
-                            const targetW = Math.min(640, sourceW);
-                            const targetH = Math.max(1, Math.round((sourceH * targetW) / sourceW));
-                            const mirrorCanvas = document.createElement('canvas');
-                            mirrorCanvas.width = targetW;
-                            mirrorCanvas.height = targetH;
-                            const mirrorCtx = mirrorCanvas.getContext('2d', { alpha: false });
-                            if (!mirrorCtx) {
-                                post({ type: 'SCREENSHOT_DATA', error: 'capture_failed', purpose, requestId });
-                                return;
-                            }
-
-                            mirrorCtx.drawImage(canvas, 0, 0, targetW, targetH);
-                            const dataUrl = mirrorCanvas.toDataURL('image/jpeg', 0.55);
-                            post({ type: 'SCREENSHOT_DATA', dataUrl, purpose, requestId });
-                            return;
-                        }
-
                         if (typeof canvas.toBlob === 'function') {
                             canvas.toBlob((blob) => {
                                 if (!blob) {

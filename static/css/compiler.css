@@ -772,28 +772,6 @@ header {
     overflow: hidden;
 }
 
-.clarity-dos-mirror {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    opacity: 1;
-    pointer-events: none;
-    z-index: 1;
-    border: none;
-    outline: none;
-    color: transparent;
-}
-
-.clarity-dos-mirror:not([src]),
-.clarity-dos-mirror[src=""] {
-    opacity: 0;
-}
-
-.clarity-dos-mirror-layer {
-    display: none;
-}
 
 #terminal-wrapper.fullscreen #dos-iframe {
     width: 100%;

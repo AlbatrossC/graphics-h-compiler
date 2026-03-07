@@ -497,7 +497,8 @@
             </svg>
             <span>Fullscreen</span>
           </button>
-          <button id="download-terminal-btn" class="panel-action-btn text-action-btn hidden" title="Download Screenshot">
+          <button id="download-terminal-btn" class="panel-action-btn text-action-btn hidden"
+            title="Download Screenshot">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
             </svg>
@@ -533,8 +534,6 @@
       <div class="terminal-canvas-wrap">
         <iframe id="dos-iframe" src="{{ url_for('static', filename='dos-runner.html') }}" title="DOS Terminal"
           sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
-        <img id="clarity-dos-mirror" class="clarity-dos-mirror" alt="" data-clarity-unmask="true" />
-        <div id="clarity-dos-mirror-layer" class="clarity-dos-mirror-layer" data-clarity-unmask="true"></div>
       </div>
 
       <div id="output-panel">

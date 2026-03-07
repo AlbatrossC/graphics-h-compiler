@@ -164,14 +164,7 @@ if (fullscreenEditorBtn) {
 
 const downloadTerminalBtn = document.getElementById('download-terminal-btn');
 const terminalZoomControls = document.getElementById('terminal-zoom-controls');
-const clarityDosMirror = document.getElementById('clarity-dos-mirror');
-const clarityDosMirrorLayer = document.getElementById('clarity-dos-mirror-layer');
-const CLARITY_MIRROR_INTERVAL_MS = 4000;
-let clarityMirrorTimer = null;
-let clarityMirrorRequestInFlight = false;
-let clarityMirrorSeq = 0;
 let isDosSessionRunning = false;
-let clarityMirrorRequestTimeout = null;
 
 const fullscreenTerminalBtn = document.getElementById('fullscreen-terminal-btn');
 if (fullscreenTerminalBtn) {
@@ -216,56 +209,6 @@ if (downloadTerminalBtn) {
             iframe.contentWindow.postMessage({ type: 'TAKE_SCREENSHOT', purpose: 'download' }, '*');
         }
     });
-}
-
-function isClarityMirrorEnabled() {
-    return Boolean((clarityDosMirror || clarityDosMirrorLayer) && typeof window.clarity === 'function');
-}
-
-function requestClarityMirrorFrame() {
-    if (!isClarityMirrorEnabled() || document.hidden || clarityMirrorRequestInFlight) return;
-
-    const iframe = document.getElementById('dos-iframe');
-    if (!iframe || !iframe.contentWindow) return;
-
-    clarityMirrorRequestInFlight = true;
-    if (clarityMirrorRequestTimeout) {
-        clearTimeout(clarityMirrorRequestTimeout);
-    }
-    clarityMirrorRequestTimeout = setTimeout(() => {
-        clarityMirrorRequestInFlight = false;
-        clarityMirrorRequestTimeout = null;
-    }, 2500);
-    clarityMirrorSeq += 1;
-    iframe.contentWindow.postMessage({
-        type: 'TAKE_SCREENSHOT',
-        purpose: 'clarity',
-        requestId: `clarity_${clarityMirrorSeq}`
-    }, '*');
-}
-
-function startClarityMirrorCapture() {
-    if (!isClarityMirrorEnabled() || clarityMirrorTimer || !isDosSessionRunning) return;
-    requestClarityMirrorFrame();
-    clarityMirrorTimer = setInterval(requestClarityMirrorFrame, CLARITY_MIRROR_INTERVAL_MS);
-}
-
-function stopClarityMirrorCapture(clearFrame = false) {
-    if (clarityMirrorTimer) {
-        clearInterval(clarityMirrorTimer);
-        clarityMirrorTimer = null;
-    }
-    clarityMirrorRequestInFlight = false;
-    if (clarityMirrorRequestTimeout) {
-        clearTimeout(clarityMirrorRequestTimeout);
-        clarityMirrorRequestTimeout = null;
-    }
-    if (clearFrame && clarityDosMirror) {
-        clarityDosMirror.removeAttribute('src');
-    }
-    if (clearFrame && clarityDosMirrorLayer) {
-        clarityDosMirrorLayer.style.backgroundImage = 'none';
-    }
 }
 
 let currentTerminalZoom = 1.0;
@@ -406,7 +349,6 @@ window.addEventListener('message', (event) => {
             }
 
             setTimeout(focusTerminal, 500);
-            startClarityMirrorCapture();
             Logger.success('Program started successfully');
         }
     } else if (data.type === 'COMPILATION_ERROR') {
@@ -416,7 +358,6 @@ window.addEventListener('message', (event) => {
         if (downloadTerminalBtn) {
             downloadTerminalBtn.classList.add('hidden');
         }
-        stopClarityMirrorCapture();
 
         Logger.info('[Error Panel] Content: ' + (data.content || '').substring(0, 200));
         outputContent.textContent = data.content || '';
@@ -444,7 +385,6 @@ window.addEventListener('message', (event) => {
         isDosSessionRunning = false;
         const message = data.message || 'Unknown DOS error';
         Logger.error('DOS Error', message);
-        stopClarityMirrorCapture();
         alert('DOS Error: ' + message);
         loading.classList.remove('active');
         runBtn.disabled = false;
@@ -455,25 +395,6 @@ window.addEventListener('message', (event) => {
             currentTcZipObjectUrl = null;
         }
     } else if (data.type === 'SCREENSHOT_DATA') {
-        if (data.purpose === 'clarity') {
-            clarityMirrorRequestInFlight = false;
-            if (clarityMirrorRequestTimeout) {
-                clearTimeout(clarityMirrorRequestTimeout);
-                clarityMirrorRequestTimeout = null;
-            }
-            if (!clarityDosMirror && !clarityDosMirrorLayer) return;
-            if (data.error) return;
-            if (data.dataUrl) {
-                if (clarityDosMirror) {
-                    clarityDosMirror.src = data.dataUrl;
-                }
-                if (clarityDosMirrorLayer) {
-                    clarityDosMirrorLayer.style.backgroundImage = `url("${data.dataUrl}")`;
-                }
-            }
-            return;
-        }
-
         if (data.error) return;
 
         let downloadUrl = null;
@@ -576,7 +497,6 @@ async function runProgram() {
     lastErrorContent = '';
     outputContent.textContent = '';
     isDosSessionRunning = false;
-    stopClarityMirrorCapture(true);
 
     try {
         updateLoadingProgress(20);
@@ -636,7 +556,6 @@ PAUSE
         }, '*');
 
     } catch (error) {
-        stopClarityMirrorCapture();
         Logger.error('Failed to start DOS environment', error);
 
         if (error.message && (error.message.includes('Compiler URL') || error.message.includes('Failed to download compiler') || error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
@@ -676,17 +595,10 @@ window.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        stopClarityMirrorCapture();
-    } else {
-        startClarityMirrorCapture();
-    }
-
     if (document.hidden && isUserLoggedIn) {
         forceSaveActiveFile('exit').catch(() => { });
     }
 });
-
 // Graceful tab close handler with fetch keepalive for guaranteed delivery
 window.addEventListener('beforeunload', (event) => {
     if (!isUserLoggedIn || !editor) return;
