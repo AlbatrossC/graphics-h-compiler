@@ -91,7 +91,7 @@
           <span class="btn-text btn-text-desktop" style="display: none">Menu</span>
           <span class="btn-text btn-text-mobile" style="display: none"></span>
         </button>
-        <button id="back-btn" class="btn btn-home" onclick="window.location.href = 'index.html'">
+        <button id="back-btn" class="btn btn-home" onclick="window.location.href = '/'">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
@@ -539,7 +539,7 @@
       <div id="output-panel">
         <div class="output-header">
           <div class="output-title">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 16px; height: 16px; color: var(--danger)">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="output-error-icon">
               <path
                 d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
             </svg>
@@ -558,15 +558,8 @@
                 <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
               </svg>
             </button>
-            <button id="close-output-btn" class="icon-btn" style="
-                  height: 30px;
-                  width: 30px;
-                  min-height: unset;
-                  border: 1px solid var(--border-color);
-                  background: transparent;
-                  border-radius: 8px;
-                ">
-              <svg viewBox="0 0 24 24" fill="currentColor" style="width: 14px; height: 14px">
+            <button id="close-output-btn" class="icon-btn close-output-btn">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="close-output-icon">
                 <path
                   d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
               </svg>

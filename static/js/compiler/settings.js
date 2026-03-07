@@ -158,6 +158,10 @@
         }
     }
 
+    function updateEditorThemeDom(editorTheme) {
+        document.documentElement.setAttribute('data-editor-theme', editorTheme || 'vscode-dark');
+    }
+
     async function applyEditorTheme(themeName, save = true) {
         if (!cmView || !themeCompartment) return;
 
@@ -167,20 +171,18 @@
             const resolvedTheme = themeName || themeEngine.THEME_VSCODE_DARK;
             themeEngine.applyTheme(cmView, themeCompartment, resolvedTheme);
 
-            const nextUiTheme = resolvedTheme === themeEngine.THEME_VSCODE_LIGHT
-                ? UI_THEME_LIGHT
-                : UI_THEME_DARK;
-
             currentSettings = {
                 ...currentSettings,
-                uiTheme: nextUiTheme,
                 editor: {
                     ...currentSettings.editor,
                     theme: resolvedTheme
                 }
             };
 
-            updateUiThemeDom(nextUiTheme);
+            // Keep UI theme independent from editor theme selection.
+            // This allows light UI with any editor theme (not only vscode-light).
+            updateUiThemeDom(currentSettings.uiTheme);
+            updateEditorThemeDom(resolvedTheme);
 
             if (save) persistSettings();
         } catch (error) {

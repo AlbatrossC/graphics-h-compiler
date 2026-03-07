@@ -199,6 +199,8 @@
             let errorPollTimer = null;
             let errorPollDelayTimer = null;
             let startupTimeoutTimer = null;
+            let progressPulseTimer = null;
+            let currentProgress = 0;
             let lastErrorContent = '';
             let compileErrorSent = false;
 
@@ -221,8 +223,33 @@
                     clearTimeout(startupTimeoutTimer);
                     startupTimeoutTimer = null;
                 }
+                if (progressPulseTimer) {
+                    clearInterval(progressPulseTimer);
+                    progressPulseTimer = null;
+                }
+                currentProgress = 0;
                 lastErrorContent = '';
                 compileErrorSent = false;
+            }
+
+            function postProgress(percent) {
+                const value = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+                currentProgress = Math.max(currentProgress, value);
+                post({ type: 'PROGRESS', percent: currentProgress });
+            }
+
+            function pulseProgress(target, step = 1, interval = 200) {
+                if (progressPulseTimer) {
+                    clearInterval(progressPulseTimer);
+                }
+                progressPulseTimer = setInterval(() => {
+                    if (currentProgress >= target) {
+                        clearInterval(progressPulseTimer);
+                        progressPulseTimer = null;
+                        return;
+                    }
+                    postProgress(currentProgress + step);
+                }, interval);
             }
 
             async function stopDos() {
@@ -388,6 +415,8 @@
                 }, 60000);
 
                 post({ type: 'STATUS', status: 'STARTING' });
+                postProgress(10);
+                pulseProgress(35, 1, 220);
 
                 const runner = Dos(canvas, {
                     wdosboxUrl: payload.wdosboxUrl,
@@ -396,10 +425,14 @@
                 });
 
                 await runner.ready(async (fs, main) => {
+                    postProgress(40);
                     post({ type: 'STATUS', status: 'EXTRACTING' });
+                    pulseProgress(75, 1, 250);
                     await fs.extract(payload.zipUrl);
 
+                    postProgress(80);
                     post({ type: 'STATUS', status: 'WRITING_CODE' });
+                    pulseProgress(92, 1, 220);
 
                     // Write source files — if this fails, report immediately
                     // rather than letting DOSBox silently compile an empty file
@@ -415,6 +448,7 @@
                     }
 
                     dosInstance = await main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT']);
+                    postProgress(98);
 
                     // Clear startup timeout — DOS is now running
                     if (startupTimeoutTimer) {
@@ -424,6 +458,7 @@
 
                     startErrorPolling();
                     post({ type: 'STATUS', status: 'RUNNING' });
+                    postProgress(100);
                 });
             }
 

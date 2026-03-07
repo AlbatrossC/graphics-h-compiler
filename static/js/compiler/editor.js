@@ -91,8 +91,9 @@ async function loadAllScripts() {
 }
 
 function updateLoadingProgress(percent) {
+    const normalized = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
     if (loadingProgressBar) {
-        loadingProgressBar.style.width = `${percent}%`;
+        loadingProgressBar.style.width = `${normalized}%`;
     }
 }
 
@@ -342,6 +343,7 @@ async function initializeEditor() {
     const initialFontSize = Math.max(10, Math.min(32, Number.parseInt(initialEditorSettings.fontSize, 10) || defaultEditorSettings.fontSize));
     const themeEngine = cmModules.themeEngine;
     const initialThemeName = initialEditorSettings.theme || THEME_VSCODE_DARK;
+    document.documentElement.setAttribute('data-editor-theme', initialThemeName);
 
     // Create compartments for dynamic reconfiguration
     themeCompartment = new Compartment();

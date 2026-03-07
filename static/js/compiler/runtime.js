@@ -351,6 +351,8 @@ window.addEventListener('message', (event) => {
             setTimeout(focusTerminal, 500);
             Logger.success('Program started successfully');
         }
+    } else if (data.type === 'PROGRESS') {
+        updateLoadingProgress(data.percent);
     } else if (data.type === 'COMPILATION_ERROR') {
         isDosSessionRunning = false;
         Logger.info('[Error Panel] Received COMPILATION_ERROR from iframe');

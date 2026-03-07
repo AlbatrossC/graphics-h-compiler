@@ -40,27 +40,27 @@
 
 /* Light Theme */
 [data-theme="light"] {
-    --vscode-bg: #fafafa;
-    --vscode-sidebar: #f5f5f5;
+    --vscode-bg: #eef2f7;
+    --vscode-sidebar: #f8fafc;
     --vscode-editor: #ffffff;
-    --vscode-line-bg: #f0f0f0;
-    --vscode-border: #e0e0e0;
+    --vscode-line-bg: #edf3fa;
+    --vscode-border: #d6deea;
 
-    --primary: #00cc6a;
-    --primary-hover: #00b35c;
-    --success: #00cc6a;
-    --success-hover: #00b35c;
+    --primary: #00a85a;
+    --primary-hover: #008f4c;
+    --success: #00a85a;
+    --success-hover: #008f4c;
     --danger: #dc2626;
     --warning: #ca8a04;
-    --accent: #00cc6a;
-    --accent-dark: #00b35c;
+    --accent: #00a85a;
+    --accent-dark: #008f4c;
 
-    --text-primary: #0a0a0a;
-    --text-secondary: #606060;
-    --text-muted: #808080;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
 
-    --border-color: rgba(0, 0, 0, 0.12);
-    --shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --border-color: rgba(15, 23, 42, 0.13);
+    --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 /* Base Styles */
@@ -94,7 +94,52 @@ header {
 }
 
 [data-theme="light"] header {
-    background: rgba(245, 245, 245, 0.85);
+    background: rgba(255, 255, 255, 0.9);
+    border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] #workspace {
+    background: linear-gradient(180deg, #f4f7fb 0%, #eef3f9 100%);
+}
+
+[data-theme="light"] #editor-wrapper,
+[data-theme="light"] #terminal-wrapper {
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .panel-header,
+[data-theme="light"] .editor-footer,
+[data-theme="light"] .activity-bar,
+[data-theme="light"] #sidebar,
+[data-theme="light"] .files-header,
+[data-theme="light"] .file-tab,
+[data-theme="light"] .output-header {
+    background: #f7fafd;
+}
+
+[data-theme="light"] .file-tab.active {
+    background: #ffffff;
+}
+
+[data-theme="light"] .header-right .icon-btn,
+[data-theme="light"] .header-right .theme-toggle {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .header-right .icon-btn:hover,
+[data-theme="light"] .header-right .theme-toggle:hover {
+    background: rgba(0, 168, 90, 0.1);
+    border-color: rgba(0, 168, 90, 0.35);
+    color: #067647;
+}
+
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-home,
+[data-theme="light"] .btn-success,
+[data-theme="light"] .editor-mode {
+    color: #ffffff;
 }
 
 .header-content {
@@ -734,6 +779,51 @@ header {
     background: rgba(0, 204, 106, 0.15);
 }
 
+/* Force dark editor surfaces for dark editor themes even when UI chrome is light */
+[data-editor-theme="monokai"] .cm-editor,
+[data-editor-theme="monokai"] .cm-editor .cm-scroller {
+    background: #272822 !important;
+    color: #f8f8f2 !important;
+}
+
+[data-editor-theme="monokai"] .cm-editor .cm-gutters {
+    background: #272822 !important;
+    color: #a7a79b !important;
+    border-right: 1px solid #3e3d32 !important;
+}
+
+[data-editor-theme="monokai"] .cm-editor .cm-activeLine,
+[data-editor-theme="monokai"] .cm-editor .cm-activeLineGutter {
+    background: #313228 !important;
+}
+
+[data-editor-theme="monokai"] .cm-editor .cm-selectionBackground,
+[data-editor-theme="monokai"] .cm-editor.cm-focused .cm-selectionBackground {
+    background: rgba(97, 97, 82, 0.65) !important;
+}
+
+[data-editor-theme="github-dark"] .cm-editor,
+[data-editor-theme="github-dark"] .cm-editor .cm-scroller {
+    background: #0d1117 !important;
+    color: #e6edf3 !important;
+}
+
+[data-editor-theme="github-dark"] .cm-editor .cm-gutters {
+    background: #0d1117 !important;
+    color: #8b949e !important;
+    border-right: 1px solid #21262d !important;
+}
+
+[data-editor-theme="github-dark"] .cm-editor .cm-activeLine,
+[data-editor-theme="github-dark"] .cm-editor .cm-activeLineGutter {
+    background: #161b22 !important;
+}
+
+[data-editor-theme="github-dark"] .cm-editor .cm-selectionBackground,
+[data-editor-theme="github-dark"] .cm-editor.cm-focused .cm-selectionBackground {
+    background: rgba(56, 139, 253, 0.35) !important;
+}
+
 /* Editor Footer */
 .editor-footer {
     display: flex;
@@ -992,6 +1082,12 @@ padding: 6px;
     flex-shrink: 0;
 }
 
+.output-error-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--danger);
+}
+
 .output-actions {
     display: flex;
     align-items: center;
@@ -1065,6 +1161,26 @@ padding: 6px;
 
 .expand-btn.expanded svg {
     transform: rotate(180deg);
+}
+
+.close-output-btn {
+    height: 30px;
+    width: 30px;
+    min-height: unset;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    border-radius: 8px;
+}
+
+.close-output-btn:hover {
+    background: var(--vscode-line-bg);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.close-output-icon {
+    width: 14px;
+    height: 14px;
 }
 
 .output-content {
@@ -1272,7 +1388,8 @@ padding: 6px;
 }
 
 [data-theme="light"] .activity-bar-btn.active {
-    background: rgba(0, 204, 106, 0.1);
+    background: rgba(0, 168, 90, 0.14);
+    color: #067647;
 }
 
 .activity-bar-btn.active::before {
@@ -1545,7 +1662,8 @@ padding: 6px;
 }
 
 [data-theme="light"] .file-item.active {
-    background: rgba(0, 204, 106, 0.1);
+    background: rgba(0, 168, 90, 0.14);
+    color: #067647;
 }
 
 .file-item .file-icon {
