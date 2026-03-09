@@ -5,5 +5,8 @@
       "database_name": "graphicsh_oc_db",
       "database_id": "ccf2896f-4161-4c6e-b56d-f3f5227c99b2"
     }
-  ]
+  ],
+  // Set BETTER_AUTH_URL via: wrangler secret put BETTER_AUTH_URL
+  // Or override locally with .dev.vars: BETTER_AUTH_URL=http://localhost:3000
+  "vars": {}
 }

@@ -1,6 +1,9 @@
 const USER_CACHE = new Map();
 const USER_CACHE_TTL_MS = 60_000;
 
+const TOKEN_EMAIL_CACHE = new Map();
+const TOKEN_CACHE_TTL_MS = 300_000; // 5 minutes
+
 function decodeJwtPayload(token) {
   const parts = token.split('.');
   if (parts.length < 2) return null;
@@ -110,6 +113,68 @@ function extractEmailFromTrustedHeader(request, env) {
   return null;
 }
 
+// --- Token verification cache ---
+
+function getCachedTokenEmail(token) {
+  const cached = TOKEN_EMAIL_CACHE.get(token);
+  if (!cached) return null;
+  if (Date.now() > cached.expiresAt) {
+    TOKEN_EMAIL_CACHE.delete(token);
+    return null;
+  }
+  return cached.value;
+}
+
+function setCachedTokenEmail(token, info) {
+  TOKEN_EMAIL_CACHE.set(token, {
+    value: info,
+    expiresAt: Date.now() + TOKEN_CACHE_TTL_MS,
+  });
+  if (TOKEN_EMAIL_CACHE.size > 2000) {
+    const oldestKey = TOKEN_EMAIL_CACHE.keys().next().value;
+    if (oldestKey) TOKEN_EMAIL_CACHE.delete(oldestKey);
+  }
+}
+
+// --- Better Auth session verification ---
+
+async function verifyTokenWithBetterAuth(token, env) {
+  const betterAuthUrl = env.BETTER_AUTH_URL;
+  if (!betterAuthUrl) return null;
+
+  // Check token cache first
+  const cached = getCachedTokenEmail(token);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(`${betterAuthUrl}/api/auth/session`, {
+      headers: {
+        'Cookie': `better-auth.session_token=${token}; __Secure-better-auth.session_token=${token}`,
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const user = data?.user || data?.session?.user;
+    const email = user?.email?.trim().toLowerCase();
+
+    if (!email) return null;
+
+    const info = {
+      email,
+      name: user?.name || user?.display_name || null,
+    };
+
+    setCachedTokenEmail(token, info);
+    return info;
+  } catch {
+    return null;
+  }
+}
+
+// --- User cache ---
+
 function getCachedUser(email) {
   const cached = USER_CACHE.get(email);
   if (!cached) return null;
@@ -142,7 +207,20 @@ function extractEmailFromRequest(request, env) {
 }
 
 export async function authenticateRequest(request, env) {
-  const email = extractEmailFromRequest(request, env);
+  let email = extractEmailFromRequest(request, env);
+  let betterAuthUserInfo = null;
+
+  // If no email from cookies/JWT, verify Bearer token with Better Auth
+  if (!email) {
+    const authHeader = request.headers.get('Authorization') || '';
+    if (authHeader.toLowerCase().startsWith('bearer ')) {
+      const token = authHeader.slice(7).trim();
+      betterAuthUserInfo = await verifyTokenWithBetterAuth(token, env);
+      if (betterAuthUserInfo) {
+        email = betterAuthUserInfo.email;
+      }
+    }
+  }
 
   if (!email) {
     throw {
@@ -157,7 +235,7 @@ export async function authenticateRequest(request, env) {
     return { email, user: cachedUser };
   }
 
-  const user = await env.graphicsh_oc_db
+  let user = await env.graphicsh_oc_db
     .prepare(
       `SELECT user_id, email, write_blocked, total_files, total_storage
        FROM users
@@ -166,6 +244,29 @@ export async function authenticateRequest(request, env) {
     )
     .bind(email)
     .first();
+
+  // Auto-provision user on first verified API call
+  if (!user && betterAuthUserInfo) {
+    const userId = crypto.randomUUID();
+    const displayName = betterAuthUserInfo.name || email.split('@')[0];
+    const now = Date.now();
+
+    await env.graphicsh_oc_db
+      .prepare(
+        `INSERT INTO users (user_id, display_name, email, first_sign_in, last_sign_in)
+         VALUES (?, ?, ?, ?, ?)`
+      )
+      .bind(userId, displayName, email, now, now)
+      .run();
+
+    user = {
+      user_id: userId,
+      email,
+      write_blocked: 0,
+      total_files: 0,
+      total_storage: 0,
+    };
+  }
 
   if (!user) {
     throw {
