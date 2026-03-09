@@ -597,51 +597,18 @@ window.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden && isUserLoggedIn) {
-        forceSaveActiveFile('exit').catch(() => { });
+    if (document.hidden && !isUserLoggedIn && editor) {
+        localStorage.setItem('tc_code', editor.getValue());
     }
 });
-// Graceful tab close handler with fetch keepalive for guaranteed delivery
-window.addEventListener('beforeunload', (event) => {
-    if (!isUserLoggedIn || !editor) return;
 
-    const code = editor.getValue();
-    const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
-    const [folder, filename] = activeKey.split('/');
-
-    // Always save to localStorage immediately (synchronous, reliable)
-    try {
-        localStorage.setItem('tc_code', code);
-        const userId = sessionCache.user?.id || 'guest';
-        localStorage.setItem(`draft_${userId}_${folder}_${filename}`, code);
-    } catch (e) {
-        // localStorage might be full, ignore
-    }
-
-    // Use fetch with keepalive because sendBeacon doesn't support custom Authorization headers
-    if (supabaseClient && sessionCache.accessToken) {
+window.addEventListener('beforeunload', () => {
+    if (!editor) return;
+    if (!isUserLoggedIn) {
         try {
-            const payload = JSON.stringify({
-                folder,
-                filename,
-                content: code
-            });
-
-            fetch(`${CLOUD_STATE.storageBaseUrl}/files/beacon-save`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${sessionCache.accessToken}`
-                },
-                body: payload,
-                keepalive: true // Ensures request completes even after tab closes
-            }).catch(() => {
-                // Silently fail - localStorage save already happened
-            });
-
-            Logger.info('Tab close: Background save initiated');
+            localStorage.setItem('tc_code', editor.getValue());
         } catch (e) {
-            // Beacon failed, but localStorage save already happened
+            // Ignore storage failures.
         }
     }
 });

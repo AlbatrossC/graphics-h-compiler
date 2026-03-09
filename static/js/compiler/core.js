@@ -209,9 +209,9 @@ const metrics = {
     // Storage operations tracking
     storage: {
         localDraftWrites: 0,
-        cloudWrites: 0,
-        cloudReads: 0,
-        cloudSkips: 0
+        remoteWrites: 0,
+        remoteReads: 0,
+        remoteSkips: 0
     },
 
     // Autosave behavior tracking
@@ -227,8 +227,7 @@ const metrics = {
         clientCacheHits: 0,
         clientCacheMisses: 0,
         workerCacheHits: 0,
-        workerCacheMisses: 0,
-        supabaseVerifications: 0
+        workerCacheMisses: 0
     },
 
     // Runtime/execution tracking
@@ -246,16 +245,15 @@ function printMetricsSummary() {
     console.log('Editor changes:', metrics.editor.changeCount);
     console.log('Idle triggers:', metrics.idle.idleTriggeredCount);
     console.log('Local draft writes:', metrics.storage.localDraftWrites);
-    console.log('Cloud writes:', metrics.storage.cloudWrites);
-    console.log('Cloud reads:', metrics.storage.cloudReads);
-    console.log('Cloud skips:', metrics.storage.cloudSkips);
+    console.log('Remote writes:', metrics.storage.remoteWrites);
+    console.log('Remote reads:', metrics.storage.remoteReads);
+    console.log('Remote skips:', metrics.storage.remoteSkips);
     console.log('Autosave scheduled:', metrics.autosave.scheduled);
     console.log('Autosave executed:', metrics.autosave.executed);
     console.log('Autosave skipped (clean):', metrics.autosave.skippedClean);
     console.log('Autosave skipped (guest):', metrics.autosave.skippedGuest);
     console.log('Auth client hits/misses:', `${metrics.auth.clientCacheHits} / ${metrics.auth.clientCacheMisses}`);
     console.log('Auth worker hits/misses:', `${metrics.auth.workerCacheHits} / ${metrics.auth.workerCacheMisses}`);
-    console.log('Supabase verifications:', metrics.auth.supabaseVerifications);
     console.log('Runs triggered:', metrics.runtime.runCount);
     console.log('Runs blocked (reuse):', metrics.runtime.runtimeReuseErrors);
     console.log('ZIP extractions started:', metrics.runtime.zipExtractionStarted);
@@ -295,9 +293,9 @@ let scriptsLoaded = {
 
 // ==================== CLOUD STORAGE STATE ====================
 const CLOUD_STATE = {
-    storageBaseUrl: '',
     files: new Map(),
     folders: new Set(['main']),
+    folderNameToId: new Map(),
     openTabs: [],
     activeFileKey: 'main/main.cpp',
     autosaveTimer: null,
@@ -313,64 +311,21 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 const AUTOSAVE_DELAY_MS = isMobile ? 60000 : 30000;           // 60s/30s cloud autosave interval
 const TYPING_DEBOUNCE_MS = isMobile ? 5000 : 3000;            // Wait 5s/3s after typing stops before autosave timer
 
-// ==================== FILE CONTENT CACHE ====================
-// Multi-tier caching: memory → localStorage draft → cloud (R2)
-const fileContentCache = new Map();
-const FILE_CACHE_TTL_MS = 5 * 60 * 1000;   // 5 minutes cache TTL
-
-// Cache management functions
-function getCachedFileContent(folder, filename) {
-    const key = `${folder}/${filename}`;
-    const cached = fileContentCache.get(key);
-
-    if (cached && (Date.now() - cached.timestamp < FILE_CACHE_TTL_MS)) {
-        return cached;
-    }
-
-    // Expired, remove from cache
-    if (cached) {
-        fileContentCache.delete(key);
-    }
+// ==================== FILE CONTENT CACHE (DISABLED) ====================
+function getCachedFileContent() {
     return null;
 }
 
-function setCachedFileContent(folder, filename, content, hash = null) {
-    const key = `${folder}/${filename}`;
-    fileContentCache.set(key, {
-        content,
-        hash: hash || null,
-        timestamp: Date.now()
-    });
+function setCachedFileContent() {
+    // cache intentionally disabled
 }
 
-function clearCachedFileContent(folder, filename) {
-    const key = `${folder}/${filename}`;
-    fileContentCache.delete(key);
+function clearCachedFileContent() {
+    // cache intentionally disabled
 }
 
 function clearAllFileCache() {
-    fileContentCache.clear();
-}
-
-// CRITICAL FIX #5: Add periodic cache cleanup every 5 minutes
-const FILE_CACHE_CLEANUP_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-
-function initializeCacheCleanup() {
-    setInterval(() => {
-        let expiredCount = 0;
-        const now = Date.now();
-
-        for (const [key, value] of fileContentCache.entries()) {
-            if (now - value.timestamp > FILE_CACHE_TTL_MS) {
-                fileContentCache.delete(key);
-                expiredCount++;
-            }
-        }
-
-        if (expiredCount > 0) {
-            Logger.debug(`[Cache] Cleaned ${expiredCount} expired entries, ${fileContentCache.size} remaining`);
-        }
-    }, FILE_CACHE_CLEANUP_INTERVAL_MS);
+    // cache intentionally disabled
 }
 
 // Demo files configuration - loaded dynamically from manifest.json

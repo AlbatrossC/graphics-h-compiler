@@ -1,8 +1,7 @@
-from flask import Flask, send_file, send_from_directory, jsonify, request, Response, render_template, make_response
+from flask import Flask, send_file, send_from_directory, jsonify, request, render_template, make_response
 from dotenv import load_dotenv
 import requests as req
 import os
-import uuid
 
 load_dotenv()
 
@@ -231,84 +230,6 @@ def get_video(filename):
     mime_type = mime_types.get(ext, 'video/mp4')
     
     return send_file(video_path, mimetype=mime_type)
-
-# Supabase Auth Config API
-@app.route('/api/auth/config')
-def auth_config():
-    supabase_url = os.getenv('SUPABASE_URL')
-    supabase_anon_key = os.getenv('SUPABASE_ANON_KEY')
-    
-    if not supabase_url or not supabase_anon_key:
-        missing = get_missing_env(['SUPABASE_URL', 'SUPABASE_ANON_KEY'])
-        return jsonify({
-            'error': 'Auth not configured',
-            'missing': missing
-        }), 500
-    
-    return jsonify({
-        'supabaseUrl': supabase_url,
-        'supabaseAnonKey': supabase_anon_key
-    })
-
-# Storage Worker Proxy (server-side only)
-@app.route('/files/<path:subpath>', methods=['GET', 'POST', 'DELETE', 'OPTIONS'])
-def proxy_storage_worker(subpath):
-    request_id = str(uuid.uuid4())
-    storage_worker_url = os.getenv('STORAGE_WORKER_URL')
-    if not storage_worker_url:
-        return jsonify({
-            'error': 'Storage worker not configured',
-            'missing': ['STORAGE_WORKER_URL'],
-            'requestId': request_id
-        }), 500
-
-    if request.method == 'OPTIONS':
-        response = Response(status=204)
-        response.headers['Access-Control-Allow-Origin'] = request.host_url.rstrip('/')
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response
-
-    base_url = storage_worker_url.rstrip('/')
-    target_url = f'{base_url}/files/{subpath}'
-    if request.query_string:
-        target_url = f'{target_url}?{request.query_string.decode()}'
-
-    headers = {}
-    if 'Authorization' in request.headers:
-        headers['Authorization'] = request.headers.get('Authorization')
-    if request.content_type:
-        headers['Content-Type'] = request.content_type
-    host = request.host.split(':')[0]
-    if host in ('127.0.0.1', '::1'):
-        headers['Origin'] = 'http://localhost:5000'
-    else:
-        headers['Origin'] = request.host_url.rstrip('/')
-
-    try:
-        upstream = req.request(
-            method=request.method,
-            url=target_url,
-            headers=headers,
-            data=request.get_data(),
-            timeout=20
-        )
-    except Exception as e:
-        return jsonify({
-            'error': 'Storage worker request failed',
-            'detail': str(e),
-            'target': target_url,
-            'requestId': request_id
-        }), 502
-
-    response = Response(upstream.content, status=upstream.status_code)
-    if upstream.headers.get('Content-Type'):
-        response.headers['Content-Type'] = upstream.headers.get('Content-Type')
-    if upstream.headers.get('X-Request-Id'):
-        response.headers['X-Request-Id'] = upstream.headers.get('X-Request-Id')
-    else:
-        response.headers['X-Request-Id'] = request_id
-    return response
 
 # Contact API
 @app.route('/api/contact', methods=['POST', 'OPTIONS'])
