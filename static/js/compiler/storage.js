@@ -125,8 +125,20 @@ const FileDB = {
 
 const progressBar = document.getElementById('progress-bar');
 const progressFill = document.getElementById('progress-fill');
-function showProgress() { if (progressBar && progressFill) { progressBar.classList.remove('hidden'); progressFill.classList.add('indeterminate'); } }
-function hideProgress() { if (progressBar && progressFill) { progressFill.classList.remove('indeterminate'); progressBar.classList.add('hidden'); } }
+let progressDepth = 0;
+function showProgress() {
+    if (!progressBar || !progressFill) return;
+    progressDepth += 1;
+    progressBar.classList.remove('hidden');
+    progressFill.classList.add('indeterminate');
+}
+function hideProgress() {
+    if (!progressBar || !progressFill) return;
+    progressDepth = Math.max(0, progressDepth - 1);
+    if (progressDepth > 0) return;
+    progressFill.classList.remove('indeterminate');
+    progressBar.classList.add('hidden');
+}
 function setExplorerLoading(isLoading, text = 'Loading files...') {
     const loading = document.getElementById('explorer-loading-state');
     const loadingText = document.getElementById('explorer-loading-text');
@@ -216,6 +228,38 @@ function getMainCppFile() {
         if (isVisibleCloudFile(file) && file.filename === 'main.cpp') return file;
     }
     return null;
+}
+function buildStarterSource(filename) {
+    const safeName = (filename || DEFAULT_FILE_NAME).trim() || DEFAULT_FILE_NAME;
+    return `// ${safeName}\n#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n    \n    // Your code here\n    \n    getch();\n    closegraph();\n    return 0;\n}\n`;
+}
+function findFolderIdByName(name) {
+    const target = String(name || '').trim().toLowerCase();
+    if (!target) return null;
+    for (const [id, folderName] of CLOUD_STATE.folderIdToName.entries()) {
+        if (String(folderName || '').trim().toLowerCase() === target) return id;
+    }
+    return null;
+}
+async function ensureMainFolder() {
+    const existing = findFolderIdByName('main');
+    if (existing) return existing;
+    const { response, payload } = await fetchJson('/api/folder/create', {
+        method: 'POST',
+        body: JSON.stringify({ folder_name: 'main' })
+    });
+    if (!response.ok) {
+        if (response.status === 409) {
+            await refreshCloudFiles(true);
+            const refreshed = findFolderIdByName('main');
+            if (refreshed) return refreshed;
+        }
+        throw new Error(payload?.error || 'Failed to create main folder');
+    }
+    CLOUD_STATE.folderIdToName.set(payload.id, payload.folder_name);
+    CLOUD_STATE.folderNameToId.set(payload.folder_name, payload.id);
+    CLOUD_STATE.folders.add(payload.id);
+    return payload.id;
 }
 function userForUi(user) {
     return {
@@ -783,13 +827,23 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
     const force = options.force === true;
     const silent = options.silent === true;
     if (!editor || isSaving) return { skipped: true };
+    showProgress();
+    try {
     const code = editor.getValue();
     if (!isUserLoggedIn) {
         await persistLocalSave(code);
         if (!silent) Logger.success(`[Save] Saved locally (${trigger})`);
         return { success: true, local: true };
     }
-    const info = activeFileInfo();
+    let info = activeFileInfo();
+    if (!info.folderId && CLOUD_STATE.folderIdToName.size === 0) {
+        const mainFolderId = await ensureMainFolder();
+        const mainFolderKey = folderKey(mainFolderId);
+        const key = fileKey(mainFolderKey, info.filename);
+        info = { ...info, folder: mainFolderKey, folderId: mainFolderId, key };
+        CLOUD_STATE.activeFileKey = key;
+        setSelectedFolder(mainFolderKey);
+    }
     const hash = await computeSha256(code);
     if (!force && SAVE_STATE.lastSavedHash === hash) {
         DIRTY_FLAG.isDirty = false;
@@ -825,6 +879,9 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
         if (!silent) Logger.success(`[Save] Saved (${trigger})`);
         return { success: true, changed: payload?.changed !== false };
     } finally { isSaving = false; SAVE_STATE.pendingHash = null; }
+    } finally {
+        hideProgress();
+    }
 }
 async function saveCode() {
     const saveBtn = document.getElementById('save-btn');
@@ -839,6 +896,8 @@ async function createNewFolder(folderName) {
     if (!isUserLoggedIn) return alert('Sign in to create cloud folders.');
     const cleanName = (folderName || '').trim();
     if (!cleanName) return;
+    showProgress();
+    try {
     const { response, payload } = await fetchJson('/api/folder/create', { method: 'POST', body: JSON.stringify({ folder_name: cleanName }) });
     if (!response.ok) throw new Error(payload?.error || 'Failed to create folder');
     CLOUD_STATE.folderIdToName.set(payload.id, payload.folder_name);
@@ -846,9 +905,15 @@ async function createNewFolder(folderName) {
     CLOUD_STATE.folders.add(payload.id);
     setSelectedFolder(payload.id);
     renderFileExplorer();
+    return payload.id;
+    } finally {
+        hideProgress();
+    }
 }
 async function createNewFile(filename) {
     if (!isUserLoggedIn) return alert('Sign in to create cloud files.');
+    showProgress();
+    try {
     let cleanName = (filename || '').trim();
     if (!cleanName) return;
     if (!cleanName.includes('.')) cleanName += '.cpp';
@@ -856,11 +921,18 @@ async function createNewFile(filename) {
     if (!cleanName || cleanName === '.cpp') return alert('Invalid file name');
     let targetFolderId = folderId(CLOUD_STATE.selectedFolderKey) || activeFileInfo().folderId;
     if (!targetFolderId) targetFolderId = Array.from(CLOUD_STATE.folderIdToName.keys())[0] || null;
-    if (!targetFolderId) return alert('Create a folder first, then create files inside it.');
+    if (!targetFolderId) {
+        targetFolderId = await ensureMainFolder();
+        setSelectedFolder(folderKey(targetFolderId));
+    }
     if (remoteFileByName(targetFolderId, cleanName)) return alert(`File "${cleanName}" already exists`);
-    const { response, payload } = await fetchJson('/api/file/create', { method: 'POST', body: JSON.stringify({ file_name: cleanName, folder_id: targetFolderId }) });
-    if (!response.ok) {
-        if (response.status === 409) {
+    const starter = buildStarterSource(cleanName);
+    const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
+        method: 'POST',
+        body: JSON.stringify({ folder_id: targetFolderId, file_name: cleanName, content: starter })
+    });
+    if (!saveResponse.ok) {
+        if (saveResponse.status === 409) {
             await refreshCloudFiles(true);
             const existing = remoteFileByName(targetFolderId, cleanName);
             if (existing) {
@@ -868,18 +940,32 @@ async function createNewFile(filename) {
                 return;
             }
         }
-        throw new Error(payload?.error || 'Failed to create file');
+        throw new Error(savePayload?.error || 'Failed to save starter code');
     }
-    const key = folderKey(payload.folder_id);
-    CLOUD_STATE.files.set(fileKey(key, payload.file_name), { id: payload.id, filename: payload.file_name, folder_id: payload.folder_id || null, folder_key: key, folder_name: getFolderName(payload.folder_id), content: payload.file_content || '', file_size: payload.file_size || 0, content_hash: payload.content_hash || null });
-    await setLocalDraft(key, payload.file_name, payload.file_content || '');
+    const key = folderKey(targetFolderId);
+    CLOUD_STATE.files.set(fileKey(key, cleanName), {
+        id: savePayload?.file_id || fileKey(key, cleanName),
+        filename: cleanName,
+        folder_id: targetFolderId || null,
+        folder_key: key,
+        folder_name: getFolderName(targetFolderId),
+        content: starter,
+        file_size: savePayload?.file_size ?? computeBytes(starter),
+        content_hash: savePayload?.content_hash || null
+    });
+    await setLocalDraft(key, cleanName, starter);
     renderFileExplorer();
-    await openFile(key, payload.file_name, { skipSave: true });
+    await openFile(key, cleanName, { skipSave: true });
+    } finally {
+        hideProgress();
+    }
 }
 async function deleteFolder(folder, name) {
     const id = folderId(folder);
     if (!id) return;
     if (!confirm(`Delete folder "${name}" and all files inside it?\nThis cannot be undone.`)) return;
+    showProgress();
+    try {
     const deletingActiveFolder = CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '')?.folder_id === id;
     const { response, payload } = await fetchJson('/api/folder/delete', { method: 'DELETE', body: JSON.stringify({ folder_id: id }) });
     if (!response.ok) throw new Error(payload?.error || 'Failed to delete folder');
@@ -892,6 +978,9 @@ async function deleteFolder(folder, name) {
         const nextFile = getFirstVisibleCloudFile();
         if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
     }
+    } finally {
+        hideProgress();
+    }
 }
 async function deleteFile(folder, filename) {
     if (filename === 'main.cpp') {
@@ -899,6 +988,8 @@ async function deleteFile(folder, filename) {
         return;
     }
     if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) return;
+    showProgress();
+    try {
     const key = fileKey(folder, filename);
     const file = CLOUD_STATE.files.get(key);
     if (!file) return;
@@ -911,6 +1002,9 @@ async function deleteFile(folder, filename) {
         if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
         else if (editor) { editor.setValue(DEFAULT_SOURCE); DIRTY_FLAG.isDirty = false; updateSaveIndicator(); }
     } else renderFileExplorer();
+    } finally {
+        hideProgress();
+    }
 }
 const LAST_OPENED_FILE_KEY = 'compiler_last_opened_v1';
 function saveLastOpenedFile(key) {
@@ -993,10 +1087,15 @@ if (storageNewFolderBtn) storageNewFolderBtn.addEventListener('click', async () 
     try { await createNewFolder(name.trim()); } catch (error) { Logger.warn(`[Folder] ${error.message}`); alert(error.message); }
 });
 
-window.addEventListener('load', () => {
+function startAuthInit() {
     initAuth().catch((error) => {
         Logger.warn(`[Auth] ${error.message}`);
         safeUpdateLoginUI(false);
         setAuthStatus('Unlimited projects · Access anywhere');
     });
-});
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startAuthInit, { once: true });
+} else {
+    startAuthInit();
+}

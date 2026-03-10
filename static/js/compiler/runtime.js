@@ -837,6 +837,8 @@ function updateLoginUI(loggedIn, user = null) {
         updateSaveIndicator();
     }
 }
+// Render logged-out promo immediately; auth bootstrap will switch to logged-in view if session exists.
+updateLoginUI(false);
 
 
 

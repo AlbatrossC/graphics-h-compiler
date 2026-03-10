@@ -14,19 +14,32 @@ export async function ensureFolderOwnership(db, userId, folderId) {
 }
 
 export async function getFileByName(db, userId, folderId, fileName) {
-  const folderValue = folderId ?? null;
-  const result = await db
-    .prepare(
-      `SELECT id, content_hash
-              , COALESCE(file_size, 0) AS file_size
-       FROM files
-       WHERE user_id = ?
-         AND ((folder_id = ?) OR (folder_id IS NULL AND ? IS NULL))
-         AND file_name = ?
-       LIMIT 1`
-    )
-    .bind(userId, folderValue, folderValue, fileName)
-    .first();
+  const isRoot = folderId === null || folderId === undefined || folderId === '';
+  const result = isRoot
+    ? await db
+      .prepare(
+        `SELECT id, content_hash
+                , COALESCE(file_size, 0) AS file_size
+         FROM files
+         WHERE user_id = ?
+           AND folder_id IS NULL
+           AND file_name = ?
+         LIMIT 1`
+      )
+      .bind(userId, fileName)
+      .first()
+    : await db
+      .prepare(
+        `SELECT id, content_hash
+                , COALESCE(file_size, 0) AS file_size
+         FROM files
+         WHERE user_id = ?
+           AND folder_id = ?
+           AND file_name = ?
+         LIMIT 1`
+      )
+      .bind(userId, folderId, fileName)
+      .first();
   return result || null;
 }
 

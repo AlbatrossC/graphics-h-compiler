@@ -1,13 +1,14 @@
 import { errorResponse, jsonResponse, readJsonBody } from './response.js';
 
 const USER_CACHE = new Map();
-const USER_CACHE_TTL_MS = 60_000;
+const USER_CACHE_TTL_MS = 300_000;
 
 const GOOGLE_TOKEN_CACHE = new Map();
 const GOOGLE_TOKEN_CACHE_TTL_MS = 300_000;
 
 const SESSION_COOKIE_NAME = 'session';
 const SESSION_DURATION_SEC = 7 * 24 * 60 * 60;
+const SESSION_KEY_CACHE = new Map();
 
 function parseCookies(cookieHeader) {
   const out = new Map();
@@ -61,11 +62,23 @@ async function importSessionKey(secret) {
   );
 }
 
+async function getSessionKey(secret) {
+  const cached = SESSION_KEY_CACHE.get(secret);
+  if (cached) return cached;
+  const key = await importSessionKey(secret);
+  SESSION_KEY_CACHE.set(secret, key);
+  if (SESSION_KEY_CACHE.size > 4) {
+    const oldest = SESSION_KEY_CACHE.keys().next().value;
+    if (oldest) SESSION_KEY_CACHE.delete(oldest);
+  }
+  return key;
+}
+
 async function signSessionJwt(payload, secret) {
   const encodedHeader = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const encodedPayload = toBase64Url(JSON.stringify(payload));
   const signingInput = `${encodedHeader}.${encodedPayload}`;
-  const key = await importSessionKey(secret);
+  const key = await getSessionKey(secret);
   const signature = new Uint8Array(
     await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput))
   );
@@ -92,7 +105,7 @@ async function verifySessionJwt(token, secret) {
     };
   }
 
-  const key = await importSessionKey(secret);
+  const key = await getSessionKey(secret);
   const signingInput = `${encodedHeader}.${encodedPayload}`;
   const isValid = await crypto.subtle.verify(
     'HMAC',
