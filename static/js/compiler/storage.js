@@ -480,31 +480,41 @@ async function handleGoogleCredentialResponse(credentialResponse) {
 
     safeUpdateLoginUI(true, userForUi(user));
     setAuthStatus(`Signed in as ${user.email}`);
+    // Show loading spinner immediately — no blank gap before files appear
+    setExplorerLoading(true, 'Syncing...');
+    showProgress();
 
-    // Sync local IndexedDB files to cloud (Cases A / B / C — no silent overwrites)
-    try { await syncLocalToCloud(); } catch (e) { Logger.warn('[Sync] Login sync error: ' + e.message); }
-
-    // Download cloud project (IndexedDB was cleared by syncLocalToCloud)
-    await refreshCloudFiles(true);
-
-    // Rebuild IndexedDB as cloud cache mirror
     try {
-        for (const [key, file] of CLOUD_STATE.files.entries()) {
-            await FileDB.put({
-                id: key,
-                name: file.filename,
-                content: file.content || '',
-                lastSavedHash: file.content_hash || null,
-                lastModified: Date.now(),
-                dirty: false,
-                folderId: file.folder_id,
-                folderKey: file.folder_key
-            });
-        }
-    } catch (e) { Logger.warn('[Sync] IndexedDB cache rebuild failed: ' + e.message); }
+        // Sync local IndexedDB files to cloud (Cases A / B / C — no silent overwrites)
+        try { await syncLocalToCloud(); } catch (e) { Logger.warn('[Sync] Login sync error: ' + e.message); }
 
-    const active = CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '') || getFirstVisibleCloudFile();
-    if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
+        // Download cloud project
+        await refreshCloudFiles(true);
+
+        // Rebuild IndexedDB cache in parallel (non-blocking — don't delay file open)
+        Promise.all(
+            Array.from(CLOUD_STATE.files.entries()).map(([key, file]) =>
+                FileDB.put({
+                    id: key,
+                    name: file.filename,
+                    content: file.content || '',
+                    lastSavedHash: file.content_hash || null,
+                    lastModified: Date.now(),
+                    dirty: false,
+                    folderId: file.folder_id,
+                    folderKey: file.folder_key
+                }).catch(() => {})
+            )
+        ).catch(() => {});
+
+        // Open last file, prioritising main.cpp
+        const savedKey = getLastOpenedFile();
+        const active = CLOUD_STATE.files.get(savedKey || '') || getMainCppFile() || getFirstVisibleCloudFile();
+        if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
+    } finally {
+        setExplorerLoading(false);
+        hideProgress();
+    }
 }
 
 function waitForGoogleIdentityScript() {
@@ -580,25 +590,31 @@ async function signInWithGoogle() {
     }
 }
 async function signOut() {
-    // FORCE SAVE: spec requires force save on sign out
-    try { if (isUserLoggedIn) await forceSaveActiveFile('signOut', { force: true, silent: true }); } catch { }
-    // Capture editor content before clearing state (for guest IndexedDB after sign-out)
+    // Capture content before any state changes
     const currentCode = editor ? editor.getValue() : null;
-    try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch { }
-    // Clear IndexedDB cloud cache
-    await clearAllLocalDrafts().catch(() => {});
-    // Restore current file to IndexedDB for guest mode
-    if (currentCode !== null) {
-        await setLocalDraft('root', 'main.cpp', currentCode).catch(() => {});
+
+    // Only save to cloud if there are unsaved changes (skip unnecessary API call)
+    if (isUserLoggedIn && DIRTY_FLAG.isDirty) {
+        try { await forceSaveActiveFile('signOut', { force: false, silent: true }); } catch { }
     }
+
+    // Update UI immediately — user sees logged-out state right away
     safeUpdateLoginUI(false);
     setAuthStatus('Unlimited projects · Access anywhere');
-    // Reset save state for guest mode
     if (currentCode !== null) {
         SAVE_STATE.lastSavedHash = await computeSha256(currentCode);
         DIRTY_FLAG.isDirty = false;
         updateSaveIndicator();
     }
+
+    // Cleanup runs in background — doesn't block UI
+    (async () => {
+        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch { }
+        await clearAllLocalDrafts().catch(() => {});
+        if (currentCode !== null) {
+            await setLocalDraft('root', 'main.cpp', currentCode).catch(() => {});
+        }
+    })();
 }
 async function ensureDefaultRemoteFile() {
     if (remoteFileByName(null, DEFAULT_FILE_NAME)) return;
@@ -906,7 +922,8 @@ async function initAuth() {
         if (loggedIn) {
             await refreshCloudFiles(true);
             const savedKey = getLastOpenedFile();
-            const active = CLOUD_STATE.files.get(savedKey || '') || CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '') || getMainCppFile() || getFirstVisibleCloudFile();
+            // Priority: last opened → main.cpp → first available file
+            const active = CLOUD_STATE.files.get(savedKey || '') || getMainCppFile() || getFirstVisibleCloudFile();
             if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
         }
     } catch (error) {

@@ -1472,7 +1472,7 @@ header {
 }
 
 .sidebar-header-left>span {
-    color: var(--primary);
+    color: var(--text-secondary);
 }
 
 /* Sidebar Header Buttons */
@@ -1503,45 +1503,23 @@ header {
     background: rgba(0, 0, 0, 0.08);
 }
 
-/* Explorer header button highlights (two solid colors, no gradients) */
-#refresh-btn {
-    background: rgba(0, 170, 255, 0.18);
-    color: #6fd3ff;
-}
-
-#refresh-btn:hover {
-    background: rgba(0, 170, 255, 0.28);
-    color: #cbefff;
-}
-
+/* Explorer header buttons — plain icon buttons, no colored glow */
+#refresh-btn,
 #sidebar-collapse-btn {
-    background: rgba(0, 170, 255, 0.18);
-    color: #6fd3ff;
+    background: transparent;
+    color: var(--text-secondary);
 }
 
+#refresh-btn:hover,
 #sidebar-collapse-btn:hover {
-    background: rgba(0, 170, 255, 0.28);
-    color: #cbefff;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-primary);
 }
 
-[data-theme="light"] #refresh-btn {
-    background: rgba(0, 120, 215, 0.14);
-    color: #005a9e;
-}
-
-[data-theme="light"] #refresh-btn:hover {
-    background: rgba(0, 120, 215, 0.22);
-    color: #003c70;
-}
-
-[data-theme="light"] #sidebar-collapse-btn {
-    background: rgba(0, 120, 215, 0.14);
-    color: #005a9e;
-}
-
+[data-theme="light"] #refresh-btn:hover,
 [data-theme="light"] #sidebar-collapse-btn:hover {
-    background: rgba(0, 120, 215, 0.22);
-    color: #003c70;
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-primary);
 }
 
 .sidebar-collapse-btn svg,
@@ -1679,7 +1657,7 @@ header {
 }
 
 .sidebar-header-left>span {
-    color: var(--primary);
+    color: var(--text-secondary);
 }
 
 /* Sidebar Header Buttons */
@@ -1710,45 +1688,23 @@ header {
     background: rgba(0, 0, 0, 0.08);
 }
 
-/* Explorer header button highlights (two solid colors, no gradients) */
-#refresh-btn {
-    background: rgba(0, 170, 255, 0.18);
-    color: #6fd3ff;
-}
-
-#refresh-btn:hover {
-    background: rgba(0, 170, 255, 0.28);
-    color: #cbefff;
-}
-
+/* Explorer header buttons — plain icon buttons, no colored glow */
+#refresh-btn,
 #sidebar-collapse-btn {
-    background: rgba(0, 170, 255, 0.18);
-    color: #6fd3ff;
+    background: transparent;
+    color: var(--text-secondary);
 }
 
+#refresh-btn:hover,
 #sidebar-collapse-btn:hover {
-    background: rgba(0, 170, 255, 0.28);
-    color: #cbefff;
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-primary);
 }
 
-[data-theme="light"] #refresh-btn {
-    background: rgba(0, 120, 215, 0.14);
-    color: #005a9e;
-}
-
-[data-theme="light"] #refresh-btn:hover {
-    background: rgba(0, 120, 215, 0.22);
-    color: #003c70;
-}
-
-[data-theme="light"] #sidebar-collapse-btn {
-    background: rgba(0, 120, 215, 0.14);
-    color: #005a9e;
-}
-
+[data-theme="light"] #refresh-btn:hover,
 [data-theme="light"] #sidebar-collapse-btn:hover {
-    background: rgba(0, 120, 215, 0.22);
-    color: #003c70;
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-primary);
 }
 
 .sidebar-collapse-btn svg,
@@ -1763,11 +1719,11 @@ header {
     align-items: center;
 }
 
-/* Explorer Actions (New File) */
+/* Explorer Actions (New File / New Folder) */
 .explorer-actions {
     display: flex;
-    gap: 8px;
-    padding: 12px 14px;
+    gap: 6px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -1776,21 +1732,31 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: var(--vscode-line-bg);
+    gap: 6px;
+    padding: 7px 10px;
+    background: transparent;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 4px;
     color: var(--text-secondary);
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 500;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.explorer-action-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .explorer-action-btn:hover {
+    background: rgba(0, 0, 0, 0.04);
 }
 
 .explorer-action-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
 /* File Explorer */
@@ -1818,29 +1784,20 @@ header {
 .files-header {
     display: flex;
     align-items: center;
-    padding: 6px 4px 6px 12px;
-    height: 30px;
-    cursor: pointer;
-    background: transparent;
+    padding: 8px 12px 4px;
     user-select: none;
-    margin-top: 4px;
 }
 
 .files-header-chevron {
-    width: 14px;
-    height: 14px;
-    color: var(--text-secondary);
-    transition: transform var(--transition-fast);
-    transform: rotate(90deg);
+    display: none; /* not functional as collapse, removed */
 }
 
 .files-title {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    color: var(--text-secondary);
+    color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-left: 4px;
+    letter-spacing: 0.06em;
 }
 
 .files-count {
@@ -1888,12 +1845,12 @@ header {
 }
 
 .folder-group-header.selected {
-    background: rgba(0, 255, 136, 0.04);
+    background: transparent;
     color: var(--primary);
 }
 
 [data-theme="light"] .folder-group-header.selected {
-    background: rgba(0, 168, 90, 0.06);
+    background: transparent;
 }
 
 .folder-group-title {
@@ -1924,11 +1881,11 @@ header {
     width: 14px;
     height: 14px;
     flex-shrink: 0;
-    color: #cca700;
+    color: var(--text-muted);
 }
 
 [data-theme="light"] .folder-group-title svg {
-    color: #dcb600;
+    color: var(--text-muted);
 }
 
 .folder-group-files {
@@ -2018,12 +1975,12 @@ header {
 }
 
 .file-item.active {
-    background: rgba(0, 255, 136, 0.1);
+    background: transparent;
     color: var(--primary);
 }
 
 [data-theme="light"] .file-item.active {
-    background: rgba(0, 168, 90, 0.12);
+    background: transparent;
 }
 
 .file-item.active::before {
@@ -2130,26 +2087,18 @@ header {
 }
 
 .file-list-empty {
-    border: 1px dashed var(--border-color);
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-    font-size: 0.78rem;
+    padding: 12px 14px;
+    font-size: 0.75rem;
     color: var(--text-muted);
 }
 
 .explorer-loading {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: 10px 10px 0;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: color-mix(in srgb, var(--vscode-line-bg) 55%, transparent);
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    font-weight: 600;
+    gap: 8px;
+    padding: 12px 14px;
+    color: var(--text-muted);
+    font-size: 0.75rem;
 }
 
 .explorer-loading-spinner {
@@ -2181,36 +2130,29 @@ header {
     color: var(--danger);
 }
 
-/* Cloud Promo — minimal centered layout */
+/* Cloud Promo — compact, no icon */
 .cloud-promo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 32px 20px 24px;
+    padding: 20px 16px 16px;
     text-align: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .cloud-promo-icon {
-    width: 48px;
-    height: 48px;
-    color: var(--text-secondary);
-    opacity: 0.5;
+    display: none; /* removed — unnecessary */
 }
 
 .cloud-promo-text {
-    font-size: 13px;
-    color: var(--text-primary);
+    font-size: 12px;
+    color: var(--text-secondary);
     line-height: 1.5;
     max-width: 200px;
-    font-weight: 500;
 }
 
 .auth-hint {
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.02em;
+    display: none; /* duplicate of auth-status-text — removed */
 }
 
 /* Auth Section */
@@ -2262,10 +2204,11 @@ header {
 
 /* User Profile */
 .user-profile {
-    padding: 10px;
+    padding: 8px;
     border-top: 1px solid var(--border-color);
     margin-top: auto;
     position: relative;
+    flex-shrink: 0;
 }
 
 .user-profile-btn {
