@@ -264,8 +264,8 @@ def compiler():
 @app.route('/api/auth/config')
 def auth_config():
     return jsonify({
-        'authEnabled': bool(os.getenv('STORAGE_WORKER_URL') and os.getenv('GOOGLE_CLIENT_ID')),
-        'storageEnabled': bool(os.getenv('STORAGE_WORKER_URL')),
+        'authEnabled': bool(os.getenv('USER_FILES_WORKERS') and os.getenv('GOOGLE_CLIENT_ID')),
+        'storageEnabled': bool(os.getenv('USER_FILES_WORKERS')),
         'googleClientId': os.getenv('GOOGLE_CLIENT_ID', ''),
     })
 
@@ -274,7 +274,7 @@ def auth_config():
 @app.route('/api/auth/session', methods=['GET', 'OPTIONS'])
 @app.route('/api/auth/logout', methods=['POST', 'OPTIONS'])
 def auth_proxy():
-    storage_worker_url = os.getenv('STORAGE_WORKER_URL')
+    storage_worker_url = os.getenv('USER_FILES_WORKERS')
     if not storage_worker_url:
         return jsonify({'error': 'Authentication is not configured'}), 503
     worker_path = request.path.replace('/api', '', 1)
@@ -304,7 +304,7 @@ def auth_proxy():
 @app.route('/api/folder/create', methods=['POST', 'OPTIONS'])
 @app.route('/api/folder/delete', methods=['DELETE', 'OPTIONS'])
 def storage_proxy():
-    storage_worker_url = os.getenv('STORAGE_WORKER_URL')
+    storage_worker_url = os.getenv('USER_FILES_WORKERS')
     if not storage_worker_url:
         return jsonify({'error': 'Storage worker is not configured'}), 503
 
