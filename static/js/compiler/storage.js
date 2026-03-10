@@ -416,28 +416,44 @@ async function checkSession() {
 // ==================== LOGIN SYNC LOGIC ====================
 // Runs when a guest user signs in. Merges local IndexedDB files into cloud.
 // Never overwrites user data silently. Applies spec Cases A, B, C.
+// Returns the freshest cloud payload when available so caller can avoid a second /api/files request.
 async function syncLocalToCloud() {
-    const localFiles = await FileDB.getAll();
-    if (!localFiles.length) return;
     // Only look at the guest main.cpp (root/main.cpp)
-    const localMainCpp = localFiles.find(f => f.id === 'root/main.cpp' || (f.name === 'main.cpp' && !f.folderId));
-    if (!localMainCpp || !localMainCpp.content || !localMainCpp.content.trim()) return;
+    const localMainCpp = await FileDB.get('root/main.cpp');
+    if (!localMainCpp || !localMainCpp.content || !localMainCpp.content.trim()) return null;
     const localContent = localMainCpp.content;
 
     // Fetch current cloud file list
     const { response, payload } = await fetchJson('/api/files', { method: 'GET' });
-    if (!response.ok) return; // Can't reach cloud, skip sync gracefully
+    if (!response.ok) return null; // Can't reach cloud, skip sync gracefully
 
-    const cloudFiles = Array.isArray(payload?.files) ? payload.files : [];
-    const cloudMainCpp = cloudFiles.find(f => (f.file_name || f.filename) === 'main.cpp');
+    const snapshot = {
+        folders: Array.isArray(payload?.folders) ? payload.folders : [],
+        files: Array.isArray(payload?.files) ? payload.files.slice() : [],
+    };
+    const cloudMainCpp = snapshot.files.find(f => (f.file_name || f.filename) === 'main.cpp');
+    const existingLocalMainCopy = snapshot.files.find(f => (f.file_name || f.filename) === 'local-main.cpp');
 
     if (!cloudMainCpp) {
         // CASE A: Cloud has no main.cpp — upload local copy
         Logger.info('[Sync] Case A: Cloud empty, uploading local main.cpp');
-        await fetchJson('/api/file/save', {
+        const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
             method: 'POST',
             body: JSON.stringify({ file_name: 'main.cpp', folder_id: null, content: localContent })
-        }).catch(e => Logger.warn('[Sync] Case A upload failed: ' + e.message));
+        });
+        if (!saveResponse.ok) {
+            Logger.warn('[Sync] Case A upload failed');
+        } else {
+            snapshot.files.push({
+                id: savePayload?.file_id || null,
+                file_name: 'main.cpp',
+                file_content: localContent,
+                folder_id: null,
+                folder_name: '',
+                file_size: savePayload?.file_size ?? computeBytes(localContent),
+                content_hash: savePayload?.content_hash || null
+            });
+        }
     } else {
         const cloudContent = cloudMainCpp.file_content || cloudMainCpp.content || '';
         const localHash = await computeSha256(localContent);
@@ -448,17 +464,46 @@ async function syncLocalToCloud() {
             Logger.info('[Sync] Case B: Local and cloud identical, using cloud');
             // Nothing to upload — cloud already has it
         } else {
+            const existingLocalMainHash = existingLocalMainCopy?.content_hash
+                || (existingLocalMainCopy ? await computeSha256(existingLocalMainCopy.file_content || existingLocalMainCopy.content || '') : null);
+            if (existingLocalMainHash && existingLocalMainHash === localHash) {
+                Logger.info('[Sync] Case C: local-main.cpp already up to date, skipping upload');
+                await FileDB.clear();
+                return snapshot;
+            }
+
             // CASE C: Content differs — rename local to "local-main.cpp" and upload
             // Cloud main.cpp is kept unchanged
             Logger.info('[Sync] Case C: Content differs, uploading local as local-main.cpp');
-            await fetchJson('/api/file/save', {
+            const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
                 method: 'POST',
                 body: JSON.stringify({ file_name: 'local-main.cpp', folder_id: null, content: localContent })
-            }).catch(e => Logger.warn('[Sync] Case C upload failed: ' + e.message));
+            });
+            if (!saveResponse.ok) {
+                Logger.warn('[Sync] Case C upload failed');
+            } else {
+                const existingLocalMain = snapshot.files.find(f => (f.file_name || f.filename) === 'local-main.cpp');
+                if (existingLocalMain) {
+                    existingLocalMain.file_content = localContent;
+                    existingLocalMain.file_size = savePayload?.file_size ?? computeBytes(localContent);
+                    existingLocalMain.content_hash = savePayload?.content_hash || existingLocalMain.content_hash || null;
+                } else {
+                    snapshot.files.push({
+                        id: savePayload?.file_id || null,
+                        file_name: 'local-main.cpp',
+                        file_content: localContent,
+                        folder_id: null,
+                        folder_name: '',
+                        file_size: savePayload?.file_size ?? computeBytes(localContent),
+                        content_hash: savePayload?.content_hash || null
+                    });
+                }
+            }
         }
     }
     // After sync: clear local IndexedDB (cloud files will be downloaded as the new cache)
     await FileDB.clear();
+    return snapshot;
 }
 
 async function handleGoogleCredentialResponse(credentialResponse) {
@@ -486,10 +531,16 @@ async function handleGoogleCredentialResponse(credentialResponse) {
 
     try {
         // Sync local IndexedDB files to cloud (Cases A / B / C — no silent overwrites)
-        try { await syncLocalToCloud(); } catch (e) { Logger.warn('[Sync] Login sync error: ' + e.message); }
+        let syncedPayload = null;
+        try { syncedPayload = await syncLocalToCloud(); } catch (e) { Logger.warn('[Sync] Login sync error: ' + e.message); }
 
-        // Download cloud project
-        await refreshCloudFiles(true);
+        // Download cloud project (or reuse already-fetched snapshot from sync to avoid duplicate /api/files call)
+        if (syncedPayload) {
+            updateCloudStateFromPayload(syncedPayload);
+            renderFileExplorer();
+        } else {
+            await refreshCloudFiles(true);
+        }
 
         // Rebuild IndexedDB cache in parallel (non-blocking — don't delay file open)
         Promise.all(
