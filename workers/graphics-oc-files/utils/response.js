@@ -17,7 +17,7 @@ export function withCors(request) {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Credentials': allowCredentials,
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie, X-User-Email',
+    'Access-Control-Allow-Headers': 'Content-Type, Cookie',
     Vary: 'Origin',
     'Content-Type': 'application/json',
   };

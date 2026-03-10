@@ -294,10 +294,10 @@ let scriptsLoaded = {
 // ==================== CLOUD STORAGE STATE ====================
 const CLOUD_STATE = {
     files: new Map(),
-    folders: new Set(['main']),
+    folders: new Set(['root']),
     folderNameToId: new Map(),
     openTabs: [],
-    activeFileKey: 'main/main.cpp',
+    activeFileKey: 'root/main.cpp',
     autosaveTimer: null,
     isSaving: false,
     lastSavedHash: null,

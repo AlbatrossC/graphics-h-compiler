@@ -449,7 +449,7 @@ async function runProgram() {
             CLOUD_STATE.autosaveTimer = null;
         }
 
-        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
         const [folder, filename] = activeKey.split('/');
         setLocalDraftImmediate(folder, filename, code);
         localStorage.setItem('tc_code', code);
@@ -651,6 +651,7 @@ const userName = document.getElementById('user-name');
 const userEmail = document.getElementById('user-email');
 const signoutBtn = document.getElementById('signout-btn');
 const mainFolderFiles = document.getElementById('main-folder-files');
+const newFolderBtn = document.getElementById('new-folder-btn');
 const newFileBtn = document.getElementById('new-file-btn');
 
 // User state (will be updated by auth logic)
@@ -717,7 +718,7 @@ const settingsActivityBtn = document.getElementById('settings-activity-btn');
 
 if (refreshBtn) {
     refreshBtn.addEventListener('click', () => {
-        refreshCloudFiles();
+        refreshCloudFiles(true);
     });
 }
 
@@ -767,6 +768,13 @@ function updateLoginUI(loggedIn, user = null) {
         // Show file explorer, hide promo
         cloudPromoView.style.display = 'none';
         fileExplorerView.style.display = 'block';
+        if (refreshBtn) {
+            refreshBtn.style.display = 'inline-flex';
+            refreshBtn.disabled = false;
+        }
+        if (newFolderBtn) {
+            newFolderBtn.style.display = 'flex';
+        }
         if (newFileBtn) {
             newFileBtn.style.display = 'flex';
         }
@@ -776,8 +784,16 @@ function updateLoginUI(loggedIn, user = null) {
         userProfileSection.style.display = 'block';
 
         // Update user info
-        const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-        const email = user.email || '';
+        const displayName =
+            user.user_metadata?.full_name ||
+            user.display_name ||
+            user.name ||
+            user.email ||
+            'Account';
+        const email =
+            user.email ||
+            user.user_metadata?.email ||
+            '';
         const avatarUrl = user.user_metadata?.avatar_url;
 
         userName.textContent = displayName;
@@ -792,9 +808,16 @@ function updateLoginUI(loggedIn, user = null) {
 
         Logger.success(`Signed in as ${displayName}`);
     } else {
-        // Show promo, hide file explorer
+        // Logged-out mode: show auth promo only, no cloud file controls.
         cloudPromoView.style.display = 'flex';
         fileExplorerView.style.display = 'none';
+        if (refreshBtn) {
+            refreshBtn.style.display = 'none';
+            refreshBtn.disabled = true;
+        }
+        if (newFolderBtn) {
+            newFolderBtn.style.display = 'none';
+        }
         if (newFileBtn) {
             newFileBtn.style.display = 'none';
         }
@@ -804,9 +827,13 @@ function updateLoginUI(loggedIn, user = null) {
         userProfileSection.style.display = 'none';
 
         CLOUD_STATE.files.clear();
-        CLOUD_STATE.folders = new Set(['main']);
+        CLOUD_STATE.folders = new Set(['root']);
+        CLOUD_STATE.folderNameToId = new Map();
+        CLOUD_STATE.folderIdToName = new Map();
+        CLOUD_STATE.files.clear();
         CLOUD_STATE.openTabs = [];
-        CLOUD_STATE.activeFileKey = 'main/main.cpp';
+        CLOUD_STATE.activeFileKey = 'root/main.cpp';
+        CLOUD_STATE.selectedFolderKey = 'root';
         updateSaveIndicator();
     }
 }

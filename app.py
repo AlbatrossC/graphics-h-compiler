@@ -2,6 +2,7 @@ from flask import Flask, send_file, send_from_directory, jsonify, request, rende
 from dotenv import load_dotenv
 import requests as req
 import os
+from urllib.parse import urljoin
 
 load_dotenv()
 
@@ -126,6 +127,80 @@ def get_missing_env(keys):
             missing.append(key)
     return missing
 
+
+def build_proxy_headers():
+    headers = {}
+    for key, value in request.headers.items():
+        key_lower = key.lower()
+        if key_lower in {'host', 'content-length', 'accept-encoding'}:
+            continue
+        headers[key] = value
+    # Avoid upstream brotli/zstd payloads that may be passed through as bytes
+    # while content-encoding is stripped by this proxy path.
+    headers['Accept-Encoding'] = 'identity'
+    forwarded_for = request.headers.get('X-Forwarded-For', request.remote_addr or '')
+    if forwarded_for:
+        headers['X-Forwarded-For'] = forwarded_for
+    headers['X-Forwarded-Proto'] = request.scheme
+    headers['X-Forwarded-Host'] = request.host
+    return headers
+
+
+def rewrite_set_cookie(cookie_value):
+    is_https = request.scheme == 'https' or request.headers.get('X-Forwarded-Proto') == 'https'
+    parts = []
+    for part in cookie_value.split(';'):
+        stripped = part.strip()
+        if stripped.lower().startswith('domain='):
+            continue
+        if stripped.lower() == 'secure' and not is_https:
+            continue
+        parts.append(stripped)
+    return '; '.join(parts)
+
+
+def proxy_request(base_url, path='', allow_redirects=False):
+    target_url = urljoin(base_url.rstrip('/') + '/', path.lstrip('/'))
+    query_string = request.query_string.decode('utf-8')
+    if query_string:
+        target_url = f'{target_url}?{query_string}'
+
+    upstream_response = req.request(
+        method=request.method,
+        url=target_url,
+        headers=build_proxy_headers(),
+        data=request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None,
+        allow_redirects=allow_redirects,
+        timeout=20,
+        stream=True
+    )
+
+    response = make_response(upstream_response.content, upstream_response.status_code)
+
+    excluded_headers = {
+        'content-encoding',
+        'content-length',
+        'transfer-encoding',
+        'connection',
+        'set-cookie',
+    }
+    for key, value in upstream_response.headers.items():
+        if key.lower() in excluded_headers:
+            continue
+        response.headers[key] = value
+
+    raw_headers = getattr(upstream_response.raw, 'headers', None)
+    if raw_headers and hasattr(raw_headers, 'getlist'):
+        set_cookies = raw_headers.getlist('Set-Cookie')
+    else:
+        set_cookie_value = upstream_response.headers.get('Set-Cookie')
+        set_cookies = [set_cookie_value] if set_cookie_value else []
+
+    for cookie in set_cookies:
+        response.headers.add('Set-Cookie', rewrite_set_cookie(cookie))
+
+    return response
+
 # Pages
 @app.route('/')
 @app.route('/index.html')
@@ -136,6 +211,39 @@ def index():
 @app.route('/compiler.html')
 def compiler():
     return render_template('compiler.html')
+
+
+@app.route('/api/auth/config')
+def auth_config():
+    return jsonify({
+        'authEnabled': bool(os.getenv('STORAGE_WORKER_URL') and os.getenv('GOOGLE_CLIENT_ID')),
+        'storageEnabled': bool(os.getenv('STORAGE_WORKER_URL')),
+        'googleClientId': os.getenv('GOOGLE_CLIENT_ID', ''),
+    })
+
+
+@app.route('/api/auth/google', methods=['POST', 'OPTIONS'])
+@app.route('/api/auth/session', methods=['GET', 'OPTIONS'])
+@app.route('/api/auth/logout', methods=['POST', 'OPTIONS'])
+def auth_proxy():
+    storage_worker_url = os.getenv('STORAGE_WORKER_URL')
+    if not storage_worker_url:
+        return jsonify({'error': 'Authentication is not configured'}), 503
+    worker_path = request.path.replace('/api', '', 1)
+    return proxy_request(storage_worker_url, worker_path, allow_redirects=False)
+
+
+@app.route('/api/files', methods=['GET', 'OPTIONS'])
+@app.route('/api/file/create', methods=['POST', 'OPTIONS'])
+@app.route('/api/file/save', methods=['POST', 'OPTIONS'])
+@app.route('/api/file/delete', methods=['DELETE', 'OPTIONS'])
+@app.route('/api/folder/create', methods=['POST', 'OPTIONS'])
+@app.route('/api/folder/delete', methods=['DELETE', 'OPTIONS'])
+def storage_proxy():
+    storage_worker_url = os.getenv('STORAGE_WORKER_URL')
+    if not storage_worker_url:
+        return jsonify({'error': 'Storage worker is not configured'}), 503
+    return proxy_request(storage_worker_url, request.path, allow_redirects=False)
 
 @app.route('/maintenance.html')
 def maintenance():

@@ -1,274 +1,370 @@
+import { errorResponse, jsonResponse, readJsonBody } from './response.js';
+
 const USER_CACHE = new Map();
 const USER_CACHE_TTL_MS = 60_000;
 
-const TOKEN_EMAIL_CACHE = new Map();
-const TOKEN_CACHE_TTL_MS = 300_000; // 5 minutes
+const GOOGLE_TOKEN_CACHE = new Map();
+const GOOGLE_TOKEN_CACHE_TTL_MS = 300_000;
 
-function decodeJwtPayload(token) {
-  const parts = token.split('.');
-  if (parts.length < 2) return null;
-  try {
-    const payloadPart = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = payloadPart + '='.repeat((4 - (payloadPart.length % 4)) % 4);
-    const decoded = atob(padded);
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-}
+const SESSION_COOKIE_NAME = 'session';
+const SESSION_DURATION_SEC = 7 * 24 * 60 * 60;
 
 function parseCookies(cookieHeader) {
   const out = new Map();
   if (!cookieHeader) return out;
-  const parts = cookieHeader.split(';');
-  for (const part of parts) {
+  for (const part of cookieHeader.split(';')) {
     const idx = part.indexOf('=');
     if (idx <= 0) continue;
-    const key = part.slice(0, idx).trim();
-    const value = part.slice(idx + 1).trim();
-    out.set(key, value);
+    out.set(part.slice(0, idx).trim(), part.slice(idx + 1).trim());
   }
   return out;
 }
 
-function maybeDecodeURIComponent(value) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
+function toBase64Url(input) {
+  const bytes =
+    typeof input === 'string'
+      ? new TextEncoder().encode(input)
+      : input instanceof Uint8Array
+        ? input
+        : new Uint8Array(input);
+
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
   }
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function extractEmailFromTokenValue(value) {
-  if (!value || typeof value !== 'string') return null;
-
-  const decodedValue = maybeDecodeURIComponent(value);
-
-  const payload = decodeJwtPayload(decodedValue);
-  if (typeof payload?.email === 'string' && payload.email.trim()) {
-    return payload.email.trim().toLowerCase();
+function fromBase64Url(value) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
   }
-
-  try {
-    const parsed = JSON.parse(decodedValue);
-    const candidates = [
-      parsed?.email,
-      parsed?.user?.email,
-      parsed?.session?.user?.email,
-      parsed?.data?.user?.email,
-    ];
-    for (const email of candidates) {
-      if (typeof email === 'string' && email.trim()) {
-        return email.trim().toLowerCase();
-      }
-    }
-  } catch {
-    // Not JSON, ignore.
-  }
-
-  return null;
+  return bytes;
 }
 
-function extractEmailFromSessionCookie(request) {
-  const cookies = parseCookies(request.headers.get('Cookie') || '');
-  const sessionCookieKeys = [
-    '__Secure-better-auth.session_token',
-    'better-auth.session_token',
-    '__Secure-better-auth.session',
-    'better-auth.session',
-    'session',
-  ];
-  for (const key of sessionCookieKeys) {
-    const token = cookies.get(key);
-    const email = extractEmailFromTokenValue(token);
-    if (email) return email;
-  }
-  return null;
+function decodeJsonBase64Url(value) {
+  const bytes = fromBase64Url(value);
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 
-function extractEmailFromAuthorizationHeader(request) {
-  const authHeader = request.headers.get('Authorization') || '';
-  if (!authHeader.toLowerCase().startsWith('bearer ')) {
-    return null;
-  }
-  const token = authHeader.slice(7).trim();
-  return extractEmailFromTokenValue(token);
+async function importSessionKey(secret) {
+  return crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
+  );
 }
 
-function extractEmailFromTrustedHeader(request, env) {
-  // Disabled by default. Enable only for temporary testing.
-  if (env.ALLOW_TEST_EMAIL_HEADER !== '1') {
-    return null;
-  }
-
-  const emailHeader =
-    request.headers.get('x-user-email') ||
-    request.headers.get('x-auth-email') ||
-    request.headers.get('cf-access-authenticated-user-email');
-
-  if (typeof emailHeader === 'string' && emailHeader.trim()) {
-    return emailHeader.trim().toLowerCase();
-  }
-
-  return null;
+async function signSessionJwt(payload, secret) {
+  const encodedHeader = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const encodedPayload = toBase64Url(JSON.stringify(payload));
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+  const key = await importSessionKey(secret);
+  const signature = new Uint8Array(
+    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput))
+  );
+  return `${signingInput}.${toBase64Url(signature)}`;
 }
 
-// --- Token verification cache ---
+async function verifySessionJwt(token, secret) {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw {
+      statusCode: 401,
+      code: 'unauthorized',
+      message: 'Invalid session token',
+    };
+  }
 
-function getCachedTokenEmail(token) {
-  const cached = TOKEN_EMAIL_CACHE.get(token);
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = decodeJsonBase64Url(encodedHeader);
+  if (header.alg !== 'HS256' || header.typ !== 'JWT') {
+    throw {
+      statusCode: 401,
+      code: 'unauthorized',
+      message: 'Invalid session token',
+    };
+  }
+
+  const key = await importSessionKey(secret);
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+  const isValid = await crypto.subtle.verify(
+    'HMAC',
+    key,
+    fromBase64Url(encodedSignature),
+    new TextEncoder().encode(signingInput)
+  );
+
+  if (!isValid) {
+    throw {
+      statusCode: 401,
+      code: 'unauthorized',
+      message: 'Invalid session token',
+    };
+  }
+
+  const payload = decodeJsonBase64Url(encodedPayload);
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!payload?.user_id || !payload?.email || !payload?.exp || payload.exp <= nowSec) {
+    throw {
+      statusCode: 401,
+      code: 'unauthorized',
+      message: 'Session expired',
+    };
+  }
+
+  return payload;
+}
+
+function getCachedGoogleToken(token) {
+  const cached = GOOGLE_TOKEN_CACHE.get(token);
   if (!cached) return null;
   if (Date.now() > cached.expiresAt) {
-    TOKEN_EMAIL_CACHE.delete(token);
+    GOOGLE_TOKEN_CACHE.delete(token);
     return null;
   }
   return cached.value;
 }
 
-function setCachedTokenEmail(token, info) {
-  TOKEN_EMAIL_CACHE.set(token, {
-    value: info,
-    expiresAt: Date.now() + TOKEN_CACHE_TTL_MS,
-  });
-  if (TOKEN_EMAIL_CACHE.size > 2000) {
-    const oldestKey = TOKEN_EMAIL_CACHE.keys().next().value;
-    if (oldestKey) TOKEN_EMAIL_CACHE.delete(oldestKey);
+function setCachedGoogleToken(token, value, expiresAt) {
+  GOOGLE_TOKEN_CACHE.set(token, { value, expiresAt });
+  if (GOOGLE_TOKEN_CACHE.size > 2000) {
+    const oldestKey = GOOGLE_TOKEN_CACHE.keys().next().value;
+    if (oldestKey) GOOGLE_TOKEN_CACHE.delete(oldestKey);
   }
 }
 
-// --- Better Auth session verification ---
-
-async function verifyTokenWithBetterAuth(token, env) {
-  const betterAuthUrl = env.BETTER_AUTH_URL;
-  if (!betterAuthUrl) return null;
-
-  // Check token cache first
-  const cached = getCachedTokenEmail(token);
+async function verifyGoogleIdToken(idToken, env) {
+  const cached = getCachedGoogleToken(idToken);
   if (cached) return cached;
 
-  try {
-    const response = await fetch(`${betterAuthUrl}/api/auth/session`, {
-      headers: {
-        'Cookie': `better-auth.session_token=${token}; __Secure-better-auth.session_token=${token}`,
-      },
-    });
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-    const user = data?.user || data?.session?.user;
-    const email = user?.email?.trim().toLowerCase();
-
-    if (!email) return null;
-
-    const info = {
-      email,
-      name: user?.name || user?.display_name || null,
+  if (!env.GOOGLE_CLIENT_ID) {
+    throw {
+      statusCode: 500,
+      code: 'server_error',
+      message: 'GOOGLE_CLIENT_ID is not configured',
     };
-
-    setCachedTokenEmail(token, info);
-    return info;
-  } catch {
-    return null;
   }
+
+  const verifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+  const response = await fetch(verifyUrl);
+  if (!response.ok) {
+    throw {
+      statusCode: 401,
+      code: 'invalid_google_token',
+      message: 'Invalid Google ID token',
+    };
+  }
+
+  const data = await response.json();
+  const expSec = Number(data?.exp || 0);
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!data?.email || !data?.sub || !expSec || expSec <= nowSec) {
+    throw {
+      statusCode: 401,
+      code: 'invalid_google_token',
+      message: 'Invalid Google ID token',
+    };
+  }
+
+  if (data.aud !== env.GOOGLE_CLIENT_ID) {
+    throw {
+      statusCode: 401,
+      code: 'invalid_google_token',
+      message: 'Google token audience mismatch',
+    };
+  }
+
+  if (String(data.email_verified) === 'false') {
+    throw {
+      statusCode: 401,
+      code: 'invalid_google_token',
+      message: 'Google email is not verified',
+    };
+  }
+
+  const value = {
+    email: String(data.email).trim().toLowerCase(),
+    name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : null,
+  };
+
+  const expiresAt = Math.min(Date.now() + GOOGLE_TOKEN_CACHE_TTL_MS, expSec * 1000);
+  setCachedGoogleToken(idToken, value, expiresAt);
+  return value;
 }
 
-// --- User cache ---
-
-function getCachedUser(email) {
-  const cached = USER_CACHE.get(email);
+function getCachedUser(userId) {
+  const cached = USER_CACHE.get(userId);
   if (!cached) return null;
   if (Date.now() > cached.expiresAt) {
-    USER_CACHE.delete(email);
+    USER_CACHE.delete(userId);
     return null;
   }
   return cached.value;
 }
 
-function setCachedUser(email, user) {
-  USER_CACHE.set(email, {
+function setCachedUser(userId, user) {
+  USER_CACHE.set(userId, {
     value: user,
     expiresAt: Date.now() + USER_CACHE_TTL_MS,
   });
-
-  // Keep cache bounded.
   if (USER_CACHE.size > 2000) {
     const oldestKey = USER_CACHE.keys().next().value;
     if (oldestKey) USER_CACHE.delete(oldestKey);
   }
 }
 
-function extractEmailFromRequest(request, env) {
-  return (
-    extractEmailFromSessionCookie(request) ||
-    extractEmailFromAuthorizationHeader(request) ||
-    extractEmailFromTrustedHeader(request, env)
-  );
+function clearCachedUser(userId) {
+  if (userId) USER_CACHE.delete(userId);
 }
 
-export async function authenticateRequest(request, env) {
-  let email = extractEmailFromRequest(request, env);
-  let betterAuthUserInfo = null;
+function buildSessionCookie(token, maxAgeSec = SESSION_DURATION_SEC) {
+  return [
+    `${SESSION_COOKIE_NAME}=${token}`,
+    'HttpOnly',
+    'Secure',
+    'SameSite=Lax',
+    'Path=/',
+    `Max-Age=${maxAgeSec}`,
+  ].join('; ');
+}
 
-  // If no email from cookies/JWT, verify Bearer token with Better Auth
-  if (!email) {
-    const authHeader = request.headers.get('Authorization') || '';
-    if (authHeader.toLowerCase().startsWith('bearer ')) {
-      const token = authHeader.slice(7).trim();
-      betterAuthUserInfo = await verifyTokenWithBetterAuth(token, env);
-      if (betterAuthUserInfo) {
-        email = betterAuthUserInfo.email;
-      }
-    }
-  }
+function buildLogoutCookie() {
+  return [
+    `${SESSION_COOKIE_NAME}=`,
+    'HttpOnly',
+    'Secure',
+    'SameSite=Lax',
+    'Path=/',
+    'Max-Age=0',
+  ].join('; ');
+}
 
-  if (!email) {
-    throw {
-      statusCode: 401,
-      code: 'unauthorized',
-      message: 'Unable to resolve user email from session',
-    };
-  }
+async function upsertUserFromIdentity(env, identity) {
+  const now = Date.now();
+  const db = env.graphicsh_oc_db;
 
-  const cachedUser = getCachedUser(email);
-  if (cachedUser) {
-    return { email, user: cachedUser };
-  }
-
-  let user = await env.graphicsh_oc_db
+  let user = await db
     .prepare(
-      `SELECT user_id, email, write_blocked, total_files, total_storage
+      `SELECT user_id, display_name, email, write_blocked, total_files, total_storage
        FROM users
        WHERE lower(email) = lower(?)
        LIMIT 1`
     )
-    .bind(email)
+    .bind(identity.email)
     .first();
 
-  // Auto-provision user on first verified API call
-  if (!user && betterAuthUserInfo) {
+  if (!user) {
     const userId = crypto.randomUUID();
-    const displayName = betterAuthUserInfo.name || email.split('@')[0];
-    const now = Date.now();
+    const displayName = identity.name || identity.email;
 
-    await env.graphicsh_oc_db
+    await db
       .prepare(
-        `INSERT INTO users (user_id, display_name, email, first_sign_in, last_sign_in)
-         VALUES (?, ?, ?, ?, ?)`
+        `INSERT INTO users (user_id, display_name, email, first_sign_in, last_sign_in, total_files, total_storage, write_blocked)
+         VALUES (?, ?, ?, ?, ?, 0, 0, 0)`
       )
-      .bind(userId, displayName, email, now, now)
+      .bind(userId, displayName, identity.email, now, now)
       .run();
 
     user = {
       user_id: userId,
-      email,
+      display_name: displayName,
+      email: identity.email,
       write_blocked: 0,
       total_files: 0,
       total_storage: 0,
     };
+  } else {
+    await db
+      .prepare(`UPDATE users SET last_sign_in = ?, display_name = COALESCE(?, display_name) WHERE user_id = ?`)
+      .bind(now, identity.name, user.user_id)
+      .run();
+
+    user = {
+      ...user,
+      display_name: identity.name || user.display_name,
+    };
   }
 
-  if (!user) {
+  const normalizedUser = {
+    user_id: user.user_id,
+    display_name: user.display_name || identity.name || identity.email,
+    email: user.email,
+    write_blocked: Number(user.write_blocked || 0),
+    total_files: Number(user.total_files || 0),
+    total_storage: Number(user.total_storage || 0),
+  };
+
+  setCachedUser(normalizedUser.user_id, normalizedUser);
+  return normalizedUser;
+}
+
+async function issueSessionLoginResponse(env, user, corsHeaders) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  const sessionToken = await signSessionJwt(
+    {
+      user_id: user.user_id,
+      email: user.email,
+      exp: nowSec + SESSION_DURATION_SEC,
+    },
+    env.SESSION_SECRET
+  );
+
+  const response = jsonResponse(
+    {
+      authenticated: true,
+      email: user.email,
+      display_name: user.display_name,
+    },
+    200,
+    corsHeaders
+  );
+  response.headers.append('Set-Cookie', buildSessionCookie(sessionToken));
+  return response;
+}
+
+export async function authenticateRequest(request, env) {
+  if (!env.SESSION_SECRET) {
+    throw {
+      statusCode: 500,
+      code: 'server_error',
+      message: 'SESSION_SECRET is not configured',
+    };
+  }
+
+  const cookies = parseCookies(request.headers.get('Cookie') || '');
+  const sessionToken = cookies.get(SESSION_COOKIE_NAME);
+  if (!sessionToken) {
+    throw {
+      statusCode: 401,
+      code: 'unauthorized',
+      message: 'Authentication required',
+    };
+  }
+
+  const session = await verifySessionJwt(sessionToken, env.SESSION_SECRET);
+  const cachedUser = getCachedUser(session.user_id);
+  if (cachedUser) {
+    return { session, user: cachedUser };
+  }
+
+  const user = await env.graphicsh_oc_db
+    .prepare(
+      `SELECT user_id, display_name, email, write_blocked, total_files, total_storage
+       FROM users
+       WHERE user_id = ?
+       LIMIT 1`
+    )
+    .bind(session.user_id)
+    .first();
+
+  if (!user || String(user.email).toLowerCase() !== String(session.email).toLowerCase()) {
     throw {
       statusCode: 401,
       code: 'unauthorized',
@@ -278,13 +374,59 @@ export async function authenticateRequest(request, env) {
 
   const normalizedUser = {
     user_id: user.user_id,
+    display_name: user.display_name || user.email,
     email: user.email,
     write_blocked: Number(user.write_blocked || 0),
     total_files: Number(user.total_files || 0),
     total_storage: Number(user.total_storage || 0),
   };
 
-  setCachedUser(email, normalizedUser);
+  setCachedUser(normalizedUser.user_id, normalizedUser);
+  return { session, user: normalizedUser };
+}
 
-  return { email, user: normalizedUser };
+export async function handleGoogleLogin(request, env, corsHeaders) {
+  if (!env.SESSION_SECRET) {
+    return errorResponse('server_error', 'SESSION_SECRET is not configured', 500, corsHeaders);
+  }
+
+  const body = await readJsonBody(request);
+  const idToken = typeof body?.id_token === 'string' ? body.id_token.trim() : '';
+  if (!idToken) {
+    return errorResponse('bad_request', 'id_token is required', 400, corsHeaders);
+  }
+
+  const identity = await verifyGoogleIdToken(idToken, env);
+  const user = await upsertUserFromIdentity(env, identity);
+  return issueSessionLoginResponse(env, user, corsHeaders);
+}
+
+export async function handleSession(request, env, corsHeaders) {
+  try {
+    const auth = await authenticateRequest(request, env);
+    return jsonResponse(
+      {
+        authenticated: true,
+        email: auth.user.email,
+        display_name: auth.user.display_name,
+      },
+      200,
+      corsHeaders
+    );
+  } catch (error) {
+    if (error?.statusCode === 401) {
+      return jsonResponse({ authenticated: false }, 200, corsHeaders);
+    }
+    throw error;
+  }
+}
+
+export function handleLogout(_request, _env, corsHeaders) {
+  const response = jsonResponse({ success: true }, 200, corsHeaders);
+  response.headers.append('Set-Cookie', buildLogoutCookie());
+  return response;
+}
+
+export function invalidateUserCache(userId) {
+  clearCachedUser(userId);
 }

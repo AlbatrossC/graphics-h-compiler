@@ -162,7 +162,7 @@ async function loadDemoFile(demoKey, forceReload = false) {
             currentDemo = demoKey;
 
             if (isUserLoggedIn) {
-                const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+                const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
                 const [folder, filename] = activeKey.split('/');
                 setLocalDraft(folder, filename, code);
                 CLOUD_STATE.lastSavedHash = null;
@@ -636,7 +636,7 @@ function updateEditorInfo() {
 async function loadDefaultCode() {
     if (isUserLoggedIn) {
         await refreshCloudFiles();
-        const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+        const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
         const [folder, filename] = activeKey.split('/');
         await openFile(folder, filename, { skipSave: true });
         DIRTY_FLAG.isDirty = false;
@@ -666,7 +666,7 @@ clearBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the editor?')) {
         editor.setValue('');
         if (isUserLoggedIn) {
-            const activeKey = CLOUD_STATE.activeFileKey || 'main/main.cpp';
+            const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
             const [folder, filename] = activeKey.split('/');
             setLocalDraft(folder, filename, '');
             CLOUD_STATE.lastSavedHash = null;

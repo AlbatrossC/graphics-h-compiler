@@ -1,4 +1,7 @@
 {
+  "name": "graphics-oc-files",
+  "main": "worker.js",
+  "compatibility_date": "2026-03-09",
   "d1_databases": [
     {
       "binding": "graphicsh_oc_db",
@@ -6,7 +9,8 @@
       "database_id": "ccf2896f-4161-4c6e-b56d-f3f5227c99b2"
     }
   ],
-  // Set BETTER_AUTH_URL via: wrangler secret put BETTER_AUTH_URL
-  // Or override locally with .dev.vars: BETTER_AUTH_URL=http://localhost:3000
+  // Set via:
+  // wrangler secret put SESSION_SECRET
+  // wrangler secret put GOOGLE_CLIENT_ID
   "vars": {}
 }

@@ -1,6 +1,11 @@
 import { handleFilesRoutes } from './routes/files.js';
 import { handleFolderRoutes } from './routes/folders.js';
-import { authenticateRequest } from './utils/auth.js';
+import {
+  authenticateRequest,
+  handleGoogleLogin,
+  handleLogout,
+  handleSession,
+} from './utils/auth.js';
 import { errorResponse, jsonResponse, withCors } from './utils/response.js';
 
 const ROUTES = {
@@ -32,6 +37,18 @@ export default {
 
       if (method === 'GET' && pathname === '/health') {
         return jsonResponse({ ok: true }, 200, corsHeaders);
+      }
+
+      if (method === 'POST' && pathname === '/auth/google') {
+        return await handleGoogleLogin(request, env, corsHeaders);
+      }
+
+      if (method === 'GET' && pathname === '/auth/session') {
+        return await handleSession(request, env, corsHeaders);
+      }
+
+      if (method === 'POST' && pathname === '/auth/logout') {
+        return handleLogout(request, env, corsHeaders);
       }
 
       if (!pathname.startsWith('/api/')) {

@@ -73,6 +73,7 @@
 
   <script src="static/analytics.js" defer></script>
   <script src="static/resource-loader.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -212,7 +213,7 @@
             <span>Explorer</span>
           </div>
           <div class="sidebar-actions">
-            <button id="refresh-btn" class="sidebar-action-btn" title="Refresh Files">
+            <button id="refresh-btn" class="sidebar-action-btn" title="Refresh Files" style="display: none;">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
@@ -242,6 +243,14 @@
         </div>
 
         <div class="explorer-actions">
+          <button id="new-folder-btn" class="explorer-action-btn" style="display: none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              <line x1="12" y1="11" x2="12" y2="17"></line>
+              <line x1="9" y1="14" x2="15" y2="14"></line>
+            </svg>
+            <span>New Folder</span>
+          </button>
           <button id="new-file-btn" class="explorer-action-btn" style="display: none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -261,7 +270,8 @@
             Sign in to save your projects to the cloud
           </p>
           <div id="auth-section" class="auth-section">
-            <button id="google-signin-btn" class="google-btn">
+            <div id="google-btn-render" class="google-btn-render"></div>
+            <button id="google-signin-btn" class="google-btn" style="display:none">
               <svg class="google-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M17.64 9.2c0-.637-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.562 2.684-3.863 2.684-6.615z"
@@ -286,19 +296,16 @@
 
         <div id="file-explorer-view" class="file-explorer" style="display: none">
           <div class="files-header">
-            <span class="files-title">Project Files</span>
+            <span class="files-title">All Files</span>
             <span class="files-count" id="files-count">0 files</span>
           </div>
 
-          <div class="file-list-flat" id="main-folder-files">
-            <div class="file-item active" data-file="main.cpp" data-folder="main">
-              <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
-              <span class="file-name">main.cpp</span>
-            </div>
+          <div id="explorer-loading-state" class="explorer-loading hidden" aria-live="polite">
+            <span class="explorer-loading-spinner" aria-hidden="true"></span>
+            <span id="explorer-loading-text">Loading files...</span>
           </div>
+
+          <div class="file-list-flat" id="main-folder-files"></div>
         </div>
 
         <!-- Settings Panel -->
@@ -571,12 +578,12 @@
     </div>
   </div>
 
-  <script src="/static/js/compiler/core.js?v=codemirror_v1"></script>
-  <script src="/static/js/compiler/storage.js?v=codemirror_v1"></script>
-  <script src="/static/js/compiler/editor.js?v=codemirror_v1"></script>
-  <script src="/static/js/compiler/runtime.js?v=codemirror_v1"></script>
+  <script src="/static/js/compiler/core.js?v=codemirror_v5"></script>
+  <script src="/static/js/compiler/storage.js?v=codemirror_v5"></script>
+  <script src="/static/js/compiler/editor.js?v=codemirror_v5"></script>
+  <script src="/static/js/compiler/runtime.js?v=codemirror_v5"></script>
 
-  <script src="/static/js/compiler/settings.js?v=codemirror_v1"></script>
+  <script src="/static/js/compiler/settings.js?v=codemirror_v5"></script>
 
 </body>
 

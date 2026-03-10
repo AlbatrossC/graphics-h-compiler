@@ -57,6 +57,11 @@ export const handleFilesRoutes = {
     const emptyHash = await computeSha256Hex(emptyContent);
     const fileId = crypto.randomUUID();
 
+    const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
+    if (existingFile) {
+      return errorResponse('conflict', 'File with this name already exists in the folder', 409, corsHeaders);
+    }
+
     try {
       await db
         .prepare(
