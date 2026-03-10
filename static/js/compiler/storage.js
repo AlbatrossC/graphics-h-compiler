@@ -157,7 +157,7 @@ async function setLocalDraft(folder, filename, content) {
 
 // Non-blocking wrapper — safe to call from synchronous contexts (change listeners, etc.)
 function setLocalDraftImmediate(folder, filename, content) {
-    setLocalDraft(folder, filename, content).catch(() => {});
+    setLocalDraft(folder, filename, content).catch(() => { });
 }
 
 async function getLocalDraft(folder, filename) {
@@ -244,7 +244,7 @@ function updateSaveIndicator() {
         saveText.textContent = isUserLoggedIn ? 'Saved to cloud' : 'Saved locally';
     } else {
         saveIndicator.classList.remove('saved');
-        saveText.textContent = '● Unsaved';  // Spec: show dot indicator for unsaved state
+        saveText.textContent = 'Unsaved';
     }
 }
 function getFileIconClass(ext) {
@@ -503,9 +503,9 @@ async function handleGoogleCredentialResponse(credentialResponse) {
                     dirty: false,
                     folderId: file.folder_id,
                     folderKey: file.folder_key
-                }).catch(() => {})
+                }).catch(() => { })
             )
-        ).catch(() => {});
+        ).catch(() => { });
 
         // Open last file, prioritising main.cpp
         const savedKey = getLastOpenedFile();
@@ -560,7 +560,7 @@ async function initGoogleIdentity(clientId) {
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
                 size: 'large',
-                shape: 'rectangular',
+                shape: 'pill',
                 text: 'signin_with',
                 width: 240,
             });
@@ -610,9 +610,9 @@ async function signOut() {
     // Cleanup runs in background — doesn't block UI
     (async () => {
         try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch { }
-        await clearAllLocalDrafts().catch(() => {});
+        await clearAllLocalDrafts().catch(() => { });
         if (currentCode !== null) {
-            await setLocalDraft('root', 'main.cpp', currentCode).catch(() => {});
+            await setLocalDraft('root', 'main.cpp', currentCode).catch(() => { });
         }
     })();
 }
@@ -764,7 +764,7 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
             dirty: false,
             folderId: info.folderId,
             folderKey: info.folder
-        }).catch(() => {});
+        }).catch(() => { });
         localStorage.setItem('tc_code', code); // Keep as emergency backup for compile flow
         SAVE_STATE.lastSavedHash = confirmedHash;
         SAVE_STATE.lastSaveTime = Date.now();

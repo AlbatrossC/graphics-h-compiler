@@ -2,12 +2,60 @@ from flask import Flask, send_file, send_from_directory, jsonify, request, rende
 from dotenv import load_dotenv
 import requests as req
 import os
+import json
+import time
 from urllib.parse import urljoin
 
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
+# ==================== LOGGING ====================
+RESET   = '\033[0m'
+BOLD    = '\033[1m'
+GREEN   = '\033[92m'
+CYAN    = '\033[96m'
+YELLOW  = '\033[93m'
+RED     = '\033[91m'
+GRAY    = '\033[90m'
+BLUE    = '\033[94m'
+MAGENTA = '\033[95m'
+
+def _ts():
+    return time.strftime('%H:%M:%S')
+
+def log_info(msg):
+    print(f"{GRAY}[{_ts()}]{RESET} {CYAN}INFO{RESET}  {msg}", flush=True)
+
+def log_ok(msg):
+    print(f"{GRAY}[{_ts()}]{RESET} {GREEN}{BOLD}OK{RESET}    {msg}", flush=True)
+
+def log_warn(msg):
+    print(f"{GRAY}[{_ts()}]{RESET} {YELLOW}WARN{RESET}  {msg}", flush=True)
+
+def log_error(msg):
+    print(f"{GRAY}[{_ts()}]{RESET} {RED}{BOLD}ERR{RESET}   {msg}", flush=True)
+
+def log_request(method, path, status):
+    color = GREEN if status < 300 else (YELLOW if status < 400 else RED)
+    print(f"{GRAY}[{_ts()}]{RESET} {BLUE}{method:<7}{RESET} {path:<38} {color}{status}{RESET}", flush=True)
+
+def log_file_save(body_bytes, status):
+    """Parse and log file-save details in a human-readable format."""
+    try:
+        data = json.loads(body_bytes or b'{}')
+        filename  = data.get('file_name') or data.get('filename') or '?'
+        folder_id = data.get('folder_id')
+        folder    = f"folder:{folder_id}" if folder_id else 'root'
+        size      = len((data.get('content') or '').encode())
+        if status < 300:
+            log_ok(f"Saved  {BOLD}{filename}{RESET}  in {MAGENTA}{folder}{RESET}  ({size:,} bytes)  → cloud")
+        else:
+            log_warn(f"Save FAILED  {filename}  in {folder}  (HTTP {status})")
+    except Exception:
+        log_info(f"File save request (status {status})")
+
+# ==================== VIDEOS ====================
 VIDEOS_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'videos')
 os.makedirs(VIDEOS_FOLDER, exist_ok=True)
 
@@ -159,7 +207,7 @@ def rewrite_set_cookie(cookie_value):
     return '; '.join(parts)
 
 
-def proxy_request(base_url, path='', allow_redirects=False):
+def proxy_request(base_url, path='', allow_redirects=False, body=None):
     target_url = urljoin(base_url.rstrip('/') + '/', path.lstrip('/'))
     query_string = request.query_string.decode('utf-8')
     if query_string:
@@ -169,7 +217,7 @@ def proxy_request(base_url, path='', allow_redirects=False):
         method=request.method,
         url=target_url,
         headers=build_proxy_headers(),
-        data=request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None,
+        data=body if body is not None else (request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None),
         allow_redirects=allow_redirects,
         timeout=20,
         stream=True
@@ -230,7 +278,23 @@ def auth_proxy():
     if not storage_worker_url:
         return jsonify({'error': 'Authentication is not configured'}), 503
     worker_path = request.path.replace('/api', '', 1)
-    return proxy_request(storage_worker_url, worker_path, allow_redirects=False)
+    resp = proxy_request(storage_worker_url, worker_path, allow_redirects=False)
+    status = resp.status_code
+
+    if request.path == '/api/auth/google':
+        if status < 300:
+            try:
+                user_email = resp.get_json(force=True).get('email', '?')
+                log_ok(f"Google sign-in  → {BOLD}{user_email}{RESET}")
+            except Exception:
+                log_ok("Google sign-in  → success")
+        else:
+            log_warn(f"Google sign-in failed  (HTTP {status})")
+    elif request.path == '/api/auth/logout':
+        log_info("User signed out")
+    # session checks are silent (called on every page load)
+
+    return resp
 
 
 @app.route('/api/files', methods=['GET', 'OPTIONS'])
@@ -243,7 +307,42 @@ def storage_proxy():
     storage_worker_url = os.getenv('STORAGE_WORKER_URL')
     if not storage_worker_url:
         return jsonify({'error': 'Storage worker is not configured'}), 503
-    return proxy_request(storage_worker_url, request.path, allow_redirects=False)
+
+    # Read body once before passing to proxy (stream is consumed on first read)
+    body_bytes = request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None
+    resp = proxy_request(storage_worker_url, request.path, allow_redirects=False, body=body_bytes)
+    status = resp.status_code
+
+    if request.path == '/api/file/save':
+        log_file_save(body_bytes, status)
+
+    elif request.path == '/api/file/delete':
+        try:
+            data = json.loads(body_bytes or b'{}')
+            fname = data.get('file_name') or data.get('filename') or '?'
+            color = GREEN if status < 300 else RED
+            print(f"{GRAY}[{_ts()}]{RESET} {RED}DEL{RESET}   File deleted  {BOLD}{fname}{RESET}  ({color}{status}{RESET})", flush=True)
+        except Exception:
+            log_request(request.method, request.path, status)
+
+    elif request.path == '/api/folder/create':
+        try:
+            data = json.loads(body_bytes or b'{}')
+            fname = data.get('folder_name') or '?'
+            log_ok(f"Folder created  {BOLD}{fname}{RESET}  (HTTP {status})")
+        except Exception:
+            log_request(request.method, request.path, status)
+
+    elif request.path == '/api/folder/delete':
+        log_info(f"Folder deleted  (HTTP {status})")
+
+    elif request.path == '/api/files':
+        log_info(f"File list fetched  (HTTP {status})")
+
+    else:
+        log_request(request.method, request.path, status)
+
+    return resp
 
 @app.route('/maintenance.html')
 def maintenance():
@@ -326,17 +425,17 @@ def serve_compiler_assets(filepath):
 @app.route('/api/video/<path:filename>')
 def get_video(filename):
     video_path = os.path.join(VIDEOS_FOLDER, filename)
-    
+
     if not os.path.abspath(video_path).startswith(os.path.abspath(VIDEOS_FOLDER)):
         return jsonify({'error': 'File not found'}), 404
-    
+
     if not os.path.exists(video_path):
         return jsonify({'error': 'Video not found'}), 404
-    
+
     mime_types = {'.webm': 'video/webm', '.mkv': 'video/x-matroska'}
     ext = os.path.splitext(filename)[1]
     mime_type = mime_types.get(ext, 'video/mp4')
-    
+
     return send_file(video_path, mimetype=mime_type)
 
 # Contact API
@@ -358,13 +457,13 @@ def contact():
         email = data.get('email', '').strip()
         message = data.get('message', '').strip()
         name = data.get('name', '').strip() or 'Anonymous'
-        
+
         if not email or not message:
             return jsonify({'error': 'Email and message are required'}), 400
-        
+
         if '@' not in email or '.' not in email:
             return jsonify({'error': 'Invalid email format'}), 400
-        
+
         payload = {
             'content': 'New contact query for Graphics.H OC',
             'embeds': [{
@@ -376,16 +475,16 @@ def contact():
                 ]
             }]
         }
-        
+
         try:
             req.post(discord_webhook_url, json=payload, timeout=5)
         except:
             pass
-        
+
         return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
-        
+
     except Exception as e:
-        print(f'Contact error: {e}')
+        log_error(f'Contact error: {e}')
         return jsonify({'error': 'Failed to send message'}), 500
 
 # Maintenance Message API
@@ -405,10 +504,10 @@ def maintenance_message():
     try:
         data = request.get_json()
         message = data.get('message', '').strip()
-        
+
         if not message:
             return jsonify({'error': 'Message is required'}), 400
-        
+
         payload = {
             'content': '🔧 Message from Maintenance Page',
             'embeds': [{
@@ -418,16 +517,16 @@ def maintenance_message():
                 ]
             }]
         }
-        
+
         try:
             req.post(discord_webhook_url, json=payload, timeout=5)
         except:
             pass
-        
+
         return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
-        
+
     except Exception as e:
-        print(f'Maintenance message error: {e}')
+        log_error(f'Maintenance message error: {e}')
         return jsonify({'error': 'Failed to send message'}), 500
 
 # Error handlers
