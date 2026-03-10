@@ -161,15 +161,16 @@ async function loadDemoFile(demoKey, forceReload = false) {
             lastLoadedDemo = demoKey;
             currentDemo = demoKey;
 
-            if (isUserLoggedIn) {
+            // Always write demo to IndexedDB (primary storage for guest, cache for logged-in)
+            {
                 const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
                 const [folder, filename] = activeKey.split('/');
-                setLocalDraft(folder, filename, code);
-                CLOUD_STATE.lastSavedHash = null;
-                scheduleAutosave();
-            } else {
-                localStorage.removeItem("tc_code");
+                setLocalDraftImmediate(folder, filename, code);
             }
+            if (isUserLoggedIn) {
+                CLOUD_STATE.lastSavedHash = null;
+            }
+            scheduleAutosave(); // Handles both guest and logged-in
 
             updateEditorInfo();
             updateSaveIndicator();
@@ -566,15 +567,16 @@ async function initializeEditor() {
         // Set dirty flag immediately
         DIRTY_FLAG.isDirty = true;
 
-        // FAST PATH: Save locally immediately
-        if (isUserLoggedIn) {
-            const activeKey = CLOUD_STATE.activeFileKey;
-            if (activeKey) {
-                const [folder, filename] = activeKey.split('/');
-                setLocalDraft(folder, filename, update.state.doc.toString());
-            }
-            scheduleAutosave();
+        // FAST PATH: Write to IndexedDB immediately (non-blocking, for BOTH guest and logged-in)
+        // This keeps the local cache fresh so data is never lost
+        {
+            const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
+            const [_f, _n] = activeKey.split('/');
+            setLocalDraftImmediate(_f, _n, update.state.doc.toString());
         }
+
+        // Schedule 20-second idle autosave (handles both guest and logged-in)
+        scheduleAutosave();
 
         // SLOW PATH: Debounce UI updates
         if (uiUpdateTimer) {
@@ -644,14 +646,30 @@ async function loadDefaultCode() {
         return;
     }
 
-    const savedCode = localStorage.getItem("tc_code");
-    if (savedCode) {
-        editor.setValue(savedCode);
+    // Guest: try IndexedDB first (primary storage)
+    const draft = await getLocalDraft('root', 'main.cpp');
+    if (draft !== null) {
+        editor.setValue(draft);
+        SAVE_STATE.lastSavedHash = await computeSha256(draft);
         updateEditorInfo();
         DIRTY_FLAG.isDirty = false;
         updateSaveIndicator();
+        Logger.info('Restored guest draft from IndexedDB');
+        return;
+    }
 
-        Logger.info('Restored saved code');
+    // Fallback: one-time migration from old localStorage tc_code key
+    const savedCode = localStorage.getItem("tc_code");
+    if (savedCode) {
+        editor.setValue(savedCode);
+        // Migrate to IndexedDB and remove from localStorage
+        await setLocalDraft('root', 'main.cpp', savedCode).catch(() => {});
+        localStorage.removeItem("tc_code");
+        SAVE_STATE.lastSavedHash = await computeSha256(savedCode);
+        updateEditorInfo();
+        DIRTY_FLAG.isDirty = false;
+        updateSaveIndicator();
+        Logger.info('Migrated saved code from localStorage to IndexedDB');
         return;
     }
 
@@ -665,14 +683,16 @@ async function loadDefaultCode() {
 clearBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the editor?')) {
         editor.setValue('');
-        if (isUserLoggedIn) {
+        // Write empty content to IndexedDB for both guest and logged-in
+        {
             const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
             const [folder, filename] = activeKey.split('/');
-            setLocalDraft(folder, filename, '');
-            CLOUD_STATE.lastSavedHash = null;
-        } else {
-            localStorage.removeItem("tc_code");
+            setLocalDraftImmediate(folder, filename, '');
         }
+        if (!isUserLoggedIn) {
+            localStorage.removeItem("tc_code"); // Clear legacy localStorage backup
+        }
+        CLOUD_STATE.lastSavedHash = null;
         lastLoadedDemo = '';
         updateEditorInfo();
         updateSaveIndicator();

@@ -308,8 +308,8 @@ const CLOUD_STATE = {
 // Global mobile detection
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
-const AUTOSAVE_DELAY_MS = isMobile ? 60000 : 30000;           // 60s/30s cloud autosave interval
-const TYPING_DEBOUNCE_MS = isMobile ? 5000 : 3000;            // Wait 5s/3s after typing stops before autosave timer
+const AUTOSAVE_DELAY_MS = 20000;  // 20-second idle autosave (spec: save after 20s of no edits)
+const TYPING_DEBOUNCE_MS = 0;     // Timer resets immediately on every keystroke
 
 // ==================== FILE CONTENT CACHE (DISABLED) ====================
 function getCachedFileContent() {
