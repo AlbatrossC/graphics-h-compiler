@@ -262,7 +262,7 @@
           </button>
         </div>
 
-        <div id="cloud-promo-view" class="cloud-promo">
+        <div id="cloud-promo-view" class="cloud-promo" style="display: none">
           <svg class="cloud-promo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
           </svg>
@@ -296,8 +296,11 @@
 
         <div id="file-explorer-view" class="file-explorer" style="display: none">
           <div class="files-header">
-            <span class="files-title">All Files</span>
-            <span class="files-count" id="files-count">0 files</span>
+            <svg class="files-header-chevron" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
+            </svg>
+            <span class="files-title">WORKSPACE</span>
+            <span class="files-count" id="files-count" style="display: none;"></span>
           </div>
 
           <div id="explorer-loading-state" class="explorer-loading hidden" aria-live="polite">

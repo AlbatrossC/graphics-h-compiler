@@ -94,6 +94,12 @@ function remoteFileByName(targetFolderId, filename) {
     for (const file of CLOUD_STATE.files.values()) if ((file.folder_id || null) === (targetFolderId || null) && file.filename === filename) return file;
     return null;
 }
+function getMainCppFile() {
+    for (const file of CLOUD_STATE.files.values()) {
+        if (isVisibleCloudFile(file) && file.filename === 'main.cpp') return file;
+    }
+    return null;
+}
 function userForUi(user) {
     return {
         email: user.email || '',
@@ -144,7 +150,23 @@ function createFileItem(folder, filename) {
             <button class="file-action-btn file-download-btn" title="Download file" onclick="event.stopPropagation(); downloadFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
             <button class="file-action-btn file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"></path></svg></button>
         </div>`;
-    item.addEventListener('click', () => { setSelectedFolder(folder); openFile(folder, filename); });
+    item.addEventListener('click', () => {
+        setSelectedFolder(folder);
+        openFile(folder, filename);
+
+        // Auto-close sidebar on mobile
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        if (sidebar && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+        }
+
+        // Auto-switch back to the code editor tab on mobile
+        if (typeof window.switchMobileTab === 'function') {
+            window.switchMobileTab('editor');
+        }
+    });
     return item;
 }
 function createFolderGroup(folder, name, files) {
@@ -463,6 +485,7 @@ async function openFile(folder, filename, options = {}) {
     DIRTY_FLAG.isDirty = false;
     updateSaveIndicator();
     highlightActiveFile();
+    saveLastOpenedFile(key);
 }
 async function persistLocalSave(code) {
     localStorage.setItem('tc_code', code);
@@ -575,6 +598,10 @@ async function deleteFolder(folder, name) {
     }
 }
 async function deleteFile(folder, filename) {
+    if (filename === 'main.cpp') {
+        alert("main.cpp is the primary file and cannot be deleted.");
+        return;
+    }
     if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) return;
     const key = fileKey(folder, filename);
     const file = CLOUD_STATE.files.get(key);
@@ -589,6 +616,14 @@ async function deleteFile(folder, filename) {
         else if (editor) { editor.setValue(DEFAULT_SOURCE); DIRTY_FLAG.isDirty = false; updateSaveIndicator(); }
     } else renderFileExplorer();
 }
+const LAST_OPENED_FILE_KEY = 'compiler_last_opened_v1';
+function saveLastOpenedFile(key) {
+    if (key) localStorage.setItem(LAST_OPENED_FILE_KEY, key);
+}
+function getLastOpenedFile() {
+    return localStorage.getItem(LAST_OPENED_FILE_KEY);
+}
+
 function downloadFile(folder, filename) {
     const key = fileKey(folder, filename);
     const content = key === CLOUD_STATE.activeFileKey && editor ? editor.getValue() : (CLOUD_STATE.files.get(key)?.content || getLocalDraft(folder, filename) || '');
@@ -624,7 +659,8 @@ async function initAuth() {
         const loggedIn = await checkSession();
         if (loggedIn) {
             await refreshCloudFiles(true);
-            const active = CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '') || getFirstVisibleCloudFile();
+            const savedKey = getLastOpenedFile();
+            const active = CLOUD_STATE.files.get(savedKey || '') || CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '') || getMainCppFile() || getFirstVisibleCloudFile();
             if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
         }
     } catch (error) {
