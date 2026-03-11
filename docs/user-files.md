@@ -120,7 +120,7 @@ The frontend **never talks directly** to the Cloudflare Worker. All API calls go
 
 | Frontend Call | Flask Route | Worker Path | Frontend Caller | Purpose |
 |--------------|-------------|-------------|-----------------|---------|
-| `GET /api/files` | `app.py:304` | `/api/files` | `refreshCloudFiles()` in `storage.js:772` | Fetch all folders + files (with content) |
+| `GET /api/files` | `app.py:304` | `/api/files` | `refreshCloudFiles()` in `storage.js:785` | Fetch folders + files (with content) + `last_opened_file_id` |
 | `POST /api/file/create` | `app.py:305` | `/api/file/create` | *(not directly used — `file/save` handles creation)* | Create empty file |
 | `POST /api/file/save` | `app.py:306` | `/api/file/save` | `forceSaveActiveFile()` in `storage.js:835` | Save/upsert file content |
 | `DELETE /api/file/delete` | `app.py:307` | `/api/file/delete` | `deleteFile()` in `storage.js:995` | Delete a file by ID |
@@ -132,7 +132,7 @@ The frontend **never talks directly** to the Cloudflare Worker. All API calls go
 The Flask backend uses a `proxy_request()` function (line 215) that:
 
 1. Reads the request body, headers, cookies from the browser
-2. Forwards them to `USER_FILES_WORKERS` URL (e.g., `https://graphics-oc-files.albatrossc.workers.dev`)
+2. Forwards them to `USER_FILES_WORKERS` URL (e.g., `https://graphics-oc-files.albatrossc.workers.dev`) with `X-Forwarded-*` headers and `Accept-Encoding: identity`
 3. The path is adjusted: `/api/file/save` → `/api/file/save` (kept as-is for storage routes), `/api/auth/google` → `/auth/google` (strips `/api` prefix for auth routes)
 4. Copies response headers back, **rewrites `Set-Cookie`** (removes `Domain=`, strips `Secure` on HTTP)
 5. Logs the operation with color-coded terminal output
@@ -163,7 +163,7 @@ checkSession()                                ← GET /api/auth/session
     ├── 200 + authenticated: true
     │   ├── updateLoginUI(true, user)
     │   ├── refreshCloudFiles(true)           ← GET /api/files
-    │   ├── openFile(lastOpened || main.cpp)
+    │   ├── openFile(last_opened_file_id || main.cpp || first cloud file)
     │   └── Show file explorer, hide sign-in promo
     │
     └── 200 + authenticated: false
@@ -188,16 +188,16 @@ handleGoogleCredentialResponse()
     ├── updateLoginUI(true, user)
     ├── setExplorerLoading(true, 'Syncing...')
     │
-    ├── syncLocalToCloud()                    ← merge guest files to cloud
+    ├── syncLocalToCloud()                    ← merge guest files to cloud (inside `main` folder)
     │   ├── Read IndexedDB for root/main.cpp
     │   ├── GET /api/files                    ← check what cloud already has
-    │   ├── Case A: cloud empty → POST /api/file/save (upload local main.cpp)
+    │   ├── Case A: `main/main.cpp` missing → POST /api/file/save (upload local main.cpp)
     │   ├── Case B: content identical → skip
-    │   └── Case C: differs → POST /api/file/save (upload as local-main.cpp)
+    │   └── Case C: differs → POST /api/file/save (upload as local-main.cpp in same folder)
     │
     ├── refreshCloudFiles() or use sync snapshot
     ├── Rebuild IndexedDB cache from cloud files
-    └── openFile(lastOpened || main.cpp)
+    └── openFile(last_opened_file_id || main.cpp || first cloud file)
 ```
 
 ### Sign-Out Flow
@@ -245,6 +245,7 @@ In `compiler.html`:
 ```
 Worker returns:
 {
+  last_opened_file_id: "uuid-or-null",
   folders: [{ id, folder_name }],
   files: [{ id, file_name, file_content, folder_id, folder_name }]
 }
@@ -252,6 +253,7 @@ Worker returns:
         ▼
 updateCloudStateFromPayload()     (storage.js:735)
         │
+        ├── Sets CLOUD_STATE.lastOpenedFileId
         ├── Populates CLOUD_STATE.folders (Set)
         ├── Populates CLOUD_STATE.folderIdToName (Map: id → name)
         ├── Populates CLOUD_STATE.folderNameToId (Map: name → id)
@@ -284,10 +286,11 @@ forceSaveActiveFile(trigger, options)
     │   ├── POST /api/file/save
     │   │   Body: { folder_id, file_name, content }
     │   │       ↓ Flask proxy ↓
-    │   │   Worker: compute hash, check existing file
-    │   │   ├── Same hash → return { changed: false } (no DB write)
-    │   │   ├── Exists + different → UPDATE files table
-    │   │   └── Not exists → INSERT into files table
+    │   │   Worker: upsert via `INSERT ... ON CONFLICT ... RETURNING id`
+    │   │   ├── Same hash → return { changed: false } (no file-row write)
+    │   │   ├── Exists + different → conflict-update
+    │   │   └── Not exists → insert
+    │   │   Also updates `users.last_opened_file_id` and refreshes user stats on changed writes
     │   │
     │   ├── Update CLOUD_STATE.files in memory
     │   ├── Update IndexedDB cache (non-blocking)
@@ -373,9 +376,11 @@ Every code path that can save a file:
 | **Autosave (idle)** | `scheduleAutosave()` → `forceSaveActiveFile('idle', { force: false, silent: true })` | `POST /api/file/save` | Skips if hash unchanged. Silent. |
 | **File switch** | `openFile()` → `forceSaveActiveFile('fileSwitch', { force: false, silent: true })` | `POST /api/file/save` | Saves current file before switching to another |
 | **Sign-out** | `signOut()` → `forceSaveActiveFile('signOut', { force: false, silent: true })` | `POST /api/file/save` | Saves dirty changes before logging out |
-| **Compile/Run** | `runtime.js:461` → `saveCode()` | `POST /api/file/save` | Saves code before compilation, but skips the progress bar |
+| **Compile/Run (preflight)** | `runtime.js:457` → `forceSaveActiveFile('compileRun')` | `POST /api/file/save` | Attempts a background save before run (skips progress UI) |
+| **Compile/Run (explicit)** | `runtime.js:461` → `saveCode()` | `POST /api/file/save` | Manual-style save call before compilation |
 | **New file creation** | `createNewFile()` → `fetchJson('/api/file/save', ...)` | `POST /api/file/save` | Creates file with starter template via upsert |
 | **Login sync** | `syncLocalToCloud()` → `fetchJson('/api/file/save', ...)` | `POST /api/file/save` | Uploads guest `main.cpp` to cloud |
+| **Open existing cloud file** | `openFile()` background save | `POST /api/file/save` | Updates backend `last_opened_file_id` even when content is unchanged |
 | **Guest save (local)** | `persistLocalSave()` → `FileDB.put()` | None (IndexedDB only) | Guest-mode save to browser storage |
 | **Draft write (on every keystroke)** | `setLocalDraftImmediate()` → `FileDB.put()` | None (IndexedDB only) | Non-blocking draft write for crash recovery |
 
@@ -403,7 +408,7 @@ Every code path that can save a file:
 
 | Key | Purpose |
 |-----|---------|
-| `compiler_last_opened_v1` | Remembers which file was last open (e.g., `"folderId/main.cpp"`) |
+| `compiler_last_opened_v1` | Guest-mode fallback for last open file key; logged-in restore now prefers backend `last_opened_file_id` |
 | `compiler_folder_ui_state_v1` | JSON object tracking collapsed/expanded state of each folder in explorer |
 | `tc_code` | Emergency backup of current code for the compile flow (kept for legacy) |
 
@@ -417,9 +422,9 @@ When a guest user signs in, `syncLocalToCloud()` runs to merge any local files w
 
 | Case | Condition | Action |
 |------|-----------|--------|
-| **A** | Cloud has **no** `main.cpp` | Upload local `main.cpp` to cloud as `main.cpp` |
-| **B** | Cloud has `main.cpp` with **identical** content (same SHA-256) | Use cloud version, discard local duplicate |
-| **C** | Cloud has `main.cpp` with **different** content | Keep cloud `main.cpp` unchanged. Upload local version as `local-main.cpp` |
+| **A** | `main` folder has **no** `main.cpp` | Upload local `main.cpp` into `main` folder |
+| **B** | `main` folder has `main.cpp` with **identical** content (same SHA-256) | Use cloud version, discard local duplicate |
+| **C** | `main` folder has `main.cpp` with **different** content | Keep cloud `main.cpp` unchanged. Upload local version as `local-main.cpp` |
 
 After sync:
 1. IndexedDB is **cleared** entirely
@@ -442,7 +447,11 @@ const CLOUD_STATE = {
     autosaveTimer: null,           // setTimeout ID for autosave
     isSaving: false,               // Mutex to prevent concurrent saves
     lastSavedHash: null,           // SHA-256 of last saved content
-    lastSavedAt: null              // Timestamp of last save
+    lastSavedAt: null,             // Timestamp of last save
+    lastOpenedFileId: null,        // Backend-provided users.last_opened_file_id
+    selectedFolderKey: 'root',     // Current folder selection in explorer
+    folderIdToName: new Map(),     // Runtime map used by storage.js
+    lastRefresh: 0                 // Last cloud list fetch timestamp
 };
 ```
 
@@ -538,10 +547,10 @@ sidebar
 8.       └── { authenticated: true, email: "john@gmail.com" }
 9.   └── updateLoginUI(true, user)     → show explorer, hide promo
 10.  └── refreshCloudFiles(true)       → GET /api/files
-11.      └── { folders: [...], files: [...] }
+11.      └── { last_opened_file_id, folders: [...], files: [...] }
 12.      └── updateCloudStateFromPayload()
 13.      └── renderFileExplorer()       → DOM updated
-14.  └── openFile(lastOpened || main.cpp)
+14.  └── openFile(last_opened_file_id || main.cpp || first cloud file)
 15.      └── editor.setValue(content)
 16.      └── SAVE_STATE.lastSavedHash = SHA-256(content)
 ```

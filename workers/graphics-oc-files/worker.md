@@ -253,12 +253,14 @@ Signature: HMAC-SHA256(header.payload, SESSION_SECRET)
 | `total_files` | `INTEGER` | `DEFAULT 0` | Cached count of user's files (updated on create/delete) | `5` |
 | `total_storage` | `INTEGER` | `DEFAULT 0` | Cached total storage in bytes (updated on save/delete) | `12480` |
 | `write_blocked` | `INTEGER` | `DEFAULT 0` | Moderation flag: `0` = normal, `1` = cannot create/save/delete | `0` |
+| `last_opened_file_id` | `TEXT` | — | Last opened file UUID (used by frontend to restore active file) | `"e5f6a7b8-..."` |
 
 **Indexes:**
 
 | Index Name | Column(s) | Type | Purpose |
 |------------|-----------|------|---------|
 | `idx_users_user_id` | `user_id` | `INDEX` | Fast user lookup by UUID |
+| `idx_users_email` | `lower(email)` | `UNIQUE INDEX` | Enforce one account per email (case-insensitive) |
 
 **CREATE statement:**
 ```sql
@@ -271,10 +273,12 @@ CREATE TABLE IF NOT EXISTS users (
   last_sign_in INTEGER,
   total_files INTEGER DEFAULT 0,
   total_storage INTEGER DEFAULT 0,
-  write_blocked INTEGER DEFAULT 0
+  write_blocked INTEGER DEFAULT 0,
+  last_opened_file_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(lower(email));
 ```
 
 ---
@@ -330,7 +334,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_user_folder ON folders(user_id, fol
 |------------|-----------|------|---------|
 | `idx_files_user_id` | `user_id` | `INDEX` | Fast lookup of all files for a user |
 | `idx_files_folder_id` | `folder_id` | `INDEX` | Fast lookup of files within a folder |
-| `idx_unique_file_in_folder` | `(user_id, folder_id, file_name)` | `UNIQUE` | Prevent duplicate file names in the same folder |
+| `idx_unique_file_in_folder` | `(user_id, folder_id, file_name)` with `WHERE folder_id IS NOT NULL` | `UNIQUE INDEX` | Prevent duplicate file names in the same non-root folder |
+| `idx_unique_root_file` | `(user_id, file_name)` with `WHERE folder_id IS NULL` | `UNIQUE INDEX` | Prevent duplicate root-level file names per user |
 
 **CREATE statement:**
 ```sql
@@ -346,7 +351,12 @@ CREATE TABLE IF NOT EXISTS files (
 
 CREATE INDEX IF NOT EXISTS idx_files_user_id ON files(user_id);
 CREATE INDEX IF NOT EXISTS idx_files_folder_id ON files(folder_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_file_in_folder ON files(user_id, folder_id, file_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_file_in_folder
+ON files(user_id, folder_id, file_name)
+WHERE folder_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_root_file
+ON files(user_id, file_name)
+WHERE folder_id IS NULL;
 ```
 
 ---
@@ -545,7 +555,7 @@ LIMIT 1
 
 **Handler:** `handleFilesRoutes.getFiles()` in `routes/files.js`  
 **Auth required:** Yes (session cookie → `authenticateRequest()`)  
-**Tables touched:** `folders` (READ), `files` (READ), `users` (READ — via auth middleware)
+**Tables touched:** `users` (READ via auth + last opened lookup), `folders` (READ), `files` (READ)
 
 **Auth middleware query** (runs before the handler):
 ```sql
@@ -559,14 +569,21 @@ LIMIT 1
 
 **Handler queries** (batched for performance):
 ```sql
--- Query 1: Get all folders for this user
+-- Query 1: Get last opened file id for this user
+SELECT last_opened_file_id
+FROM users
+WHERE user_id = ?1
+LIMIT 1
+-- ?1 = user.user_id
+
+-- Query 2: Get all folders for this user
 SELECT id, folder_name
 FROM folders
 WHERE user_id = ?1
 ORDER BY folder_name COLLATE NOCASE
 -- ?1 = user.user_id
 
--- Query 2: Get all files for this user (with folder name via JOIN)
+-- Query 3: Get all files for this user (with folder name via JOIN)
 SELECT
   f.id,
   f.file_name,
@@ -574,17 +591,19 @@ SELECT
   f.folder_id,
   fo.folder_name
 FROM files f
-LEFT JOIN folders fo ON f.folder_id = fo.id
-WHERE f.user_id = ?1
+LEFT JOIN folders fo ON f.folder_id = fo.id AND fo.user_id = ?1
+WHERE f.user_id = ?2
 ORDER BY f.file_name COLLATE NOCASE
 -- ?1 = user.user_id
+-- ?2 = user.user_id
 ```
 
-> Both queries execute in a **single batch** (`db.batch([stmt1, stmt2])`) for reduced round-trip latency.
+> All three queries execute in a **single batch** (`db.batch([userStmt, foldersStmt, filesStmt])`) for reduced round-trip latency.
 
 **Response (200):**
 ```json
 {
+  "last_opened_file_id": "e5f6a7b8-...",
   "folders": [
     { "id": "a1b2c3d4-...", "folder_name": "Assignments" }
   ],
@@ -714,7 +733,7 @@ WHERE user_id = ?3
 
 **Handler:** `handleFilesRoutes.saveFile()` in `routes/files.js`  
 **Auth required:** Yes  
-**Tables touched:** `folders` (READ — ownership), `files` (READ + WRITE), `users` (WRITE — stats)  
+**Tables touched:** `folders` (READ — ownership), `files` (WRITE + optional READ fallback), `users` (WRITE — last opened + stats)  
 **Behavior:** This is an **upsert**. Three possible outcomes:
 
 | Scenario | DB Writes | Response |
@@ -744,77 +763,46 @@ SELECT id FROM folders WHERE id = ?1 AND user_id = ?2 LIMIT 1
 
 3. **Size check** — `new TextEncoder().encode(content).byteLength > 1,200,000` → `413`.
 4. **Compute SHA-256** of the content.
-5. **Look up existing file:**
+5. **Upsert by unique key (single statement with conditional conflict updates):**
 
 ```sql
--- Query 2a (root): Find existing file by name at root level
-SELECT id, content_hash, COALESCE(file_size, 0) AS file_size
-FROM files
-WHERE user_id = ?1 AND folder_id IS NULL AND file_name = ?2
-LIMIT 1
-
--- Query 2b (folder): Find existing file by name in folder
-SELECT id, content_hash, COALESCE(file_size, 0) AS file_size
-FROM files
-WHERE user_id = ?1 AND folder_id = ?2 AND file_name = ?3
-LIMIT 1
-```
-
-6a. **If file exists AND hash matches** → Return immediately:
-```json
-{ "success": true, "changed": false, "file_id": "...", "content_hash": "..." }
-```
-*(No DB write at all)*
-
-6b. **If file exists AND hash differs — update:**
-
-```sql
--- Query 3: Update file content
-UPDATE files
-SET file_content = ?1, file_size = ?2, content_hash = ?3
-WHERE id = ?4 AND user_id = ?5
--- ?1 = new content string
--- ?2 = new content byte length   (e.g. 1250)
--- ?3 = new SHA-256 hex hash
--- ?4 = existing file's id
--- ?5 = user.user_id
-```
-
-```sql
--- Query 4: Adjust storage delta (file count unchanged)
-UPDATE users
-SET total_files = MAX(COALESCE(total_files, 0) + ?1, 0),
-    total_storage = MAX(COALESCE(total_storage, 0) + ?2, 0)
-WHERE user_id = ?3
--- ?1 = 0                                    (no new file)
--- ?2 = newSizeBytes - previousSizeBytes     (e.g. 1250 - 800 = +450)
--- ?3 = user.user_id
-```
-
-6c. **If file does NOT exist — insert:**
-
-```sql
--- Query 3: Insert new file with content
 INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash)
 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
--- ?1 = crypto.randomUUID()
+ON CONFLICT(user_id, folder_id, file_name) WHERE folder_id IS NOT NULL
+DO UPDATE SET
+  file_content = excluded.file_content,
+  file_size = excluded.file_size,
+  content_hash = excluded.content_hash
+WHERE files.content_hash != excluded.content_hash
+ON CONFLICT(user_id, file_name) WHERE folder_id IS NULL
+DO UPDATE SET
+  file_content = excluded.file_content,
+  file_size = excluded.file_size,
+  content_hash = excluded.content_hash
+WHERE files.content_hash != excluded.content_hash
+RETURNING id
+-- ?1 = candidate file UUID (crypto.randomUUID())
 -- ?2 = user.user_id
 -- ?3 = folder_id (or NULL)
--- ?4 = validated file_name
--- ?5 = content string
--- ?6 = content byte length
--- ?7 = SHA-256 hex hash
+-- ?4 = file_name
+-- ?5 = content
+-- ?6 = content byte size
+-- ?7 = SHA-256 content hash
 ```
 
-```sql
--- Query 4: Adjust stats (+1 file, +N bytes)
-UPDATE users
-SET total_files = MAX(COALESCE(total_files, 0) + ?1, 0),
-    total_storage = MAX(COALESCE(total_storage, 0) + ?2, 0)
-WHERE user_id = ?3
--- ?1 = 1              (new file)
--- ?2 = contentBytes   (e.g. 1250)
--- ?3 = user.user_id
+6a. **If `RETURNING` is empty**: content hash was unchanged, so no file row changed. The worker:
+- Reads the existing file id via `getFileByName(...)` (fallback lookup)
+- Updates `users.last_opened_file_id` for this request context
+- Returns `200` with `changed: false`
+
+6b. **If `RETURNING` has an id**: insert or update happened. The worker:
+- Updates `users.last_opened_file_id` to the returned id
+- Recalculates user stats using `recalculateAndUpdateUserStats(...)`
+- Returns `201` for new insert, `200` for update
+
+7. **Unchanged response:**
+```json
+{ "success": true, "changed": false, "file_id": "...", "content_hash": "..." }
 ```
 
 **Response (200 — updated):**
@@ -1031,11 +1019,13 @@ WHERE user_id = ?3
 
 | Operation | Query | File |
 |-----------|-------|------|
-| **Get all user files** | `SELECT f.id, f.file_name, f.file_content, f.folder_id, fo.folder_name FROM files f LEFT JOIN folders fo ON f.folder_id = fo.id WHERE f.user_id = ? ORDER BY f.file_name COLLATE NOCASE` | `files.js` |
+| **Get user's last opened file** | `SELECT last_opened_file_id FROM users WHERE user_id = ? LIMIT 1` | `files.js` |
+| **Get all user files** | `SELECT f.id, f.file_name, f.file_content, f.folder_id, fo.folder_name FROM files f LEFT JOIN folders fo ON f.folder_id = fo.id AND fo.user_id = ? WHERE f.user_id = ? ORDER BY f.file_name COLLATE NOCASE` | `files.js` |
 | **Get file by name (root)** | `SELECT id, content_hash, COALESCE(file_size, 0) AS file_size FROM files WHERE user_id = ? AND folder_id IS NULL AND file_name = ? LIMIT 1` | `db.js` |
 | **Get file by name (folder)** | `SELECT id, content_hash, COALESCE(file_size, 0) AS file_size FROM files WHERE user_id = ? AND folder_id = ? AND file_name = ? LIMIT 1` | `db.js` |
 | **Create file** | `INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash) VALUES (?, ?, ?, ?, ?, ?, ?)` | `files.js` |
-| **Update file content** | `UPDATE files SET file_content = ?, file_size = ?, content_hash = ? WHERE id = ? AND user_id = ?` | `files.js` |
+| **Save file upsert** | `INSERT ... ON CONFLICT(user_id, folder_id, file_name) ... ON CONFLICT(user_id, file_name) ... RETURNING id` | `files.js` |
+| **Update user's last opened file** | `UPDATE users SET last_opened_file_id = ? WHERE user_id = ?` | `files.js` |
 | **Find file for delete** | `SELECT id, COALESCE(file_size, 0) AS file_size FROM files WHERE id = ? AND user_id = ? LIMIT 1` | `files.js` |
 | **Delete file** | `DELETE FROM files WHERE id = ? AND user_id = ?` | `files.js` |
 | **List user files (metadata)** | `SELECT id, folder_id, file_name, file_size, content_hash FROM files WHERE user_id = ? ORDER BY file_name COLLATE NOCASE` | `db.js` |
