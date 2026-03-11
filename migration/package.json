@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "migrate": "node migrate.js",
-    "import": "bash import.sh"
+    "reset:remote": "wrangler d1 execute graphicsh_oc_db --remote --file=./reset.sql --config=./wrangler.jsonc",
+    "import:remote": "wrangler d1 execute graphicsh_oc_db --remote --file=./migration.sql --config=./wrangler.jsonc"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.0.0",

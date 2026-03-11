@@ -5,6 +5,7 @@ import {
   getFileByName,
   getUserFiles,
   parseSqliteError,
+  recalculateAndUpdateUserStats,
 } from '../utils/db.js';
 import { errorResponse, jsonResponse, readJsonBody } from '../utils/response.js';
 import { MAX_FILE_SIZE_BYTES, validateFileName, validateFolderId } from '../utils/validate.js';
@@ -25,11 +26,11 @@ export const handleFilesRoutes = {
           f.folder_id,
           fo.folder_name
         FROM files f
-        LEFT JOIN folders fo ON f.folder_id = fo.id
+        LEFT JOIN folders fo ON f.folder_id = fo.id AND fo.user_id = ?
         WHERE f.user_id = ?
         ORDER BY f.file_name COLLATE NOCASE`
       )
-      .bind(user.user_id);
+      .bind(user.user_id, user.user_id);
 
     const [foldersRes, filesRes] = await db.batch([foldersStmt, filesStmt]);
 
@@ -111,56 +112,30 @@ export const handleFilesRoutes = {
     }
 
     const contentHash = await computeSha256Hex(content);
-    const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
+    const candidateFileId = crypto.randomUUID();
 
-    if (existingFile && existingFile.content_hash === contentHash) {
-      return jsonResponse(
-        {
-          success: true,
-          changed: false,
-          file_id: existingFile.id,
-          content_hash: contentHash,
-        },
-        200,
-        corsHeaders
-      );
-    }
-
-    if (existingFile) {
-      await db
-        .prepare(
-          `UPDATE files
-           SET file_content = ?, file_size = ?, content_hash = ?
-           WHERE id = ? AND user_id = ?`
-        )
-        .bind(content, contentBytes, contentHash, existingFile.id, user.user_id)
-        .run();
-
-      const previousSize = Number(existingFile.file_size || 0);
-      await adjustUserStats(db, user.user_id, 0, contentBytes - previousSize);
-
-      return jsonResponse(
-        {
-          success: true,
-          changed: true,
-          file_id: existingFile.id,
-          content_hash: contentHash,
-          file_size: contentBytes,
-        },
-        200,
-        corsHeaders
-      );
-    }
-
-    const newFileId = crypto.randomUUID();
+    let conflictUpsertRow = null;
     try {
-      await db
+      conflictUpsertRow = await db
         .prepare(
           `INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(user_id, folder_id, file_name) WHERE folder_id IS NOT NULL
+           DO UPDATE SET
+             file_content = excluded.file_content,
+             file_size = excluded.file_size,
+             content_hash = excluded.content_hash
+           WHERE files.content_hash != excluded.content_hash
+           ON CONFLICT(user_id, file_name) WHERE folder_id IS NULL
+           DO UPDATE SET
+             file_content = excluded.file_content,
+             file_size = excluded.file_size,
+             content_hash = excluded.content_hash
+           WHERE files.content_hash != excluded.content_hash
+           RETURNING id`
         )
-        .bind(newFileId, user.user_id, folderId, fileName, content, contentBytes, contentHash)
-        .run();
+        .bind(candidateFileId, user.user_id, folderId, fileName, content, contentBytes, contentHash)
+        .first();
     } catch (error) {
       const parsed = parseSqliteError(error);
       if (parsed?.isUniqueConstraint) {
@@ -169,17 +144,44 @@ export const handleFilesRoutes = {
       throw error;
     }
 
-    await adjustUserStats(db, user.user_id, 1, contentBytes);
+    const changed = Boolean(conflictUpsertRow?.id);
+    if (!changed) {
+      const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
+      return jsonResponse(
+        {
+          success: true,
+          changed: false,
+          file_id: existingFile?.id ?? null,
+          content_hash: contentHash,
+        },
+        200,
+        corsHeaders
+      );
+    }
+
+    const savedFileId = conflictUpsertRow.id;
+
+    await db
+      .prepare(
+        `UPDATE users
+         SET last_opened_file_id = ?
+         WHERE user_id = ?`
+      )
+      .bind(savedFileId, user.user_id)
+      .run();
+    await recalculateAndUpdateUserStats(db, user.user_id);
+
+    const statusCode = savedFileId === candidateFileId ? 201 : 200;
 
     return jsonResponse(
       {
         success: true,
         changed: true,
-        file_id: newFileId,
+        file_id: savedFileId,
         content_hash: contentHash,
         file_size: contentBytes,
       },
-      201,
+      statusCode,
       corsHeaders
     );
   },

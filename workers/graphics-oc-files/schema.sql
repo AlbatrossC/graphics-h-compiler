@@ -15,25 +15,25 @@
 
 CREATE TABLE IF NOT EXISTS users (
   sr_no INTEGER PRIMARY KEY AUTOINCREMENT,
-
   user_id TEXT NOT NULL UNIQUE,
-
   display_name TEXT,
   email TEXT,
-
   first_sign_in INTEGER,
   last_sign_in INTEGER,
-
   total_files INTEGER DEFAULT 0,
   total_storage INTEGER DEFAULT 0,
-
-  write_blocked INTEGER DEFAULT 0
+  write_blocked INTEGER DEFAULT 0,
+  last_opened_file_id TEXT
 );
 
 
 -- Index for quick user lookup
 CREATE INDEX IF NOT EXISTS idx_users_user_id
 ON users(user_id);
+
+-- Enforce one account per email (case-insensitive)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+ON users(lower(email));
 
 
 
@@ -44,9 +44,7 @@ ON users(user_id);
 
 CREATE TABLE IF NOT EXISTS folders (
   id TEXT PRIMARY KEY,
-
   user_id TEXT NOT NULL,
-
   folder_name TEXT NOT NULL
 );
 
@@ -69,17 +67,11 @@ ON folders(user_id, folder_name);
 
 CREATE TABLE IF NOT EXISTS files (
   id TEXT PRIMARY KEY,
-
   user_id TEXT NOT NULL,
-
   folder_id TEXT,
-
   file_name TEXT NOT NULL,
-
   file_content TEXT,
-
   file_size INTEGER,
-
   content_hash TEXT
 );
 
@@ -94,6 +86,12 @@ CREATE INDEX IF NOT EXISTS idx_files_folder_id
 ON files(folder_id);
 
 
--- Prevent duplicate file names inside a folder
+-- Prevent duplicate file names inside the same non-root folder
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_file_in_folder
-ON files(user_id, folder_id, file_name);
+ON files(user_id, folder_id, file_name)
+WHERE folder_id IS NOT NULL;
+
+-- Prevent duplicate root-level file names per user
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_root_file
+ON files(user_id, file_name)
+WHERE folder_id IS NULL;
