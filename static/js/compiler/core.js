@@ -522,9 +522,9 @@ async function getTCZip() {
                 return blob;
             }
 
-            // Download and cache
+            // Download with manifest fallback chain (R2 -> local) and cache result.
             Logger.info('Downloading TC ZIP...');
-            const response = await fetch(TC_ZIP_URL);
+            const response = await ResourceLoader.fetchResource('assets', 'tc-zip');
             if (!response.ok) {
                 throw new Error(`Failed to download compiler (HTTP ${response.status})`);
             }

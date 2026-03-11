@@ -414,7 +414,16 @@ async function readJsonSafe(response) {
     try { return await response.json(); } catch { return null; }
 }
 async function fetchJson(url, options = {}) {
-    const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', ...options, headers: { ...(options.headers || {}), ...(options.body ? { 'Content-Type': 'application/json' } : {}) } });
+    const method = String(options.method || 'GET').toUpperCase();
+    const fetchOptions = {
+        credentials: 'same-origin',
+        ...options,
+        headers: { ...(options.headers || {}), ...(options.body ? { 'Content-Type': 'application/json' } : {}) }
+    };
+    if (method === 'GET' && !Object.prototype.hasOwnProperty.call(fetchOptions, 'cache')) {
+        fetchOptions.cache = 'no-cache';
+    }
+    const response = await fetch(url, fetchOptions);
     return { response, payload: await readJsonSafe(response) };
 }
 function normalizeSessionUser(payload) {
@@ -437,7 +446,7 @@ function normalizeSessionUser(payload) {
 }
 async function loadAuthConfig() {
     if (authConfig) return authConfig;
-    const response = await fetch('/api/auth/config', { credentials: 'same-origin', cache: 'no-store' });
+    const response = await fetch('/api/auth/config', { credentials: 'same-origin', cache: 'no-cache' });
     if (!response.ok) throw new Error('Failed to load auth config');
     authConfig = await response.json();
     return authConfig;

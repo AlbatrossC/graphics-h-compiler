@@ -12,12 +12,14 @@ const ResourceLoader = (function () {
     let manifest = null;
     let isOnline = navigator.onLine;
     let manifestLoaded = false;
+    const urlHealthCache = new Map();
 
     // Configuration
     const CONFIG = {
         MANIFEST_PATH: '/static/manifest.json',
         FALLBACK_TIMEOUT: 5000, // 5 seconds timeout for fetching
         REQUEST_TIMEOUT: 3000,  // 3 seconds for individual URL checks
+        URL_CHECK_TTL: 5 * 60 * 1000, // 5 minutes
     };
 
     // Logger utility
@@ -49,7 +51,7 @@ const ResourceLoader = (function () {
         }
 
         try {
-            const response = await fetch(CONFIG.MANIFEST_PATH);
+            const response = await fetch(CONFIG.MANIFEST_PATH, { cache: 'default' });
             if (!response.ok) {
                 throw new Error(`Failed to load manifest: ${response.status}`);
             }
@@ -79,19 +81,29 @@ const ResourceLoader = (function () {
      * Check if a URL is accessible
      */
     async function checkUrl(url, timeout = CONFIG.REQUEST_TIMEOUT) {
+        if (url.startsWith('/')) return true;
+        const now = Date.now();
+        const cached = urlHealthCache.get(url);
+        if (cached && (now - cached.ts) < CONFIG.URL_CHECK_TTL) {
+            return cached.ok;
+        }
+
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeout);
 
             const response = await fetch(url, {
                 method: 'HEAD',
-                cache: 'no-cache',
+                cache: 'default',
                 signal: controller.signal
             });
 
             clearTimeout(timeoutId);
-            return response.ok;
+            const ok = response.ok;
+            urlHealthCache.set(url, { ok, ts: now });
+            return ok;
         } catch (e) {
+            urlHealthCache.set(url, { ok: false, ts: now });
             return false;
         }
     }

@@ -31,7 +31,7 @@ export const handleFilesRoutes = {
       )
       .bind(user.user_id);
 
-    const [foldersRes, filesRes] = await Promise.all([foldersStmt.all(), filesStmt.all()]);
+    const [foldersRes, filesRes] = await db.batch([foldersStmt, filesStmt]);
 
     return jsonResponse(
       {

@@ -9,6 +9,11 @@ from urllib.parse import urljoin
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 604800  # 7 days for static files by default
+
+PROXY_HTTP = req.Session()
+PROXY_HTTP.mount('http://', req.adapters.HTTPAdapter(pool_connections=50, pool_maxsize=100))
+PROXY_HTTP.mount('https://', req.adapters.HTTPAdapter(pool_connections=50, pool_maxsize=100))
 
 # ==================== LOGGING ====================
 RESET   = '\033[0m'
@@ -213,14 +218,13 @@ def proxy_request(base_url, path='', allow_redirects=False, body=None):
     if query_string:
         target_url = f'{target_url}?{query_string}'
 
-    upstream_response = req.request(
+    upstream_response = PROXY_HTTP.request(
         method=request.method,
         url=target_url,
         headers=build_proxy_headers(),
         data=body if body is not None else (request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None),
         allow_redirects=allow_redirects,
-        timeout=20,
-        stream=True
+        timeout=(3.5, 20)
     )
 
     response = make_response(upstream_response.content, upstream_response.status_code)
@@ -397,7 +401,18 @@ def docs_content(slug):
 # Static assets
 @app.route('/static/<path:path>')
 def serve_static(path):
-    return send_from_directory('static', path)
+    response = send_from_directory('static', path)
+    lower_path = path.lower()
+
+    # Manifest should revalidate quickly; other static assets can be cached longer.
+    if lower_path == 'manifest.json':
+        response.cache_control.public = True
+        response.cache_control.max_age = 300
+        response.cache_control.must_revalidate = True
+    elif any(lower_path.endswith(ext) for ext in ('.js', '.css', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.mp4', '.webm')):
+        response.cache_control.public = True
+        response.cache_control.max_age = 604800
+    return response
 
 @app.route('/robots.txt')
 def robots_txt():
@@ -418,7 +433,12 @@ def serve_libs(filename):
 # Serve compiler assets (demos, zip files) for offline mode
 @app.route('/compiler-assets/<path:filepath>')
 def serve_compiler_assets(filepath):
-    return send_from_directory('compiler-assets', filepath)
+    response = send_from_directory('compiler-assets', filepath)
+    lower_path = filepath.lower()
+    if any(lower_path.endswith(ext) for ext in ('.zip', '.cpp', '.js', '.wasm', '.data')):
+        response.cache_control.public = True
+        response.cache_control.max_age = 604800
+    return response
 
 
 # Video API
@@ -477,7 +497,7 @@ def contact():
         }
 
         try:
-            req.post(discord_webhook_url, json=payload, timeout=5)
+            PROXY_HTTP.post(discord_webhook_url, json=payload, timeout=5)
         except:
             pass
 
@@ -519,7 +539,7 @@ def maintenance_message():
         }
 
         try:
-            req.post(discord_webhook_url, json=payload, timeout=5)
+            PROXY_HTTP.post(discord_webhook_url, json=payload, timeout=5)
         except:
             pass
 
