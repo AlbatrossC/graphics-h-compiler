@@ -836,60 +836,61 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
     const force = options.force === true;
     const silent = options.silent === true;
     if (!editor || isSaving) return { skipped: true };
-    showProgress();
+    const skipProgress = trigger === 'compileRun';
+    if (!skipProgress) showProgress();
     try {
-    const code = editor.getValue();
-    if (!isUserLoggedIn) {
-        await persistLocalSave(code);
-        if (!silent) Logger.success(`[Save] Saved locally (${trigger})`);
-        return { success: true, local: true };
-    }
-    let info = activeFileInfo();
-    if (!info.folderId && CLOUD_STATE.folderIdToName.size === 0) {
-        const mainFolderId = await ensureMainFolder();
-        const mainFolderKey = folderKey(mainFolderId);
-        const key = fileKey(mainFolderKey, info.filename);
-        info = { ...info, folder: mainFolderKey, folderId: mainFolderId, key };
-        CLOUD_STATE.activeFileKey = key;
-        setSelectedFolder(mainFolderKey);
-    }
-    const hash = await computeSha256(code);
-    if (!force && SAVE_STATE.lastSavedHash === hash) {
-        DIRTY_FLAG.isDirty = false;
-        updateSaveIndicator();
-        if (!silent) Logger.info(`[Save] Skipped (${trigger}) - unchanged`);
-        return { skipped: true, unchanged: true };
-    }
-    isSaving = true;
-    SAVE_STATE.pendingHash = hash;
-    try {
-        const { response, payload } = await fetchJson('/api/file/save', { method: 'POST', body: JSON.stringify({ folder_id: info.folderId, file_name: info.filename, content: code }) });
-        if (response.status === 401) { safeUpdateLoginUI(false); setAuthStatus('Session expired. Please sign in again.'); throw new Error('Session expired'); }
-        if (!response.ok) throw new Error(payload?.error || 'Failed to save file');
-        CLOUD_STATE.files.set(info.key, { id: payload?.file_id || info.key, filename: info.filename, folder_id: info.folderId, folder_key: info.folder, folder_name: getFolderName(info.folderId), content: code, file_size: payload?.file_size ?? computeBytes(code), content_hash: payload?.content_hash || hash });
-        const confirmedHash = payload?.content_hash || hash;
-        // Update IndexedDB cache after successful cloud save (non-blocking, logged-in only)
-        FileDB.put({
-            id: info.key,
-            name: info.filename,
-            content: code,
-            lastSavedHash: confirmedHash,
-            lastModified: Date.now(),
-            dirty: false,
-            folderId: info.folderId,
-            folderKey: info.folder
-        }).catch(() => { });
-        localStorage.setItem('tc_code', code); // Keep as emergency backup for compile flow
-        SAVE_STATE.lastSavedHash = confirmedHash;
-        SAVE_STATE.lastSaveTime = Date.now();
-        DIRTY_FLAG.isDirty = false;
-        updateSaveIndicator();
-        renderFileExplorer();
-        if (!silent) Logger.success(`[Save] Saved (${trigger})`);
-        return { success: true, changed: payload?.changed !== false };
-    } finally { isSaving = false; SAVE_STATE.pendingHash = null; }
+        const code = editor.getValue();
+        if (!isUserLoggedIn) {
+            await persistLocalSave(code);
+            if (!silent) Logger.success(`[Save] Saved locally (${trigger})`);
+            return { success: true, local: true };
+        }
+        let info = activeFileInfo();
+        if (!info.folderId && CLOUD_STATE.folderIdToName.size === 0) {
+            const mainFolderId = await ensureMainFolder();
+            const mainFolderKey = folderKey(mainFolderId);
+            const key = fileKey(mainFolderKey, info.filename);
+            info = { ...info, folder: mainFolderKey, folderId: mainFolderId, key };
+            CLOUD_STATE.activeFileKey = key;
+            setSelectedFolder(mainFolderKey);
+        }
+        const hash = await computeSha256(code);
+        if (!force && SAVE_STATE.lastSavedHash === hash) {
+            DIRTY_FLAG.isDirty = false;
+            updateSaveIndicator();
+            if (!silent) Logger.info(`[Save] Skipped (${trigger}) - unchanged`);
+            return { skipped: true, unchanged: true };
+        }
+        isSaving = true;
+        SAVE_STATE.pendingHash = hash;
+        try {
+            const { response, payload } = await fetchJson('/api/file/save', { method: 'POST', body: JSON.stringify({ folder_id: info.folderId, file_name: info.filename, content: code }) });
+            if (response.status === 401) { safeUpdateLoginUI(false); setAuthStatus('Session expired. Please sign in again.'); throw new Error('Session expired'); }
+            if (!response.ok) throw new Error(payload?.error || 'Failed to save file');
+            CLOUD_STATE.files.set(info.key, { id: payload?.file_id || info.key, filename: info.filename, folder_id: info.folderId, folder_key: info.folder, folder_name: getFolderName(info.folderId), content: code, file_size: payload?.file_size ?? computeBytes(code), content_hash: payload?.content_hash || hash });
+            const confirmedHash = payload?.content_hash || hash;
+            // Update IndexedDB cache after successful cloud save (non-blocking, logged-in only)
+            FileDB.put({
+                id: info.key,
+                name: info.filename,
+                content: code,
+                lastSavedHash: confirmedHash,
+                lastModified: Date.now(),
+                dirty: false,
+                folderId: info.folderId,
+                folderKey: info.folder
+            }).catch(() => { });
+            localStorage.setItem('tc_code', code); // Keep as emergency backup for compile flow
+            SAVE_STATE.lastSavedHash = confirmedHash;
+            SAVE_STATE.lastSaveTime = Date.now();
+            DIRTY_FLAG.isDirty = false;
+            updateSaveIndicator();
+            renderFileExplorer();
+            if (!silent) Logger.success(`[Save] Saved (${trigger})`);
+            return { success: true, changed: payload?.changed !== false };
+        } finally { isSaving = false; SAVE_STATE.pendingHash = null; }
     } finally {
-        hideProgress();
+        if (!skipProgress) hideProgress();
     }
 }
 async function saveCode() {
@@ -907,14 +908,14 @@ async function createNewFolder(folderName) {
     if (!cleanName) return;
     showProgress();
     try {
-    const { response, payload } = await fetchJson('/api/folder/create', { method: 'POST', body: JSON.stringify({ folder_name: cleanName }) });
-    if (!response.ok) throw new Error(payload?.error || 'Failed to create folder');
-    CLOUD_STATE.folderIdToName.set(payload.id, payload.folder_name);
-    CLOUD_STATE.folderNameToId.set(payload.folder_name, payload.id);
-    CLOUD_STATE.folders.add(payload.id);
-    setSelectedFolder(payload.id);
-    renderFileExplorer();
-    return payload.id;
+        const { response, payload } = await fetchJson('/api/folder/create', { method: 'POST', body: JSON.stringify({ folder_name: cleanName }) });
+        if (!response.ok) throw new Error(payload?.error || 'Failed to create folder');
+        CLOUD_STATE.folderIdToName.set(payload.id, payload.folder_name);
+        CLOUD_STATE.folderNameToId.set(payload.folder_name, payload.id);
+        CLOUD_STATE.folders.add(payload.id);
+        setSelectedFolder(payload.id);
+        renderFileExplorer();
+        return payload.id;
     } finally {
         hideProgress();
     }
@@ -923,48 +924,48 @@ async function createNewFile(filename) {
     if (!isUserLoggedIn) return alert('Sign in to create cloud files.');
     showProgress();
     try {
-    let cleanName = (filename || '').trim();
-    if (!cleanName) return;
-    if (!cleanName.includes('.')) cleanName += '.cpp';
-    cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
-    if (!cleanName || cleanName === '.cpp') return alert('Invalid file name');
-    let targetFolderId = folderId(CLOUD_STATE.selectedFolderKey) || activeFileInfo().folderId;
-    if (!targetFolderId) targetFolderId = Array.from(CLOUD_STATE.folderIdToName.keys())[0] || null;
-    if (!targetFolderId) {
-        targetFolderId = await ensureMainFolder();
-        setSelectedFolder(folderKey(targetFolderId));
-    }
-    if (remoteFileByName(targetFolderId, cleanName)) return alert(`File "${cleanName}" already exists`);
-    const starter = buildStarterSource(cleanName);
-    const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
-        method: 'POST',
-        body: JSON.stringify({ folder_id: targetFolderId, file_name: cleanName, content: starter })
-    });
-    if (!saveResponse.ok) {
-        if (saveResponse.status === 409) {
-            await refreshCloudFiles(true);
-            const existing = remoteFileByName(targetFolderId, cleanName);
-            if (existing) {
-                await openFile(existing.folder_key, existing.filename, { skipSave: true });
-                return;
-            }
+        let cleanName = (filename || '').trim();
+        if (!cleanName) return;
+        if (!cleanName.includes('.')) cleanName += '.cpp';
+        cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
+        if (!cleanName || cleanName === '.cpp') return alert('Invalid file name');
+        let targetFolderId = folderId(CLOUD_STATE.selectedFolderKey) || activeFileInfo().folderId;
+        if (!targetFolderId) targetFolderId = Array.from(CLOUD_STATE.folderIdToName.keys())[0] || null;
+        if (!targetFolderId) {
+            targetFolderId = await ensureMainFolder();
+            setSelectedFolder(folderKey(targetFolderId));
         }
-        throw new Error(savePayload?.error || 'Failed to save starter code');
-    }
-    const key = folderKey(targetFolderId);
-    CLOUD_STATE.files.set(fileKey(key, cleanName), {
-        id: savePayload?.file_id || fileKey(key, cleanName),
-        filename: cleanName,
-        folder_id: targetFolderId || null,
-        folder_key: key,
-        folder_name: getFolderName(targetFolderId),
-        content: starter,
-        file_size: savePayload?.file_size ?? computeBytes(starter),
-        content_hash: savePayload?.content_hash || null
-    });
-    await setLocalDraft(key, cleanName, starter);
-    renderFileExplorer();
-    await openFile(key, cleanName, { skipSave: true });
+        if (remoteFileByName(targetFolderId, cleanName)) return alert(`File "${cleanName}" already exists`);
+        const starter = buildStarterSource(cleanName);
+        const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
+            method: 'POST',
+            body: JSON.stringify({ folder_id: targetFolderId, file_name: cleanName, content: starter })
+        });
+        if (!saveResponse.ok) {
+            if (saveResponse.status === 409) {
+                await refreshCloudFiles(true);
+                const existing = remoteFileByName(targetFolderId, cleanName);
+                if (existing) {
+                    await openFile(existing.folder_key, existing.filename, { skipSave: true });
+                    return;
+                }
+            }
+            throw new Error(savePayload?.error || 'Failed to save starter code');
+        }
+        const key = folderKey(targetFolderId);
+        CLOUD_STATE.files.set(fileKey(key, cleanName), {
+            id: savePayload?.file_id || fileKey(key, cleanName),
+            filename: cleanName,
+            folder_id: targetFolderId || null,
+            folder_key: key,
+            folder_name: getFolderName(targetFolderId),
+            content: starter,
+            file_size: savePayload?.file_size ?? computeBytes(starter),
+            content_hash: savePayload?.content_hash || null
+        });
+        await setLocalDraft(key, cleanName, starter);
+        renderFileExplorer();
+        await openFile(key, cleanName, { skipSave: true });
     } finally {
         hideProgress();
     }
@@ -975,18 +976,18 @@ async function deleteFolder(folder, name) {
     if (!confirm(`Delete folder "${name}" and all files inside it?\nThis cannot be undone.`)) return;
     showProgress();
     try {
-    const deletingActiveFolder = CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '')?.folder_id === id;
-    const { response, payload } = await fetchJson('/api/folder/delete', { method: 'DELETE', body: JSON.stringify({ folder_id: id }) });
-    if (!response.ok) throw new Error(payload?.error || 'Failed to delete folder');
-    for (const [key, file] of CLOUD_STATE.files.entries()) if (file.folder_id === id) { CLOUD_STATE.files.delete(key); await clearLocalDraft(file.folder_key, file.filename); }
-    CLOUD_STATE.folderIdToName.delete(id);
-    CLOUD_STATE.folders.delete(id);
-    setSelectedFolder(Array.from(CLOUD_STATE.folderIdToName.keys())[0] || ROOT_FOLDER_KEY);
-    renderFileExplorer();
-    if (deletingActiveFolder) {
-        const nextFile = getFirstVisibleCloudFile();
-        if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
-    }
+        const deletingActiveFolder = CLOUD_STATE.files.get(CLOUD_STATE.activeFileKey || '')?.folder_id === id;
+        const { response, payload } = await fetchJson('/api/folder/delete', { method: 'DELETE', body: JSON.stringify({ folder_id: id }) });
+        if (!response.ok) throw new Error(payload?.error || 'Failed to delete folder');
+        for (const [key, file] of CLOUD_STATE.files.entries()) if (file.folder_id === id) { CLOUD_STATE.files.delete(key); await clearLocalDraft(file.folder_key, file.filename); }
+        CLOUD_STATE.folderIdToName.delete(id);
+        CLOUD_STATE.folders.delete(id);
+        setSelectedFolder(Array.from(CLOUD_STATE.folderIdToName.keys())[0] || ROOT_FOLDER_KEY);
+        renderFileExplorer();
+        if (deletingActiveFolder) {
+            const nextFile = getFirstVisibleCloudFile();
+            if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
+        }
     } finally {
         hideProgress();
     }
@@ -999,18 +1000,18 @@ async function deleteFile(folder, filename) {
     if (!confirm(`Delete "${filename}"?\nThis cannot be undone.`)) return;
     showProgress();
     try {
-    const key = fileKey(folder, filename);
-    const file = CLOUD_STATE.files.get(key);
-    if (!file) return;
-    const { response, payload } = await fetchJson('/api/file/delete', { method: 'DELETE', body: JSON.stringify({ file_id: file.id }) });
-    if (!response.ok) throw new Error(payload?.error || 'Failed to delete file');
-    CLOUD_STATE.files.delete(key);
-    await clearLocalDraft(folder, filename);
-    if (CLOUD_STATE.activeFileKey === key) {
-        const nextFile = getFirstVisibleCloudFile();
-        if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
-        else if (editor) { editor.setValue(DEFAULT_SOURCE); DIRTY_FLAG.isDirty = false; updateSaveIndicator(); }
-    } else renderFileExplorer();
+        const key = fileKey(folder, filename);
+        const file = CLOUD_STATE.files.get(key);
+        if (!file) return;
+        const { response, payload } = await fetchJson('/api/file/delete', { method: 'DELETE', body: JSON.stringify({ file_id: file.id }) });
+        if (!response.ok) throw new Error(payload?.error || 'Failed to delete file');
+        CLOUD_STATE.files.delete(key);
+        await clearLocalDraft(folder, filename);
+        if (CLOUD_STATE.activeFileKey === key) {
+            const nextFile = getFirstVisibleCloudFile();
+            if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
+            else if (editor) { editor.setValue(DEFAULT_SOURCE); DIRTY_FLAG.isDirty = false; updateSaveIndicator(); }
+        } else renderFileExplorer();
     } finally {
         hideProgress();
     }
