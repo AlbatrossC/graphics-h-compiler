@@ -14,6 +14,9 @@ export const handleFilesRoutes = {
   async getFiles(env, user, corsHeaders) {
     const db = env.graphicsh_oc_db;
 
+    const userStmt = db
+      .prepare('SELECT last_opened_file_id FROM users WHERE user_id = ? LIMIT 1')
+      .bind(user.user_id);
     const foldersStmt = db
       .prepare('SELECT id, folder_name FROM folders WHERE user_id = ? ORDER BY folder_name COLLATE NOCASE')
       .bind(user.user_id);
@@ -32,10 +35,11 @@ export const handleFilesRoutes = {
       )
       .bind(user.user_id, user.user_id);
 
-    const [foldersRes, filesRes] = await db.batch([foldersStmt, filesStmt]);
+    const [userRes, foldersRes, filesRes] = await db.batch([userStmt, foldersStmt, filesStmt]);
 
     return jsonResponse(
       {
+        last_opened_file_id: userRes?.results?.[0]?.last_opened_file_id ?? null,
         folders: foldersRes.results ?? [],
         files: filesRes.results ?? [],
       },
@@ -147,6 +151,16 @@ export const handleFilesRoutes = {
     const changed = Boolean(conflictUpsertRow?.id);
     if (!changed) {
       const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
+      if (existingFile?.id) {
+        await db
+          .prepare(
+            `UPDATE users
+             SET last_opened_file_id = ?
+             WHERE user_id = ?`
+          )
+          .bind(existingFile.id, user.user_id)
+          .run();
+      }
       return jsonResponse(
         {
           success: true,

@@ -225,7 +225,17 @@ function remoteFileByName(targetFolderId, filename) {
 }
 function getMainCppFile() {
     for (const file of CLOUD_STATE.files.values()) {
-        if (isVisibleCloudFile(file) && file.filename === 'main.cpp') return file;
+        if (file.filename === 'main.cpp') return file;
+    }
+    return null;
+}
+function getFirstCloudFile() {
+    return Array.from(CLOUD_STATE.files.values())[0] || null;
+}
+function getCloudFileById(fileId) {
+    if (!fileId) return null;
+    for (const file of CLOUD_STATE.files.values()) {
+        if (file?.id === fileId) return file;
     }
     return null;
 }
@@ -611,9 +621,11 @@ async function handleGoogleCredentialResponse(credentialResponse) {
             )
         ).catch(() => { });
 
-        // Open last file, prioritising main.cpp
-        const savedKey = getLastOpenedFile();
-        const active = CLOUD_STATE.files.get(savedKey || '') || getMainCppFile() || getFirstVisibleCloudFile();
+        // Open backend last-opened first, then main.cpp, then first cloud file.
+        const active =
+            getCloudFileById(CLOUD_STATE.lastOpenedFileId) ||
+            getMainCppFile() ||
+            getFirstCloudFile();
         if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
     } finally {
         setExplorerLoading(false);
@@ -734,6 +746,7 @@ async function ensureDefaultRemoteFile() {
 }
 function updateCloudStateFromPayload(payload) {
     setDefaultFolderState();
+    CLOUD_STATE.lastOpenedFileId = payload?.last_opened_file_id || payload?.data?.last_opened_file_id || null;
     CLOUD_STATE.files.clear();
     const folders = Array.isArray(payload?.folders)
         ? payload.folders
@@ -782,8 +795,8 @@ async function refreshCloudFiles(force = false, isRetry = false) {
         if (!response.ok) throw new Error(payload?.error || 'Failed to load files');
         updateCloudStateFromPayload(payload);
         if (!getVisibleCloudFiles().length && !isRetry) {
-            renderFileExplorer();
-            return;
+            await ensureDefaultRemoteFile();
+            return refreshCloudFiles(true, true);
         }
         renderFileExplorer();
     } catch (error) {
@@ -810,7 +823,26 @@ async function openFile(folder, filename, options = {}) {
     DIRTY_FLAG.isDirty = false;
     updateSaveIndicator();
     highlightActiveFile();
-    saveLastOpenedFile(key);
+    if (!isUserLoggedIn) saveLastOpenedFile(key);
+    if (isUserLoggedIn && !options.skipSave) {
+        const opened = CLOUD_STATE.files.get(key);
+        if (opened?.id && opened.id !== CLOUD_STATE.lastOpenedFileId) {
+            fetchJson('/api/file/save', {
+                method: 'POST',
+                body: JSON.stringify({
+                    folder_id: opened.folder_id ?? null,
+                    file_name: opened.filename,
+                    content
+                })
+            })
+                .then(({ response, payload }) => {
+                    if (response.ok) {
+                        CLOUD_STATE.lastOpenedFileId = payload?.file_id || opened.id;
+                    }
+                })
+                .catch(() => { });
+        }
+    }
 }
 async function persistLocalSave(code) {
     // Guest save: IndexedDB is primary storage (not localStorage)
@@ -1076,9 +1108,11 @@ async function initAuth() {
         const loggedIn = await checkSession();
         if (loggedIn) {
             await refreshCloudFiles(true);
-            const savedKey = getLastOpenedFile();
-            // Priority: last opened → main.cpp → first available file
-            const active = CLOUD_STATE.files.get(savedKey || '') || getMainCppFile() || getFirstVisibleCloudFile();
+            // Priority: backend last_opened_file_id -> main.cpp -> first cloud file
+            const active =
+                getCloudFileById(CLOUD_STATE.lastOpenedFileId) ||
+                getMainCppFile() ||
+                getFirstCloudFile();
             if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
         }
     } catch (error) {
