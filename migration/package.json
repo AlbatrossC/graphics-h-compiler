@@ -1,0 +1,14 @@
+{
+  "name": "r2-d1-migration",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "migrate": "node migrate.js",
+    "import": "bash import.sh"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "csv-parse": "^5.0.0",
+    "dotenv": "^16.0.0"
+  }
+}
