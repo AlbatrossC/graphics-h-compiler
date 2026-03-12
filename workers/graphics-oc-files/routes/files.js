@@ -5,7 +5,6 @@ import {
   getFileByName,
   getUserFiles,
   parseSqliteError,
-  recalculateAndUpdateUserStats,
 } from '../utils/db.js';
 import { errorResponse, jsonResponse, readJsonBody } from '../utils/response.js';
 import { MAX_FILE_SIZE_BYTES, validateFileName, validateFolderId } from '../utils/validate.js';
@@ -117,6 +116,7 @@ export const handleFilesRoutes = {
 
     const contentHash = await computeSha256Hex(content);
     const candidateFileId = crypto.randomUUID();
+    const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
 
     let conflictUpsertRow = null;
     try {
@@ -150,7 +150,6 @@ export const handleFilesRoutes = {
 
     const changed = Boolean(conflictUpsertRow?.id);
     if (!changed) {
-      const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
       if (existingFile?.id) {
         await db
           .prepare(
@@ -183,9 +182,13 @@ export const handleFilesRoutes = {
       )
       .bind(savedFileId, user.user_id)
       .run();
-    await recalculateAndUpdateUserStats(db, user.user_id);
 
-    const statusCode = savedFileId === candidateFileId ? 201 : 200;
+    const isCreated = savedFileId === candidateFileId;
+    const previousSize = Number(existingFile?.file_size || 0);
+    const storageDelta = isCreated ? contentBytes : contentBytes - previousSize;
+    await adjustUserStats(db, user.user_id, isCreated ? 1 : 0, storageDelta);
+
+    const statusCode = isCreated ? 201 : 200;
 
     return jsonResponse(
       {

@@ -2082,17 +2082,16 @@ header {
 
 /* File Actions - Always Visible */
 .file-actions {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 4px;
-    opacity: 0;
     margin-left: auto;
     padding-left: 8px;
     transition: opacity var(--transition-fast);
 }
 
-.file-item:hover .file-actions,
-.file-item.active .file-actions {
+.file-item:hover .file-actions {
+    display: flex;
     opacity: 1;
 }
 

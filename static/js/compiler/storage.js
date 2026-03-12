@@ -14,6 +14,12 @@ const ROOT_FOLDER_KEY = 'root';
 const DEFAULT_FILE_NAME = 'main.cpp';
 const DEFAULT_FILE_KEY = `${ROOT_FOLDER_KEY}/${DEFAULT_FILE_NAME}`;
 const DEFAULT_SOURCE = `#include <graphics.h>\n#include <conio.h>\n\nint main()\n{\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n\n    // Your code here\n\n    getch();\n    closegraph();\n    return 0;\n}\n`;
+const DEMO_HASHES = new Set([
+    '8392b1554b6b9643fdedfeb898f177333b7b04f8565de621b57abb383d51b964', // bouncing_ball.cpp
+    'a7bf3145a7ef0b22a466143545d4622d9fc16fc94a923f3b140658b70135f3fc', // circle_pattern.cpp
+    '617e8525ac300822d4410e0b53d40fa201afde96548fa73b0597d77395c46dab', // graphics_demo.cpp
+    '20c59b432fd12667ff76b11202cb1ef97c6cd24690b0dc1d42ff35c6cdd519a4', // shooter_game.cpp
+]);
 
 function folderKey(folderId) { return folderId || ROOT_FOLDER_KEY; }
 function folderId(value) { return !value || value === ROOT_FOLDER_KEY ? null : value; }
@@ -316,7 +322,7 @@ function createFileItem(folder, filename) {
     if (fileKey(folder, filename) === (CLOUD_STATE.activeFileKey || DEFAULT_FILE_KEY)) item.classList.add('active');
     item.innerHTML = `
         <svg class="file-icon ${getFileIconClass(ext)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-        <span class="file-name">${filename}</span>
+        <span class="file-name" title="${filename}">${filename}</span>
         <div class="file-actions">
             <button class="file-action-btn file-download-btn" title="Download file" onclick="event.stopPropagation(); downloadFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
             <button class="file-action-btn file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"></path></svg></button>
@@ -476,97 +482,90 @@ async function checkSession() {
         return false;
     }
 }
-// ==================== LOGIN SYNC LOGIC ====================
-// Runs when a guest user signs in. Merges local IndexedDB files into cloud.
-// Never overwrites user data silently. Applies spec Cases A, B, C.
-// Returns the freshest cloud payload when available so caller can avoid a second /api/files request.
-async function syncLocalToCloud() {
-    // Only look at the guest main.cpp (root/main.cpp)
-    const localMainCpp = await FileDB.get('root/main.cpp');
-    if (!localMainCpp || !localMainCpp.content || !localMainCpp.content.trim()) return null;
-    const localContent = localMainCpp.content;
-
-    // Fetch current cloud file list
-    const { response, payload } = await fetchJson('/api/files', { method: 'GET' });
-    if (!response.ok) return null; // Can't reach cloud, skip sync gracefully
-
-    const snapshot = {
-        folders: Array.isArray(payload?.folders) ? payload.folders : [],
-        files: Array.isArray(payload?.files) ? payload.files.slice() : [],
+function toCloudSnapshot(payload) {
+    return {
+        last_opened_file_id: payload?.last_opened_file_id || payload?.data?.last_opened_file_id || null,
+        folders: Array.isArray(payload?.folders) ? payload.folders : (Array.isArray(payload?.data?.folders) ? payload.data.folders : []),
+        files: Array.isArray(payload?.files) ? payload.files.slice() : (Array.isArray(payload?.data?.files) ? payload.data.files.slice() : []),
     };
-    const cloudMainCpp = snapshot.files.find(f => (f.file_name || f.filename) === 'main.cpp');
-    const existingLocalMainCopy = snapshot.files.find(f => (f.file_name || f.filename) === 'local-main.cpp');
-
-    if (!cloudMainCpp) {
-        // CASE A: Cloud has no main.cpp — upload local copy
-        Logger.info('[Sync] Case A: Cloud empty, uploading local main.cpp');
-        const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
-            method: 'POST',
-            body: JSON.stringify({ file_name: 'main.cpp', folder_id: null, content: localContent })
-        });
-        if (!saveResponse.ok) {
-            Logger.warn('[Sync] Case A upload failed');
-        } else {
-            snapshot.files.push({
-                id: savePayload?.file_id || null,
-                file_name: 'main.cpp',
-                file_content: localContent,
-                folder_id: null,
-                folder_name: '',
-                file_size: savePayload?.file_size ?? computeBytes(localContent),
-                content_hash: savePayload?.content_hash || null
-            });
+}
+async function fetchCloudSnapshot() {
+    const { response, payload } = await fetchJson('/api/files', { method: 'GET' });
+    if (!response.ok) throw new Error(payload?.error || 'Failed to load files');
+    return toCloudSnapshot(payload);
+}
+async function guestCodeModified() {
+    const code = editor ? editor.getValue() : '';
+    const hash = await computeSha256(code);
+    return !DEMO_HASHES.has(hash);
+}
+function findMainFolderIdInSnapshot(snapshot) {
+    const folders = Array.isArray(snapshot?.folders) ? snapshot.folders : [];
+    const mainFolder = folders.find((folder) => String(folder?.folder_name || '').trim().toLowerCase() === 'main');
+    return mainFolder?.id || null;
+}
+async function ensureMainFolderIdForSnapshot(snapshot) {
+    const existing = findMainFolderIdInSnapshot(snapshot);
+    if (existing) return existing;
+    const { response, payload } = await fetchJson('/api/folder/create', {
+        method: 'POST',
+        body: JSON.stringify({ folder_name: 'main' })
+    });
+    if (!response.ok) {
+        if (response.status === 409) {
+            const refreshedSnapshot = await fetchCloudSnapshot();
+            snapshot.folders = refreshedSnapshot.folders;
+            snapshot.files = refreshedSnapshot.files;
+            snapshot.last_opened_file_id = refreshedSnapshot.last_opened_file_id || null;
+            const refreshedMain = findMainFolderIdInSnapshot(snapshot);
+            if (refreshedMain) return refreshedMain;
         }
-    } else {
-        const cloudContent = cloudMainCpp.file_content || cloudMainCpp.content || '';
-        const localHash = await computeSha256(localContent);
-        const cloudHash = await computeSha256(cloudContent);
-
-        if (localHash === cloudHash) {
-            // CASE B: Identical — use cloud version only, discard local duplicate
-            Logger.info('[Sync] Case B: Local and cloud identical, using cloud');
-            // Nothing to upload — cloud already has it
-        } else {
-            const existingLocalMainHash = existingLocalMainCopy?.content_hash
-                || (existingLocalMainCopy ? await computeSha256(existingLocalMainCopy.file_content || existingLocalMainCopy.content || '') : null);
-            if (existingLocalMainHash && existingLocalMainHash === localHash) {
-                Logger.info('[Sync] Case C: local-main.cpp already up to date, skipping upload');
-                await FileDB.clear();
-                return snapshot;
-            }
-
-            // CASE C: Content differs — rename local to "local-main.cpp" and upload
-            // Cloud main.cpp is kept unchanged
-            Logger.info('[Sync] Case C: Content differs, uploading local as local-main.cpp');
-            const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
-                method: 'POST',
-                body: JSON.stringify({ file_name: 'local-main.cpp', folder_id: null, content: localContent })
-            });
-            if (!saveResponse.ok) {
-                Logger.warn('[Sync] Case C upload failed');
-            } else {
-                const existingLocalMain = snapshot.files.find(f => (f.file_name || f.filename) === 'local-main.cpp');
-                if (existingLocalMain) {
-                    existingLocalMain.file_content = localContent;
-                    existingLocalMain.file_size = savePayload?.file_size ?? computeBytes(localContent);
-                    existingLocalMain.content_hash = savePayload?.content_hash || existingLocalMain.content_hash || null;
-                } else {
-                    snapshot.files.push({
-                        id: savePayload?.file_id || null,
-                        file_name: 'local-main.cpp',
-                        file_content: localContent,
-                        folder_id: null,
-                        folder_name: '',
-                        file_size: savePayload?.file_size ?? computeBytes(localContent),
-                        content_hash: savePayload?.content_hash || null
-                    });
-                }
-            }
-        }
+        throw new Error(payload?.error || 'Failed to create main folder');
     }
-    // After sync: clear local IndexedDB (cloud files will be downloaded as the new cache)
-    await FileDB.clear();
-    return snapshot;
+    snapshot.folders.push({ id: payload.id, folder_name: payload.folder_name || 'main' });
+    return payload.id;
+}
+function nextUntitledFilename(snapshot, targetFolderId) {
+    const files = Array.isArray(snapshot?.files) ? snapshot.files : [];
+    let maxN = 0;
+    for (const file of files) {
+        if ((file?.folder_id || null) !== (targetFolderId || null)) continue;
+        const name = file?.file_name || file?.filename || '';
+        const match = /^untitled-(\d+)\.cpp$/i.exec(name);
+        if (!match) continue;
+        const value = Number(match[1]);
+        if (Number.isFinite(value) && value > maxN) maxN = value;
+    }
+    return `untitled-${maxN + 1}.cpp`;
+}
+function getSnapshotFileById(snapshot, fileId) {
+    if (!fileId) return null;
+    const files = Array.isArray(snapshot?.files) ? snapshot.files : [];
+    for (const file of files) {
+        if (file?.id === fileId) return file;
+    }
+    return null;
+}
+async function saveGuestCodeAsUntitled(snapshot, content) {
+    const mainFolderId = await ensureMainFolderIdForSnapshot(snapshot);
+    const fileName = nextUntitledFilename(snapshot, mainFolderId);
+    const { response, payload } = await fetchJson('/api/file/save', {
+        method: 'POST',
+        body: JSON.stringify({ folder_id: mainFolderId, file_name: fileName, content })
+    });
+    if (!response.ok) throw new Error(payload?.error || 'Failed to save guest code');
+    const folderName = (snapshot.folders.find((folder) => folder?.id === mainFolderId)?.folder_name) || 'main';
+    snapshot.last_opened_file_id = payload?.file_id || snapshot.last_opened_file_id || null;
+    snapshot.files.push({
+        id: payload?.file_id || null,
+        file_name: fileName,
+        file_content: content,
+        folder_id: mainFolderId,
+        folder_name: folderName,
+        file_size: payload?.file_size ?? computeBytes(content),
+        content_hash: payload?.content_hash || null
+    });
+    return { fileName, folderId: mainFolderId };
 }
 
 async function handleGoogleCredentialResponse(credentialResponse) {
@@ -593,19 +592,32 @@ async function handleGoogleCredentialResponse(credentialResponse) {
     showProgress();
 
     try {
-        // Sync local IndexedDB files to cloud (Cases A / B / C — no silent overwrites)
-        let syncedPayload = null;
-        try { syncedPayload = await syncLocalToCloud(); } catch (e) { Logger.warn('[Sync] Login sync error: ' + e.message); }
+        const editorContent = editor ? editor.getValue() : '';
+        const codeModified = await guestCodeModified();
+        let snapshot = await fetchCloudSnapshot();
+        const isExistingUser = Array.isArray(snapshot.files) && snapshot.files.length > 0;
 
-        // Download cloud project (or reuse already-fetched snapshot from sync to avoid duplicate /api/files call)
-        if (syncedPayload) {
-            updateCloudStateFromPayload(syncedPayload);
-            renderFileExplorer();
-        } else {
-            await refreshCloudFiles(true);
+        let openTarget = null;
+        if (codeModified) {
+            const saved = await saveGuestCodeAsUntitled(snapshot, editorContent);
+            openTarget = { folder: folderKey(saved.folderId), filename: saved.fileName };
+        } else if (isExistingUser) {
+            const active =
+                getSnapshotFileById(snapshot, snapshot.last_opened_file_id) ||
+                (Array.isArray(snapshot.files) ? snapshot.files.find((file) => (file?.file_name || file?.filename) === 'main.cpp') : null) ||
+                (Array.isArray(snapshot.files) ? snapshot.files[0] : null);
+            if (active) {
+                openTarget = {
+                    folder: folderKey(active.folder_id || null),
+                    filename: active.file_name || active.filename
+                };
+            }
         }
+        updateCloudStateFromPayload(snapshot);
+        renderFileExplorer();
 
-        // Rebuild IndexedDB cache in parallel (non-blocking — don't delay file open)
+        // Rebuild IndexedDB cache in parallel (non-blocking)
+        await FileDB.clear().catch(() => { });
         Promise.all(
             Array.from(CLOUD_STATE.files.entries()).map(([key, file]) =>
                 FileDB.put({
@@ -621,12 +633,7 @@ async function handleGoogleCredentialResponse(credentialResponse) {
             )
         ).catch(() => { });
 
-        // Open backend last-opened first, then main.cpp, then first cloud file.
-        const active =
-            getCloudFileById(CLOUD_STATE.lastOpenedFileId) ||
-            getMainCppFile() ||
-            getFirstCloudFile();
-        if (active) await openFile(active.folder_key, active.filename, { skipSave: true });
+        if (openTarget) await openFile(openTarget.folder, openTarget.filename, { skipSave: true });
     } finally {
         setExplorerLoading(false);
         hideProgress();
@@ -711,7 +718,7 @@ async function signOut() {
 
     // Only save to cloud if there are unsaved changes (skip unnecessary API call)
     if (isUserLoggedIn && DIRTY_FLAG.isDirty) {
-        try { await forceSaveActiveFile('signOut', { force: false, silent: true }); } catch { }
+        try { await forceSaveActiveFile('signOut', { silent: true }); } catch { }
     }
 
     // Update UI immediately — user sees logged-out state right away
@@ -731,18 +738,6 @@ async function signOut() {
             await setLocalDraft('root', 'main.cpp', currentCode).catch(() => { });
         }
     })();
-}
-async function ensureDefaultRemoteFile() {
-    if (remoteFileByName(null, DEFAULT_FILE_NAME)) return;
-    const { response, payload } = await fetchJson('/api/file/save', {
-        method: 'POST',
-        body: JSON.stringify({
-            file_name: DEFAULT_FILE_NAME,
-            folder_id: null,
-            content: DEFAULT_SOURCE,
-        }),
-    });
-    if (!response.ok) throw new Error(payload?.error || 'Unable to initialize default file');
 }
 function updateCloudStateFromPayload(payload) {
     setDefaultFolderState();
@@ -782,22 +777,18 @@ function updateCloudStateFromPayload(payload) {
         CLOUD_STATE.selectedFolderKey = firstFolder;
     }
 }
-async function refreshCloudFiles(force = false, isRetry = false) {
+async function refreshCloudFiles(force = false) {
     if (!isUserLoggedIn) return;
     const lastRefresh = CLOUD_STATE.lastRefresh || 0;
     if (!force && Date.now() - lastRefresh < 2000) { renderFileExplorer(); return; }
     CLOUD_STATE.lastRefresh = Date.now();
     showProgress();
-    setExplorerLoading(true, isRetry ? 'Syncing files...' : 'Loading files...');
+    setExplorerLoading(true, 'Loading files...');
     try {
         const { response, payload } = await fetchJson('/api/files', { method: 'GET' });
         if (response.status === 401) { safeUpdateLoginUI(false); setAuthStatus('Session expired. Please sign in again.'); return; }
         if (!response.ok) throw new Error(payload?.error || 'Failed to load files');
         updateCloudStateFromPayload(payload);
-        if (!getVisibleCloudFiles().length && !isRetry) {
-            await ensureDefaultRemoteFile();
-            return refreshCloudFiles(true, true);
-        }
         renderFileExplorer();
     } catch (error) {
         Logger.warn(`[Files] ${error.message}`);
@@ -809,7 +800,7 @@ async function refreshCloudFiles(force = false, isRetry = false) {
 }
 async function openFile(folder, filename, options = {}) {
     // FILE SWITCH SAVE: save current file before switching
-    if (!options.skipSave) await forceSaveActiveFile('fileSwitch', { force: false, silent: true });
+    if (!options.skipSave) await forceSaveActiveFile('fileSwitch', { silent: true });
     const key = fileKey(folder, filename);
     CLOUD_STATE.activeFileKey = key;
     setSelectedFolder(folder);
@@ -865,7 +856,6 @@ async function persistLocalSave(code) {
     updateSaveIndicator();
 }
 async function forceSaveActiveFile(trigger = 'manual', options = {}) {
-    const force = options.force === true;
     const silent = options.silent === true;
     if (!editor || isSaving) return { skipped: true };
     const skipProgress = trigger === 'compileRun';
@@ -887,7 +877,7 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
             setSelectedFolder(mainFolderKey);
         }
         const hash = await computeSha256(code);
-        if (!force && SAVE_STATE.lastSavedHash === hash) {
+        if (SAVE_STATE.lastSavedHash === hash) {
             DIRTY_FLAG.isDirty = false;
             updateSaveIndicator();
             if (!silent) Logger.info(`[Save] Skipped (${trigger}) - unchanged`);
@@ -930,7 +920,7 @@ async function saveCode() {
     const btnText = saveBtn?.querySelector('.btn-text');
     const originalText = btnText?.textContent || 'Save';
     if (btnText) btnText.textContent = 'Saving...';
-    try { await forceSaveActiveFile('manual', { force: true, silent: false }); if (btnText) btnText.textContent = 'Saved'; }
+    try { await forceSaveActiveFile('manual', { silent: false }); if (btnText) btnText.textContent = 'Saved'; }
     catch (error) { if (btnText) btnText.textContent = 'Error'; Logger.error(`[Save] ${error.message}`); }
     finally { setTimeout(() => { if (btnText) btnText.textContent = originalText; }, 1200); }
 }
@@ -1085,7 +1075,7 @@ function scheduleAutosave() {
         try {
             if (isUserLoggedIn) {
                 // NORMAL SAVE: only saves dirty files, skips if hash unchanged
-                await forceSaveActiveFile('idle', { force: false, silent: true });
+                await forceSaveActiveFile('idle', { silent: true });
             } else {
                 // Guest: save to IndexedDB (primary storage)
                 if (editor) await persistLocalSave(editor.getValue());

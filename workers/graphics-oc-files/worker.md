@@ -402,7 +402,7 @@ Relationships:
 | Method | Path | Handler | Description |
 |--------|------|---------|-------------|
 | `GET` | `/api/files` | `handleFilesRoutes.getFiles()` | Fetch all folders and files for the authenticated user |
-| `POST` | `/api/file/create` | `handleFilesRoutes.createFile()` | Create a new empty file |
+| `POST` | `/api/file/create` | `handleFilesRoutes.createFile()` | Create a new empty file (legacy; UI uses `/api/file/save`) |
 | `POST` | `/api/file/save` | `handleFilesRoutes.saveFile()` | Save/update file content (upsert behavior) |
 | `DELETE` | `/api/file/delete` | `handleFilesRoutes.deleteFile()` | Delete a file by `file_id` |
 
@@ -628,7 +628,7 @@ ORDER BY f.file_name COLLATE NOCASE
 
 ---
 
-#### `POST /api/file/create`
+#### `POST /api/file/create` (Legacy Endpoint)
 
 **Handler:** `handleFilesRoutes.createFile()` in `routes/files.js`  
 **Auth required:** Yes  
@@ -733,7 +733,7 @@ WHERE user_id = ?3
 
 **Handler:** `handleFilesRoutes.saveFile()` in `routes/files.js`  
 **Auth required:** Yes  
-**Tables touched:** `folders` (READ — ownership), `files` (WRITE + optional READ fallback), `users` (WRITE — last opened + stats)  
+**Tables touched:** `folders` (READ — ownership), `files` (READ + WRITE), `users` (WRITE — last opened + stats)  
 **Behavior:** This is an **upsert**. Three possible outcomes:
 
 | Scenario | DB Writes | Response |
@@ -797,7 +797,9 @@ RETURNING id
 
 6b. **If `RETURNING` has an id**: insert or update happened. The worker:
 - Updates `users.last_opened_file_id` to the returned id
-- Recalculates user stats using `recalculateAndUpdateUserStats(...)`
+- Updates user stats incrementally via `adjustUserStats(...)`:
+  - New file: `fileDelta=+1`, `storageDelta=contentBytes`
+  - Existing file: `fileDelta=0`, `storageDelta=(newSize-oldSize)`
 - Returns `201` for new insert, `200` for update
 
 7. **Unchanged response:**
@@ -1077,7 +1079,7 @@ Database helper functions:
 - **`ensureFolderOwnership(db, userId, folderId)`** — Throws `404` if the folder doesn't exist or isn't owned by the user.
 - **`getFileByName(db, userId, folderId, fileName)`** — Fetches a file by its unique `(user, folder, name)` combo. Handles `NULL` folder_id for root files.
 - **`getUserFiles(db, userId)`** — Returns all file metadata (without content) for a user.
-- **`recalculateAndUpdateUserStats(db, userId)`** — Full recalculation of `total_files` and `total_storage` from the `files` table.
+- **`recalculateAndUpdateUserStats(db, userId)`** — Full recalculation of `total_files` and `total_storage` from the `files` table (recovery/admin use).
 - **`adjustUserStats(db, userId, fileDelta, storageDelta)`** — Incremental adjustment (e.g., `+1` file, `+500` bytes).
 - **`parseSqliteError(error)`** — Detects `UNIQUE constraint failed` errors.
 

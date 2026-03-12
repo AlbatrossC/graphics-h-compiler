@@ -67,7 +67,6 @@ The frontend **never talks directly** to the Cloudflare Worker. All API calls go
 │  /api/auth/session  ──┤  proxy_request()│
 │  /api/auth/logout   ──┤  to WORKER_URL  │
 │  /api/files         ──┤                 │
-│  /api/file/create   ──┤                 │
 │  /api/file/save     ──┤                 │
 │  /api/file/delete   ──┤                 │
 │  /api/folder/create ──┤                 │
@@ -121,7 +120,7 @@ The frontend **never talks directly** to the Cloudflare Worker. All API calls go
 | Frontend Call | Flask Route | Worker Path | Frontend Caller | Purpose |
 |--------------|-------------|-------------|-----------------|---------|
 | `GET /api/files` | `app.py:304` | `/api/files` | `refreshCloudFiles()` in `storage.js:785` | Fetch folders + files (with content) + `last_opened_file_id` |
-| `POST /api/file/create` | `app.py:305` | `/api/file/create` | *(not directly used — `file/save` handles creation)* | Create empty file |
+| `POST /api/file/create` | `app.py:305` | `/api/file/create` | *(legacy route; UI uses `file/save`)* | Create empty file |
 | `POST /api/file/save` | `app.py:306` | `/api/file/save` | `forceSaveActiveFile()` in `storage.js:835` | Save/upsert file content |
 | `DELETE /api/file/delete` | `app.py:307` | `/api/file/delete` | `deleteFile()` in `storage.js:995` | Delete a file by ID |
 | `POST /api/folder/create` | `app.py:308` | `/api/folder/create` | `createNewFolder()` in `storage.js:905` | Create a named folder |
@@ -188,16 +187,23 @@ handleGoogleCredentialResponse()
     ├── updateLoginUI(true, user)
     ├── setExplorerLoading(true, 'Syncing...')
     │
-    ├── syncLocalToCloud()                    ← merge guest files to cloud (inside `main` folder)
-    │   ├── Read IndexedDB for root/main.cpp
-    │   ├── GET /api/files                    ← check what cloud already has
-    │   ├── Case A: `main/main.cpp` missing → POST /api/file/save (upload local main.cpp)
-    │   ├── Case B: content identical → skip
-    │   └── Case C: differs → POST /api/file/save (upload as local-main.cpp in same folder)
+    ├── Get editor content
+    ├── Detect modified guest code:
+    │   └── SHA-256(content) vs demo hash set (`guestCodeModified()`)
+    ├── GET /api/files                        ← classify user: new/existing
     │
-    ├── refreshCloudFiles() or use sync snapshot
+    ├── If modified:
+    │   ├── ensure folder "main" exists
+    │   ├── pick next untitled-N.cpp
+    │   └── POST /api/file/save
+    │
+    ├── If unmodified:
+    │   ├── new user: do nothing
+    │   └── existing user: open last_opened_file_id (fallback main.cpp/first file)
+    │
+    ├── updateCloudStateFromPayload(snapshot)
     ├── Rebuild IndexedDB cache from cloud files
-    └── openFile(last_opened_file_id || main.cpp || first cloud file)
+    └── open saved file (modified case) or previous workspace (existing+unmodified)
 ```
 
 ### Sign-Out Flow
@@ -290,7 +296,7 @@ forceSaveActiveFile(trigger, options)
     │   │   ├── Same hash → return { changed: false } (no file-row write)
     │   │   ├── Exists + different → conflict-update
     │   │   └── Not exists → insert
-    │   │   Also updates `users.last_opened_file_id` and refreshes user stats on changed writes
+    │   │   Also updates `users.last_opened_file_id` and applies incremental stats deltas on changed writes
     │   │
     │   ├── Update CLOUD_STATE.files in memory
     │   ├── Update IndexedDB cache (non-blocking)
@@ -338,7 +344,7 @@ scheduleAutosave() timer fires
     │   └── No → return (nothing to save)
     │
     ├── If logged in:
-    │   └── forceSaveActiveFile('idle', { force: false, silent: true })
+    │   └── forceSaveActiveFile('idle', { silent: true })
     │       └── POST /api/file/save → Flask → Worker → D1
     │
     └── If guest:
@@ -371,15 +377,15 @@ Every code path that can save a file:
 
 | Trigger | Source | Route Called | Behavior |
 |---------|--------|-------------|----------|
-| **Manual save** (Save button) | `saveCode()` → `forceSaveActiveFile('manual', { force: true })` | `POST /api/file/save` | Always saves, even if hash unchanged. Shows button feedback. |
+| **Manual save** (Save button) | `saveCode()` → `forceSaveActiveFile('manual', { silent: false })` | `POST /api/file/save` | Saves only when content changed. Shows button feedback. |
 | **Ctrl+S / Cmd+S** | `runtime.js:592-595` → `saveCode()` | `POST /api/file/save` | Same as manual save |
-| **Autosave (idle)** | `scheduleAutosave()` → `forceSaveActiveFile('idle', { force: false, silent: true })` | `POST /api/file/save` | Skips if hash unchanged. Silent. |
-| **File switch** | `openFile()` → `forceSaveActiveFile('fileSwitch', { force: false, silent: true })` | `POST /api/file/save` | Saves current file before switching to another |
-| **Sign-out** | `signOut()` → `forceSaveActiveFile('signOut', { force: false, silent: true })` | `POST /api/file/save` | Saves dirty changes before logging out |
+| **Autosave (idle)** | `scheduleAutosave()` → `forceSaveActiveFile('idle', { silent: true })` | `POST /api/file/save` | Skips if hash unchanged. Silent. |
+| **File switch** | `openFile()` → `forceSaveActiveFile('fileSwitch', { silent: true })` | `POST /api/file/save` | Saves current file before switching to another |
+| **Sign-out** | `signOut()` → `forceSaveActiveFile('signOut', { silent: true })` | `POST /api/file/save` | Saves dirty changes before logging out |
 | **Compile/Run (preflight)** | `runtime.js:457` → `forceSaveActiveFile('compileRun')` | `POST /api/file/save` | Attempts a background save before run (skips progress UI) |
 | **Compile/Run (explicit)** | `runtime.js:461` → `saveCode()` | `POST /api/file/save` | Manual-style save call before compilation |
 | **New file creation** | `createNewFile()` → `fetchJson('/api/file/save', ...)` | `POST /api/file/save` | Creates file with starter template via upsert |
-| **Login sync** | `syncLocalToCloud()` → `fetchJson('/api/file/save', ...)` | `POST /api/file/save` | Uploads guest `main.cpp` to cloud |
+| **Login sync (guest→login, modified only)** | `handleGoogleCredentialResponse()` | `POST /api/file/save` | Saves as `main/untitled-N.cpp` |
 | **Open existing cloud file** | `openFile()` background save | `POST /api/file/save` | Updates backend `last_opened_file_id` even when content is unchanged |
 | **Guest save (local)** | `persistLocalSave()` → `FileDB.put()` | None (IndexedDB only) | Guest-mode save to browser storage |
 | **Draft write (on every keystroke)** | `setLocalDraftImmediate()` → `FileDB.put()` | None (IndexedDB only) | Non-blocking draft write for crash recovery |
@@ -416,20 +422,15 @@ Every code path that can save a file:
 
 ## 9. Login Sync — Guest → Cloud Migration
 
-When a guest user signs in, `syncLocalToCloud()` runs to merge any local files with cloud:
+On Google sign-in, the client classifies the current guest editor content before any upload:
 
-### Three Cases
-
-| Case | Condition | Action |
-|------|-----------|--------|
-| **A** | `main` folder has **no** `main.cpp` | Upload local `main.cpp` into `main` folder |
-| **B** | `main` folder has `main.cpp` with **identical** content (same SHA-256) | Use cloud version, discard local duplicate |
-| **C** | `main` folder has `main.cpp` with **different** content | Keep cloud `main.cpp` unchanged. Upload local version as `local-main.cpp` |
-
-After sync:
-1. IndexedDB is **cleared** entirely
-2. Cloud files are downloaded and used as the new state
-3. IndexedDB is rebuilt as a cache mirror of cloud files
+1. Always compute SHA-256 of current editor content (`guestCodeModified()` in `storage.js`).
+2. Compare the hash against the demo hash set (`bouncing_ball.cpp`, `circle_pattern.cpp`, `graphics_demo.cpp`, `shooter_game.cpp`).
+3. Fetch `/api/files`.
+4. New user + unmodified demo: do nothing (no cloud file created).
+5. Existing user + unmodified demo: open previous workspace.
+6. Any user + modified code: ensure `main` folder, save as `untitled-N.cpp` via `/api/file/save`, then open it.
+7. IndexedDB is cleared and rebuilt from cloud as cache mirror.
 
 ---
 
@@ -586,8 +587,8 @@ sidebar
 ```
 1. User clicks Save button or presses Ctrl+S
 2. saveCode()
-3.   └── forceSaveActiveFile('manual', { force: true })
-4.       └── Posts to /api/file/save even if hash unchanged
+3.   └── forceSaveActiveFile('manual', { silent: false })
+4.       └── Computes hash and skips network call if unchanged
 5.       └── Button text: "Save" → "Saving..." → "Saved" → "Save"
 ```
 
