@@ -35,6 +35,35 @@ Graphics.h Compiler is a modern Turbo C wrapper that enables you to compile and 
 
 ---
 
+## 🧩 Three Main Components
+
+This repository contains **three products** that work together:
+
+### 1. 🌐 Online Compiler (Web App)
+
+The main product — a browser-based Turbo C++ 3.0 compiler with a CodeMirror 6 editor, DOS emulation via JS-DOS, multi-theme support, and cloud file storage. Built on Flask (Python) and deployed on Vercel.
+
+📖 Technical deep-dive: [online-compiler.md](online-compiler.md)
+
+### 2. ⚙️ Cloudflare Workers (Backend Services)
+
+Two Cloudflare Workers power the backend:
+
+| Worker | Purpose |
+|--------|---------|
+| **`graphics-oc-files`** | User authentication (Google Sign-In), session management (JWT), and file CRUD — backed by Cloudflare D1 (SQLite) |
+| **`r2-public-assets`** | Public asset serving from R2 — demo `.cpp` files, `tc.zip` compiler archive, and promotional videos |
+
+📖 Full reference: [worker.md](../workers/worker.md)
+
+### 3. 📦 VS Code Extension
+
+A dedicated VS Code extension that lets users compile and run `graphics.h` programs directly inside their editor, with the same JS-DOS + Turbo C++ engine.
+
+📖 Extension docs: [vscode-compiler.md](vscode-compiler.md)
+
+---
+
 ## ✨ Features
 
 **Browser-Based Compilation**  
@@ -237,8 +266,10 @@ graphics.h-online-compiler/
 |----------|-------------|
 | **[readme.md](readme.md)** | This file — project overview, setup, and contributor guide |
 | **[online-compiler.md](online-compiler.md)** | Technical deep-dive into the browser-based compiler architecture |
+| **[worker.md](../workers/worker.md)** | Cloudflare Workers reference — `graphics-oc-files` (auth + file storage) and `r2-public-assets` (public R2 assets) |
 | **[vscode-compiler.md](vscode-compiler.md)** | VS Code extension internals, toolchain, and build process |
 | **[editor.md](editor.md)** | CodeMirror 6 editor setup, bundling, and theme system |
+| **[user-files.md](user-files.md)** | User file storage integration — worker API, IndexedDB cache, autosave flow |
 
 ---
 

@@ -1,7 +1,16 @@
-# `graphics-oc-files` — Cloudflare Worker Documentation
+# Cloudflare Workers Documentation
 
-> Full reference for the **Graphics.h Online Compiler** file-storage backend.  
-> Deployed as a [Cloudflare Worker](https://developers.cloudflare.com/workers/) with a [D1 SQLite](https://developers.cloudflare.com/d1/) database.
+> Full reference for the **Graphics.h Online Compiler** Cloudflare Workers.
+>
+> This document covers two workers:
+> 1. **`graphics-oc-files`** — File storage & auth backend (D1 SQLite + JWT sessions)
+> 2. **`r2-public-assets`** — Public asset serving from R2
+
+---
+
+# Part 1: `graphics-oc-files`
+
+> File-storage backend deployed as a [Cloudflare Worker](https://developers.cloudflare.com/workers/) with a [D1 SQLite](https://developers.cloudflare.com/d1/) database.
 
 ---
 
@@ -1218,4 +1227,193 @@ graphics-oc-files/
     ├── hash.js             # SHA-256 content hashing
     ├── response.js         # CORS headers, JSON/error response builders
     └── validate.js         # Input validation (file names, folder names, IDs)
+```
+
+---
+---
+
+# Part 2: `r2-public-assets`
+
+> Public asset serving worker — serves demo files, system archives, and videos from a Cloudflare R2 bucket.
+
+---
+
+## Overview
+
+`r2-public-assets` is a lightweight Cloudflare Worker that serves **public, read-only assets** from the `graphics-compiler-public` R2 bucket. It provides demo `.cpp` files, the `tc.zip` system archive, and promotional videos used by the compiler website and VS Code extension.
+
+Unlike `graphics-oc-files`, this worker has **no authentication** — all assets are publicly accessible. It supports `GET` and `HEAD` requests only.
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────┐
+│   Any HTTP Client        │
+│   (Browser, CLI, CDN)    │
+└────────────┬─────────────┘
+             │  HTTPS
+             ▼
+┌──────────────────────────┐
+│  Cloudflare Worker       │
+│  r2-public-assets        │
+│                          │
+│  ┌────────────────────┐  │
+│  │  Path Validation   │  │  Only /demo/, /system/, /videos/ allowed
+│  │  CORS Headers      │  │  Access-Control-Allow-Origin: *
+│  │  Content-Type Map  │  │  Extension-based type detection
+│  │  Range Requests    │  │  Supports HTTP Range for video streaming
+│  │  Cache Control     │  │  Aggressive 1-year immutable caching
+│  └───────┬────────────┘  │
+│          │               │
+└──────────┼───────────────┘
+           │  R2 Binding
+           ▼
+┌──────────────────────────┐
+│  Cloudflare R2           │
+│  graphics-compiler-public│
+│                          │
+│  demo/*.cpp              │  Sample C++ programs
+│  system/*.zip            │  TC.zip compiler archive
+│  videos/*.mp4            │  Promotional videos
+└──────────────────────────┘
+```
+
+---
+
+## Allowed Paths
+
+Only three path prefixes are accessible. Requests to any other path return `404`.
+
+| Path Prefix | Content | Example |
+|---|---|---|
+| `/demo/` | Sample `.cpp` demo programs | `/demo/graphics_demo.cpp` |
+| `/system/` | System archives (e.g., `tc.zip`) | `/system/tc-v1.zip` |
+| `/videos/` | Promotional / tutorial videos | `/videos/vscode-demo-v2.mp4` |
+
+---
+
+## Content-Type Mapping
+
+| Extension | Content-Type |
+|---|---|
+| `.cpp` | `text/plain; charset=utf-8` |
+| `.zip` | `application/zip` |
+| `.mp4` | `video/mp4` |
+| `.txt` | `text/plain; charset=utf-8` |
+| `.pdf` | `application/pdf` |
+| `.webm` | `video/webm` |
+| `.mov` | `video/quicktime` |
+| _(other)_ | `application/octet-stream` |
+
+---
+
+## Caching
+
+All served assets use **aggressive immutable caching** — 1 year TTL:
+
+```
+Cache-Control: public, max-age=31536000, immutable
+```
+
+This is applied uniformly across `/demo/`, `/system/`, and `/videos/` paths. Assets are versioned by filename (e.g., `tc-v1.zip`, `vscode-demo-v2.mp4`) so updated assets get a new filename rather than invalidating cache.
+
+The root path (`/`) returns a JSON info response with a 1-hour cache.
+
+---
+
+## Range Requests
+
+The worker supports HTTP `Range` headers for partial content retrieval — critical for video streaming in browsers:
+
+- **Valid range**: Returns `206 Partial Content` with `Content-Range` header
+- **No range**: Returns `200` with the full file body
+- **Invalid range format**: Falls back to full file delivery
+
+---
+
+## CORS
+
+All responses include permissive CORS headers:
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Range
+Access-Control-Max-Age: 86400
+```
+
+No credentials or cookies are involved — assets are fully public.
+
+---
+
+## Endpoints
+
+| Method | Path | Response |
+|---|---|---|
+| `OPTIONS` | `*` | `204` — CORS preflight |
+| `GET` | `/` | `200` — JSON service info (endpoints, examples) |
+| `GET` | `/demo/*` | `200` / `206` — Serves file from R2 |
+| `GET` | `/system/*` | `200` / `206` — Serves file from R2 |
+| `GET` | `/videos/*` | `200` / `206` — Serves file from R2 |
+| `HEAD` | `(any valid path)` | Same headers as GET, no body |
+| `*` | `(any other method)` | `405` — Method Not Allowed |
+
+---
+
+## Configuration (`wrangler.jsonc`)
+
+```jsonc
+{
+  "name": "r2-public-assets",
+  "main": "src/index.js",
+  "compatibility_date": "2026-01-28",
+  "observability": { "enabled": true },
+  "r2_buckets": [
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "graphics-compiler-public"
+    }
+  ]
+}
+```
+
+### Secrets
+
+None — this worker has no authentication and no secrets.
+
+---
+
+## File Structure
+
+```
+r2-public-assets/
+├── package.json             # Scripts: deploy, dev, upload, list
+├── wrangler.jsonc            # Cloudflare Wrangler config (R2 binding)
+├── vitest.config.js          # Test configuration
+│
+└── src/
+    └── index.js             # Main worker — path validation, R2 fetch, range handling
+```
+
+### Deployment
+
+```bash
+cd workers/r2-public-assets
+npm install
+npx wrangler deploy
+```
+
+### Useful Commands
+
+```bash
+# Upload assets to R2
+npm run upload
+
+# List objects in the bucket
+npm run list
+
+# Local dev server
+npm run dev
 ```

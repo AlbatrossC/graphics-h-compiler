@@ -8,7 +8,6 @@ Live: https://graphics-h-compiler.vercel.app/compiler.html
 ## Table of Contents
 
 - [What This Is](#what-this-is)
-- [Running Locally](#running-locally)
 - [Project Structure](#project-structure)
 - [Turbo C++ Source](#turbo-c-source)
 - [The Compilation Command](#the-compilation-command)
@@ -17,13 +16,6 @@ Live: https://graphics-h-compiler.vercel.app/compiler.html
 - [Error Detection](#error-detection--polling-the-emscripten-fs)
 - [Execution Flow](#execution-flow)
 - [Module Breakdown](#module-breakdown)
-- [Theme System](#theme-system-theme-enginejs)
-- [Caching](#caching)
-- [Cloud Storage & Auth](#cloud-storage--auth)
-- [Flask Backend](#flask-backend-apppy)
-- [CodeMirror Bundle](#codemirror-editor-bundle)
-- [Environment Variables](#environment-variables)
-- [Deployment](#deployment)
 - [Tech Stack](#tech-stack)
 
 ---
@@ -33,67 +25,6 @@ Live: https://graphics-h-compiler.vercel.app/compiler.html
 [JS-DOS](https://js-dos.com/) is a WebAssembly port of DOSBox that can run a full DOS environment in the browser. Turbo C++ 3.0 runs inside it natively, with `graphics.h` and `graphics.lib` intact. This project wraps that environment with a CodeMirror 6 code editor, multi-theme support, cloud file storage, and a split-pane UI — giving it a proper developer interface instead of a raw DOS terminal.
 
 No local installation. No DOSBox setup. No Turbo C IDE.
-
----
-
-## Running Locally
-
-The app is a **Flask** application. To run the full compiler locally:
-
-### Prerequisites
-
-| Requirement | Minimum Version | Purpose |
-|-------------|-----------------|---------|
-| Python | 3.8+ | Flask backend |
-| pip | — | Install Python dependencies |
-| Node.js | 16.x+ | Only needed if rebuilding the CodeMirror editor bundle |
-| npm | 8.x+ | Only needed if rebuilding the CodeMirror editor bundle |
-
-### Setup Steps
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/AlbatrossC/graphics-h-compiler.git
-cd graphics-h-compiler
-
-# 2. Install Python dependencies
-pip install -r requirements.txt
-```
-
-The `requirements.txt` contains:
-```
-flask
-python-dotenv
-requests
-```
-
-### Create the Environment File
-
-Create a `.env` file in the project root. The app will start without any variables (the compiler itself works fully), but auth and cloud features need them. See [Environment Variables](#environment-variables) for the full list.
-
-```bash
-# Minimum — creates an empty .env so dotenv doesn't warn
-copy NUL .env          # Windows (Command Prompt)
-# touch .env           # macOS / Linux
-```
-
-### Start the Server
-
-```bash
-python app.py
-```
-
-Flask starts on **`http://localhost:5000`** (bound to `0.0.0.0`, accessible from all interfaces).
-
-| Page | URL |
-|------|-----|
-| Landing page | `http://localhost:5000/` |
-| Compiler | `http://localhost:5000/compiler` or `/compiler.html` |
-| Documentation | `http://localhost:5000/docs` |
-| Embed widget | `http://localhost:5000/embed` |
-| Embed docs widget | `http://localhost:5000/embed-docs` |
-
-> **Important:** Do **not** use `python -m http.server` — the app relies on Flask for routing, template rendering, API endpoints, and the storage worker proxy. A static file server will not work.
 
 ---
 
@@ -128,7 +59,7 @@ graphics.h-online-compiler/
 │   │   │   ├── core.js           ← Shared logger, constants, performance metrics
 │   │   │   ├── editor.js         ← CodeMirror 6 initialization, keybindings, CDN loading
 │   │   │   ├── runtime.js        ← postMessage bridge to iframe, keyboard blocker, fullscreen
-│   │   │   ├── storage.js        ← Supabase auth, Cloudflare Worker file API, IndexedDB cache
+│   │   │   ├── storage.js        ← Auth, cloud storage, IndexedDB cache, autosave
 │   │   │   ├── theme-engine.js   ← Theme definitions, CodeMirror extension compilation
 │   │   │   ├── settings.js       ← Settings panel logic
 │   │   │   └── cm-entry.js       ← esbuild entry (re-exports CodeMirror packages)
@@ -148,8 +79,7 @@ graphics.h-online-compiler/
 ├── TURBOC3/                      ← Turbo C++ 3.0 (BIN/, INCLUDE/, LIB/) — source files
 │
 ├── workers/                      ← Cloudflare Workers
-│   ├── graphics-oc-users-files/  ← File storage worker (R2 + JWT auth)
-│   ├── graphics-compiler-users-worker/  ← User management
+│   ├── graphics-oc-files/        ← File storage & auth worker (D1 + JWT)
 │   └── r2-public-assets/         ← Public asset serving from R2
 │
 └── docs/                         ← Developer documentation
@@ -334,7 +264,6 @@ Multiple path variants are checked (`/TURBOC3/BIN/ERR.TXT`, `TURBOC3/BIN/ERR.TXT
 User clicks Run
     │
     ├─ Editor validates code is non-empty
-    ├─ Code autosaved to localStorage (and cloud if logged in)
     ├─ AUTOEXEC.BAT constructed with TCC compile command
     ├─ tc.zip fetched from IndexedDB cache or downloaded
     ├─ postMessage({ type: 'INIT_DOS', payload: { code, batchScript, zipUrl, ... } }) → iframe
@@ -364,221 +293,10 @@ A 60-second startup timeout is set immediately before `Dos()` is called. If `dos
 | `core.js` | Logger (color-coded `info` / `success` / `warn` / `error`), shared constants, metrics |
 | `editor.js` | CodeMirror 6 setup, language extensions, keyboard shortcuts, CDN script loading with local fallback |
 | `runtime.js` | `postMessage` bridge to iframe, keyboard blocker, fullscreen toggle, run button orchestration |
-| `storage.js` | Supabase auth, Cloudflare Worker file API, IndexedDB ZIP cache, autosave, demo file loading |
+| `storage.js` | Auth, cloud file storage, IndexedDB ZIP cache, autosave, demo file loading |
 | `theme-engine.js` | Theme definitions, CodeMirror extension compilation, per-view theme state |
 | `settings.js` | User settings panel (theme selection, font size, CPU cycles, output format) |
 | `dos-runner.html` | Self-contained iframe — boots JS-DOS, writes filesystem, runs compiler, streams errors back |
-
----
-
-## Theme System (`theme-engine.js`)
-
-Six themes are defined: `vscode-dark`, `vscode-light`, `monokai`, `github-dark`, `solarized-dark`, `one-dark`.
-
-Each theme is a **frozen object** — immutable at runtime. Compiled CodeMirror `Extension` arrays are cached in a `Map` (keyed by theme name), so compilation only happens once per theme per session. The currently active theme per editor view is tracked in a `WeakMap`; `applyTheme()` short-circuits if the requested theme is already active.
-
-```javascript
-applyTheme(cmView, themeCompartment, 'github-dark');
-resolveThemeName('invalid-name'); // → 'vscode-dark' (default fallback)
-isValidThemeName('monokai');      // → true
-```
-
-**To add a new theme:** add an entry to `THEME_DATA` in `theme-engine.js` with the required fields (`dark`, `bg`, `fg`, `cursor`, `activeLine`, `gutterBg`, `gutterFg`, `gutterBorder`, `selection`, `matchBracketBg`, `matchBracketOutline`, `highlights`), then add its name to the `THEME_NAMES` array.
-
----
-
-## Caching
-
-### TC.ZIP — IndexedDB
-
-| Detail | Value |
-|---|---|
-| Database | `GraphicsHCompilerCache` |
-| Store | `files` |
-| Key | `tc_zip_cache` |
-| TTL | 7 days |
-
-The download promise is shared globally — if the user clicks Run while a background warmup download is still in progress, the same promise is reused. No duplicate downloads, no race conditions.
-
-### Demo Files — LocalStorage
-
-Demo `.cpp` files are cached per key with a 7-day TTL. Selecting the same demo twice triggers a force-reload with a `?t=<timestamp>` cache-busting query parameter.
-
-### User Code — LocalStorage + Cloud
-
-Local save every 1 second (eager). Cloud save throttled to every 2 minutes. A forced synchronous save runs before every compilation via `forceSaveActiveFile('compileRun')`.
-
----
-
-## Cloud Storage & Auth
-
-**Stack:** Cloudflare Workers (gateway) + R2 (file storage) + Supabase (Google OAuth)
-
-JWT tokens are verified **locally inside the Worker** using Web Crypto API (HMAC-SHA256 signature check + expiry validation). This avoids a Supabase round-trip on every request, dropping auth latency from 200–500ms to under 10ms.
-
-Client-side session cache refresh interval is 45 minutes (vs Supabase's default 15 minutes), reducing unnecessary token refreshes by 3×.
-
-**Worker endpoints:**
-
-| Method | Route | Action |
-|---|---|---|
-| `POST` | `/files/save` | Save file to R2 |
-| `GET` | `/files/list` | List user's files |
-| `GET` | `/files/:path` | Load a file |
-| `DELETE` | `/files/:path` | Delete a file |
-
-R2 file path format: `user_{user_id}/main/{filename}`
-
-**Worker environment variables** (set via `npx wrangler secret put`):
-
-```
-USER_FILES_BUCKET       R2 bucket name
-SUPABASE_URL            Supabase project URL
-SUPABASE_ANON_KEY       Public API key
-SUPABASE_JWT_SECRET     JWT signing secret (used for local verification)
-PROD_ORIGIN             https://graphics-h-compiler.vercel.app
-```
-
-### Storage Worker Proxy
-
-In production (and locally), the Flask backend **proxies** all `/files/*` requests to the Cloudflare Worker. This avoids cross-origin issues — the browser makes same-origin requests to Flask, and Flask forwards them to the Worker with the user's JWT in the `Authorization` header. The proxy logic is in the `proxy_storage_worker()` function in `app.py`.
-
-For local development, Flask detects `127.0.0.1` and `::1` origins and rewrites the `Origin` header to `http://localhost:5000` so the Worker's CORS check passes.
-
----
-
-## Flask Backend (`app.py`)
-
-The backend is a standard Flask app that handles:
-
-1. **Page rendering** — Jinja2 templates for all pages (`/`, `/compiler`, `/docs`, `/embed`, etc.)
-2. **Static file serving** — CSS, JS, images at `/static/`
-3. **Library serving** — JS-DOS runtime files at `/libs/` (mapped from `compiler-assets/libs/`)
-4. **API endpoints** — Auth config (`/api/auth/config`), contact form (`/api/contact`), maintenance messages (`/api/maintenance/message`)
-5. **Storage proxy** — Forwards `/files/*` to the Cloudflare Worker
-6. **Maintenance mode** — Redirects all pages to `maintenance.html` when `MAINTENANCE_MODE=true`
-
-### Key Routes
-
-| Route Pattern | Method | Description |
-|---------------|--------|-------------|
-| `/` , `/index.html` | GET | Landing page |
-| `/compiler` , `/compiler.html` | GET | Main compiler page |
-| `/docs` | GET | Documentation hub |
-| `/docs/<slug>` | GET | Individual doc page (rendered into `base.html` layout) |
-| `/docs-content/<slug>` | GET | Doc content only (used for SPA-style loading in `embed-docs.html`) |
-| `/embed` , `/embed.html` | GET | Embeddable compiler widget |
-| `/embed-docs` , `/embed-docs.html` | GET | Embeddable docs widget |
-| `/api/auth/config` | GET | Returns `SUPABASE_URL` and `SUPABASE_ANON_KEY` to the frontend |
-| `/files/<path>` | GET/POST/DELETE | Proxies to Cloudflare storage worker |
-| `/api/contact` | POST | Sends contact form data to Discord webhook |
-| `/libs/<path>` | GET | Serves JS-DOS library files |
-| `/compiler-assets/<path>` | GET | Serves demo files, zip files, etc. |
-
-### Documentation System
-
-Docs are template-based. Each doc page is a slug (e.g., `circle`, `hello-graphics`) that maps to a Jinja2 template:
-
-- **`DOCS_SLUG_TO_TEMPLATE`** — Maps slug → template file path (e.g., `'circle'` → `'docs/drawing/circle.html'`)
-- **`DOCS_SLUG_TO_TITLE`** — Maps slug → page title
-- **`DOCS_SLUG_TO_DESCRIPTION`** — Maps slug → meta description for SEO
-
-To add a new doc page:
-1. Create the HTML template in `templates/docs/<category>/`
-2. Add entries to all three dictionaries in `app.py`
-
----
-
-## CodeMirror Editor Bundle
-
-The editor uses **CodeMirror 6** for syntax highlighting, autocompletion, keybindings, and theming. CodeMirror is split into many small packages; they are bundled into a single file for the browser using **esbuild**.
-
-### Build Process
-
-```bash
-# Install Node.js dependencies (first time only)
-npm install
-
-# Run the bundler
-node esbuild.mjs
-```
-
-**Entry point:** `static/js/compiler/cm-entry.js` — this file re-exports the specific CodeMirror packages used by the app.
-
-**Output:** `static/js/codemirror.bundle.v1.js` — a minified ESM bundle (~530 KB) loaded by `editor.js`.
-
-### When to Rebuild
-
-You need to run `node esbuild.mjs` if you:
-- Add, remove, or update a CodeMirror package in `package.json`
-- Modify `cm-entry.js` (change which packages are exported)
-- Update CodeMirror extensions
-
-You do **not** need to rebuild if you only modify `editor.js`, `core.js`, `runtime.js`, or other app-level JS — those are loaded as regular `<script>` tags, not bundled.
-
----
-
-## Environment Variables
-
-All environment variables are loaded from a `.env` file in the project root (via `python-dotenv`).
-
-| Variable | Required For | Description |
-|----------|--------------|-------------|
-| `SUPABASE_URL` | Google Sign-In | Supabase project URL |
-| `SUPABASE_ANON_KEY` | Google Sign-In | Supabase public (anon) API key |
-| `STORAGE_WORKER_URL` | Cloud file save | URL of the Cloudflare Worker (e.g., `https://graphics-oc-users-files.your-worker.workers.dev`) |
-| `DISCORD_WEBHOOK_URL` | Contact form | Discord webhook URL for receiving messages |
-| `MAINTENANCE_MODE` | Maintenance | Set to `true` to redirect all traffic to maintenance page |
-
-**Without any `.env` variables:**
-- The compiler works fully (editor, compilation, local save)
-- Google Sign-In button will be hidden or show an error
-- Cloud save will be disabled
-- Contact form submissions will fail silently
-
----
-
-## Deployment
-
-### Vercel (Web App)
-
-The app is deployed to Vercel as a Python serverless function. Configuration is in `vercel.json`:
-
-```json
-{
-  "builds": [
-    { "src": "static/**/*",              "use": "@vercel/static" },
-    { "src": "compiler-assets/libs/**/*", "use": "@vercel/static" },
-    { "src": "app.py",                   "use": "@vercel/python" }
-  ],
-  "routes": [
-    { "src": "/static/(.*)", "dest": "/static/$1", "headers": { "cache-control": "public, max-age=31536000, immutable" } },
-    { "src": "/libs/(.*)",   "dest": "/compiler-assets/libs/$1" },
-    { "src": "/(.*)",        "dest": "/app.py" }
-  ]
-}
-```
-
-- **Static files** (`/static/*`, `/libs/*`) are served directly by Vercel's CDN with immutable caching
-- **Everything else** is routed to `app.py` (Flask serverless function)
-- Environment variables are set in the Vercel dashboard (Settings → Environment Variables)
-
-### Cloudflare Workers
-
-Each worker in `workers/` is deployed independently:
-
-```bash
-cd workers/graphics-oc-users-files
-npm install
-npx wrangler deploy
-
-# Set secrets
-npx wrangler secret put SUPABASE_JWT_SECRET
-npx wrangler secret put SUPABASE_URL
-npx wrangler secret put SUPABASE_ANON_KEY
-```
-
-Worker configuration lives in `wrangler.jsonc` (or `wrangler.toml`) within each worker directory.
 
 ---
 
@@ -593,8 +311,8 @@ Worker configuration lives in `wrangler.jsonc` (or `wrangler.toml`) within each 
 | Compiler | Turbo C++ 3.0 (`TCC.EXE`) |
 | Compiler Source | [turbo-c.net](https://turbo-c.net/) (modified) |
 | File Hosting | Vercel Blob Storage |
-| Cloud Files | Cloudflare Workers + R2 |
-| Auth | Supabase (Google OAuth) |
+| Cloud Files | Cloudflare Workers + D1 |
+| Auth | Google Sign-In (OAuth 2.0) |
 | Caching | IndexedDB (tc.zip) · LocalStorage (code, demos) |
 | Deployment | Vercel (app) · Cloudflare (workers) |
 
