@@ -1312,22 +1312,22 @@ header {
 .activity-bar {
     width: 56px;
     min-width: 56px;
-    background: rgba(16, 16, 16, 0.65);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(16, 16, 18, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 10px 0;
     flex-shrink: 0;
     gap: 2px;
-    margin-right: 2px;
+    margin-right: 4px;
     transition:
-        background-color var(--transition-slow),
-        border-color var(--transition-slow);
+        background-color 0.2s ease,
+        border-color 0.2s ease;
     position: relative;
 }
 
@@ -1423,26 +1423,7 @@ header {
     animation: settings-spin 0.6s ease;
 }
 
-/* Sidebar */
-#sidebar {
-    width: 232px;
-    min-width: 232px;
-    background: var(--vscode-sidebar);
-    border: 1px solid var(--border-color);
-    border-radius: var(--panel-radius);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    transition:
-        width var(--transition-slow),
-        min-width var(--transition-slow),
-        opacity var(--transition-slow),
-        margin var(--transition-slow);
-    z-index: 90;
-    overflow: hidden;
-    overflow-y: auto;
-    min-height: 0;
-}
+/* Sidebar (Moved and enhanced below) */
 
 #sidebar.collapsed {
     width: 0;
@@ -1611,20 +1592,20 @@ header {
 #sidebar {
     width: 240px;
     min-width: 240px;
-    background: rgba(16, 16, 16, 0.65);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(16, 16, 18, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease;
     z-index: 90;
     overflow: hidden;
     overflow-y: auto;
     min-height: 0;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 [data-theme="light"] #sidebar,
@@ -1866,8 +1847,9 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 32px;
-    padding: 0 10px;
+    min-height: 32px;
+    height: auto;
+    padding: 4px 10px;
     margin: 2px 8px;
     border-radius: 6px;
     font-size: 13px;
@@ -1905,9 +1887,8 @@ header {
 }
 
 .folder-group-title span:last-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
+    white-space: normal;
 }
 
 .folder-chevron {
@@ -1994,9 +1975,10 @@ header {
 .file-item {
     display: flex;
     align-items: center;
-    height: 32px;
+    min-height: 32px;
+    height: auto;
     gap: 10px;
-    padding: 0 12px 0 24px;
+    padding: 4px 12px 4px 24px;
     margin: 2px 8px;
     cursor: pointer;
     color: var(--text-secondary);
@@ -2055,9 +2037,7 @@ header {
     color: #7d8590;
 }
 
-.file-item:hover .file-icon {
-    transform: scale(1.05);
-}
+/* Scale transform removed to prevent scroll/hover lag */
 
 .file-item.active .file-icon {
     color: var(--primary);
@@ -2065,9 +2045,8 @@ header {
 
 .file-item .file-name {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    word-break: break-all;
+    white-space: normal;
     font-weight: 400;
     font-family: "JetBrains Mono", "Fira Code", monospace;
     font-size: 0.8125rem;
@@ -2082,17 +2061,19 @@ header {
 
 /* File Actions - Always Visible */
 .file-actions {
-    display: none;
+    display: flex;
+    opacity: 0;
+    pointer-events: none;
     align-items: center;
     gap: 4px;
     margin-left: auto;
     padding-left: 8px;
-    transition: opacity var(--transition-fast);
+    transition: opacity 0.15s ease;
 }
 
 .file-item:hover .file-actions {
-    display: flex;
     opacity: 1;
+    pointer-events: auto;
 }
 
 .file-action-btn {
@@ -2246,17 +2227,19 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    padding: 10px 16px;
+    padding: 10px 14px;
     background: #ffffff;
     color: #1f1f1f;
     border: 1px solid #dadce0;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
+    white-space: normal;
+    text-align: left;
 }
 
 .google-btn:hover {
@@ -2290,12 +2273,12 @@ header {
 .user-profile-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    padding: 6px 8px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 6px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
     cursor: pointer;
     transition: all var(--transition-fast);
     text-align: left;
@@ -2333,8 +2316,8 @@ header {
 }
 
 .user-name {
-    font-size: 0.8125rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
@@ -2342,7 +2325,7 @@ header {
 }
 
 .user-email {
-    font-size: 0.6875rem;
+    font-size: 0.70rem;
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
@@ -3331,8 +3314,12 @@ header {
     }
 
     .google-btn {
-        padding: 12px 16px;
-        font-size: 0.875rem;
+        padding: 12px 14px;
+        font-size: 0.8125rem;
+    }
+    
+    .user-profile-btn {
+        padding: 10px 12px;
     }
 
     /* ---- Panel headers / actions ---- */
@@ -3366,6 +3353,27 @@ header {
     .panel-action-btn svg {
         width: 16px;
         height: 16px;
+    }
+
+    /* Keep file actions visible on mobile always since there's no hover */
+    .file-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Give action buttons enough touch target size */
+    .file-action-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .file-action-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .file-item {
+        padding: 6px 10px 6px 16px;
     }
 
     /* Show fullscreen buttons on mobile since we use split view */
