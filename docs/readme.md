@@ -166,6 +166,7 @@ Create a `.env` file in the project root. The app will run without these (with r
 | `STORAGE_WORKER_URL` | For cloud save | URL to the Cloudflare Worker that handles file storage |
 | `DISCORD_WEBHOOK_URL` | For contact form | Discord webhook URL for receiving contact form messages |
 | `MAINTENANCE_MODE` | Optional | Set to `true` to enable maintenance mode (redirects all pages to maintenance page) |
+| `MAINTENANCE_DATE` | Optional | Text shown on maintenance page as the "Back online" date/time |
 
 Without these variables:
 - **No `.env` at all** — The compiler and editor work fully. Google Sign-In, cloud file save, and the contact form will be disabled.
