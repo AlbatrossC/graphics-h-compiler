@@ -10,3 +10,5 @@ worker/.wrangler/
 worker/dist/
 worker/.dev.vars
 node_modules/
+
+dashboard/
