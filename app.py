@@ -276,6 +276,8 @@ def auth_config():
         'authEnabled': bool(os.getenv('USER_FILES_WORKERS') and os.getenv('GOOGLE_CLIENT_ID')),
         'storageEnabled': bool(os.getenv('USER_FILES_WORKERS')),
         'googleClientId': os.getenv('GOOGLE_CLIENT_ID', ''),
+        'supabaseUrl': os.getenv('SUPABASE_URL', ''),
+        'supabaseAnonKey': os.getenv('SUPABASE_ANON_KEY', ''),
     })
 
 
