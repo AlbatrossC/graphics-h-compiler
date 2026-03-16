@@ -72,6 +72,7 @@
         const wrapper = document.createElement('div');
         wrapper.id = POPUP_ID;
         wrapper.setAttribute('aria-live', 'polite');
+        wrapper.setAttribute('data-clarity-unmask', 'true');
 
         wrapper.innerHTML = `
             <style>
@@ -269,7 +270,7 @@
                                 <span>No, not needed</span>
                             </label>
                         </div>
-                        <textarea class="ai-poll-textarea" name="message" placeholder="If you have suggestions for the AI feature, you can write them here (optional)."></textarea>
+                        <textarea class="ai-poll-textarea" name="message" data-clarity-unmask="true" placeholder="If you have suggestions for the AI feature, you can write them here (optional)."></textarea>
                         <div class="ai-poll-footer">
                             <button type="submit" class="ai-poll-submit">Submit Vote</button>
                             <p class="ai-poll-status" data-status></p>
