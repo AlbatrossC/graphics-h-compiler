@@ -565,5 +565,9 @@ def not_found(error):
 def server_error(error):
     return jsonify({'error': 'Server error'}), 500
 
+@app.route('/60fdeab2245d4db481d42962ab440eb2.txt')
+def serve_txt():
+    return send_file('60fdeab2245d4db481d42962ab440eb2.txt')
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
