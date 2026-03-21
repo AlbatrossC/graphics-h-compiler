@@ -72,7 +72,7 @@
   <link rel="stylesheet" href="/static/css/compiler.css?v=2.0" />
 
   <script src="/static/analytics.js" defer></script>
-  <script src="/static/resource-loader.js" defer></script>
+  <script src="/static/resource-loader.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
@@ -155,6 +155,12 @@
 
       <!-- Status Message Removed -->
 
+      <button id="ask-ai-btn" class="btn btn-gemini" type="button" title="Ask AI">
+        <img src="/static/gemini.svg" alt="" class="gemini-logo" />
+        <span class="btn-text btn-text-desktop">Ask AI</span>
+        <span class="btn-text btn-text-mobile" style="display: none">AI</span>
+      </button>
+
       <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M8 5v14l11-7z" />
@@ -196,6 +202,9 @@
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
           </button>
+          <button id="ai-activity-btn" class="activity-bar-btn" title="Ask AI">
+            <img src="/static/gemini.svg" alt="" class="gemini-logo activity-gemini-logo" />
+          </button>
         </div>
         <div class="activity-bar-bottom">
           <button id="settings-activity-btn" class="activity-bar-btn" title="Settings">
@@ -232,6 +241,10 @@
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
             <span>Files</span>
+          </button>
+          <button id="mobile-menu-ai-btn" class="mobile-menu-btn" type="button">
+            <img src="/static/gemini.svg" alt="" class="gemini-logo mobile-gemini-logo" />
+            <span>AI</span>
           </button>
           <button id="mobile-menu-settings-btn" class="mobile-menu-btn" type="button">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -309,6 +322,42 @@
           </div>
 
           <div class="file-list-flat" id="main-folder-files"></div>
+        </div>
+
+        <div id="ai-panel-view" class="ai-panel" style="display: none">
+          <div class="ai-panel-header">
+            <span class="ai-panel-title">AI Assistant</span>
+            <div id="ai-status-pill" class="ai-status-pill">Ready for a prompt</div>
+          </div>
+
+          <div id="ai-messages" class="ai-messages" aria-live="polite"></div>
+
+          <div id="ai-empty-state" class="ai-empty-state">
+            <div class="ai-empty-content">
+              <h3>Graphics.h AI Assistant</h3>
+              <p>Type what you want to build and the AI will write, compile, and repair the code automatically.</p>
+            </div>
+          </div>
+
+          <div id="ai-actions" class="ai-actions hidden">
+            <button id="ai-reject-btn" class="btn btn-ai-secondary" type="button">Reject</button>
+            <button id="ai-apply-btn" class="btn btn-ai-primary" type="button">Apply</button>
+          </div>
+
+          <form id="ai-form" class="ai-composer">
+            <label for="ai-input" class="sr-only">Ask the AI assistant</label>
+            <textarea id="ai-input" class="ai-input" rows="2"
+              placeholder="Describe a scene or ask for an edit..." spellcheck="false"></textarea>
+            <div class="ai-composer-footer">
+              <span class="ai-hint">Shift+Enter for new line</span>
+              <button id="ai-send-btn" class="btn-ai-send" type="submit">
+                <span>Send</span>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
+            </div>
+          </form>
         </div>
 
         <!-- Settings Panel -->
@@ -587,6 +636,7 @@
   <script src="/static/js/compiler/runtime.js?v=codemirror_v5"></script>
 
   <script src="/static/js/compiler/settings.js?v=codemirror_v5"></script>
+  <script src="/static/js/compiler/ai.js?v=1"></script>
   <script src="/static/js/compiler/popup.js?v=2"></script>
 
 </body>

@@ -80,6 +80,7 @@ graphics.h-online-compiler/
 │
 ├── workers/                      ← Cloudflare Workers
 │   ├── graphics-oc-files/        ← File storage & auth worker (D1 + JWT)
+│   ├── ai-assistant/             ← Gemini-backed AI code assistant worker (D1 + JWT/guest sessions)
 │   └── r2-public-assets/         ← Public asset serving from R2
 │
 └── docs/                         ← Developer documentation
@@ -180,6 +181,19 @@ Each run deletes old `USER.EXE`, `ERR.TXT`, and `FAIL.TXT` first to guarantee a 
 When JS-DOS renders to a `<canvas>` element, DOSBox registers global `keydown`, `keyup`, and `mousemove` event listeners on the `document`. These listeners capture **all** keyboard and mouse input at the document level — not just when the canvas is focused. This meant that as soon as JS-DOS loaded, typing in the CodeMirror editor became broken: keystrokes were intercepted by DOSBox before CodeMirror could see them.
 
 The fix is to run the entire JS-DOS environment inside a sandboxed `<iframe>` (`dos-runner.html`). Because iframes have a completely separate `document` and `window` context, DOSBox's global event listeners are confined to the iframe's document and cannot reach the parent page at all. The editor and the DOS canvas now operate in entirely separate browsing contexts with no shared input state.
+
+### AI Assistant Layer
+
+The compiler UI now also includes an **AI assistant panel** in the sidebar. The browser sends `/api/ai` requests to Flask, Flask proxies them to the Cloudflare `ai-assistant` worker, and that worker:
+
+- verifies the session cookie or falls back to a guest fingerprint ID
+- rate-limits requests in D1
+- calls Gemini
+- parses Gemini's tagged response into `{ filename, chat, generated_code }`
+- stores the interaction in D1
+- returns clean JSON back to the compiler UI
+
+The frontend treats AI responses as a **preview** first: code is shown in the editor, chat is shown in the assistant panel, the compiler auto-runs the preview, and the user can then **Apply** or **Reject** it. If the generated code fails to compile, the panel auto-sends up to two `type: "error"` repair requests back through the same worker.
 
 Communication between the two contexts is handled exclusively via `postMessage`:
 

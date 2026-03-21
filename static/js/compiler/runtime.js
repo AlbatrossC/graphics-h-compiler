@@ -350,6 +350,7 @@ window.addEventListener('message', (event) => {
 
             setTimeout(focusTerminal, 500);
             Logger.success('Program started successfully');
+            document.dispatchEvent(new CustomEvent('compiler-run-success'));
         }
     } else if (data.type === 'PROGRESS') {
         updateLoadingProgress(data.percent);
@@ -383,6 +384,9 @@ window.addEventListener('message', (event) => {
         } else if (!isMobileView()) {
             focusEditor();
         }
+        document.dispatchEvent(new CustomEvent('compiler-compilation-error', {
+            detail: { content: data.content || '' }
+        }));
     } else if (data.type === 'ERROR') {
         isDosSessionRunning = false;
         const message = data.message || 'Unknown DOS error';
@@ -442,8 +446,10 @@ async function runProgram() {
 
     metrics.runtime.runCount++;
     Logger.info(`[Run] Triggered | count=${metrics.runtime.runCount}`);
+    document.dispatchEvent(new CustomEvent('compiler-run-start'));
+    const shouldPersistPreviewOnRun = window.__aiPreviewPending !== true && window.__suppressCompileRunSave !== true;
 
-    if (isUserLoggedIn) {
+    if (isUserLoggedIn && shouldPersistPreviewOnRun) {
         if (CLOUD_STATE.autosaveTimer) {
             clearTimeout(CLOUD_STATE.autosaveTimer);
             CLOUD_STATE.autosaveTimer = null;
@@ -457,7 +463,7 @@ async function runProgram() {
         forceSaveActiveFile('compileRun').catch(e => {
             Logger.warn('Background save during run failed: ' + e.message);
         });
-    } else {
+    } else if (!isUserLoggedIn && shouldPersistPreviewOnRun) {
         saveCode();
     }
 
@@ -697,10 +703,12 @@ if (sidebarCollapseBtn) {
 // Activity bar: Explorer button opens/collapses sidebar
 if (explorerActivityBtn) {
     explorerActivityBtn.addEventListener('click', () => {
-        // If settings panel is open, switch back to explorer (handled by settings.js)
-        if (settingsActivityBtn && settingsActivityBtn.classList.contains('active')) {
+        const currentSidebarView = typeof window.getSidebarView === 'function'
+            ? window.getSidebarView()
+            : 'explorer';
+
+        if (currentSidebarView !== 'explorer') {
             document.dispatchEvent(new CustomEvent('request-show-explorer'));
-            // If sidebar is collapsed, expand it
             if (sidebar.classList.contains('collapsed')) {
                 sidebar.classList.remove('collapsed');
                 setTimeout(() => {
@@ -763,11 +771,18 @@ if (signoutBtn) {
 function updateLoginUI(loggedIn, user = null) {
     isUserLoggedIn = loggedIn;
     currentUser = user;
+    const sidebarView = typeof window.getSidebarView === 'function'
+        ? window.getSidebarView()
+        : 'explorer';
 
     if (loggedIn && user) {
-        // Show file explorer, hide promo
-        cloudPromoView.style.display = 'none';
-        fileExplorerView.style.display = 'block';
+        if (sidebarView === 'explorer') {
+            cloudPromoView.style.display = 'none';
+            fileExplorerView.style.display = 'block';
+        } else {
+            cloudPromoView.style.display = 'none';
+            fileExplorerView.style.display = 'none';
+        }
         if (refreshBtn) {
             refreshBtn.style.display = 'inline-flex';
             refreshBtn.disabled = false;
@@ -808,9 +823,13 @@ function updateLoginUI(loggedIn, user = null) {
 
         Logger.success(`Signed in as ${displayName}`);
     } else {
-        // Logged-out mode: show auth promo only, no cloud file controls.
-        cloudPromoView.style.display = 'flex';
-        fileExplorerView.style.display = 'none';
+        if (sidebarView === 'explorer') {
+            cloudPromoView.style.display = 'flex';
+            fileExplorerView.style.display = 'none';
+        } else {
+            cloudPromoView.style.display = 'none';
+            fileExplorerView.style.display = 'none';
+        }
         if (refreshBtn) {
             refreshBtn.style.display = 'none';
             refreshBtn.disabled = true;
@@ -836,6 +855,10 @@ function updateLoginUI(loggedIn, user = null) {
         CLOUD_STATE.selectedFolderKey = 'root';
         updateSaveIndicator();
     }
+
+    document.dispatchEvent(new CustomEvent('auth-state-changed', {
+        detail: { loggedIn, user }
+    }));
 }
 // Render logged-out promo immediately; auth bootstrap will switch to logged-in view if session exists.
 updateLoginUI(false);

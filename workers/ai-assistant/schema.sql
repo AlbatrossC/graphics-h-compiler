@@ -1,0 +1,135 @@
+-- Graphics.h AI Assistant — D1 Schema
+-- Run: wrangler d1 execute graphicsh-ai --remote --file=schema.sql
+
+-- ═══════════════════════════════════════
+-- Table 1: guest_info
+-- One row per guest visitor
+-- Rate limiting via sliding window
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS guest_info (
+  id TEXT PRIMARY KEY,
+  fingerprint_id TEXT NOT NULL UNIQUE,
+  total_requests INTEGER NOT NULL DEFAULT 0,
+  window_requests INTEGER NOT NULL DEFAULT 0,
+  window_start TEXT NOT NULL,
+  last_request_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_gi_fp ON guest_info(fingerprint_id);
+
+-- ═══════════════════════════════════════
+-- Table 2: guest_logs
+-- One row per guest request
+-- No filename sent to guest, but stored for analytics
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS guest_logs (
+  id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  fingerprint_id TEXT NOT NULL,
+  version TEXT NOT NULL,
+  request_type TEXT NOT NULL CHECK(request_type IN ('new', 'edit', 'error')),
+  user_query TEXT NOT NULL,
+  generated_code TEXT NOT NULL,
+  generated_filename TEXT NOT NULL,
+  chat_response TEXT NOT NULL,
+  error_message TEXT,
+  fix_attempt INTEGER NOT NULL DEFAULT 0,
+  user_action TEXT CHECK(user_action IN ('apply', 'reject', 'force_apply')),
+  api_key_used TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_gl_session ON guest_logs(session_id);
+CREATE INDEX IF NOT EXISTS idx_gl_fp ON guest_logs(fingerprint_id);
+
+-- ═══════════════════════════════════════
+-- Table 3: logged_users
+-- One row per signed-in user
+-- Rate limiting via sliding window
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS logged_users (
+  id TEXT PRIMARY KEY,
+  user_email TEXT NOT NULL UNIQUE,
+  user_name TEXT NOT NULL,
+  total_requests INTEGER NOT NULL DEFAULT 0,
+  window_requests INTEGER NOT NULL DEFAULT 0,
+  window_start TEXT NOT NULL,
+  last_request_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_lu_email ON logged_users(user_email);
+
+-- ═══════════════════════════════════════
+-- Table 4: logged_sessions
+-- One row per logged-in user request
+-- Sessions + chat history + generated code + filename
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS logged_sessions (
+  id TEXT PRIMARY KEY,
+  user_email TEXT NOT NULL,
+  session_id TEXT NOT NULL,
+  session_title TEXT,
+  version TEXT NOT NULL,
+  request_type TEXT NOT NULL CHECK(request_type IN ('new', 'edit', 'error')),
+  user_query TEXT NOT NULL,
+  generated_code TEXT NOT NULL,
+  generated_filename TEXT NOT NULL,
+  chat_response TEXT NOT NULL,
+  error_message TEXT,
+  fix_attempt INTEGER NOT NULL DEFAULT 0,
+  user_action TEXT CHECK(user_action IN ('apply', 'reject', 'force_apply')),
+  api_key_used TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_ls_email ON logged_sessions(user_email);
+CREATE INDEX IF NOT EXISTS idx_ls_session ON logged_sessions(session_id);
+CREATE INDEX IF NOT EXISTS idx_ls_email_session ON logged_sessions(user_email, session_id);
+
+-- ═══════════════════════════════════════
+-- Table 5: daily_usage
+-- One row per day, platform-wide analytics
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS daily_usage (
+  date TEXT PRIMARY KEY,
+  total_requests INTEGER NOT NULL DEFAULT 0,
+  guest_requests INTEGER NOT NULL DEFAULT 0,
+  user_requests INTEGER NOT NULL DEFAULT 0,
+  error_requests INTEGER NOT NULL DEFAULT 0,
+  primary_key_calls INTEGER NOT NULL DEFAULT 0,
+  secondary_key_calls INTEGER NOT NULL DEFAULT 0,
+  total_input_tokens INTEGER NOT NULL DEFAULT 0,
+  total_output_tokens INTEGER NOT NULL DEFAULT 0,
+  unique_guests INTEGER NOT NULL DEFAULT 0,
+  unique_users INTEGER NOT NULL DEFAULT 0,
+  last_request_at TEXT
+);
+
+-- ═══════════════════════════════════════
+-- Table 6: api_key_status
+-- Always exactly 2 rows (primary + secondary)
+-- Tracks Gemini API key health for failover
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS api_key_status (
+  key_name TEXT PRIMARY KEY,
+  is_rate_limited INTEGER NOT NULL DEFAULT 0,
+  rate_limited_until TEXT,
+  total_requests_today INTEGER NOT NULL DEFAULT 0,
+  total_errors_today INTEGER NOT NULL DEFAULT 0,
+  last_used_at TEXT,
+  last_error TEXT
+);
+
+INSERT OR IGNORE INTO api_key_status (key_name, is_rate_limited, total_requests_today, total_errors_today)
+VALUES ('primary', 0, 0, 0);
+
+INSERT OR IGNORE INTO api_key_status (key_name, is_rate_limited, total_requests_today, total_errors_today)
+VALUES ('secondary', 0, 0, 0);

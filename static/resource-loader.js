@@ -400,6 +400,8 @@ const ResourceLoader = (function () {
     };
 })();
 
+window.ResourceLoader = ResourceLoader;
+
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ResourceLoader;

@@ -334,17 +334,34 @@ let DEMO_FILES = {};
 // TC.ZIP URL - loaded dynamically from manifest.json
 let TC_ZIP_URL = null;
 
+async function waitForResourceLoader(maxAttempts = 50, delayMs = 100) {
+    if (typeof ResourceLoader !== 'undefined') {
+        return ResourceLoader;
+    }
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        if (typeof ResourceLoader !== 'undefined') {
+            Logger.info(`ResourceLoader became available after ${attempt + 1} wait cycle(s)`);
+            return ResourceLoader;
+        }
+    }
+
+    throw new Error('ResourceLoader is not available');
+}
+
 // Initialize resources from manifest
 async function initializeResourcesFromManifest() {
     try {
-        await ResourceLoader.init();
+        const loader = await waitForResourceLoader();
+        await loader.init();
 
         // Load demo files mapping
-        DEMO_FILES = await ResourceLoader.getDemoFiles();
+        DEMO_FILES = await loader.getDemoFiles();
         Logger.success('Demo files loaded from manifest');
 
         // Get TC ZIP URL (will handle fallback automatically)
-        TC_ZIP_URL = await ResourceLoader.getResourceUrl('assets', 'tc-zip');
+        TC_ZIP_URL = await loader.getResourceUrl('assets', 'tc-zip');
         Logger.success('TC ZIP URL resolved from manifest');
     } catch (error) {
         Logger.error('Failed to initialize resources from manifest', error);

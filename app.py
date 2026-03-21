@@ -275,6 +275,7 @@ def auth_config():
     return jsonify({
         'authEnabled': bool(os.getenv('USER_FILES_WORKERS') and os.getenv('GOOGLE_CLIENT_ID')),
         'storageEnabled': bool(os.getenv('USER_FILES_WORKERS')),
+        'aiEnabled': bool(os.getenv('AI_ASSISTANT_WORKER')),
         'googleClientId': os.getenv('GOOGLE_CLIENT_ID', ''),
         'supabaseUrl': os.getenv('SUPABASE_URL', ''),
         'supabaseAnonKey': os.getenv('SUPABASE_ANON_KEY', ''),
@@ -352,6 +353,51 @@ def storage_proxy():
 
     else:
         log_request(request.method, request.path, status)
+
+    return resp
+
+@app.route('/api/ai', methods=['POST', 'OPTIONS'])
+@app.route('/api/ai/action', methods=['PATCH', 'OPTIONS'])
+def ai_proxy():
+    ai_worker_url = os.getenv('AI_ASSISTANT_WORKER')
+    if not ai_worker_url:
+        return jsonify({'error': 'AI assistant worker is not configured'}), 503
+
+    body_bytes = request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None
+    resp = proxy_request(ai_worker_url, request.path, allow_redirects=False, body=body_bytes)
+    status = resp.status_code
+    response_text = ''
+    ai_payload = None
+    try:
+        response_text = resp.get_data(as_text=True)
+        ai_payload = json.loads(response_text) if response_text else None
+    except Exception:
+        response_text = response_text[:300] if response_text else ''
+
+    response_excerpt = response_text[:300] if response_text else ''
+    ai_code = ai_payload.get('code') if isinstance(ai_payload, dict) else ''
+    ai_reason = ''
+    if isinstance(ai_payload, dict) and isinstance(ai_payload.get('debug'), dict):
+        ai_reason = ai_payload['debug'].get('reason') or ''
+    retry_after = resp.headers.get('Retry-After', '')
+
+    if request.path == '/api/ai':
+        if status < 300:
+            log_ok(f"AI request completed  (HTTP {status})")
+        else:
+            log_warn(
+                f"AI request failed  (HTTP {status})  target={ai_worker_url}  "
+                f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
+                f"{response_excerpt}"
+            )
+    elif request.path == '/api/ai/action':
+        if status < 300:
+            log_info("AI draft action recorded")
+        else:
+            log_warn(
+                f"AI draft action failed  (HTTP {status})  target={ai_worker_url}  "
+                f"code={ai_code or '?'}  reason={ai_reason or '?'}  {response_excerpt}"
+            )
 
     return resp
 

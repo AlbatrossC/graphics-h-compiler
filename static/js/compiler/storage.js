@@ -426,8 +426,29 @@ function highlightActiveFile() {
     if (name) name.textContent = filename;
 }
 async function readJsonSafe(response) {
-    if (!(response.headers.get('Content-Type') || '').includes('application/json')) return null;
-    try { return await response.json(); } catch { return null; }
+    const contentType = response.headers.get('Content-Type') || '';
+    let rawText = '';
+    try {
+        rawText = await response.text();
+    } catch {
+        return { payload: null, rawText: '', contentType };
+    }
+
+    if (!rawText) {
+        return { payload: null, rawText: '', contentType };
+    }
+
+    const trimmed = rawText.trim();
+    const looksJson = contentType.includes('application/json') || trimmed.startsWith('{') || trimmed.startsWith('[');
+    if (!looksJson) {
+        return { payload: null, rawText, contentType };
+    }
+
+    try {
+        return { payload: JSON.parse(rawText), rawText, contentType };
+    } catch {
+        return { payload: null, rawText, contentType };
+    }
 }
 async function fetchJson(url, options = {}) {
     const method = String(options.method || 'GET').toUpperCase();
@@ -440,7 +461,8 @@ async function fetchJson(url, options = {}) {
         fetchOptions.cache = 'no-cache';
     }
     const response = await fetch(url, fetchOptions);
-    return { response, payload: await readJsonSafe(response) };
+    const { payload, rawText, contentType } = await readJsonSafe(response.clone());
+    return { response, payload, rawText, contentType };
 }
 function normalizeSessionUser(payload) {
     const directEmail = payload?.email || payload?.user_email || payload?.mail || '';
@@ -1072,6 +1094,7 @@ function scheduleAutosave() {
     CLOUD_STATE.autosaveTimer = setTimeout(async () => {
         CLOUD_STATE.autosaveTimer = null;
         if (!DIRTY_FLAG.isDirty) return; // Nothing changed, skip write
+        if (window.__aiPreviewPending === true) return;
         try {
             if (isUserLoggedIn) {
                 // NORMAL SAVE: only saves dirty files, skips if hash unchanged

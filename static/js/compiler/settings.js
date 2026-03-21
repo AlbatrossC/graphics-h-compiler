@@ -55,15 +55,19 @@
     }
 
     let currentSettings = loadSettingsState();
-    let isSettingsOpen = false;
+    let currentSidebarView = 'explorer';
 
     // ==================== DOM ELEMENTS ====================
     const settingsHeaderBtn = document.getElementById('settings-header-btn');
+    const askAiBtn = document.getElementById('ask-ai-btn');
     const settingsActivityBtn = document.getElementById('settings-activity-btn');
+    const aiActivityBtn = document.getElementById('ai-activity-btn');
     const mobileMenuSettingsBtn = document.getElementById('mobile-menu-settings-btn');
     const mobileMenuFilesBtn = document.getElementById('mobile-menu-files-btn');
+    const mobileMenuAiBtn = document.getElementById('mobile-menu-ai-btn');
     const explorerActivityBtn = document.getElementById('explorer-activity-btn');
     const settingsPanel = document.getElementById('settings-panel-view');
+    const aiPanel = document.getElementById('ai-panel-view');
     const cloudPromoView = document.getElementById('cloud-promo-view');
     const fileExplorerView = document.getElementById('file-explorer-view');
     const sidebar = document.getElementById('sidebar');
@@ -84,67 +88,79 @@
     const headerFontDisplay = document.getElementById('font-size-display');
 
     // ==================== PANEL SWITCHING ====================
-    function showSettingsPanel() {
-        isSettingsOpen = true;
+    function setSidebarHeading(label) {
+        if (!sidebarHeader) return;
+        const headerLeft = sidebarHeader.querySelector('.sidebar-header-left span');
+        if (headerLeft) headerLeft.textContent = label;
+    }
 
-        if (cloudPromoView) cloudPromoView.style.display = 'none';
-        if (fileExplorerView) fileExplorerView.style.display = 'none';
-        if (settingsPanel) settingsPanel.style.display = 'flex';
-
-        if (explorerActivityBtn) explorerActivityBtn.classList.remove('active');
-        if (settingsActivityBtn) settingsActivityBtn.classList.add('active');
-        if (mobileMenuFilesBtn) mobileMenuFilesBtn.classList.remove('active');
-        if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.add('active');
-
-        if (sidebarHeader) {
-            const headerLeft = sidebarHeader.querySelector('.sidebar-header-left span');
-            if (headerLeft) headerLeft.textContent = 'Settings';
-        }
-
+    function openSidebarIfNeeded(forceMobileOpen = false) {
         if (sidebar && sidebar.classList.contains('collapsed')) {
             sidebar.classList.remove('collapsed');
         }
 
-        if (window.innerWidth <= 768 && sidebar) {
+        if (forceMobileOpen && window.innerWidth <= 768 && sidebar) {
             sidebar.classList.add('open');
             const overlay = document.getElementById('sidebar-overlay');
             if (overlay) overlay.classList.add('active');
         }
-
-        syncUIFromSettings();
     }
 
-    function showExplorerPanel() {
-        isSettingsOpen = false;
+    function setSidebarView(view, options = {}) {
+        currentSidebarView = view;
 
-        if (settingsPanel) settingsPanel.style.display = 'none';
+        if (settingsPanel) settingsPanel.style.display = view === 'settings' ? 'flex' : 'none';
+        if (aiPanel) aiPanel.style.display = view === 'ai' ? 'flex' : 'none';
 
-        if (typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn) {
-            if (fileExplorerView) fileExplorerView.style.display = 'flex';
-            if (cloudPromoView) cloudPromoView.style.display = 'none';
+        const shouldShowExplorerFiles = view === 'explorer' && typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn;
+        const shouldShowExplorerPromo = view === 'explorer' && !shouldShowExplorerFiles;
+
+        if (fileExplorerView) fileExplorerView.style.display = shouldShowExplorerFiles ? 'flex' : 'none';
+        if (cloudPromoView) cloudPromoView.style.display = shouldShowExplorerPromo ? 'flex' : 'none';
+
+        if (explorerActivityBtn) explorerActivityBtn.classList.toggle('active', view === 'explorer');
+        if (aiActivityBtn) aiActivityBtn.classList.toggle('active', view === 'ai');
+        if (settingsActivityBtn) settingsActivityBtn.classList.toggle('active', view === 'settings');
+        if (mobileMenuFilesBtn) mobileMenuFilesBtn.classList.toggle('active', view === 'explorer');
+        if (mobileMenuAiBtn) mobileMenuAiBtn.classList.toggle('active', view === 'ai');
+        if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.toggle('active', view === 'settings');
+
+        if (view === 'settings') {
+            setSidebarHeading('Settings');
+            syncUIFromSettings();
+        } else if (view === 'ai') {
+            setSidebarHeading('AI Assistant');
         } else {
-            if (cloudPromoView) cloudPromoView.style.display = 'flex';
-            if (fileExplorerView) fileExplorerView.style.display = 'none';
+            setSidebarHeading('Explorer');
         }
 
-        if (explorerActivityBtn) explorerActivityBtn.classList.add('active');
-        if (settingsActivityBtn) settingsActivityBtn.classList.remove('active');
-        if (mobileMenuFilesBtn) mobileMenuFilesBtn.classList.add('active');
-        if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.remove('active');
+        openSidebarIfNeeded(options.forceMobileOpen === true);
+        document.body.dataset.sidebarView = view;
+    }
 
-        if (sidebarHeader) {
-            const headerLeft = sidebarHeader.querySelector('.sidebar-header-left span');
-            if (headerLeft) headerLeft.textContent = 'Explorer';
-        }
+    function showSettingsPanel() {
+        setSidebarView('settings', { forceMobileOpen: true });
+    }
+
+    function showExplorerPanel(options = {}) {
+        setSidebarView('explorer', options);
+    }
+
+    function showAiPanel() {
+        setSidebarView('ai', { forceMobileOpen: true });
+        document.dispatchEvent(new CustomEvent('ai-panel-opened'));
     }
 
     function toggleSettingsPanel() {
-        if (isSettingsOpen) {
+        if (currentSidebarView === 'settings') {
             showExplorerPanel();
             return;
         }
         showSettingsPanel();
     }
+
+    window.getSidebarView = () => currentSidebarView;
+    window.setSidebarView = (view) => setSidebarView(view);
 
     function persistSettings() {
         currentSettings = saveSettingsState(currentSettings);
@@ -356,13 +372,34 @@
         settingsHeaderBtn.addEventListener('click', toggleSettingsPanel);
     }
 
+    if (askAiBtn) {
+        askAiBtn.addEventListener('click', () => {
+            if (currentSidebarView === 'ai') {
+                setSidebarView('ai', { forceMobileOpen: true });
+                document.dispatchEvent(new CustomEvent('ai-panel-opened'));
+                return;
+            }
+            showAiPanel();
+        });
+    }
+
     if (settingsActivityBtn) {
         settingsActivityBtn.addEventListener('click', () => {
-            if (isSettingsOpen) {
+            if (currentSidebarView === 'settings') {
                 showExplorerPanel();
                 return;
             }
             showSettingsPanel();
+        });
+    }
+
+    if (aiActivityBtn) {
+        aiActivityBtn.addEventListener('click', () => {
+            if (currentSidebarView === 'ai') {
+                showExplorerPanel();
+                return;
+            }
+            showAiPanel();
         });
     }
 
@@ -374,14 +411,37 @@
         mobileMenuFilesBtn.addEventListener('click', showExplorerPanel);
     }
 
+    if (mobileMenuAiBtn) {
+        mobileMenuAiBtn.addEventListener('click', showAiPanel);
+    }
+
     if (explorerActivityBtn) {
         explorerActivityBtn.addEventListener('click', () => {
-            if (isSettingsOpen) showExplorerPanel();
+            if (currentSidebarView !== 'explorer') showExplorerPanel();
         });
     }
 
     document.addEventListener('request-show-explorer', () => {
-        if (isSettingsOpen) showExplorerPanel();
+        if (currentSidebarView !== 'explorer') showExplorerPanel();
+    });
+
+    document.addEventListener('request-show-ai', () => {
+        if (currentSidebarView !== 'ai') {
+            showAiPanel();
+        } else {
+            setSidebarView('ai', { forceMobileOpen: true });
+            document.dispatchEvent(new CustomEvent('ai-panel-opened'));
+        }
+    });
+
+    document.addEventListener('request-show-settings', () => {
+        if (currentSidebarView !== 'settings') showSettingsPanel();
+    });
+
+    document.addEventListener('auth-state-changed', () => {
+        if (currentSidebarView === 'explorer') {
+            showExplorerPanel();
+        }
     });
 
     // ==================== SETTINGS CONTROL EVENTS ====================
@@ -478,6 +538,7 @@
     });
 
     syncUIFromSettings();
+    setSidebarView('explorer', { forceMobileOpen: false });
     if (typeof cmView !== 'undefined' && cmView && cmModules) {
         applySavedSettings();
     }

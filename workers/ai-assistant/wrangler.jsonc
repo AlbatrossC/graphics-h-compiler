@@ -1,0 +1,15 @@
+{
+  "name": "graphics-oc-ai",
+  "main": "worker.js",
+  "compatibility_date": "2026-03-21",
+  "d1_databases": [
+    {
+      "binding": "graphicsh_ai_db",
+      "database_name": "graphicsh-ai",
+      "database_id": "5b858c3c-b800-4234-8962-e8570c50c567"
+    }
+  ],
+  "vars": {
+    "GEMINI_MODEL": "gemini-2.5-flash"
+  }
+}
