@@ -371,6 +371,26 @@ def embed_docs():
     return render_template('embed-docs.html')
 
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+
+@app.route('/contact')
+def contact_page():
+    return render_template('contact.html')
+
+
+@app.route('/privacy-policy')
+def privacy_policy():
+    return render_template('privacy-policy.html')
+
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
 @app.route('/docs')
 def docs_landing():
     return render_template('docs.html')

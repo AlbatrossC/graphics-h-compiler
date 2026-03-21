@@ -90,19 +90,19 @@
                         <i data-lucide="moon" class="theme-icon-dark"></i>
                     </button>
                     <div class="nav-divider"></div>
-                    <button class="nav-btn" onclick="openModal()">
+                    <a href="/about" class="nav-btn">
                         <i data-lucide="info"></i>
                         <span>About</span>
-                    </button>
+                    </a>
                     <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
                         rel="noopener noreferrer" class="nav-btn">
                         <i data-lucide="github"></i>
                         <span>Source</span>
                     </a>
-                    <button class="nav-btn" onclick="openContactModal()">
+                    <a href="/contact" class="nav-btn">
                         <i data-lucide="mail"></i>
                         <span>Contact</span>
-                    </button>
+                    </a>
                     <a href="/docs" class="nav-btn">
                         <i data-lucide="book-open"></i>
                         <span>Docs</span>
@@ -134,10 +134,10 @@
                     <span>Toggle Theme</span>
                 </button>
 
-                <button class="mobile-menu-item" onclick="openModal(); toggleMobileMenu();">
+                <a href="/about" class="mobile-menu-item" onclick="toggleMobileMenu()">
                     <i data-lucide="info"></i>
                     <span>About</span>
-                </button>
+                </a>
 
                 <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
                     class="mobile-menu-item" onclick="toggleMobileMenu()">
@@ -145,10 +145,10 @@
                     <span>GitHub Source</span>
                 </a>
 
-                <button class="mobile-menu-item" onclick="openContactModal(); toggleMobileMenu();">
+                <a href="/contact" class="mobile-menu-item" onclick="toggleMobileMenu()">
                     <i data-lucide="mail"></i>
                     <span>Contact</span>
-                </button>
+                </a>
 
                 <a href="/docs" class="mobile-menu-item" onclick="toggleMobileMenu()">
                     <i data-lucide="book-open"></i>
@@ -377,51 +377,6 @@
             </div>
         </section>
 
-        <!-- About Modal -->
-        <div id="about-modal" class="modal" onclick="closeModal(event)">
-            <div class="modal-content" onclick="event.stopPropagation()">
-                <button class="modal-close" onclick="closeModal()">
-                    <i data-lucide="x"></i>
-                </button>
-
-                <h2 class="modal-title">Why This Exists</h2>
-
-                <p class="modal-text">
-                    <strong>graphics.h</strong> is a legacy graphics library still taught in Computer Graphics
-                    courses—especially in SPPU curriculum. But running it today requires jumping through hoops:
-                    installing
-                    Turbo C, configuring DOSBox, dealing with broken environments.
-                </p>
-
-                <p class="modal-text">
-                    Students waste hours fighting setup instead of learning graphics programming.
-                </p>
-
-                <p class="modal-text">
-                    <strong>This project eliminates that friction.</strong>
-                </p>
-
-                <p class="modal-text">
-                    It provides two ways to run graphics.h programs instantly:
-                </p>
-
-                <ul class="modal-list">
-                    <li><strong>Online compiler</strong> – Works directly in your browser</li>
-                    <li><strong>VS Code extension</strong> – Integrates with your local development environment</li>
-                </ul>
-
-                <p class="modal-text">
-                    No legacy tools. No manual configuration. Just write code and run it.
-                </p>
-
-                <div class="modal-highlight">
-                    <p class="modal-text">
-                        Built by an SPPU student who experienced this pain firsthand. The goal is simple: let students
-                        focus on learning graphics, not wrestling with 1990s software.
-                    </p>
-                </div>
-            </div>
-        </div>
 
         <!-- ==================== FOOTER ==================== -->
         <footer class="site-footer">
@@ -462,8 +417,16 @@
                             <li><a href="https://sppucodes.vercel.app/" target="_blank"><i
                                         data-lucide="external-link"></i>
                                     Sppucodes</a></li>
-                            <li><a href="javascript:void(0)" onclick="openModal()"><i data-lucide="info"></i> About</a>
-                            </li>
+                            <li><a href="/about"><i data-lucide="info"></i> About</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Legal -->
+                    <div>
+                        <div class="footer-col-title">Legal</div>
+                        <ul class="footer-links">
+                            <li><a href="/privacy-policy"><i data-lucide="shield"></i> Privacy Policy</a></li>
+                            <li><a href="/terms"><i data-lucide="file-text"></i> Terms of Service</a></li>
                         </ul>
                     </div>
 
@@ -471,9 +434,7 @@
                     <div>
                         <div class="footer-col-title">Connect</div>
                         <ul class="footer-links">
-                            <li><a href="javascript:void(0)" onclick="openContactModal()"><i data-lucide="mail"></i>
-                                    Contact
-                                    Us</a></li>
+                            <li><a href="/contact"><i data-lucide="mail"></i> Contact</a></li>
                             <li><a href="https://github.com/AlbatrossC/graphics-h-compiler/issues" target="_blank"
                                     rel="noopener noreferrer"><i data-lucide="bug"></i> Report a Bug</a></li>
                         </ul>
@@ -481,13 +442,13 @@
                 </div>
 
                 <div class="footer-bottom">
-                    <span class="footer-copyright">&copy; 2025 graphics.h Compiler. Open source under MIT.</span>
+                    <span class="footer-copyright">&copy; 2026 graphics.h Compiler. Open source under MIT.</span>
                     <div class="footer-social">
                         <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
                             rel="noopener noreferrer" title="GitHub">
                             <i data-lucide="github"></i>
                         </a>
-                        <a href="javascript:void(0)" onclick="openContactModal()" title="Contact">
+                        <a href="/contact" title="Contact">
                             <i data-lucide="mail"></i>
                         </a>
                     </div>
@@ -621,49 +582,15 @@
             revealObserver.observe(el);
         });
 
-        // Modal Management
-        function openModal() {
-            const modal = document.getElementById('about-modal');
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            setTimeout(initIcons, 50);
-        }
-
-        function closeModal(event) {
-            if (!event || event.target.id === 'about-modal' || event.target.closest('.modal-close')) {
-                const modal = document.getElementById('about-modal');
-                modal.classList.remove('active');
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        // Close modal and mobile menu with Escape key
+        // Close mobile menu with Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                closeModal();
                 const menu = document.getElementById('mobile-menu');
                 if (menu.classList.contains('active')) {
                     toggleMobileMenu();
                 }
-                if (window.ContactModal) {
-                    window.ContactModal.close();
-                }
             }
         });
-
-        // Contact Modal - Lazy loaded
-        function openContactModal() {
-            if (!window.ContactModal) {
-                const script = document.createElement('script');
-                script.src = 'static/contact.js';
-                script.onload = () => {
-                    window.ContactModal.open();
-                };
-                document.head.appendChild(script);
-            } else {
-                window.ContactModal.open();
-            }
-        }
 
         // Close mobile menu when clicking outside
         document.addEventListener('click', (e) => {
