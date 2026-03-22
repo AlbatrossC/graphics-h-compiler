@@ -125,6 +125,12 @@
         if (mobileMenuAiBtn) mobileMenuAiBtn.classList.toggle('active', view === 'ai');
         if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.toggle('active', view === 'settings');
 
+        // Hide new-file/new-folder buttons when not in explorer view
+        const explorerActionsEl = document.querySelector('.explorer-actions');
+        if (explorerActionsEl) {
+            explorerActionsEl.style.display = view === 'explorer' ? '' : 'none';
+        }
+
         if (view === 'settings') {
             setSidebarHeading('Settings');
             syncUIFromSettings();

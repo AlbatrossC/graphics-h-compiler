@@ -4,9 +4,11 @@
     const MAX_FIX_ATTEMPTS = 2;
     const GUEST_FINGERPRINT_KEY = 'graphicsh_ai_guest_id_v1';
 
+    let sessionHistoryLoaded = false;
+
     const aiMessages = document.getElementById('ai-messages');
     const aiEmptyState = document.getElementById('ai-empty-state');
-    const aiStatusPill = document.getElementById('ai-status-pill');
+    const aiStatusPill = document.getElementById('ai-status-pill'); // optional — may not exist in HTML
     const aiActions = document.getElementById('ai-actions');
     const aiApplyBtn = document.getElementById('ai-apply-btn');
     const aiRejectBtn = document.getElementById('ai-reject-btn');
@@ -15,7 +17,8 @@
     const aiSendBtn = document.getElementById('ai-send-btn');
     const editorWrapperEl = document.getElementById('editor-wrapper');
 
-    if (!aiMessages || !aiForm || !aiInput || !aiSendBtn || !aiStatusPill) {
+    // aiStatusPill is optional — do NOT include it in this guard
+    if (!aiMessages || !aiForm || !aiInput || !aiSendBtn) {
         return;
     }
 
@@ -29,6 +32,7 @@
         currentFilename: '',
         lastDecision: null,
         preview: null,
+        forceChatView: false,
     };
 
     window.__aiPreviewPending = false;
@@ -114,6 +118,7 @@
     }
 
     function setStatus(text, tone = 'idle') {
+        if (!aiStatusPill) return;
         aiStatusPill.textContent = text;
         aiStatusPill.dataset.tone = tone;
     }
@@ -123,6 +128,10 @@
         aiSendBtn.disabled = isBusy;
         aiInput.disabled = isBusy;
         aiInput.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+        // Restore focus to chat input after AI responds
+        if (!isBusy && typeof window.getSidebarView === 'function' && window.getSidebarView() === 'ai') {
+            setTimeout(() => aiInput.focus(), 40);
+        }
     }
 
     function syncPreviewChrome(active) {
@@ -143,12 +152,6 @@
 
     function createMetaChips(meta) {
         const fragment = document.createDocumentFragment();
-        if (meta.version) {
-            const chip = document.createElement('span');
-            chip.className = 'ai-meta-chip';
-            chip.textContent = meta.version;
-            fragment.appendChild(chip);
-        }
         if (meta.filename) {
             const chip = document.createElement('span');
             chip.className = 'ai-meta-chip';
@@ -168,41 +171,29 @@
             const row = document.createElement('div');
             row.className = 'ai-message-row';
 
-            const avatar = document.createElement('div');
-            avatar.className = 'ai-avatar';
-
-            if (message.role === 'assistant') {
-                const icon = document.createElement('img');
-                icon.src = '/static/gemini.svg';
-                icon.alt = '';
-                icon.className = 'gemini-logo';
-                avatar.appendChild(icon);
-            } else if (message.role === 'user') {
-                avatar.textContent = 'You';
-            } else {
-                avatar.textContent = '...';
-            }
-
             const bubble = document.createElement('div');
             bubble.className = 'ai-bubble';
             bubble.textContent = message.text;
 
-            row.appendChild(avatar);
             row.appendChild(bubble);
             wrapper.appendChild(row);
 
-            if (message.meta && (message.meta.version || message.meta.filename)) {
+            if (message.meta && message.meta.filename) {
                 const meta = document.createElement('div');
                 meta.className = 'ai-meta';
                 meta.appendChild(createMetaChips(message.meta));
                 wrapper.appendChild(meta);
             }
 
+            // Code block rendering removed per user request
+
             aiMessages.appendChild(wrapper);
         });
 
         aiEmptyState.style.display = AI_STATE.messages.length ? 'none' : 'block';
         syncPreviewChrome(Boolean(AI_STATE.preview));
+        syncSessionHistoryVisibility();
+        syncNewSessionBtnVisibility();
         scrollMessagesToBottom();
     }
 
@@ -218,10 +209,13 @@
         AI_STATE.currentFilename = '';
         AI_STATE.lastDecision = null;
         AI_STATE.preview = null;
+        AI_STATE.forceChatView = false;
         AI_STATE.sessionId = createSessionId();
         syncPreviewChrome(false);
         setStatus('Ready for a prompt', 'idle');
         setBusyState(false);
+        syncSessionHistoryVisibility();
+        syncNewSessionBtnVisibility();
         renderMessages();
     }
 
@@ -557,12 +551,13 @@
                 previousConversationFilename: AI_STATE.currentFilename,
                 autoFixAttempts: 0,
             });
+            if (isLoggedInNow()) loadSessionHistory();
         } catch (error) {
             if (typeof Logger !== 'undefined') {
                 Logger.error('[AI] Prompt request failed', error);
             }
             setStatus('Unable to generate code', 'error');
-            pushMessage('status', error.message);
+            pushMessage('error', error.message);
         } finally {
             setBusyState(false);
         }
@@ -575,7 +570,7 @@
         if (preview.autoFixAttempts >= MAX_FIX_ATTEMPTS) {
             preview.awaitingCompile = false;
             setStatus('Max auto-fix attempts reached', 'error');
-            pushMessage('status', 'Max auto-fix attempts reached. Describe the issue manually.');
+            pushMessage('error', 'Max auto-fix attempts reached. Describe the issue manually.');
             return;
         }
 
@@ -631,15 +626,182 @@
                 previousConversationFilename: preview.previousConversationFilename,
                 autoFixAttempts: preview.autoFixAttempts,
             });
+            if (isLoggedInNow()) loadSessionHistory();
         } catch (error) {
             if (typeof Logger !== 'undefined') {
                 Logger.error('[AI] Auto-fix failed', error);
             }
             setStatus('Auto-fix failed', 'error');
-            pushMessage('status', error.message);
+            pushMessage('error', error.message);
         } finally {
             setBusyState(false);
         }
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function timeAgo(isoString) {
+        if (!isoString) return '';
+        const diff = Date.now() - new Date(isoString).getTime();
+        const mins = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+        if (mins < 2) return 'just now';
+        if (mins < 60) return `${mins}m ago`;
+        if (hours < 24) return `${hours}h ago`;
+        return `${days}d ago`;
+    }
+
+    function syncSessionHistoryVisibility() {
+        const aiSessionsView = document.getElementById('ai-sessions-view');
+        const aiChatView = document.getElementById('ai-chat-view');
+        const aiChatHeader = document.getElementById('ai-chat-header');
+        if (!aiSessionsView || !aiChatView) return;
+
+        if (isLoggedInNow() && !AI_STATE.hasConversation && !AI_STATE.forceChatView) {
+            aiSessionsView.style.display = 'flex';
+            aiChatView.style.display = 'none';
+        } else {
+            aiSessionsView.style.display = 'none';
+            aiChatView.style.display = 'flex';
+            if (aiChatHeader) aiChatHeader.style.display = isLoggedInNow() ? 'flex' : 'none';
+        }
+        
+        // Ensure inputs are correctly enabled/disabled
+        if (aiInput && aiSendBtn) {
+           aiInput.disabled = AI_STATE.isSending;
+           aiSendBtn.disabled = AI_STATE.isSending;
+        }
+    }
+
+    function syncNewSessionBtnVisibility() {
+        // Handled by syncSessionHistoryVisibility toggling the views now.
+    }
+
+    function renderSessionHistory(sessions) {
+        const historyList = document.getElementById('ai-session-history-list');
+        if (!historyList) return;
+        historyList.innerHTML = '';
+        if (!sessions.length) {
+            const empty = document.createElement('div');
+            empty.className = 'ai-session-history-empty';
+            empty.textContent = 'No saved AI sessions yet. Your next prompt will appear here.';
+            historyList.appendChild(empty);
+            syncSessionHistoryVisibility();
+            return;
+        }
+        sessions.forEach((session) => {
+            const item = document.createElement('button');
+            item.className = 'ai-session-item';
+            item.type = 'button';
+            const title = session.session_title || 'Untitled Session';
+            const ago = timeAgo(session.last_active || session.started);
+            const count = Number(session.messages || 0);
+            item.innerHTML = `<span class="ai-session-item-title">${escapeHtml(title)}</span><span class="ai-session-item-meta">${escapeHtml(ago)}${count ? ` · ${count} msg${count !== 1 ? 's' : ''}` : ''}</span>`;
+            item.addEventListener('click', () => openSessionMessages(session));
+            historyList.appendChild(item);
+        });
+        syncSessionHistoryVisibility();
+    }
+
+    async function openSessionMessages(session) {
+        clearConversationState();
+        AI_STATE.sessionId = session.session_id;
+        AI_STATE.hasConversation = true;
+        setBusyState(true);
+
+        // Show loading state immediately to prevent UI freeze
+        aiMessages.innerHTML = '<div class="ai-session-loading">Loading session...</div>';
+        
+        try {
+            const { response, payload } = await fetchJson(
+                `/api/ai/sessions/${encodeURIComponent(session.session_id)}`,
+                { method: 'GET' }
+            );
+
+            if (!response.ok || !Array.isArray(payload?.messages) || !payload.messages.length) {
+                AI_STATE.messages.push({
+                    role: 'status',
+                    text: `Session resumed: ${session.session_title || 'Untitled'}. Type a message to continue.`,
+                    meta: {},
+                });
+                renderMessages();
+                return;
+            }
+
+            const msgs = payload.messages;
+
+            // Find the index of the last non-error message (to attach code block)
+            let lastRealIdx = -1;
+            for (let i = msgs.length - 1; i >= 0; i--) {
+                if (msgs[i].request_type !== 'error') { lastRealIdx = i; break; }
+            }
+            const lastMsg = lastRealIdx >= 0 ? msgs[lastRealIdx] : null;
+
+            // Batch all messages into AI_STATE.messages, then render once
+            msgs.forEach((msg, idx) => {
+                if (msg.request_type === 'error') return; // skip auto-fix internals
+                AI_STATE.messages.push({ role: 'user', text: msg.user_query, meta: {} });
+                const isLast = idx === lastRealIdx;
+                AI_STATE.messages.push({
+                    role: 'assistant',
+                    text: msg.chat_response,
+                    meta: {
+                        version: msg.version,
+                        filename: msg.generated_filename,
+                        code: isLast ? msg.generated_code : undefined,
+                    },
+                });
+            });
+
+            AI_STATE.hasConversation = true;
+            AI_STATE.currentVersion = lastMsg?.version || '';
+            AI_STATE.currentFilename = lastMsg?.generated_filename || '';
+
+            // Load the last version's code into the editor
+            if (lastMsg?.generated_code && editor) {
+                editor.setValue(lastMsg.generated_code);
+                editor.clearSelection();
+            }
+
+            renderMessages();
+        } catch (_) {
+            AI_STATE.messages.push({ role: 'status', text: 'Session resumed. Type a message to continue.', meta: {} });
+            renderMessages();
+        } finally {
+            setBusyState(false);
+        }
+    }
+
+    async function loadSessionHistory() {
+        if (!isLoggedInNow()) return;
+        try {
+            const { response, payload } = await fetchJson('/api/ai/sessions', { method: 'GET' });
+            if (!response.ok || !Array.isArray(payload?.sessions)) return;
+            sessionHistoryLoaded = true;
+            renderSessionHistory(payload.sessions);
+        } catch {}
+    }
+
+    const aiNewSessionBtn = document.getElementById('ai-create-new-session-btn');
+    if (aiNewSessionBtn) {
+        aiNewSessionBtn.addEventListener('click', () => {
+            clearConversationState();
+            AI_STATE.forceChatView = true;
+            syncSessionHistoryVisibility();
+            setTimeout(() => aiInput?.focus(), 40);
+        });
+    }
+
+    const aiBackBtn = document.getElementById('ai-back-to-sessions-btn');
+    if (aiBackBtn) {
+        aiBackBtn.addEventListener('click', () => {
+            clearConversationState();
+            AI_STATE.forceChatView = false;
+            syncSessionHistoryVisibility();
+        });
     }
 
     aiForm.addEventListener('submit', async (event) => {
@@ -662,7 +824,15 @@
         await rejectPreview();
     });
 
+    // compiler-run-success fires when STATUS:'RUNNING' arrives — this is when the batch
+    // *starts*, not when compilation finishes. Do NOT set awaitingCompile = false here,
+    // because COMPILATION_ERROR may still arrive from error polling 1.5s+ later.
+    // We use compiler-compile-success (fired by COMPILE_SUCCESS from dos-runner) instead.
     document.addEventListener('compiler-run-success', () => {
+        // Intentionally left empty for AI — status is already "Compiling AI preview..."
+    });
+
+    document.addEventListener('compiler-compile-success', () => {
         if (!AI_STATE.preview || !AI_STATE.preview.awaitingCompile) return;
         AI_STATE.preview.awaitingCompile = false;
         if (typeof Logger !== 'undefined') {
@@ -681,14 +851,19 @@
 
     document.addEventListener('ai-panel-opened', () => {
         setTimeout(() => aiInput.focus(), 40);
+        if (isLoggedInNow() && !sessionHistoryLoaded) {
+            loadSessionHistory();
+        }
     });
 
     document.addEventListener('auth-state-changed', () => {
         AI_STATE.guestFingerprintId = ensureGuestFingerprintId();
+        sessionHistoryLoaded = false;
         if (typeof Logger !== 'undefined') {
             Logger.info('[AI] Auth state changed; resetting assistant session');
         }
         clearConversationState();
+        loadSessionHistory();
     });
 
     AI_STATE.guestFingerprintId = ensureGuestFingerprintId();
@@ -696,4 +871,5 @@
         Logger.info('[AI] Assistant initialized');
     }
     clearConversationState();
+    loadSessionHistory();
 })();

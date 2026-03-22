@@ -356,10 +356,11 @@
                             const hasFailMarker = !!failPath;
                             const hasUserExe = !!userExePath;
 
-                            // Compilation succeeded — stop polling, nothing more to do
+                            // Compilation succeeded — notify parent and stop polling
                             if (hasUserExe && !hasFailMarker) {
                                 clearInterval(errorPollTimer);
                                 errorPollTimer = null;
+                                post({ type: 'COMPILE_SUCCESS' });
                                 return;
                             }
 

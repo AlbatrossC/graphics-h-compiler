@@ -304,6 +304,14 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+        // Don't steal focus away from sidebar inputs (AI chat, etc.)
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'INPUT')) {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && sidebar.contains(activeEl)) {
+                return;
+            }
+        }
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -387,6 +395,8 @@ window.addEventListener('message', (event) => {
         document.dispatchEvent(new CustomEvent('compiler-compilation-error', {
             detail: { content: data.content || '' }
         }));
+    } else if (data.type === 'COMPILE_SUCCESS') {
+        document.dispatchEvent(new CustomEvent('compiler-compile-success'));
     } else if (data.type === 'ERROR') {
         isDosSessionRunning = false;
         const message = data.message || 'Unknown DOS error';

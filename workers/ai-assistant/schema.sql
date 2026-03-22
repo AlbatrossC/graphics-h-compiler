@@ -111,25 +111,3 @@ CREATE TABLE IF NOT EXISTS daily_usage (
   unique_users INTEGER NOT NULL DEFAULT 0,
   last_request_at TEXT
 );
-
--- ═══════════════════════════════════════
--- Table 6: api_key_status
--- Always exactly 2 rows (primary + secondary)
--- Tracks Gemini API key health for failover
--- ═══════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS api_key_status (
-  key_name TEXT PRIMARY KEY,
-  is_rate_limited INTEGER NOT NULL DEFAULT 0,
-  rate_limited_until TEXT,
-  total_requests_today INTEGER NOT NULL DEFAULT 0,
-  total_errors_today INTEGER NOT NULL DEFAULT 0,
-  last_used_at TEXT,
-  last_error TEXT
-);
-
-INSERT OR IGNORE INTO api_key_status (key_name, is_rate_limited, total_requests_today, total_errors_today)
-VALUES ('primary', 0, 0, 0);
-
-INSERT OR IGNORE INTO api_key_status (key_name, is_rate_limited, total_requests_today, total_errors_today)
-VALUES ('secondary', 0, 0, 0);

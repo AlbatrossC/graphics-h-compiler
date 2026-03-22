@@ -106,7 +106,7 @@ Step 1: Extract session cookie
     → No cookie? → GUEST (must have fingerprint_id in body)
 
 Step 2: Verify JWT signature
-    → jwt.verify(token, JWT_SECRET)
+    → jwt.verify(token, SESSION_SECRET)
     → Invalid/expired? → GUEST
     → Valid? → extract email from payload
 
@@ -127,8 +127,8 @@ Result:
 
 ### Why this can't be spoofed
 
-- **JWT is signed with a secret only the Worker knows** — stored as a Cloudflare Worker secret (`wrangler secret put JWT_SECRET`)
-- **Same `JWT_SECRET` is shared with the existing `graphics-oc-files` Worker** — uses the same auth system
+- **JWT is signed with a secret only the Worker knows** — stored as a Cloudflare Worker secret (`wrangler secret put SESSION_SECRET`)
+- **The same `SESSION_SECRET` must be shared with the existing `graphics-oc-files` Worker** — otherwise logged users will be treated as guests
 - **Worker ignores `fingerprint_id` and `email` from the request body if a valid JWT exists** — the JWT always wins
 - **Body `email` is ignored** — the Worker uses the email from the verified JWT payload
 
@@ -995,7 +995,7 @@ const CONFIG = {
 **Secrets** (stored via `wrangler secret put`):
 - `PRIMARY_KEY` — Gemini API key #1
 - `SECONDARY_KEY` — Gemini API key #2
-- `JWT_SECRET` — shared with `graphics-oc-files` Worker for auth verification
+- `SESSION_SECRET` — shared with `graphics-oc-files` Worker for auth verification
 
 ---
 

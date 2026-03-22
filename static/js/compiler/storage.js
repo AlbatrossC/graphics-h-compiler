@@ -38,6 +38,13 @@ function setDefaultFolderState() {
 }
 function getFolderName(idOrKey) { return !idOrKey || idOrKey === ROOT_FOLDER_KEY ? '' : (CLOUD_STATE.folderIdToName.get(idOrKey) || 'Folder'); }
 function computeBytes(text) { return new TextEncoder().encode(text || '').byteLength; }
+function formatFileSize(bytes) {
+    const size = Number(bytes || 0);
+    if (!Number.isFinite(size) || size <= 0) return '0 B';
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(size < 10 * 1024 ? 1 : 0)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
 async function computeSha256(content) {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
     return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -316,13 +323,17 @@ function getFileIconClass(ext) {
 function createFileItem(folder, filename) {
     const item = document.createElement('div');
     const ext = filename.split('.').pop().toLowerCase();
+    const file = CLOUD_STATE.files.get(fileKey(folder, filename));
+    const sizeLabel = formatFileSize(file?.file_size ?? computeBytes(file?.content || ''));
     item.className = 'file-item';
     item.dataset.folder = folder;
     item.dataset.file = filename;
     if (fileKey(folder, filename) === (CLOUD_STATE.activeFileKey || DEFAULT_FILE_KEY)) item.classList.add('active');
     item.innerHTML = `
         <svg class="file-icon ${getFileIconClass(ext)}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-        <span class="file-name" title="${filename}">${filename}</span>
+        <div class="file-main">
+            <span class="file-name" title="${filename}">${filename}</span>
+        </div>
         <div class="file-actions">
             <button class="file-action-btn file-download-btn" title="Download file" onclick="event.stopPropagation(); downloadFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
             <button class="file-action-btn file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"></path></svg></button>

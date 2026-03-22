@@ -325,39 +325,78 @@
         </div>
 
         <div id="ai-panel-view" class="ai-panel" style="display: none">
-          <div class="ai-panel-header">
-            <span class="ai-panel-title">AI Assistant</span>
-            <div id="ai-status-pill" class="ai-status-pill">Ready for a prompt</div>
-          </div>
-
-          <div id="ai-messages" class="ai-messages" aria-live="polite"></div>
-
-          <div id="ai-empty-state" class="ai-empty-state">
-            <div class="ai-empty-content">
-              <h3>Graphics.h AI Assistant</h3>
-              <p>Type what you want to build and the AI will write, compile, and repair the code automatically.</p>
-            </div>
-          </div>
-
-          <div id="ai-actions" class="ai-actions hidden">
-            <button id="ai-reject-btn" class="btn btn-ai-secondary" type="button">Reject</button>
-            <button id="ai-apply-btn" class="btn btn-ai-primary" type="button">Apply</button>
-          </div>
-
-          <form id="ai-form" class="ai-composer">
-            <label for="ai-input" class="sr-only">Ask the AI assistant</label>
-            <textarea id="ai-input" class="ai-input" rows="2"
-              placeholder="Describe a scene or ask for an edit..." spellcheck="false"></textarea>
-            <div class="ai-composer-footer">
-              <span class="ai-hint">Shift+Enter for new line</span>
-              <button id="ai-send-btn" class="btn-ai-send" type="submit">
-                <span>Send</span>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          <!-- SESSIONS VIEW -->
+          <div id="ai-sessions-view" style="display: none; flex: 1; flex-direction: column; overflow: hidden;">
+            <div class="sidebar-header" style="justify-content: space-between;">
+              <div class="sidebar-header-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon" style="width: 14px; height: 14px;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
+                <span>Your Sessions</span>
+              </div>
+              <button id="ai-create-new-session-btn" class="sidebar-action-btn" title="New Session" style="width: auto; padding: 0 8px; font-size: 0.75rem; font-weight: 600; gap: 4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 13px; height: 13px">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>New</span>
               </button>
             </div>
-          </form>
+            <div id="ai-session-history-list" class="ai-session-history-list" style="flex: 1; overflow-y: auto; padding-top: 8px;"></div>
+          </div>
+
+          <!-- CHAT VIEW -->
+          <div id="ai-chat-view" style="display: flex; flex: 1; flex-direction: column; min-height: 0;">
+            <div class="sidebar-header" id="ai-chat-header" style="display: none;">
+              <button id="ai-back-to-sessions-btn" class="sidebar-action-btn" style="width: auto; padding: 0 8px; font-size: 0.75rem; font-weight: 600; gap: 4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                <span>Back</span>
+              </button>
+            </div>
+
+            <div class="ai-messages-container">
+              <div id="ai-messages" class="ai-messages" aria-live="polite"></div>
+              
+              <div id="ai-generating-indicator" class="ai-generating-indicator">
+                <div class="ai-generating-pulse">Generating response...</div>
+              </div>
+
+              <div id="ai-empty-state" class="ai-empty-state">
+                <div class="ai-empty-content">
+                  <div class="ai-empty-icon">
+                    <img src="/static/gemini.svg" alt="AI Logic" />
+                  </div>
+                  <h3>What do you want to build?</h3>
+                  <p>Describe a shape, scene, or algorithm. The AI will write and repair the graphics code.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="ai-actions" class="ai-actions hidden">
+              <button id="ai-reject-btn" class="btn btn-ai-secondary" type="button">Discard</button>
+              <button id="ai-apply-btn" class="btn btn-ai-primary" type="button">Accept</button>
+            </div>
+
+            <div class="ai-composer-wrapper">
+              <form id="ai-form" class="ai-composer">
+                <label for="ai-input" class="sr-only">Ask the AI assistant</label>
+                <textarea id="ai-input" class="ai-input" rows="1"
+                  placeholder="Ask anything..." spellcheck="false"></textarea>
+                <div class="ai-composer-footer">
+                  <span class="ai-hint">Shift+Enter for new line</span>
+                  <button id="ai-send-btn" class="btn-ai-send" type="submit" aria-label="Send">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
 
         <!-- Settings Panel -->
@@ -636,7 +675,7 @@
   <script src="/static/js/compiler/runtime.js?v=codemirror_v5"></script>
 
   <script src="/static/js/compiler/settings.js?v=codemirror_v5"></script>
-  <script src="/static/js/compiler/ai.js?v=1"></script>
+  <script src="/static/js/compiler/ai.js?v=3"></script>
   <script src="/static/js/compiler/popup.js?v=2"></script>
 
 </body>

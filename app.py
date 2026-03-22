@@ -217,7 +217,7 @@ def rewrite_set_cookie(cookie_value):
     return '; '.join(parts)
 
 
-def proxy_request(base_url, path='', allow_redirects=False, body=None):
+def proxy_request(base_url, path='', allow_redirects=False, body=None, read_timeout=20):
     target_url = urljoin(base_url.rstrip('/') + '/', path.lstrip('/'))
     query_string = request.query_string.decode('utf-8')
     if query_string:
@@ -229,7 +229,7 @@ def proxy_request(base_url, path='', allow_redirects=False, body=None):
         headers=build_proxy_headers(),
         data=body if body is not None else (request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None),
         allow_redirects=allow_redirects,
-        timeout=(3.5, 20)
+        timeout=(3.5, read_timeout)
     )
 
     response = make_response(upstream_response.content, upstream_response.status_code)
@@ -358,13 +358,22 @@ def storage_proxy():
 
 @app.route('/api/ai', methods=['POST', 'OPTIONS'])
 @app.route('/api/ai/action', methods=['PATCH', 'OPTIONS'])
-def ai_proxy():
+@app.route('/api/ai/sessions', methods=['GET', 'OPTIONS'])
+@app.route('/api/ai/sessions/<session_id>', methods=['GET', 'OPTIONS'])
+def ai_proxy(session_id=None):
     ai_worker_url = os.getenv('AI_ASSISTANT_WORKER')
     if not ai_worker_url:
         return jsonify({'error': 'AI assistant worker is not configured'}), 503
 
     body_bytes = request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None
-    resp = proxy_request(ai_worker_url, request.path, allow_redirects=False, body=body_bytes)
+    try:
+        resp = proxy_request(ai_worker_url, request.path, allow_redirects=False, body=body_bytes, read_timeout=120)
+    except req.exceptions.Timeout as exc:
+        log_warn(f"AI proxy timeout  path={request.path}  error={exc}")
+        return jsonify({'error': 'AI request timed out. Please try again.', 'code': 'timeout'}), 504
+    except req.exceptions.RequestException as exc:
+        log_warn(f"AI proxy error  path={request.path}  error={exc}")
+        return jsonify({'error': 'AI service unreachable. Please try again.', 'code': 'proxy_error'}), 502
     status = resp.status_code
     response_text = ''
     ai_payload = None
@@ -398,6 +407,11 @@ def ai_proxy():
                 f"AI draft action failed  (HTTP {status})  target={ai_worker_url}  "
                 f"code={ai_code or '?'}  reason={ai_reason or '?'}  {response_excerpt}"
             )
+    elif request.path == '/api/ai/sessions':
+        if status < 300:
+            log_info("AI session history fetched")
+        else:
+            log_warn(f"AI session history failed  (HTTP {status})")
 
     return resp
 

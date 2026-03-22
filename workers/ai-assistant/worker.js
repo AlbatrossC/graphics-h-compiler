@@ -1,3 +1,5 @@
+import SYSTEM_INSTRUCTION from './system_instructions.md';
+
 const CONFIG = Object.freeze({
   MAX_GUEST_REQUESTS: 10,
   MAX_USER_REQUESTS: 20,
@@ -9,7 +11,6 @@ const CONFIG = Object.freeze({
   MAX_QUERY_LENGTH: 2_000,
   MAX_SESSION_ID_LENGTH: 120,
   MAX_ERROR_LENGTH: 4_000,
-  RATE_LIMIT_COOLDOWN_MS: 60_000,
   MODEL_FALLBACK: 'gemini-2.5-flash',
 });
 
@@ -23,48 +24,6 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:5000',
   'http://127.0.0.1:5000',
 ]);
-
-const SYSTEM_INSTRUCTION = `Turbo C (Borland TC++ 3.0) graphics.h assistant.
-
-# Response Format (STRICT)
-Always reply exactly as:
-
-<filename>
-Generate a filename based on the code content.
-Default extension: .cpp — use .c only if user explicitly says "write in C"
-Always starts with ai_ prefix
-Descriptive, under 30 characters, lowercase + underscores
-</filename>
-
-<chat>
-Max 2–3 short lines explanation.
-</chat>
-
-<code>
-Complete Turbo C program.
-</code>
-
-Do not add anything before or after these tags.
-<code> must contain ONLY valid C/Turbo C code.
-
-# Core Behavior
-- Always generate a Turbo C program using graphics.h
-- Never answer in plain text
-- Every response must follow the required format
-
-# Request Handling
-- For programming / graphics requests, generate a correct Turbo C graphics program that compiles.
-- For non-programming requests, still generate a Turbo C graphics program and show a witty message with outtextxy().
-
-# Graphics Initialization
-- Always use initgraph(&gd,&gm,"")
-- Never use file paths like C:\\TC\\BGI
-
-# Drawing + Code Quality
-- Prefer complete, visually clear drawings with meaningful details
-- Use correct graphics.h function signatures and integer coordinates only
-- Keep code clean, readable, and Turbo C++ 3.0 compatible
-- Avoid unsupported modern C++ features`;
 
 function withCors(request) {
   const origin = request.headers.get('Origin');
@@ -109,50 +68,16 @@ function wantsDebugDetails(request) {
   return value === '1' || value === 'true' || value === 'yes';
 }
 
-function parseIsoMs(value) {
-  const parsed = Date.parse(value || '');
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function buildCandidateDiagnostics(candidates, nowMs) {
-  return candidates.map((candidate) => {
-    const rateLimitedUntilMs = parseIsoMs(candidate.status?.rateLimitedUntil);
-    const cooldownSeconds =
-      rateLimitedUntilMs > nowMs ? Math.max(1, Math.ceil((rateLimitedUntilMs - nowMs) / 1000)) : 0;
-
-    return {
-      key_name: candidate.keyName,
-      configured: Boolean(candidate.secret),
-      is_rate_limited: Boolean(candidate.status?.isRateLimited),
-      rate_limited_until: candidate.status?.rateLimitedUntil || null,
-      cooldown_seconds: cooldownSeconds,
-      total_requests_today: Number(candidate.status?.totalRequestsToday || 0),
-      total_errors_today: Number(candidate.status?.totalErrorsToday || 0),
-      last_used_at: candidate.status?.lastUsedAt || null,
-      last_error: candidate.status?.lastError || null,
-    };
-  });
-}
-
-function computeRetryAfterSeconds(candidates, nowMs) {
-  const futureMoments = candidates
-    .map((candidate) => parseIsoMs(candidate.status?.rateLimitedUntil))
-    .filter((value) => value > nowMs);
-
-  if (!futureMoments.length) {
-    return 0;
-  }
-
-  return Math.max(1, Math.ceil((Math.min(...futureMoments) - nowMs) / 1000));
-}
-
 function buildGeminiDebugPayload(reason, modelName, nowIso, candidates, extra = {}) {
   return {
     worker: 'graphics-oc-ai',
     reason,
     model: modelName,
     timestamp: nowIso,
-    keys: buildCandidateDiagnostics(candidates, parseIsoMs(nowIso)),
+    keys: candidates.map((candidate) => ({
+      key_name: candidate.keyName,
+      configured: Boolean(candidate.secret),
+    })),
     ...extra,
   };
 }
@@ -267,6 +192,46 @@ async function verifySessionJwt(token, secret) {
 
 function getSessionSecret(env) {
   return env.SESSION_SECRET || env.JWT_SECRET || '';
+}
+
+function getSessionToken(request) {
+  const cookies = parseCookies(request.headers.get('Cookie') || '');
+  return cookies.get(SESSION_COOKIE_NAME) || '';
+}
+
+async function resolveSessionIdentity(request, env) {
+  const sessionSecret = getSessionSecret(env);
+  const sessionToken = getSessionToken(request);
+
+  if (!sessionToken) {
+    return { status: 'missing_cookie' };
+  }
+
+  if (!sessionSecret) {
+    return { status: 'missing_secret' };
+  }
+
+  try {
+    const session = await verifySessionJwt(sessionToken, sessionSecret);
+    const email = String(session.email || '').trim().toLowerCase();
+    if (!email) {
+      return { status: 'invalid_session', message: 'Session email was missing' };
+    }
+
+    return {
+      status: 'ok',
+      identity: {
+        kind: 'user',
+        email,
+        userName: email,
+      },
+    };
+  } catch (error) {
+    return {
+      status: 'invalid_session',
+      message: error instanceof Error ? error.message : 'Invalid session token',
+    };
+  }
 }
 
 function normalizeOptionalString(value, maxLength = 10_000) {
@@ -411,29 +376,33 @@ function validateRequestBody(body) {
   };
 }
 
-async function identifyRequest(request, env, body) {
-  const sessionSecret = getSessionSecret(env);
-  const cookies = parseCookies(request.headers.get('Cookie') || '');
-  const sessionToken = cookies.get(SESSION_COOKIE_NAME);
-
-  if (sessionSecret && sessionToken) {
-    try {
-      const session = await verifySessionJwt(sessionToken, sessionSecret);
-      const email = String(session.email || '').trim().toLowerCase();
-      if (email) {
-        return {
-          kind: 'user',
-          email,
-          userName: email,
-        };
-      }
-    } catch {
-      // Fall through to guest mode.
-    }
+async function identifyRequest(request, env, body, options = {}) {
+  const includeDebug = options.includeDebug === true;
+  const sessionState = await resolveSessionIdentity(request, env);
+  if (sessionState.status === 'ok') {
+    return sessionState.identity;
   }
 
   const fingerprintId = normalizeOptionalString(body.fingerprint_id, 200);
   if (!fingerprintId) {
+    if (sessionState.status === 'invalid_session' || sessionState.status === 'missing_secret') {
+      throw {
+        statusCode: 401,
+        code: 'invalid_session',
+        message:
+          sessionState.status === 'missing_secret'
+            ? 'AI worker session verification is not configured. Set SESSION_SECRET to match the auth worker.'
+            : 'Your login session could not be verified. Sign in again.',
+        debug: includeDebug
+          ? {
+              worker: 'graphics-oc-ai',
+              reason: sessionState.status,
+              detail: sessionState.message || null,
+            }
+          : null,
+      };
+    }
+
     throw {
       statusCode: 400,
       code: 'bad_request',
@@ -527,118 +496,6 @@ function parseGeminiResponse(rawText) {
   };
 }
 
-async function ensureApiKeyStatusRows(db) {
-  // Upsert both rows so they always exist — prevents silent UPDATE failures
-  await db
-    .prepare(
-      `INSERT OR IGNORE INTO api_key_status (key_name, is_rate_limited, total_requests_today, total_errors_today)
-       VALUES ('primary', 0, 0, 0)`
-    )
-    .run();
-  await db
-    .prepare(
-      `INSERT OR IGNORE INTO api_key_status (key_name, is_rate_limited, total_requests_today, total_errors_today)
-       VALUES ('secondary', 0, 0, 0)`
-    )
-    .run();
-}
-
-async function clearExpiredRateLimits(db, nowIso) {
-  // Clear keys where rate_limited_until has passed
-  await db
-    .prepare(
-      `UPDATE api_key_status
-       SET is_rate_limited = 0,
-           rate_limited_until = NULL
-       WHERE is_rate_limited = 1
-         AND rate_limited_until IS NOT NULL
-         AND rate_limited_until <= ?`
-    )
-    .bind(nowIso)
-    .run();
-
-  // Also clear keys that are stuck with is_rate_limited=1 but no rate_limited_until timestamp
-  // This can happen if a previous deploy had a bug — without this they'd be stuck forever
-  await db
-    .prepare(
-      `UPDATE api_key_status
-       SET is_rate_limited = 0
-       WHERE is_rate_limited = 1
-         AND rate_limited_until IS NULL`
-    )
-    .run();
-}
-
-async function getKeyStatuses(db) {
-  const result = await db
-    .prepare(
-      `SELECT key_name, is_rate_limited, rate_limited_until, total_requests_today,
-              total_errors_today, last_used_at, last_error
-       FROM api_key_status
-       WHERE key_name IN ('primary', 'secondary')`
-    )
-    .all();
-
-  const map = new Map();
-  for (const row of result.results || []) {
-    map.set(row.key_name, {
-      keyName: row.key_name,
-      isRateLimited: Number(row.is_rate_limited || 0) === 1,
-      rateLimitedUntil: row.rate_limited_until || null,
-      totalRequestsToday: Number(row.total_requests_today || 0),
-      totalErrorsToday: Number(row.total_errors_today || 0),
-      lastUsedAt: row.last_used_at || null,
-      lastError: row.last_error || null,
-    });
-  }
-
-  return map;
-}
-
-async function markKeyRateLimited(db, keyName, nowMs, message) {
-  const untilIso = new Date(nowMs + CONFIG.RATE_LIMIT_COOLDOWN_MS).toISOString();
-  await db
-    .prepare(
-      `UPDATE api_key_status
-       SET is_rate_limited = 1,
-           rate_limited_until = ?,
-           total_errors_today = COALESCE(total_errors_today, 0) + 1,
-           last_error = ?,
-           last_used_at = ?
-       WHERE key_name = ?`
-    )
-    .bind(untilIso, message || '429 rate limited', new Date(nowMs).toISOString(), keyName)
-    .run();
-}
-
-async function markKeyError(db, keyName, nowIso, message) {
-  await db
-    .prepare(
-      `UPDATE api_key_status
-       SET total_errors_today = COALESCE(total_errors_today, 0) + 1,
-           last_error = ?,
-           last_used_at = ?
-       WHERE key_name = ?`
-    )
-    .bind(message || 'Unknown Gemini error', nowIso, keyName)
-    .run();
-}
-
-async function markKeySuccess(db, keyName, nowIso) {
-  await db
-    .prepare(
-      `UPDATE api_key_status
-       SET is_rate_limited = 0,
-           rate_limited_until = NULL,
-           total_requests_today = COALESCE(total_requests_today, 0) + 1,
-           last_error = NULL,
-           last_used_at = ?
-       WHERE key_name = ?`
-    )
-    .bind(nowIso, keyName)
-    .run();
-}
-
 function extractGeminiText(responseJson) {
   const candidates = Array.isArray(responseJson?.candidates) ? responseJson.candidates : [];
   const firstCandidate = candidates[0];
@@ -658,27 +515,39 @@ function extractUsage(responseJson) {
 }
 
 async function callGeminiOnce(apiKey, modelName, prompt) {
-  const response = await fetch(`${GEMINI_API_BASE}/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: SYSTEM_INSTRUCTION }],
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 50_000);
+
+  let response;
+  try {
+    response = await fetch(`${GEMINI_API_BASE}/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: SYSTEM_INSTRUCTION }],
         },
-      ],
-      generationConfig: {
-        temperature: 0.45,
-        topP: 0.9,
-      },
-    }),
-  });
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.45,
+          topP: 0.9,
+          thinkingConfig: {
+            thinkingBudget: 2048,
+          },
+        },
+      }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const text = await response.text();
   let data = null;
@@ -697,17 +566,12 @@ async function callGeminiOnce(apiKey, modelName, prompt) {
 }
 
 async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
-  const db = env.graphicsh_ai_db;
-  const nowMs = Date.now();
   const includeDebug = options.includeDebug === true;
-  await ensureApiKeyStatusRows(db);
-  await clearExpiredRateLimits(db, nowIso);
-  const statuses = await getKeyStatuses(db);
   const modelName = env.GEMINI_MODEL || CONFIG.MODEL_FALLBACK;
 
   const candidates = [
-    { keyName: 'primary', secret: env.PRIMARY_KEY, status: statuses.get('primary') },
-    { keyName: 'secondary', secret: env.SECONDARY_KEY, status: statuses.get('secondary') },
+    { keyName: 'primary', secret: env.PRIMARY_KEY },
+    { keyName: 'secondary', secret: env.SECONDARY_KEY },
   ].filter((item) => item.secret);
 
   if (!candidates.length) {
@@ -717,28 +581,22 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
       message: 'PRIMARY_KEY or SECONDARY_KEY is not configured',
       debug: includeDebug
         ? buildGeminiDebugPayload('missing_api_keys', modelName, nowIso, [
-            { keyName: 'primary', secret: env.PRIMARY_KEY, status: statuses.get('primary') },
-            { keyName: 'secondary', secret: env.SECONDARY_KEY, status: statuses.get('secondary') },
+            { keyName: 'primary', secret: env.PRIMARY_KEY },
+            { keyName: 'secondary', secret: env.SECONDARY_KEY },
           ])
         : null,
     };
   }
 
-  let attempted = false;
   let lastNonRateError = null;
+  let sawRateLimit = false;
 
   for (const candidate of candidates) {
-    if (candidate.status?.isRateLimited) {
-      continue;
-    }
-
-    attempted = true;
     let gemini;
     try {
       gemini = await callGeminiOnce(candidate.secret, modelName, prompt);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Gemini request failed';
-      await markKeyError(db, candidate.keyName, nowIso, errorMessage);
       lastNonRateError = {
         statusCode: 502,
         code: 'upstream_error',
@@ -753,13 +611,12 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
     }
 
     if (gemini.status === 429) {
-      await markKeyRateLimited(db, candidate.keyName, nowMs, 'Gemini returned 429');
+      sawRateLimit = true;
       continue;
     }
 
     if (!gemini.ok) {
       const errorMessage = gemini.data?.error?.message || gemini.text || `Gemini returned HTTP ${gemini.status}`;
-      await markKeyError(db, candidate.keyName, nowIso, errorMessage);
       lastNonRateError = {
         statusCode: 502,
         code: 'upstream_error',
@@ -776,7 +633,6 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
 
     const outputText = extractGeminiText(gemini.data);
     if (!outputText) {
-      await markKeyError(db, candidate.keyName, nowIso, 'Gemini returned an empty candidate');
       throw {
         statusCode: 502,
         code: 'invalid_ai_response',
@@ -784,7 +640,6 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
       };
     }
 
-    await markKeySuccess(db, candidate.keyName, nowIso);
     return {
       keyName: candidate.keyName,
       text: outputText,
@@ -796,19 +651,16 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
     throw lastNonRateError;
   }
 
-  const retryAfterSeconds = computeRetryAfterSeconds(candidates, nowMs);
   const apiDownDebug = includeDebug
-    ? buildGeminiDebugPayload('all_keys_rate_limited', modelName, nowIso, candidates, {
-        retry_after_seconds: retryAfterSeconds || CONFIG.MIN_REQUEST_GAP_SECONDS,
-      })
+    ? buildGeminiDebugPayload('all_keys_rate_limited', modelName, nowIso, candidates)
     : null;
 
-  if (!attempted) {
+  if (sawRateLimit) {
     throw {
       statusCode: 503,
       code: 'API_DOWN',
       message: 'AI is temporarily busy. Try again in a minute.',
-      headers: retryAfterSeconds ? { 'Retry-After': String(retryAfterSeconds) } : undefined,
+      headers: { 'Retry-After': String(CONFIG.MIN_REQUEST_GAP_SECONDS) },
       debug: apiDownDebug,
     };
   }
@@ -1183,7 +1035,7 @@ async function processAiRequest(request, env, corsHeaders) {
 
   const rawBody = await readJsonBody(request);
   const payload = validateRequestBody(rawBody);
-  const identity = await identifyRequest(request, env, rawBody);
+  const identity = await identifyRequest(request, env, rawBody, { includeDebug });
 
   const subjectRow =
     identity.kind === 'user'
@@ -1252,7 +1104,9 @@ async function processActionRequest(request, env, corsHeaders) {
 
   const identity = await (async () => {
     try {
-      return await identifyRequest(request, env, body);
+      return await identifyRequest(request, env, body, {
+        includeDebug: wantsDebugDetails(request),
+      });
     } catch {
       return { kind: 'guest', fingerprintId: '' };
     }
@@ -1291,6 +1145,87 @@ async function processActionRequest(request, env, corsHeaders) {
   return jsonResponse({ success: true, request_id: requestId, action }, 200, corsHeaders);
 }
 
+async function identifyFromCookieOnly(request, env, options = {}) {
+  const includeDebug = options.includeDebug === true;
+  const sessionState = await resolveSessionIdentity(request, env);
+  if (sessionState.status === 'ok') {
+    return sessionState.identity;
+  }
+
+  if (sessionState.status === 'missing_cookie') {
+    return { kind: 'guest' };
+  }
+
+  throw {
+    statusCode: 401,
+    code: 'invalid_session',
+    message:
+      sessionState.status === 'missing_secret'
+        ? 'AI worker session verification is not configured. Set SESSION_SECRET to match the auth worker.'
+        : 'Your login session could not be verified. Sign in again.',
+    debug: includeDebug
+      ? {
+          worker: 'graphics-oc-ai',
+          reason: sessionState.status,
+          detail: sessionState.message || null,
+        }
+      : null,
+  };
+}
+
+async function processSessionsRequest(request, env, corsHeaders) {
+  const identity = await identifyFromCookieOnly(request, env, {
+    includeDebug: wantsDebugDetails(request),
+  });
+  if (identity.kind !== 'user') {
+    return errorResponse('unauthorized', 'Session history requires a valid login', 401, corsHeaders);
+  }
+
+  const db = env.graphicsh_ai_db;
+  const result = await db
+    .prepare(
+      `SELECT session_id, session_title,
+              MIN(created_at) as started,
+              MAX(created_at) as last_active,
+              COUNT(*) as messages
+       FROM logged_sessions
+       WHERE user_email = ?
+       GROUP BY session_id
+       ORDER BY last_active DESC
+       LIMIT 20`
+    )
+    .bind(identity.email)
+    .all();
+
+  return jsonResponse({ sessions: result.results || [] }, 200, corsHeaders);
+}
+
+async function processSessionMessagesRequest(request, env, corsHeaders, sessionId) {
+  if (!sessionId || sessionId.length > CONFIG.MAX_SESSION_ID_LENGTH) {
+    return errorResponse('bad_request', 'Invalid session ID', 400, corsHeaders);
+  }
+
+  const identity = await identifyFromCookieOnly(request, env, {
+    includeDebug: wantsDebugDetails(request),
+  });
+  if (identity.kind !== 'user') {
+    return errorResponse('unauthorized', 'Session history requires a valid login', 401, corsHeaders);
+  }
+
+  const db = env.graphicsh_ai_db;
+  const result = await db
+    .prepare(
+      `SELECT version, request_type, user_query, chat_response, generated_code, generated_filename, fix_attempt, created_at
+       FROM logged_sessions
+       WHERE user_email = ? AND session_id = ?
+       ORDER BY created_at ASC`
+    )
+    .bind(identity.email, sessionId)
+    .all();
+
+  return jsonResponse({ messages: result.results || [] }, 200, corsHeaders);
+}
+
 export default {
   async fetch(request, env) {
     const corsHeaders = withCors(request);
@@ -1316,28 +1251,13 @@ export default {
         return await processActionRequest(request, env, corsHeaders);
       }
 
-      // Admin: reset both API key rate-limit flags in D1
-      // GET /admin/reset-keys — clears is_rate_limited for both primary and secondary
-      if (method === 'GET' && pathname === '/admin/reset-keys') {
-        const db = env.graphicsh_ai_db;
-        await db
-          .prepare(
-            `UPDATE api_key_status
-             SET is_rate_limited = 0,
-                 rate_limited_until = NULL,
-                 last_error = NULL
-             WHERE key_name IN ('primary', 'secondary')`
-          )
-          .run();
-        const statuses = await getKeyStatuses(db);
-        return jsonResponse({
-          ok: true,
-          message: 'API key rate limits cleared',
-          keys: [
-            statuses.get('primary') || { keyName: 'primary', isRateLimited: false },
-            statuses.get('secondary') || { keyName: 'secondary', isRateLimited: false },
-          ],
-        }, 200, corsHeaders);
+      if (method === 'GET' && pathname === '/api/ai/sessions') {
+        return await processSessionsRequest(request, env, corsHeaders);
+      }
+
+      if (method === 'GET' && pathname.startsWith('/api/ai/sessions/')) {
+        const sessionId = pathname.slice('/api/ai/sessions/'.length);
+        return await processSessionMessagesRequest(request, env, corsHeaders, sessionId);
       }
 
       return errorResponse('not_found', 'Route not found', 404, corsHeaders);
