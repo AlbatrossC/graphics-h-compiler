@@ -663,10 +663,12 @@
         if (isLoggedInNow() && !AI_STATE.hasConversation && !AI_STATE.forceChatView) {
             aiSessionsView.style.display = 'flex';
             aiChatView.style.display = 'none';
+            document.body.dataset.aiView = 'sessions';
         } else {
             aiSessionsView.style.display = 'none';
             aiChatView.style.display = 'flex';
             if (aiChatHeader) aiChatHeader.style.display = isLoggedInNow() ? 'flex' : 'none';
+            document.body.dataset.aiView = 'chat';
         }
         
         // Ensure inputs are correctly enabled/disabled
@@ -678,6 +680,27 @@
 
     function syncNewSessionBtnVisibility() {
         // Handled by syncSessionHistoryVisibility toggling the views now.
+    }
+
+    async function deleteSession(session, itemEl) {
+        itemEl.classList.add('ai-session-deleting');
+        try {
+            const { response } = await fetchJson(
+                `/api/ai/sessions/${encodeURIComponent(session.session_id)}`,
+                { method: 'DELETE' }
+            );
+            if (response.ok) {
+                itemEl.remove();
+                const historyList = document.getElementById('ai-session-history-list');
+                if (historyList && !historyList.querySelector('.ai-session-item')) {
+                    renderSessionHistory([]);
+                }
+            } else {
+                itemEl.classList.remove('ai-session-deleting');
+            }
+        } catch {
+            itemEl.classList.remove('ai-session-deleting');
+        }
     }
 
     function renderSessionHistory(sessions) {
@@ -693,14 +716,31 @@
             return;
         }
         sessions.forEach((session) => {
-            const item = document.createElement('button');
+            const item = document.createElement('div');
             item.className = 'ai-session-item';
-            item.type = 'button';
+
             const title = session.session_title || 'Untitled Session';
             const ago = timeAgo(session.last_active || session.started);
             const count = Number(session.messages || 0);
-            item.innerHTML = `<span class="ai-session-item-title">${escapeHtml(title)}</span><span class="ai-session-item-meta">${escapeHtml(ago)}${count ? ` · ${count} msg${count !== 1 ? 's' : ''}` : ''}</span>`;
-            item.addEventListener('click', () => openSessionMessages(session));
+
+            const content = document.createElement('button');
+            content.type = 'button';
+            content.className = 'ai-session-item-content';
+            content.innerHTML = `<span class="ai-session-item-title">${escapeHtml(title)}</span><span class="ai-session-item-meta">${escapeHtml(ago)}${count ? ` · ${count} msg${count !== 1 ? 's' : ''}` : ''}</span>`;
+            content.addEventListener('click', () => openSessionMessages(session));
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'ai-session-delete-btn';
+            deleteBtn.setAttribute('aria-label', 'Delete session');
+            deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>`;
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteSession(session, item);
+            });
+
+            item.appendChild(content);
+            item.appendChild(deleteBtn);
             historyList.appendChild(item);
         });
         syncSessionHistoryVisibility();

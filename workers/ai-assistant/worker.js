@@ -34,7 +34,7 @@ function withCors(request) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Credentials': allowCredentials,
-    'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Cookie',
     Vary: 'Origin',
     'Content-Type': 'application/json',
@@ -459,11 +459,25 @@ function extractTagContent(text, tagName) {
 
 function parseGeminiResponse(rawText) {
   const text = stripOuterFences(rawText);
-  const filename = normalizeFilename(extractTagContent(text, 'filename'));
+  const rawFilename = extractTagContent(text, 'filename');
+  let filename = '';
+  try {
+    filename = normalizeFilename(rawFilename);
+  } catch {
+    filename = '';
+  }
   const chat = extractTagContent(text, 'chat');
   const code = extractTagContent(text, 'code');
 
   if (!filename || !chat || !code) {
+    console.error('[AI] parseGeminiResponse: missing or invalid tags', {
+      hasRawFilename: Boolean(rawFilename),
+      rawFilenameValue: rawFilename || '(empty)',
+      validFilename: Boolean(filename),
+      hasChat: Boolean(chat),
+      hasCode: Boolean(code),
+      rawTextPreview: text.slice(0, 600),
+    });
     throw {
       statusCode: 502,
       code: 'invalid_ai_response',
@@ -597,6 +611,11 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
       gemini = await callGeminiOnce(candidate.secret, modelName, prompt);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Gemini request failed';
+      console.error('[AI] Gemini fetch threw an exception', {
+        keyName: candidate.keyName,
+        model: modelName,
+        errorMessage,
+      });
       lastNonRateError = {
         statusCode: 502,
         code: 'upstream_error',
@@ -611,12 +630,20 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
     }
 
     if (gemini.status === 429) {
+      console.error('[AI] Gemini rate limited (429)', { keyName: candidate.keyName, model: modelName });
       sawRateLimit = true;
       continue;
     }
 
     if (!gemini.ok) {
       const errorMessage = gemini.data?.error?.message || gemini.text || `Gemini returned HTTP ${gemini.status}`;
+      console.error('[AI] Gemini non-200 response', {
+        keyName: candidate.keyName,
+        status: gemini.status,
+        model: modelName,
+        errorMessage,
+        rawTextPreview: gemini.text?.slice(0, 500),
+      });
       lastNonRateError = {
         statusCode: 502,
         code: 'upstream_error',
@@ -633,6 +660,11 @@ async function callGeminiWithFailover(env, prompt, nowIso, options = {}) {
 
     const outputText = extractGeminiText(gemini.data);
     if (!outputText) {
+      console.error('[AI] Gemini returned empty response body', {
+        keyName: candidate.keyName,
+        model: modelName,
+        rawDataPreview: JSON.stringify(gemini.data)?.slice(0, 300),
+      });
       throw {
         statusCode: 502,
         code: 'invalid_ai_response',
@@ -1226,6 +1258,32 @@ async function processSessionMessagesRequest(request, env, corsHeaders, sessionI
   return jsonResponse({ messages: result.results || [] }, 200, corsHeaders);
 }
 
+async function processDeleteSessionRequest(request, env, corsHeaders, sessionId) {
+  if (!sessionId || sessionId.length > CONFIG.MAX_SESSION_ID_LENGTH) {
+    return errorResponse('bad_request', 'Invalid session ID', 400, corsHeaders);
+  }
+
+  const identity = await identifyFromCookieOnly(request, env, {
+    includeDebug: wantsDebugDetails(request),
+  });
+  if (identity.kind !== 'user') {
+    return errorResponse('unauthorized', 'Deleting sessions requires a valid login', 401, corsHeaders);
+  }
+
+  const db = env.graphicsh_ai_db;
+  const result = await db
+    .prepare(`DELETE FROM logged_sessions WHERE user_email = ? AND session_id = ?`)
+    .bind(identity.email, sessionId)
+    .run();
+
+  const deleted = Number(result.meta?.changes || 0);
+  if (deleted === 0) {
+    return errorResponse('not_found', 'Session not found', 404, corsHeaders);
+  }
+
+  return jsonResponse({ success: true, deleted }, 200, corsHeaders);
+}
+
 export default {
   async fetch(request, env) {
     const corsHeaders = withCors(request);
@@ -1260,6 +1318,11 @@ export default {
         return await processSessionMessagesRequest(request, env, corsHeaders, sessionId);
       }
 
+      if (method === 'DELETE' && pathname.startsWith('/api/ai/sessions/')) {
+        const sessionId = pathname.slice('/api/ai/sessions/'.length);
+        return await processDeleteSessionRequest(request, env, corsHeaders, sessionId);
+      }
+
       return errorResponse('not_found', 'Route not found', 404, corsHeaders);
     } catch (error) {
       if (error?.statusCode) {
@@ -1275,6 +1338,7 @@ export default {
         );
       }
 
+      console.error('[AI] Unhandled internal error', error);
       return errorResponse('internal_error', 'Internal server error', 500, corsHeaders);
     }
   },

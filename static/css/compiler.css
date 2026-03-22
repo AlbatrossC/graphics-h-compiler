@@ -2354,36 +2354,79 @@ header {
 
 .ai-session-item {
     display: flex;
-    flex-direction: column;
-    padding: 12px 16px;
+    align-items: center;
     background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--border-color);
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background 0.12s ease;
     width: 100%;
 }
 
-.ai-session-item:hover, .ai-session-item:focus {
-    background: rgba(255, 255, 255, 0.05);
-    outline: none;
+.ai-session-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.ai-session-item-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 9px 8px 9px 16px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
 }
 
 .ai-session-item-title {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 4px;
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 100%;
+    transition: color 0.12s ease;
+}
+
+.ai-session-item:hover .ai-session-item-title {
+    color: var(--text-primary);
 }
 
 .ai-session-item-meta {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.ai-session-delete-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin-right: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.ai-session-item:hover .ai-session-delete-btn {
+    opacity: 1;
+}
+
+.ai-session-delete-btn:hover {
+    color: #e06c75;
+    background: rgba(224, 108, 117, 0.1);
+}
+
+.ai-session-item.ai-session-deleting {
+    opacity: 0.35;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
 .ai-session-history-empty {
@@ -2394,8 +2437,18 @@ header {
     font-style: italic;
 }
 
-[data-theme="light"] .ai-session-item:hover, [data-theme="light"] .ai-session-item:focus {
-    background: rgba(0, 0, 0, 0.04);
+[data-theme="light"] .ai-session-item:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+/* Hide refresh button when AI panel is active */
+body[data-sidebar-view="ai"] #refresh-btn {
+    display: none !important;
+}
+
+/* Hide user profile when in AI chat view (give more space to conversation) */
+body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
+    display: none !important;
 }
 
 .ai-messages {
@@ -2528,44 +2581,61 @@ header {
     font-weight: 500;
 }
 
-/* Generating Indicator Overlay */
+/* Generating Indicator — inline conversation style */
 .ai-generating-indicator {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--vscode-sidebar);
-    border: 1px solid var(--primary);
-    padding: 10px 16px;
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    max-height: 0;
+    overflow: hidden;
     opacity: 0;
     pointer-events: none;
-    transition: all 0.2s ease;
-    z-index: 10;
+    transition: opacity 0.18s ease, max-height 0.18s ease;
 }
 
 .ai-panel:has(.ai-input[aria-busy="true"]) .ai-generating-indicator {
+    max-height: 60px;
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    padding: 0 20px 16px;
 }
 
-.ai-generating-indicator span {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--primary);
+.ai-generating-pulse {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 14px;
+    background: var(--vscode-line-bg);
+    border-radius: 12px;
+    border-top-left-radius: 3px;
+    font-size: 0;
 }
 
-.ai-generating-spinner {
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(0, 255, 136, 0.2);
-    border-top-color: var(--primary);
+.ai-generating-pulse::before,
+.ai-generating-pulse::after {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    background: var(--text-muted);
+    opacity: 0.4;
+    animation: ai-dot-fade 1.2s ease-in-out infinite;
+}
+
+.ai-generating-pulse::before { animation-delay: 0s; }
+.ai-generating-pulse::after  { animation-delay: 0.2s; }
+
+.ai-generating-dot3 {
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    opacity: 0.4;
+    animation: ai-dot-fade 1.2s ease-in-out infinite;
+    animation-delay: 0.4s;
+}
+
+@keyframes ai-dot-fade {
+    0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+    30% { opacity: 0.75; transform: translateY(-3px); }
 }
 
 /* Actions */

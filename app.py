@@ -359,7 +359,7 @@ def storage_proxy():
 @app.route('/api/ai', methods=['POST', 'OPTIONS'])
 @app.route('/api/ai/action', methods=['PATCH', 'OPTIONS'])
 @app.route('/api/ai/sessions', methods=['GET', 'OPTIONS'])
-@app.route('/api/ai/sessions/<session_id>', methods=['GET', 'OPTIONS'])
+@app.route('/api/ai/sessions/<session_id>', methods=['GET', 'DELETE', 'OPTIONS'])
 def ai_proxy(session_id=None):
     ai_worker_url = os.getenv('AI_ASSISTANT_WORKER')
     if not ai_worker_url:
