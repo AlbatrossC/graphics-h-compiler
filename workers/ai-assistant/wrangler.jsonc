@@ -1,10 +1,13 @@
 {
   "name": "graphics-oc-ai",
-  "main": "worker.js",
+  "main": "src/index.js",
   "rules": [{ "type": "Text", "globs": ["**/*.md"] }],
   "compatibility_date": "2026-03-21",
-  // Set via:
+  // Secrets — set via:
   // wrangler secret put SESSION_SECRET
+  // wrangler secret put PRIMARY_KEY
+  // wrangler secret put SECONDARY_KEY
+  // wrangler secret put TERTIARY_KEY   ← add a 3rd Gemini key for extra quota
   // Optional legacy alias: wrangler secret put JWT_SECRET
   // The value must exactly match the auth/files worker SESSION_SECRET.
   "d1_databases": [

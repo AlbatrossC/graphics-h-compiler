@@ -383,6 +383,7 @@
                 body: JSON.stringify({
                     request_id: AI_STATE.preview.requestId,
                     action,
+                    ...(!isLoggedInNow() && { fingerprint_id: AI_STATE.guestFingerprintId }),
                 }),
             });
 

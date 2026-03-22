@@ -51,7 +51,7 @@ compiler.html  ──  ai.js (POST /api/ai)
                    app.py (Flask proxy)
                          │
                          ▼
-              workers/ai-assistant/worker.js
+              workers/ai-assistant/src/index.js
                          │
               ┌──────────┴──────────┐
               │                     │
@@ -61,15 +61,31 @@ compiler.html  ──  ai.js (POST /api/ai)
 
 - **`ai.js`** builds the request payload, manages local UI state, and handles the response.
 - **`app.py`** is a thin proxy — it forwards requests verbatim to the Cloudflare Worker and passes cookies through.
-- **`worker.js`** validates the request, identifies the caller (guest or logged-in user), enforces rate limits, calls Gemini, parses the response, writes to D1, and returns the result.
+- **`src/index.js`** routes the request; handler modules validate, identify the caller, enforce rate limits, call Gemini, parse the response, write to D1, and return the result.
 - **D1** stores all requests for session history, analytics, and rate limiting.
 
 ---
 
 ## 2. Cloudflare Worker
 
-**File:** `workers/ai-assistant/worker.js`
+**Entry point:** `workers/ai-assistant/src/index.js`
 **Config:** `workers/ai-assistant/wrangler.jsonc`
+
+The worker code is split into modules under `src/`:
+
+| Module | Responsibility |
+|--------|---------------|
+| `src/config.js` | `CONFIG` constants, `ALLOWED_ORIGINS` |
+| `src/cors.js` | CORS headers, `jsonResponse`, `errorResponse`, debug helpers |
+| `src/auth.js` | JWT verify, `identifyRequest`, `identifyFromCookieOnly` |
+| `src/validate.js` | `validateRequestBody`, `normalizeFilename`, size checks |
+| `src/gemini.js` | `buildPrompt`, `callGeminiWithFailover`, `parseGeminiResponse` |
+| `src/rateLimit.js` | `evaluateRateLimit`, window/cooldown logic |
+| `src/db.js` | All D1 operations, `runPostResponseWrites` |
+| `src/handlers.js` | All route handler functions |
+| `src/index.js` | Main `fetch` router |
+
+`worker.js` at the root is kept as a legacy re-export only.
 
 ### 2.1 Entry point & routing
 
@@ -183,13 +199,17 @@ Both return `429`. The window resets automatically once 12 hours have elapsed si
 
 ### 2.8 Database writes
 
-After a successful Gemini response, three writes happen in sequence:
+After a successful Gemini response, only **one write blocks the response**. The remaining two are deferred.
 
+**Synchronous (critical path):**
 1. **`insertRequestLog()`** — writes one row to `logged_sessions` (user) or `guest_logs` (guest) with the full request/response including generated code, filename, chat text, token counts, and API key used. Returns the `request_id` sent back to the client.
 
-2. **`updateSubjectUsage()`** — increments `window_requests`, `total_requests`, updates `window_start` if the window reset, and sets `last_request_at`.
+**Asynchronous (via `ctx.waitUntil`):**
+2. **`updateSubjectUsage()`** — increments `window_requests`, `total_requests`, updates `window_start` if the window reset, and sets `last_request_at`. Runs after the response is sent.
 
-3. **`updateDailyUsage()`** — upserts a row in `daily_usage` for today's date. Increments guest/user/error counters, token totals, and unique-visitor counts (using `isFirstToday`).
+3. **`updateDailyUsage()`** — upserts a row in `daily_usage` for today's date. Increments guest/user/error counters, token totals, and unique-visitor counts (using `isFirstToday`). The `countRequestsToday()` read that determines `isFirstToday` also runs inside the async block, keeping it off the critical path.
+
+Both async writes are bundled in `runPostResponseWrites()` (`src/db.js`) and dispatched together via `Promise.all`.
 
 Version numbers (`v1`, `v2`, …) are computed before writing by counting existing rows for the `session_id`.
 
@@ -211,7 +231,11 @@ Accepted actions: `apply`, `reject`, `force_apply`.
 - `reject` — user clicked Discard; previous code was restored.
 - `force_apply` — user sent a new prompt while a draft was pending; the draft was silently applied before processing the new prompt.
 
-Updates the `user_action` column in `logged_sessions` (for users) or `guest_logs` (for guests). Scoped by `request_id` and `user_email` for users.
+Updates the `user_action` column in `logged_sessions` (for users) or `guest_logs` (for guests).
+
+**Ownership scoping:**
+- Users: scoped by `request_id AND user_email` — a user cannot update another user's action.
+- Guests: scoped by `request_id AND fingerprint_id` — a guest cannot update another guest's action. `fingerprint_id` is required in the request body; omitting it returns `400 bad_request`.
 
 ### 2.11 Error handling
 
@@ -566,17 +590,30 @@ Four tables in the D1 database `graphicsh-ai`:
   "filename": "ai_solar_system.cpp",
   "session_id": "sess_1234_abcdef",
   "version": "v1",
-  "request_id": "ls_uuid-here"
+  "request_id": "ls_uuid-here",
+  "rate_limit": {
+    "remaining": 18,
+    "max": 20
+  }
 }
 ```
 
-**Success response (guest):** Same but without `filename`.
+**Success response (guest):** Same shape but without `filename`. `rate_limit.max` is `10` for guests.
+
+`rate_limit.remaining` is the number of requests left in the current 12-hour window **after** this request was counted. Frontend can use this to display a usage indicator or warn the user when approaching the limit.
 
 ### PATCH /api/ai/action
 
+**Logged-in user:**
 ```json
 { "request_id": "ls_uuid-here", "action": "apply" }
 ```
+
+**Guest (fingerprint_id required for ownership check):**
+```json
+{ "request_id": "gl_uuid-here", "action": "apply", "fingerprint_id": "fp_..." }
+```
+
 Response: `{ "success": true, "request_id": "...", "action": "apply" }`
 
 ### GET /api/ai/sessions
