@@ -2722,6 +2722,55 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     color: var(--text-muted);
 }
 
+.ai-rate-limit-bar {
+    padding: 6px 14px 8px;
+    border-top: 1px solid var(--border-color);
+    background: transparent;
+    flex-shrink: 0;
+}
+
+.ai-rate-limit-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.ai-rate-limit-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.ai-rate-limit-count {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.ai-rate-limit-track {
+    height: 3px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.ai-rate-limit-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: width 0.4s ease, background 0.3s ease;
+}
+
+.ai-rate-limit-bar[data-tone="warn"] .ai-rate-limit-count { color: #e8a045; }
+.ai-rate-limit-bar[data-tone="warn"] .ai-rate-limit-fill  { background: #e8a045; }
+.ai-rate-limit-bar[data-tone="critical"] .ai-rate-limit-count { color: #e05c5c; }
+.ai-rate-limit-bar[data-tone="critical"] .ai-rate-limit-fill  { background: #e05c5c; }
+
 .btn-ai-send {
     background: var(--text-primary);
     color: var(--vscode-bg);
@@ -2796,6 +2845,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 .auth-section {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 8px;
     padding: 0;
     border-top: none;
@@ -2820,7 +2870,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: normal;
-    text-align: left;
+    text-align: center;
 }
 
 .google-btn:hover {

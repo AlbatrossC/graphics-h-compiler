@@ -22,6 +22,10 @@
         return;
     }
 
+    const aiRateLimitBar = document.getElementById('ai-rate-limit-bar');
+    const aiRateLimitText = document.getElementById('ai-rate-limit-text');
+    const aiRateLimitFill = document.getElementById('ai-rate-limit-fill');
+
     const AI_STATE = {
         guestFingerprintId: '',
         sessionId: '',
@@ -33,6 +37,7 @@
         lastDecision: null,
         preview: null,
         forceChatView: false,
+        rateLimit: null,  // { remaining, max } from last response
     };
 
     window.__aiPreviewPending = false;
@@ -132,6 +137,30 @@
         if (!isBusy && typeof window.getSidebarView === 'function' && window.getSidebarView() === 'ai') {
             setTimeout(() => aiInput.focus(), 40);
         }
+    }
+
+    function setRateLimitUI(remaining, max) {
+        if (!aiRateLimitBar || !aiRateLimitText || !aiRateLimitFill) return;
+        const pct = max > 0 ? Math.max(0, (remaining / max) * 100) : 100;
+        aiRateLimitText.textContent = `${remaining} / ${max}`;
+        aiRateLimitFill.style.width = `${pct}%`;
+        const tone = remaining <= 2 ? 'critical' : remaining <= Math.ceil(max * 0.3) ? 'warn' : 'ok';
+        aiRateLimitBar.dataset.tone = tone;
+    }
+
+    function initRateLimitDisplay() {
+        const max = isLoggedInNow() ? 20 : 10;
+        if (AI_STATE.rateLimit) {
+            setRateLimitUI(AI_STATE.rateLimit.remaining, AI_STATE.rateLimit.max);
+        } else {
+            setRateLimitUI(max, max);
+        }
+    }
+
+    function updateRateLimitDisplay(rateLimit) {
+        if (!rateLimit) return;
+        AI_STATE.rateLimit = rateLimit;
+        setRateLimitUI(rateLimit.remaining, rateLimit.max);
     }
 
     function syncPreviewChrome(active) {
@@ -547,6 +576,10 @@
                 throw new Error(buildAiErrorMessage(payload, response, rawText, 'AI request failed'));
             }
 
+            if (payload.rate_limit) {
+                AI_STATE.rateLimit = payload.rate_limit;
+                updateRateLimitDisplay(payload.rate_limit);
+            }
             await showPreviewInEditor(payload, {
                 baseSnapshot,
                 previousConversationFilename: AI_STATE.currentFilename,
@@ -622,6 +655,10 @@
                 throw new Error(buildAiErrorMessage(payload, response, rawText, 'Auto-fix failed'));
             }
 
+            if (payload.rate_limit) {
+                AI_STATE.rateLimit = payload.rate_limit;
+                updateRateLimitDisplay(payload.rate_limit);
+            }
             await showPreviewInEditor(payload, {
                 baseSnapshot: preview.baseSnapshot,
                 previousConversationFilename: preview.previousConversationFilename,
@@ -899,11 +936,13 @@
 
     document.addEventListener('auth-state-changed', () => {
         AI_STATE.guestFingerprintId = ensureGuestFingerprintId();
+        AI_STATE.rateLimit = null;
         sessionHistoryLoaded = false;
         if (typeof Logger !== 'undefined') {
             Logger.info('[AI] Auth state changed; resetting assistant session');
         }
         clearConversationState();
+        initRateLimitDisplay();
         loadSessionHistory();
     });
 
@@ -912,5 +951,6 @@
         Logger.info('[AI] Assistant initialized');
     }
     clearConversationState();
+    initRateLimitDisplay();
     loadSessionHistory();
 })();

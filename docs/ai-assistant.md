@@ -312,6 +312,7 @@ const AI_STATE = {
     lastDecision: null,          // 'apply' | 'reject' | 'force_apply' | null
     preview: null,               // active preview metadata object (see below)
     forceChatView: false,        // show chat even with no conversation (New button)
+    rateLimit: null,             // { remaining, max } from last successful response
 };
 ```
 
@@ -481,6 +482,7 @@ The AI panel lives inside `#sidebar` as a sibling to the Explorer and Settings p
       <form id="ai-form" class="ai-composer">
         <textarea id="ai-input" placeholder="Ask anything..."></textarea>
         <div class="ai-composer-footer">
+          <span id="ai-rate-limit" class="ai-rate-limit"></span>  <!-- e.g. "18 / 20 requests left" -->
           <span class="ai-hint">Shift+Enter for new line</span>
           <button id="ai-send-btn" type="submit">▶</button>
         </div>
@@ -600,7 +602,7 @@ Four tables in the D1 database `graphicsh-ai`:
 
 **Success response (guest):** Same shape but without `filename`. `rate_limit.max` is `10` for guests.
 
-`rate_limit.remaining` is the number of requests left in the current 12-hour window **after** this request was counted. Frontend can use this to display a usage indicator or warn the user when approaching the limit.
+`rate_limit.remaining` is the number of requests left in the current 12-hour window **after** this request was counted. The frontend renders this as **`X / Y requests left`** in `#ai-rate-limit` (the composer footer). The label turns amber when `remaining ≤ 2`.
 
 ### PATCH /api/ai/action
 
