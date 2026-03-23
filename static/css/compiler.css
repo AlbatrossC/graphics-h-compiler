@@ -278,6 +278,10 @@ header {
     border-color: var(--primary);
 }
 
+#ai-feedback-btn {
+    white-space: nowrap;
+}
+
 .btn-home,
 .btn-success {
     background: var(--primary);
@@ -3217,9 +3221,55 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 
 }
 
+.modal-body textarea {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--vscode-editor);
+    color: var(--text-primary);
+    padding: 10px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 120px;
+}
+
+.modal-body textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
 .modal-hint {
     font-size: 0.7rem;
     color: var(--text-muted);
+}
+
+.modal-status {
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+.modal-status.success {
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.25);
+    color: var(--success);
+}
+
+.modal-status.error {
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid rgba(255, 68, 68, 0.25);
+    color: #ff8c8c;
+}
+
+.ai-feedback-modal {
+    width: min(480px, 100%);
+}
+
+.ai-feedback-modal .modal-header .icon-btn {
+    width: 34px;
+    height: 34px;
 }
 
 .modal-actions {

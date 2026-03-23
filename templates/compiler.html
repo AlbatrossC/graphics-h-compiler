@@ -110,6 +110,14 @@
       </div>
 
       <div class="header-right">
+        <button id="ai-feedback-btn" class="btn btn-secondary" type="button" title="Share AI feedback">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M21 6h-2v9H7v2c0 .55.45 1 1 1h9l4 4V7c0-.55-.45-1-1-1zm-4 5V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
+          </svg>
+          <span class="btn-text btn-text-desktop">Feedback</span>
+          <span class="btn-text btn-text-mobile" style="display: none">FB</span>
+        </button>
 
         <button id="settings-header-btn" class="icon-btn" title="Settings">
           <svg viewBox="0 0 24 24" fill="currentColor">
@@ -679,6 +687,37 @@
     </div>
   </div>
 
+  <div id="ai-feedback-modal" class="modal-overlay hidden" role="dialog" aria-modal="true"
+    aria-labelledby="ai-feedback-title">
+    <div class="modal ai-feedback-modal">
+      <div class="modal-header">
+        <h3 id="ai-feedback-title">AI assistant feedback</h3>
+        <button id="ai-feedback-close" class="icon-btn" type="button" aria-label="Close feedback form">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <form id="ai-feedback-form" class="modal-body" autocomplete="off">
+        <p class="modal-hint">Share what worked, what felt off, or what the AI assistant should do better.</p>
+        <label for="ai-feedback-name">Name</label>
+        <input id="ai-feedback-name" name="name" type="text" maxlength="100" placeholder="Your name" />
+
+        <label for="ai-feedback-suggestion">Suggestion</label>
+        <textarea id="ai-feedback-suggestion" name="suggestion" rows="5" maxlength="2000"
+          placeholder="Tell us how the AI assistant can improve..." required></textarea>
+
+        <div id="ai-feedback-status" class="modal-status hidden" aria-live="polite"></div>
+
+        <div class="modal-actions">
+          <button id="ai-feedback-cancel" class="btn btn-secondary" type="button">Cancel</button>
+          <button id="ai-feedback-submit" class="btn btn-primary" type="submit">Send Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/static/js/compiler/core.js?v=codemirror_v5"></script>
   <script src="/static/js/compiler/storage.js?v=codemirror_v5"></script>
   <script src="/static/js/compiler/editor.js?v=codemirror_v5"></script>
@@ -687,6 +726,103 @@
   <script src="/static/js/compiler/settings.js?v=codemirror_v5"></script>
   <script src="/static/js/compiler/ai.js?v=3"></script>
   <script src="/static/js/compiler/popup.js?v=4"></script>
+  <script>
+    (function () {
+      const feedbackBtn = document.getElementById('ai-feedback-btn');
+      const modal = document.getElementById('ai-feedback-modal');
+      const closeBtn = document.getElementById('ai-feedback-close');
+      const cancelBtn = document.getElementById('ai-feedback-cancel');
+      const form = document.getElementById('ai-feedback-form');
+      const submitBtn = document.getElementById('ai-feedback-submit');
+      const statusEl = document.getElementById('ai-feedback-status');
+      const nameInput = document.getElementById('ai-feedback-name');
+      const suggestionInput = document.getElementById('ai-feedback-suggestion');
+
+      if (!feedbackBtn || !modal || !form) {
+        return;
+      }
+
+      function setStatus(message, type) {
+        statusEl.textContent = message;
+        statusEl.className = 'modal-status';
+        statusEl.classList.add(type);
+      }
+
+      function clearStatus() {
+        statusEl.textContent = '';
+        statusEl.className = 'modal-status hidden';
+      }
+
+      function openModal() {
+        modal.classList.remove('hidden');
+        clearStatus();
+        window.setTimeout(function () {
+          nameInput.focus();
+        }, 0);
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+        clearStatus();
+      }
+
+      feedbackBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        clearStatus();
+
+        const name = nameInput.value.trim();
+        const suggestion = suggestionInput.value.trim();
+
+        if (!suggestion) {
+          setStatus('Please enter your suggestion.', 'error');
+          suggestionInput.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+
+        try {
+          const response = await fetch('/api/ai-feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, suggestion })
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            setStatus(data.error || 'Unable to send feedback right now.', 'error');
+            return;
+          }
+
+          setStatus('Thanks for the feedback. It has been sent.', 'success');
+          form.reset();
+          window.setTimeout(closeModal, 1200);
+        } catch (error) {
+          setStatus('Network error. Please try again.', 'error');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Feedback';
+        }
+      });
+    })();
+  </script>
 
 </body>
 

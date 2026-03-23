@@ -186,6 +186,26 @@ def get_missing_env(keys):
     return missing
 
 
+def truncate_discord_field(text, limit=1024):
+    value = (text or '').strip()
+    if len(value) <= limit:
+        return value
+    return value[:limit - 3] + '...'
+
+
+def send_discord_webhook(payload):
+    discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
+    if not discord_webhook_url:
+        return False
+
+    try:
+        PROXY_HTTP.post(discord_webhook_url, json=payload, timeout=5)
+        return True
+    except Exception as exc:
+        log_warn(f'Discord webhook failed: {exc}')
+        return False
+
+
 def build_proxy_headers():
     headers = {}
     for key, value in request.headers.items():
@@ -555,8 +575,7 @@ def contact():
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         return response, 200
 
-    discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
-    if not discord_webhook_url:
+    if not os.getenv('DISCORD_WEBHOOK_URL'):
         return jsonify({'error': 'Server configuration error'}), 500
 
     try:
@@ -578,15 +597,12 @@ def contact():
                 'fields': [
                     {'name': 'Name', 'value': name, 'inline': False},
                     {'name': 'Email', 'value': email, 'inline': False},
-                    {'name': 'Message', 'value': message[:1021] + '...' if len(message) > 1024 else message, 'inline': False}
+                    {'name': 'Message', 'value': truncate_discord_field(message), 'inline': False}
                 ]
             }]
         }
 
-        try:
-            PROXY_HTTP.post(discord_webhook_url, json=payload, timeout=5)
-        except:
-            pass
+        send_discord_webhook(payload)
 
         return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
 
@@ -604,8 +620,7 @@ def maintenance_message():
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         return response, 200
 
-    discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
-    if not discord_webhook_url:
+    if not os.getenv('DISCORD_WEBHOOK_URL'):
         return jsonify({'error': 'Server configuration error'}), 500
 
     try:
@@ -620,21 +635,62 @@ def maintenance_message():
             'embeds': [{
                 'color': 0xff9900,
                 'fields': [
-                    {'name': 'Message', 'value': message[:1021] + '...' if len(message) > 1024 else message, 'inline': False}
+                    {'name': 'Message', 'value': truncate_discord_field(message), 'inline': False}
                 ]
             }]
         }
 
-        try:
-            PROXY_HTTP.post(discord_webhook_url, json=payload, timeout=5)
-        except:
-            pass
+        send_discord_webhook(payload)
 
         return jsonify({'success': True, 'message': 'Message sent successfully'}), 200
 
     except Exception as e:
         log_error(f'Maintenance message error: {e}')
         return jsonify({'error': 'Failed to send message'}), 500
+
+
+@app.route('/api/ai-feedback', methods=['POST', 'OPTIONS'])
+def ai_feedback():
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response, 200
+
+    if not os.getenv('DISCORD_WEBHOOK_URL'):
+        return jsonify({'error': 'Server configuration error'}), 500
+
+    try:
+        data = request.get_json() or {}
+        name = data.get('name', '').strip() or 'Anonymous'
+        suggestion = data.get('suggestion', '').strip()
+
+        if not suggestion:
+            return jsonify({'error': 'Suggestion is required'}), 400
+
+        payload = {
+            'content': 'AI assistant feedback from compiler',
+            'embeds': [{
+                'color': 0x5865F2,
+                'fields': [
+                    {'name': 'Name', 'value': truncate_discord_field(name), 'inline': False},
+                    {'name': 'Suggestion', 'value': truncate_discord_field(suggestion), 'inline': False},
+                    {'name': 'Page', 'value': '/compiler.html', 'inline': False},
+                ]
+            }]
+        }
+
+        webhook_sent = send_discord_webhook(payload)
+        if not webhook_sent:
+            return jsonify({'error': 'Failed to send feedback'}), 502
+
+        log_ok(f"AI feedback sent  from {BOLD}{name}{RESET}")
+        return jsonify({'success': True, 'message': 'Feedback sent successfully'}), 200
+
+    except Exception as e:
+        log_error(f'AI feedback error: {e}')
+        return jsonify({'error': 'Failed to send feedback'}), 500
 
 # Error handlers
 @app.errorhandler(404)
