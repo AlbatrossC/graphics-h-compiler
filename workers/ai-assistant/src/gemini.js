@@ -29,6 +29,10 @@ export function buildPrompt(payload, identity) {
   return `${header.join('\n')}\n\nBroken code:\n${payload.generatedCode}\n\nCompiler error:\n${payload.errorMessage}\n\nFix attempt: ${payload.fixAttempt}/${CONFIG.MAX_FIX_ATTEMPTS}\n\nReturn corrected Turbo C code that addresses the compile error while preserving the original idea and filename.`;
 }
 
+function stripXmlTags(text) {
+  return String(text || '').replace(/<\/?(filename|chat|code)>/gi, '').trim();
+}
+
 function stripOuterFences(text) {
   let cleaned = String(text || '').trim();
   if (cleaned.startsWith('```')) {
@@ -44,17 +48,100 @@ function extractTagContent(text, tagName) {
   return match ? match[1].trim() : '';
 }
 
-export function parseGeminiResponse(rawText) {
-  const text = stripOuterFences(rawText);
-  const rawFilename = extractTagContent(text, 'filename');
-  let filename = '';
-  try {
-    filename = normalizeFilename(rawFilename);
-  } catch {
-    filename = '';
+function extractCodeFallback(text) {
+  const fenced = text.match(/```(?:cpp|c|c\+\+)?\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) return fenced[1].trim();
+
+  const afterCodeTag = text.match(/<code>([\s\S]*)$/i);
+  if (afterCodeTag?.[1]) return stripXmlTags(afterCodeTag[1]);
+
+  const includeIndex = text.search(/#include\s*[<"]/i);
+  if (includeIndex >= 0) {
+    return text.slice(includeIndex).trim();
   }
-  const chat = extractTagContent(text, 'chat');
-  const code = extractTagContent(text, 'code');
+
+  const mainIndex = text.search(/\b(?:void\s+)?main\s*\(/i);
+  if (mainIndex >= 0) {
+    return text.slice(mainIndex).trim();
+  }
+
+  return '';
+}
+
+function extractChatFallback(text, code) {
+  let working = String(text || '').trim();
+  if (code) {
+    const codeIndex = working.indexOf(code);
+    if (codeIndex >= 0) {
+      working = working.slice(0, codeIndex).trim();
+    } else {
+      working = working.replace(/```(?:cpp|c|c\+\+)?[\s\S]*?```/gi, '').trim();
+    }
+  }
+
+  working = working
+    .replace(/<filename>[\s\S]*?<\/filename>/gi, '')
+    .replace(/<chat>[\s\S]*?<\/chat>/gi, '')
+    .replace(/<code>[\s\S]*?<\/code>/gi, '')
+    .trim();
+
+  if (!working) return '';
+
+  const lines = working
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !/^filename\s*:/i.test(line))
+    .filter((line) => !/^code\s*:/i.test(line));
+
+  return lines.slice(0, 3).join('\n').trim();
+}
+
+function normalizeFilenameFallback(rawFilename, options = {}) {
+  const candidates = [
+    rawFilename,
+    options.requestedFilename || '',
+    options.currentFilename || '',
+    'ai_graphics.cpp',
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const normalized = normalizeFilename(candidate);
+      if (normalized) return normalized;
+    } catch {
+      // Keep trying fallbacks
+    }
+  }
+
+  return '';
+}
+
+function extractJsonFallback(text) {
+  const cleaned = stripOuterFences(text);
+  if (!cleaned.startsWith('{')) return null;
+  try {
+    const parsed = JSON.parse(cleaned);
+    return {
+      filename: typeof parsed?.filename === 'string' ? parsed.filename : '',
+      chat: typeof parsed?.chat === 'string' ? parsed.chat : '',
+      code: typeof parsed?.code === 'string' ? parsed.code : '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function parseGeminiResponse(rawText, options = {}) {
+  const text = stripOuterFences(rawText);
+  const jsonFallback = extractJsonFallback(text);
+  const rawFilename = extractTagContent(text, 'filename') || jsonFallback?.filename || '';
+  const taggedChat = extractTagContent(text, 'chat') || jsonFallback?.chat || '';
+  const taggedCode = extractTagContent(text, 'code') || jsonFallback?.code || '';
+
+  const code = taggedCode || extractCodeFallback(text);
+  const chat = taggedChat || extractChatFallback(text, code);
+  const filename = normalizeFilenameFallback(rawFilename, options);
 
   if (!filename || !chat || !code) {
     console.error('[AI] parseGeminiResponse: missing or invalid tags', {
@@ -64,6 +151,7 @@ export function parseGeminiResponse(rawText) {
       hasChat: Boolean(chat),
       hasCode: Boolean(code),
       rawTextPreview: text.slice(0, 600),
+      requestedFilename: options.requestedFilename || '',
     });
     throw {
       statusCode: 502,

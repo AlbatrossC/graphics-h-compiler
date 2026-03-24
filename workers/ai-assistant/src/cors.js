@@ -10,7 +10,7 @@ export function withCors(request) {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Credentials': allowCredentials,
     'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Cookie',
+    'Access-Control-Allow-Headers': 'Content-Type, Cookie, X-AI-Debug',
     Vary: 'Origin',
     'Content-Type': 'application/json',
   };

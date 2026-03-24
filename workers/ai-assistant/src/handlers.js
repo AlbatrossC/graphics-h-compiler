@@ -40,7 +40,10 @@ export async function processAiRequest(request, env, ctx, corsHeaders) {
 
   const prompt = buildPrompt(payload, identity);
   const gemini = await callGeminiWithFailover(env, prompt, nowIso, { includeDebug });
-  const parsed = parseGeminiResponse(gemini.text);
+  const parsed = parseGeminiResponse(gemini.text, {
+    requestedFilename: payload.filename,
+    currentFilename: payload.filename,
+  });
   const version = await getNextVersion(env, identity, payload.sessionId);
 
   const aiResult = {

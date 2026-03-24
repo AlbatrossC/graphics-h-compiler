@@ -69,7 +69,7 @@
       }
     </script>
 
-  <link rel="stylesheet" href="/static/css/compiler.css?v=2.2" />
+  <link rel="stylesheet" href="/static/css/compiler.css?v=2.3" />
 
   <script src="/static/analytics.js" defer></script>
   <script src="/static/resource-loader.js"></script>
@@ -389,23 +389,23 @@
               <button id="ai-apply-btn" class="btn btn-ai-primary" type="button">Accept</button>
             </div>
 
-            <div id="ai-rate-limit-bar" class="ai-rate-limit-bar">
-              <div class="ai-rate-limit-info">
-                <span class="ai-rate-limit-label">Requests</span>
-                <span id="ai-rate-limit-text" class="ai-rate-limit-count">— / —</span>
-              </div>
-              <div class="ai-rate-limit-track">
-                <div id="ai-rate-limit-fill" class="ai-rate-limit-fill"></div>
-              </div>
-            </div>
-
             <div class="ai-composer-wrapper">
               <form id="ai-form" class="ai-composer">
                 <label for="ai-input" class="sr-only">Ask the AI assistant</label>
                 <textarea id="ai-input" class="ai-input" rows="1"
                   placeholder="Ask anything..." spellcheck="false"></textarea>
                 <div class="ai-composer-footer">
-                  <span class="ai-hint">Shift+Enter for new line</span>
+                  <div class="ai-composer-meta">
+                    <div id="ai-rate-limit-bar" class="ai-rate-limit-bar">
+                      <div class="ai-rate-limit-info">
+                        <span class="ai-rate-limit-label">Requests</span>
+                        <span id="ai-rate-limit-text" class="ai-rate-limit-count">— / —</span>
+                      </div>
+                      <div class="ai-rate-limit-track">
+                        <div id="ai-rate-limit-fill" class="ai-rate-limit-fill"></div>
+                      </div>
+                    </div>
+                  </div>
                   <button id="ai-send-btn" class="btn-ai-send" type="submit" aria-label="Send">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>

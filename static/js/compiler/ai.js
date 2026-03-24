@@ -3,6 +3,7 @@
 
     const MAX_FIX_ATTEMPTS = 2;
     const GUEST_FINGERPRINT_KEY = 'graphicsh_ai_guest_id_v1';
+    const AI_RATE_LIMIT_CACHE_PREFIX = 'graphicsh_ai_rate_limit_v1';
 
     let sessionHistoryLoaded = false;
 
@@ -51,11 +52,28 @@
         return Math.random().toString(36).slice(2, 8);
     }
 
+    function safeLocalStorageGet(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch {
+            return '';
+        }
+    }
+
+    function safeLocalStorageSet(key, value) {
+        try {
+            localStorage.setItem(key, value);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     function ensureGuestFingerprintId() {
-        let current = localStorage.getItem(GUEST_FINGERPRINT_KEY);
+        let current = safeLocalStorageGet(GUEST_FINGERPRINT_KEY);
         if (!current) {
             current = `fp_${Date.now()}_${randomFragment()}`;
-            localStorage.setItem(GUEST_FINGERPRINT_KEY, current);
+            safeLocalStorageSet(GUEST_FINGERPRINT_KEY, current);
         }
         return current;
     }
@@ -63,6 +81,60 @@
     function createSessionId() {
         const prefix = isLoggedInNow() ? 'sess' : 'gs';
         return `${prefix}_${Date.now()}_${randomFragment()}`;
+    }
+
+    function getRateLimitCacheKey() {
+        if (isLoggedInNow()) return `${AI_RATE_LIMIT_CACHE_PREFIX}:user`;
+        const fingerprint = AI_STATE.guestFingerprintId || ensureGuestFingerprintId();
+        return `${AI_RATE_LIMIT_CACHE_PREFIX}:guest:${fingerprint}`;
+    }
+
+    function readCachedRateLimit() {
+        const raw = safeLocalStorageGet(getRateLimitCacheKey());
+        if (!raw) return null;
+
+        try {
+            const parsed = JSON.parse(raw);
+            const remaining = Number(parsed?.remaining);
+            const max = Number(parsed?.max);
+            if (!Number.isFinite(remaining) || !Number.isFinite(max) || remaining < 0 || max <= 0) {
+                return null;
+            }
+            return {
+                remaining: Math.min(remaining, max),
+                max,
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    function writeCachedRateLimit(rateLimit) {
+        if (!rateLimit) return;
+        const remaining = Number(rateLimit.remaining);
+        const max = Number(rateLimit.max);
+        if (!Number.isFinite(remaining) || !Number.isFinite(max) || remaining < 0 || max <= 0) return;
+
+        safeLocalStorageSet(getRateLimitCacheKey(), JSON.stringify({
+            remaining: Math.min(remaining, max),
+            max,
+            updatedAt: Date.now(),
+        }));
+    }
+
+    function pulseEditorTransition(label = 'AI updating') {
+        if (!editorWrapperEl) return;
+        const text = String(label || 'AI updating').trim();
+        editorWrapperEl.dataset.aiTransition = text;
+        editorWrapperEl.classList.remove('ai-syncing');
+        void editorWrapperEl.offsetWidth;
+        editorWrapperEl.classList.add('ai-syncing');
+
+        window.clearTimeout(pulseEditorTransition._timer);
+        pulseEditorTransition._timer = window.setTimeout(() => {
+            editorWrapperEl.classList.remove('ai-syncing');
+            delete editorWrapperEl.dataset.aiTransition;
+        }, 950);
     }
 
     function formatRetrySeconds(value) {
@@ -150,16 +222,16 @@
 
     function initRateLimitDisplay() {
         const max = isLoggedInNow() ? 20 : 10;
-        if (AI_STATE.rateLimit) {
-            setRateLimitUI(AI_STATE.rateLimit.remaining, AI_STATE.rateLimit.max);
-        } else {
-            setRateLimitUI(max, max);
+        if (!AI_STATE.rateLimit) {
+            AI_STATE.rateLimit = readCachedRateLimit();
         }
+        setRateLimitUI(AI_STATE.rateLimit?.remaining ?? max, AI_STATE.rateLimit?.max ?? max);
     }
 
     function updateRateLimitDisplay(rateLimit) {
         if (!rateLimit) return;
         AI_STATE.rateLimit = rateLimit;
+        writeCachedRateLimit(rateLimit);
         setRateLimitUI(rateLimit.remaining, rateLimit.max);
     }
 
@@ -297,6 +369,60 @@
         return payload.id;
     }
 
+    async function loadGeneratedCodeIntoWorkspace(filename, code, options = {}) {
+        const preferExistingView = options.preferExistingView === true;
+        const existingTarget = options.existingTarget || null;
+        const transitionLabel = options.transitionLabel || 'AI updating';
+
+        pulseEditorTransition(transitionLabel);
+
+        if (isLoggedInNow() && filename) {
+            const aiFolderId = await ensureAiFolderId();
+            const aiFolderKey = folderKey(aiFolderId);
+            const targetKey = fileKey(aiFolderKey, filename);
+            const targetFile = existingTarget || (CLOUD_STATE.files.get(targetKey) ? { ...CLOUD_STATE.files.get(targetKey) } : null);
+
+            CLOUD_STATE.files.set(targetKey, {
+                id: targetFile?.id || null,
+                filename,
+                folder_id: aiFolderId,
+                folder_key: aiFolderKey,
+                folder_name: getFolderName(aiFolderId) || 'AI',
+                content: code,
+                file_size: computeBytes(code),
+                content_hash: targetFile?.content_hash || null,
+            });
+
+            await setLocalDraft(aiFolderKey, filename, code);
+            renderFileExplorer();
+
+            if (!preferExistingView || CLOUD_STATE.activeFileKey !== targetKey) {
+                await openFile(aiFolderKey, filename, { skipSave: true });
+            }
+
+            return {
+                filename,
+                targetKey,
+                targetFolder: aiFolderKey,
+                targetFolderId: aiFolderId,
+                targetExistingFile: targetFile,
+            };
+        }
+
+        if (editor) {
+            editor.setValue(code);
+            editor.clearSelection();
+        }
+
+        return {
+            filename: filename || getCurrentFileName(),
+            targetKey: (typeof CLOUD_STATE !== 'undefined' && CLOUD_STATE.activeFileKey) || 'root/main.cpp',
+            targetFolder: ((typeof CLOUD_STATE !== 'undefined' && CLOUD_STATE.activeFileKey) || 'root/main.cpp').split('/')[0],
+            targetFolderId: null,
+            targetExistingFile: null,
+        };
+    }
+
     function markPreviewClean() {
         if (typeof DIRTY_FLAG !== 'undefined') {
             DIRTY_FLAG.isDirty = false;
@@ -329,41 +455,23 @@
             targetExistingFile: baseSnapshot.existingFile,
         };
 
-        if (isLoggedInNow() && payload.filename) {
-            const aiFolderId = await ensureAiFolderId();
-            const aiFolderKey = folderKey(aiFolderId);
-            const targetKey = fileKey(aiFolderKey, payload.filename);
-            const existingTarget = CLOUD_STATE.files.get(targetKey) ? { ...CLOUD_STATE.files.get(targetKey) } : null;
-
-            CLOUD_STATE.files.set(targetKey, {
-                id: existingTarget?.id || null,
-                filename: payload.filename,
-                folder_id: aiFolderId,
-                folder_key: aiFolderKey,
-                folder_name: getFolderName(aiFolderId) || 'AI',
-                content: payload.generated_code,
-                file_size: computeBytes(payload.generated_code),
-                content_hash: existingTarget?.content_hash || null,
+        if (payload.filename) {
+            const workspaceTarget = await loadGeneratedCodeIntoWorkspace(payload.filename, payload.generated_code, {
+                transitionLabel: 'AI preview ready',
             });
-            await setLocalDraft(aiFolderKey, payload.filename, payload.generated_code);
-            renderFileExplorer();
-            await openFile(aiFolderKey, payload.filename, { skipSave: true });
-
             preview = {
                 ...preview,
-                filename: payload.filename,
-                targetKey,
-                targetFolder: aiFolderKey,
-                targetFolderId: aiFolderId,
-                targetExistingFile: existingTarget,
+                filename: workspaceTarget.filename,
+                targetKey: workspaceTarget.targetKey,
+                targetFolder: workspaceTarget.targetFolder,
+                targetFolderId: workspaceTarget.targetFolderId,
+                targetExistingFile: workspaceTarget.targetExistingFile,
             };
 
             AI_STATE.currentFilename = payload.filename;
-        } else {
-            if (editor) {
-                editor.setValue(payload.generated_code);
-                editor.clearSelection();
-            }
+        } else if (editor) {
+            editor.setValue(payload.generated_code);
+            editor.clearSelection();
         }
 
         if (typeof SAVE_STATE !== 'undefined') {
@@ -431,6 +539,7 @@
 
     async function restoreBaseSnapshot(snapshot) {
         if (!snapshot) return;
+        pulseEditorTransition('Restoring code');
 
         if (isLoggedInNow() && snapshot.existingFile) {
             CLOUD_STATE.files.set(snapshot.activeFileKey, {
@@ -838,10 +947,15 @@
             AI_STATE.currentVersion = lastMsg?.version || '';
             AI_STATE.currentFilename = lastMsg?.generated_filename || '';
 
-            // Load the last version's code into the editor
-            if (lastMsg?.generated_code && editor) {
-                editor.setValue(lastMsg.generated_code);
-                editor.clearSelection();
+            if (lastMsg?.generated_code) {
+                await loadGeneratedCodeIntoWorkspace(lastMsg.generated_filename || '', lastMsg.generated_code, {
+                    preferExistingView: false,
+                    transitionLabel: 'Session loaded',
+                });
+                if (typeof SAVE_STATE !== 'undefined') {
+                    SAVE_STATE.lastSavedHash = null;
+                }
+                markPreviewClean();
             }
 
             renderMessages();
