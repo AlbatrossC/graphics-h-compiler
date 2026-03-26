@@ -1,424 +1,383 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maintenance — Graphics Compiler</title>
-<script src="static/analytics.js" async></script>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Under Maintenance — graphics.h online compiler</title>
+    <!-- Preconnect for faster font load on Vercel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  :root {
-    --bg: #ffffff;
-    --surface: #f9f9f9;
-    --border: #e8e8e8;
-    --text: #111111;
-    --muted: #999999;
-    --accent: #111111;
-  }
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #060a06;
+        }
 
-  html, body {
-    height: 100%;
-    overflow: hidden;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
+        /* Video is 1280×720 (16:9) — fills landscape screens cleanly, no significant crop */
+        #bg-video {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            z-index: 0;
+            filter: brightness(0.62) saturate(0.85);
+        }
 
-  .frame {
-    height: 100vh;
-    width: 100vw;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
+        #bg-audio { display: none; }
 
-  /* ── LEFT ── */
-  .left {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 2.5rem 3rem;
-    border-right: 1px solid var(--border);
-    overflow: hidden;
-  }
+        /* Left side darkened for readability, right side open so cat is visible */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(
+                to right,
+                rgba(4, 10, 4, 0.90) 0%,
+                rgba(4, 10, 4, 0.80) 28%,
+                rgba(4, 10, 4, 0.45) 52%,
+                rgba(4, 10, 4, 0.08) 70%,
+                transparent 86%
+            );
+            pointer-events: none;
+        }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-shrink: 0;
-  }
+        /* Panel */
+        .panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 2;
+            width: clamp(300px, 42vw, 500px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 48px 0 7vw;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.75s ease, transform 0.75s ease;
+        }
+        .panel::-webkit-scrollbar { display: none; }
+        .panel.visible { opacity: 1; transform: translateY(0); }
 
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: var(--accent);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
+        /* Wordmark */
+        .wordmark {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.20);
+            margin-bottom: 22px;
+        }
 
-  .logo-icon svg { color: #fff; }
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(74, 222, 128, 0.09);
+            border: 1px solid rgba(74, 222, 128, 0.26);
+            color: #4ade80;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 4px 11px 4px 9px;
+            border-radius: 99px;
+            margin-bottom: 16px;
+            width: fit-content;
+        }
 
-  .logo-name {
-    font-size: 0.82rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+        .badge-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #4ade80;
+            flex-shrink: 0;
+            animation: blink 1.6s ease-in-out infinite;
+        }
 
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0;
-    min-height: 0;
-  }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.2; }
+        }
 
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.3rem 0.85rem;
-    font-size: 0.72rem;
-    font-weight: 400;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 1.5rem;
-    width: fit-content;
-    flex-shrink: 0;
-  }
+        /* Heading */
+        h1 {
+            font-size: clamp(24px, 2.5vw, 32px);
+            font-weight: 800;
+            color: #f0fdf4;
+            line-height: 1.12;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+        }
 
-  .dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: #f59e0b;
-    animation: blink 2.5s ease-in-out infinite;
-  }
+        /* Message blocks */
+        .message {
+            display: flex;
+            flex-direction: column;
+            gap: 13px;
+            margin-bottom: 26px;
+        }
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.25; }
-  }
+        .msg-block {
+            font-size: clamp(12.5px, 1.1vw, 13.5px);
+            line-height: 1.72;
+        }
 
-  h1 {
-    font-size: clamp(2.8rem, 4.5vw, 4.2rem);
-    font-weight: 300;
-    line-height: 1.08;
-    letter-spacing: -0.03em;
-    color: var(--text);
-    margin-bottom: 1.1rem;
-    flex-shrink: 0;
-  }
+        .msg-block.status {
+            color: rgba(240, 253, 244, 0.76);
+        }
 
-  .desc {
-    font-size: 0.95rem;
-    font-weight: 400;
-    color: var(--muted);
-    line-height: 1.75;
-    max-width: 300px;
-    margin-bottom: 2rem;
-    flex-shrink: 0;
-  }
+        .msg-block.aside {
+            color: rgba(240, 253, 244, 0.46);
+            font-size: clamp(12px, 1.0vw, 13px);
+            font-style: italic;
+            padding-left: 12px;
+            border-left: 2px solid rgba(74, 222, 128, 0.28);
+            line-height: 1.68;
+        }
 
-  .date-block {
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1rem 1.35rem;
-    display: inline-flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    width: fit-content;
-    background: var(--surface);
-    flex-shrink: 0;
-  }
+        .msg-block.cta {
+            color: rgba(240, 253, 244, 0.70);
+        }
 
-  .date-label {
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+        /* Form */
+        .form-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-  .date-value {
-    font-size: 1.05rem;
-    font-weight: 400;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
+        .form-label {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.26);
+        }
 
-  .footer {
-    font-size: 0.72rem;
-    font-weight: 400;
-    color: var(--border);
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-  }
+        textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 9px;
+            color: rgba(240, 253, 244, 0.88);
+            font-size: 13px;
+            font-family: inherit;
+            line-height: 1.6;
+            padding: 10px 12px;
+            resize: none;
+            outline: none;
+            min-height: 74px;
+            transition: border-color 0.2s, background 0.2s;
+        }
 
-  /* ── RIGHT ── */
-  .right {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 2.5rem 3rem;
-    background: var(--surface);
-    overflow: hidden;
-  }
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.20);
+            font-style: italic;
+        }
 
-  .top-spacer { height: 32px; flex-shrink: 0; }
+        textarea:focus {
+            border-color: rgba(74, 222, 128, 0.36);
+            background: rgba(255, 255, 255, 0.08);
+        }
 
-  .form-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    max-width: 380px;
-    min-height: 0;
-  }
+        .form-footer {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-  .form-heading {
-    font-size: 1.75rem;
-    font-weight: 400;
-    color: var(--text);
-    margin-bottom: 0.45rem;
-    letter-spacing: -0.02em;
-    flex-shrink: 0;
-  }
+        .send-btn {
+            background: #16a34a;
+            color: #f0fdf4;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 600;
+            border: none;
+            border-radius: 7px;
+            padding: 9px 20px;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            transition: background 0.2s, transform 0.15s;
+            flex-shrink: 0;
+        }
 
-  .form-sub {
-    font-size: 0.9rem;
-    font-weight: 400;
-    color: var(--muted);
-    line-height: 1.75;
-    margin-bottom: 1.75rem;
-    flex-shrink: 0;
-  }
+        .send-btn:hover   { background: #15803d; transform: translateY(-1px); }
+        .send-btn:active  { transform: translateY(0); }
+        .send-btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none; }
 
-  .field { margin-bottom: 0.85rem; flex-shrink: 0; }
+        .status-msg {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .status-msg.success { color: #4ade80; }
+        .status-msg.error   { color: #f87171; }
 
-  .field label {
-    display: block;
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0.45rem;
-  }
+        /* Mobile: stack panel full width, gradient goes top-to-bottom */
+        @media (max-width: 600px) {
+            .panel {
+                width: 100%;
+                padding: 36px 24px 28px;
+                justify-content: flex-start;
+            }
+            .overlay {
+                background: linear-gradient(
+                    to bottom,
+                    rgba(4, 10, 4, 0.90) 0%,
+                    rgba(4, 10, 4, 0.72) 50%,
+                    rgba(4, 10, 4, 0.18) 80%,
+                    transparent 100%
+                );
+            }
+        }
 
-  .field textarea {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.85rem 1rem;
-    color: var(--text);
-    font-family: 'Geist', -apple-system, sans-serif;
-    font-size: 0.9rem;
-    font-weight: 400;
-    line-height: 1.7;
-    outline: none;
-    resize: none;
-    height: 130px;
-    transition: border-color 0.15s;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .field textarea::placeholder { color: #cccccc; }
-  .field textarea:focus { border-color: #aaaaaa; }
-
-  .send-btn {
-    width: 100%;
-    padding: 0.9rem 1.2rem;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: 'Geist', -apple-system, sans-serif;
-    font-size: 0.88rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.12s;
-    -webkit-font-smoothing: antialiased;
-    flex-shrink: 0;
-  }
-
-  .send-btn:hover   { opacity: 0.75; }
-  .send-btn:active  { transform: scale(0.99); opacity: 1; }
-  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-
-  .status {
-    margin-top: 0.7rem;
-    font-size: 0.78rem;
-    line-height: 1.6;
-    display: none;
-    padding: 0.7rem 1rem;
-    border-radius: 7px;
-    flex-shrink: 0;
-  }
-  .status.success { display: block; background: #f0faf2; color: #2d7a40; border: 1px solid #c6e8cd; }
-  .status.error   { display: block; background: #fff5f5; color: #c0392b; border: 1px solid #f5c6c6; }
-
-  .right-footer {
-    font-size: 0.72rem;
-    font-weight: 400;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    flex-shrink: 0;
-  }
-
-  .active-dot {
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: #22c55e;
-    flex-shrink: 0;
-  }
-
-  /* Entrance */
-  .left > * { animation: up 0.5s ease both; }
-  .left > *:nth-child(1) { animation-delay: 0s; }
-  .left > *:nth-child(2) { animation-delay: 0.08s; }
-  .left > *:nth-child(3) { animation-delay: 0.16s; }
-
-  .right > * { animation: up 0.5s ease both; }
-  .right > *:nth-child(1) { animation-delay: 0.12s; }
-  .right > *:nth-child(2) { animation-delay: 0.2s; }
-  .right > *:nth-child(3) { animation-delay: 0.28s; }
-
-  @keyframes up {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @media (max-width: 680px) {
-    html, body { overflow: auto; }
-    .frame { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
-    .left { border-right: none; border-bottom: 1px solid var(--border); }
-  }
-
-  /* Compact screens */
-  @media (max-height: 700px) {
-    h1 { font-size: clamp(2rem, 3.5vw, 3rem); margin-bottom: 0.75rem; }
-    .desc { font-size: 0.85rem; margin-bottom: 1.25rem; }
-    .tag { margin-bottom: 1rem; }
-    .field textarea { height: 100px; }
-    .left, .right { padding: 1.75rem 2.5rem; }
-  }
-</style>
+        @media (max-height: 580px) {
+            .panel { justify-content: flex-start; padding-top: 20px; }
+            h1 { font-size: 22px; margin-bottom: 12px; }
+            .message { gap: 9px; margin-bottom: 16px; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="frame">
+<video id="bg-video" autoplay muted loop playsinline>
+    <source src="/static/bg-video.mp4" type="video/mp4">
+</video>
 
-  <!-- LEFT -->
-  <div class="left">
-    <div class="logo">
-      <div class="logo-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-        </svg>
-      </div>
-      <span class="logo-name">Graphics Compiler</span>
+<audio id="bg-audio" loop>
+    <source src="/static/bg-audio.mp3" type="audio/mpeg">
+</audio>
+
+<div class="overlay"></div>
+
+<div class="panel">
+
+    <div class="wordmark">graphics.h online compiler</div>
+
+    <div class="badge">
+        <span class="badge-dot"></span>
+        Maintenance
     </div>
 
-    <div class="main">
-      <div class="tag">
-        <span class="dot"></span>
-        Under maintenance
-      </div>
+    <h1>Site Under<br>Maintenance</h1>
 
-      <h1>Improving<br>things for you.</h1>
-      <p class="desc">Graphics Compiler is undergoing scheduled maintenance. I'm making improvements under the hood — it'll be better when it's back.</p>
+    <div class="message">
+        <div class="msg-block status">
+            The site is down for a bit. I'm working on some new features and getting them live. Should be back up soon.
+        </div>
 
-      <div class="date-block">
-        <span class="date-label">Back online</span>
-        <span class="date-value">{{ maintenance_date }}</span>
-      </div>
+        <div class="msg-block aside">
+            Also... I can see the usage stats 👀<br>
+            Some of you are spending an unhealthy amount of time on here.<br>
+            Go outside. Meet people. Eat something. You'll be okay.
+        </div>
+
+        <div class="msg-block cta">
+            That said, if you genuinely need this for a lab or practical right now, drop me a message below and I'll see what I can do.
+        </div>
     </div>
 
-    <div class="footer">© 2026 Graphics Compiler</div>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="right">
-    <div class="top-spacer"></div>
-
-    <div class="form-section">
-      <div class="form-heading">Need it now?</div>
-      <p class="form-sub">If this is urgent, send a message below — I'll consider postponing the maintenance so you can get back to work.</p>
-
-      <div class="field">
-        <label>Your message</label>
-        <textarea id="msg" placeholder="Describe what you need and why it can't wait..."></textarea>
-      </div>
-
-      <button class="send-btn" id="btn" onclick="handleSend()">Send Message</button>
-      <div class="status" id="status"></div>
+    <div class="form-wrap">
+        <div class="form-label">Leave a message</div>
+        <textarea id="user-message" placeholder="Hey, I need access for my lab practical tomorrow..." rows="3"></textarea>
+        <div class="form-footer">
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">Send Message</button>
+            <span class="status-msg" id="status-msg"></span>
+        </div>
     </div>
-
-    <div class="right-footer">
-      <span class="active-dot"></span>
-      Team is online
-    </div>
-  </div>
 
 </div>
 
 <script>
-  async function handleSend() {
-    const msg = document.getElementById('msg').value.trim();
-    const btn = document.getElementById('btn');
-    const status = document.getElementById('status');
+    // Show panel once video is ready
+    const video = document.getElementById('bg-video');
+    const panel = document.querySelector('.panel');
 
-    status.className = 'status';
+    function showPanel() { panel.classList.add('visible'); }
 
-    if (!msg) {
-      status.className = 'status error';
-      status.textContent = 'Please enter a message before sending.';
-      return;
+    if (video.readyState >= 3) {
+        showPanel();
+    } else {
+        video.addEventListener('canplaythrough', showPanel, { once: true });
+        setTimeout(showPanel, 2500); // fallback if video is slow
     }
 
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
+    // Audio: only trusted activation events (click / keydown / touchstart)
+    let audioUnlocked = false;
 
-    try {
-      const res = await fetch('/api/maintenance/message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        status.className = 'status success';
-        status.textContent = "Message sent. We'll review it and reach out shortly.";
-        document.getElementById('msg').value = '';
-      } else {
-        status.className = 'status error';
-        status.textContent = data.error || 'Something went wrong. Please try again.';
-      }
-    } catch {
-      status.className = 'status error';
-      status.textContent = 'Could not send message. Please try again.';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Send Message';
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        const audio = document.getElementById('bg-audio');
+        audio.load();
+        audio.play().catch(() => {});
+        document.removeEventListener('click',      unlockAudio);
+        document.removeEventListener('keydown',    unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
     }
-  }
 
-  document.getElementById('msg').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
-  });
+    document.addEventListener('click',      unlockAudio);
+    document.addEventListener('keydown',    unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
+    // Send message
+    async function sendMessage() {
+        const textarea = document.getElementById('user-message');
+        const btn      = document.getElementById('send-btn');
+        const status   = document.getElementById('status-msg');
+        const message  = textarea.value.trim();
+
+        if (!message) {
+            status.textContent = 'Write something first.';
+            status.className = 'status-msg error';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        status.textContent = '';
+        status.className = 'status-msg';
+
+        try {
+            const res  = await fetch('/api/maintenance/message', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ message }),
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                status.textContent = "Sent! I'll get back to you.";
+                status.className = 'status-msg success';
+                textarea.value = '';
+                btn.textContent = 'Sent ✓';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Send Message'; }, 3500);
+            } else {
+                throw new Error(data.error || 'Failed');
+            }
+        } catch (e) {
+            status.textContent = 'Could not send. Try again.';
+            status.className = 'status-msg error';
+            btn.disabled = false;
+            btn.textContent = 'Send Message';
+        }
+    }
+
+    document.getElementById('user-message').addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendMessage();
+    });
 </script>
 
 </body>
