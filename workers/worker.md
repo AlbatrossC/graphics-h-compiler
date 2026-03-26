@@ -2,9 +2,10 @@
 
 > Full reference for the **Graphics.h Online Compiler** Cloudflare Workers.
 >
-> This document covers two workers:
+> This document covers three workers:
 > 1. **`graphics-oc-files`** — File storage & auth backend (D1 SQLite + JWT sessions)
-> 2. **`r2-public-assets`** — Public asset serving from R2
+> 2. **`graphics-oc-ai`** — AI assistant backend (Gemini API, rate limiting, session history)
+> 3. **`r2-public-assets`** — Public asset serving from R2
 
 ---
 
@@ -1416,4 +1417,386 @@ npm run list
 
 # Local dev server
 npm run dev
+```
+
+
+---
+
+# Part 2: `graphics-oc-ai`
+
+> AI assistant backend deployed as a Cloudflare Worker with a D1 SQLite database. Powers the AI code-generation and fix features in the compiler.
+
+---
+
+## Table of Contents
+
+1. [Overview](#ai-1-overview)
+2. [Architecture](#ai-2-architecture)
+3. [Identity & Auth](#ai-3-identity--auth)
+4. [Rate Limiting](#ai-4-rate-limiting)
+5. [Request Flow](#ai-5-request-flow)
+6. [Gemini Integration](#ai-6-gemini-integration)
+7. [Database Schema](#ai-7-database-schema)
+8. [API Endpoints](#ai-8-api-endpoints)
+9. [CORS & Security](#ai-9-cors--security)
+10. [Configuration & Secrets](#ai-10-configuration--secrets)
+11. [File Structure](#ai-11-file-structure)
+
+---
+
+## AI-1. Overview
+
+`graphics-oc-ai` is a Cloudflare Worker that:
+
+- Accepts AI requests from the compiler frontend (new program, edit, or error-fix)
+- Identifies the caller as a **logged-in user** (via shared JWT session cookie) or a **guest** (via browser fingerprint)
+- Enforces **rate limits** per identity (sliding 12-hour window)
+- Calls the **Google Gemini API** with automatic failover across up to 3 API keys
+- Logs every request to a D1 database for analytics and session history
+- Exposes **session history** endpoints (logged-in users only)
+
+The worker is stateless at the compute layer; all state lives in **Cloudflare D1** (`graphicsh-ai`).
+
+---
+
+## AI-2. Architecture
+
+```
+Frontend (compiler page)
+    |
+    | HTTPS (proxied through Flask /api/ai*)
+    v
+graphics-oc-ai (src/index.js)
+    |
+    +-- auth.js        Session JWT verify OR fingerprint_id fallback
+    +-- rateLimit.js   Sliding 12-hour window, 3s cooldown
+    +-- gemini.js      buildPrompt -> callGeminiWithFailover -> parseGeminiResponse
+    +-- db.js          Insert log, update usage (via ctx.waitUntil)
+    |
+    v
+Cloudflare D1 (graphicsh-ai)
+    |
+    v
+Google Gemini API (generativelanguage.googleapis.com)
+```
+
+### Request Lifecycle
+
+1. **CORS preflight** — `OPTIONS` answered immediately with `204`.
+2. **Health** — `GET /health` returns `{ ok: true }` (no auth).
+3. **Identify** — `auth.js` checks session cookie first; falls back to `fingerprint_id` in request body.
+4. **Rate check** — `rateLimit.js` evaluates sliding window and minimum gap.
+5. **Build prompt** — `gemini.js` constructs the prompt from type (`new` / `edit` / `error`), code, query.
+6. **Gemini call** — tries PRIMARY_KEY then SECONDARY_KEY then TERTIARY_KEY; skips on 429, fails on other errors.
+7. **Critical write** — `insertRequestLog()` logs the request to D1 and returns a `request_id`.
+8. **Response** — worker returns the result immediately.
+9. **Background writes** — `ctx.waitUntil(runPostResponseWrites())` updates rate-limit counters and daily analytics after response is sent.
+
+---
+
+## AI-3. Identity & Auth
+
+Two identity kinds are supported:
+
+### Logged-in user
+
+The frontend sends the session cookie set by `graphics-oc-files` (HttpOnly, same `SESSION_SECRET`).
+
+`auth.js` verifies the JWT with HMAC-SHA256:
+- Decodes header + payload from base64url
+- Verifies signature using `crypto.subtle.verify`
+- Checks `exp` claim — rejects expired tokens
+- Extracts `email` from payload
+
+If valid: `{ kind: 'user', email, userName }`.
+
+### Guest
+
+No cookie (or invalid cookie) falls through to guest mode. The request body **must** include `fingerprint_id` (max 200 chars). Guests get a lower rate limit and no session history.
+
+If cookie is invalid AND no `fingerprint_id`: `401 invalid_session`.
+
+---
+
+## AI-4. Rate Limiting
+
+Implemented in `rateLimit.js`. Uses a **sliding 12-hour window** stored per-identity in D1.
+
+| Identity | Max requests / 12h | Min gap between requests |
+|---|---|---|
+| Guest | 10 | 3 seconds |
+| Logged-in user | 20 | 3 seconds |
+
+Rate state is evaluated **before** calling Gemini. On block:
+- `429 LIMIT_REACHED` — with human-readable reset time (e.g. "Resets in 3h 20m")
+- `429 COOLDOWN` — if gap is less than 3 seconds
+
+Counter updates run **after** the response is sent via `ctx.waitUntil` to keep latency low.
+
+---
+
+## AI-5. Request Flow
+
+### `POST /api/ai` — Generate or fix code
+
+Request body:
+
+```json
+{
+  "type": "new|edit|error",
+  "userQuery": "Draw a circle",
+  "currentCode": "...",
+  "generatedCode": "...",
+  "errorMessage": "...",
+  "fixAttempt": 1,
+  "filename": "circle.cpp",
+  "sessionId": "sess_abc123",
+  "fingerprint_id": "fp_xyz"
+}
+```
+
+Response:
+
+```json
+{
+  "generated_code": "...",
+  "chat": "Here is your circle program.",
+  "filename": "circle.cpp",
+  "session_id": "sess_abc123",
+  "version": "v2",
+  "request_id": "ls_uuid",
+  "rate_limit": { "remaining": 18, "max": 20 }
+}
+```
+
+`filename` is only returned for logged-in users.
+
+### `PATCH /api/ai/action` — Record user action on a draft
+
+Lets the frontend record whether the user applied, rejected, or force-applied an AI suggestion.
+
+```json
+{ "request_id": "ls_uuid", "action": "apply|reject|force_apply", "fingerprint_id": "..." }
+```
+
+Uses parameterized `WHERE id = ? AND user_email = ?` (or `fingerprint_id`) — guests cannot update logged-in rows and vice versa.
+
+### `GET /api/ai/sessions` — Session list (logged-in only)
+
+Returns up to 20 sessions grouped by `session_id`, most recent first.
+
+### `GET /api/ai/sessions/:id` — Session messages (logged-in only)
+
+Returns all messages in a session ordered by `created_at ASC`.
+
+### `DELETE /api/ai/sessions/:id` — Delete session (logged-in only)
+
+Deletes all rows in `logged_sessions` where `user_email = ? AND session_id = ?`.
+
+---
+
+## AI-6. Gemini Integration
+
+### Model
+
+Configured via `GEMINI_MODEL` env var (default: `gemini-2.5-flash`). Set in `wrangler.jsonc` under `vars`.
+
+### Thinking budget
+
+Each request sends `thinkingConfig: { thinkingBudget: 100 }` — minimal thinking to keep latency low while retaining accuracy.
+
+### Prompt types
+
+| Type | Prompt structure |
+|---|---|
+| `new` | System instruction + header + `User request: {query}` |
+| `edit` | System instruction + header + current code + `Edit request: {query}` |
+| `error` | System instruction + header + broken code + compiler error + fix attempt count |
+
+### Key failover
+
+`callGeminiWithFailover()` tries keys in order: PRIMARY then SECONDARY then TERTIARY.
+- `429` from Gemini: skip to next key
+- Any other error: stop and return `502 upstream_error`
+- All keys rate-limited: `503 API_DOWN` with `Retry-After` header
+
+### Response parsing
+
+Gemini is expected to return structured XML tags: `<filename>`, `<chat>`, `<code>`.
+
+`parseGeminiResponse()` tries in order:
+1. Exact XML tag extraction
+2. JSON object fallback (`{ filename, chat, code }`)
+3. Heuristic code extraction (fenced blocks, `#include` index, `main()` index)
+
+If any field is missing after all fallbacks: `502 invalid_ai_response`.
+
+---
+
+## AI-7. Database Schema
+
+Five tables in `graphicsh-ai` D1 database:
+
+### `guest_info`
+One row per unique guest fingerprint. Stores rate-limit counters.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | TEXT PK | `gi_{uuid}` |
+| fingerprint_id | TEXT UNIQUE | Browser fingerprint |
+| total_requests | INTEGER | Lifetime count |
+| window_requests | INTEGER | Count in current 12h window |
+| window_start | TEXT | ISO timestamp of window start |
+| last_request_at | TEXT | For cooldown enforcement |
+
+### `guest_logs`
+One row per guest AI request.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | TEXT PK | `gl_{uuid}` |
+| session_id | TEXT | Client-generated session ID |
+| fingerprint_id | TEXT | Links to guest_info |
+| version | TEXT | v1, v2, ... per session |
+| request_type | TEXT | new / edit / error |
+| user_query | TEXT | |
+| generated_code | TEXT | |
+| generated_filename | TEXT | |
+| chat_response | TEXT | |
+| error_message | TEXT | Nullable |
+| fix_attempt | INTEGER | |
+| user_action | TEXT | apply / reject / force_apply / NULL |
+| api_key_used | TEXT | primary / secondary / tertiary |
+
+### `logged_users`
+One row per signed-in user. Stores rate-limit counters (same structure as `guest_info` but keyed by email).
+
+### `logged_sessions`
+One row per logged-in user AI request. Same structure as `guest_logs` plus `user_email` and `session_title`.
+
+`session_title` is set from the first `new`-type query in the session (truncated to 60 chars). Subsequent requests in the same session inherit the original title.
+
+### `daily_usage`
+One row per calendar date. Platform-wide analytics updated via `ctx.waitUntil`.
+
+| Column | Notes |
+|---|---|
+| date | TEXT PK — YYYY-MM-DD |
+| total_requests | |
+| guest_requests | |
+| user_requests | |
+| error_requests | |
+| primary_key_calls | |
+| secondary_key_calls | |
+| total_input_tokens | |
+| total_output_tokens | |
+| unique_guests | First-time-today guests |
+| unique_users | First-time-today users |
+
+---
+
+## AI-8. API Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `OPTIONS` | `*` | None | CORS preflight (204) |
+| `GET` | `/health` | None | `{ ok: true }` |
+| `POST` | `/api/ai` | Cookie or fingerprint_id | Generate / edit / fix code |
+| `PATCH` | `/api/ai/action` | Cookie or fingerprint_id | Record apply/reject action |
+| `GET` | `/api/ai/sessions` | Cookie (user only) | List session history |
+| `GET` | `/api/ai/sessions/:id` | Cookie (user only) | Get messages in a session |
+| `DELETE` | `/api/ai/sessions/:id` | Cookie (user only) | Delete a session |
+
+All routes are proxied through Flask (`app.py`) at `/api/ai*` to `AI_ASSISTANT_WORKER`.
+
+---
+
+## AI-9. CORS & Security
+
+Allowed origins (same set as `graphics-oc-files`):
+
+```
+https://graphics-h-compiler.vercel.app
+https://graphics-h-online-compiler-git-test-albatrosscs-projects.vercel.app
+http://localhost:5000
+http://127.0.0.1:5000
+```
+
+- No `Origin` header: `Access-Control-Allow-Origin: *` (non-browser tooling — acceptable since no credentials are involved for such calls)
+- Allowed origin: `Access-Control-Allow-Credentials: true`
+- Unknown origin: `Access-Control-Allow-Origin: null`
+
+`X-AI-Debug` header: when set to `"1"`, error responses include a `debug` object with internal reason codes. Useful for dev/debugging; the production frontend does not send this header.
+
+---
+
+## AI-10. Configuration & Secrets
+
+All secrets are set via `wrangler secret put`. Never committed to source control.
+
+| Secret | Command | Notes |
+|---|---|---|
+| `SESSION_SECRET` | `wrangler secret put SESSION_SECRET` | Must exactly match `graphics-oc-files` worker |
+| `PRIMARY_KEY` | `wrangler secret put PRIMARY_KEY` | Google Gemini API key (primary) |
+| `SECONDARY_KEY` | `wrangler secret put SECONDARY_KEY` | Gemini API key (failover) |
+| `TERTIARY_KEY` | `wrangler secret put TERTIARY_KEY` | Gemini API key (third fallback, optional) |
+
+Non-secret config in `wrangler.jsonc`:
+
+```jsonc
+"vars": {
+  "GEMINI_MODEL": "gemini-2.5-flash"
+}
+```
+
+D1 binding:
+
+```jsonc
+"d1_databases": [{
+  "binding": "graphicsh_ai_db",
+  "database_name": "graphicsh-ai",
+  "database_id": "5b858c3c-b800-4234-8962-e8570c50c567"
+}]
+```
+
+---
+
+## AI-11. File Structure
+
+```
+workers/ai-assistant/
+├── schema.sql               # D1 schema — run once to initialize
+├── reset.sql                # Drop + recreate tables (dev only, destructive)
+├── system_instructions.md   # Gemini system prompt (bundled into worker via wrangler rules)
+├── api-test.js              # Manual API test script (Node.js)
+├── worker.js                # Entrypoint alias
+├── wrangler.jsonc           # Cloudflare Wrangler config
+│
+└── src/
+    ├── index.js             # Router — dispatches to handler functions
+    ├── handlers.js          # processAiRequest, processActionRequest, processSessionsRequest, processDeleteSessionRequest
+    ├── auth.js              # JWT verification (HMAC-SHA256), identifyRequest, identifyFromCookieOnly
+    ├── config.js            # CONFIG constants, SESSION_COOKIE_NAME, ALLOWED_ORIGINS, GEMINI_API_BASE
+    ├── cors.js              # withCors, jsonResponse, errorResponse, wantsDebugDetails
+    ├── db.js                # getOrCreateGuest/LoggedUser, insertRequestLog, updateSubjectUsage, updateDailyUsage, runPostResponseWrites
+    ├── gemini.js            # buildPrompt, callGeminiWithFailover, parseGeminiResponse
+    ├── rateLimit.js         # evaluateRateLimit, parseDateMs, formatRemainingWindow
+    └── validate.js          # readJsonBody, validateRequestBody, normalizeOptionalString, normalizeFilename
+```
+
+### Deployment
+
+```bash
+cd workers/ai-assistant
+npx wrangler deploy
+```
+
+### Initialize database
+
+```bash
+# Create tables (safe — CREATE IF NOT EXISTS)
+npx wrangler d1 execute graphicsh-ai --remote --file=schema.sql
+
+# Reset tables (DEV ONLY — destructive)
+npx wrangler d1 execute graphicsh-ai --remote --file=reset.sql
 ```
