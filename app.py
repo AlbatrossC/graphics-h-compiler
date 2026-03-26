@@ -178,6 +178,14 @@ def check_maintenance():
             and not request.path.startswith('/static/'):
         return render_template('maintenance.html', maintenance_date=get_maintenance_date())
 
+@app.after_request
+def apply_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
 def get_missing_env(keys):
     missing = []
     for key in keys:
