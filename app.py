@@ -703,7 +703,14 @@ def ai_feedback():
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({'error': 'Not found'}), 404
+    wants_json = (
+        request.path.startswith('/api/')
+        or request.path.startswith('/static/')
+        or request.accept_mimetypes.best == 'application/json'
+    )
+    if wants_json:
+        return jsonify({'error': 'Not found'}), 404
+    return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def server_error(error):
