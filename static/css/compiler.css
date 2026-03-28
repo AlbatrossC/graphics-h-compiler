@@ -1308,7 +1308,11 @@ header {
     width: 100%;
     background: #4a80d4;
     transform-origin: left;
-    animation: fixToastDrain var(--fix-toast-duration, 4s) linear forwards;
+    transform: scaleX(1);
+}
+
+.fix-toast-progress-bar.draining {
+    animation: fixToastDrain 4s linear forwards;
 }
 
 @keyframes fixToastDrain {

@@ -27,7 +27,7 @@
     let toastTimer = null;
 
     function showToast(message) {
-        if (!toast || !toastBody || !toastBar) return;
+        if (!toast || !toastBody) return;
 
         if (toastTimer) {
             clearTimeout(toastTimer);
@@ -36,13 +36,18 @@
 
         toastBody.textContent = message;
 
-        // Reset animation by replacing the bar element clone
-        toastBar.style.animation = 'none';
-        // Force reflow
-        void toastBar.offsetWidth;
-        toastBar.style.setProperty('--fix-toast-duration', `${TOAST_DURATION_MS}ms`);
-        toast.style.setProperty('--fix-toast-duration', `${TOAST_DURATION_MS / 1000}s`);
-        toastBar.style.animation = '';
+        // Restart the drain animation by replacing the bar with a fresh clone
+        const progressWrap = toast.querySelector('.fix-toast-progress');
+        if (progressWrap) {
+            const oldBar = progressWrap.querySelector('.fix-toast-progress-bar');
+            if (oldBar) oldBar.remove();
+            const newBar = document.createElement('div');
+            newBar.className = 'fix-toast-progress-bar';
+            progressWrap.appendChild(newBar);
+            // Force reflow so the browser registers the element before adding class
+            void newBar.offsetWidth;
+            newBar.classList.add('draining');
+        }
 
         toast.classList.add('visible');
 
