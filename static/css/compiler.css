@@ -1221,30 +1221,38 @@ header {
 
 /* Fix chat toast popup */
 #fix-chat-toast {
+    --fix-toast-duration: 15000ms;
     position: fixed;
-    top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0.92);
-    z-index: 9999;
-    background: #1a2233;
-    border: 1px solid #2d425f;
-    border-radius: 14px;
-    padding: 20px 24px;
-    max-width: 420px;
-    width: calc(100vw - 40px);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+    bottom: 18px;
+    z-index: 20000;
     display: flex;
-    flex-direction: column;
-    gap: 14px;
+    justify-content: center;
+    width: min(440px, calc(100vw - 20px));
+    transform: translateX(-50%) translateY(20px);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.22s ease, transform 0.22s ease;
+    visibility: hidden;
+    transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease;
 }
 
 #fix-chat-toast.visible {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translateX(-50%) translateY(0);
+}
+
+.fix-toast-card {
+    width: 100%;
+    background: rgba(19, 24, 33, 0.96);
+    border: 1px solid rgba(173, 196, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px 12px 10px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .fix-toast-header {
@@ -1257,15 +1265,18 @@ header {
 .fix-toast-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #a0c4ff;
+    gap: 7px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #c7d9ff;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(148, 188, 255, 0.22);
 }
 
 .fix-toast-title img {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
 .fix-toast-close {
@@ -1273,7 +1284,7 @@ header {
     border: none;
     cursor: pointer;
     color: var(--text-secondary);
-    padding: 2px;
+    padding: 1px;
     display: flex;
     align-items: center;
     border-radius: 4px;
@@ -1285,39 +1296,60 @@ header {
 }
 
 .fix-toast-close svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
 }
 
 .fix-toast-body {
-    font-size: 0.875rem;
-    color: var(--text-primary);
-    line-height: 1.55;
+    font-size: 0.86rem;
+    font-weight: 500;
+    color: #eef4ff;
+    line-height: 1.45;
     white-space: pre-wrap;
+    text-align: center;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    text-shadow: 0 0 14px rgba(188, 214, 255, 0.12);
 }
 
 .fix-toast-progress {
     height: 3px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 2px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 999px;
     overflow: hidden;
 }
 
 .fix-toast-progress-bar {
     height: 100%;
     width: 100%;
-    background: #4a80d4;
+    background: #7fb0ff;
     transform-origin: left;
     transform: scaleX(1);
 }
 
 .fix-toast-progress-bar.draining {
-    animation: fixToastDrain 4s linear forwards;
+    animation: fixToastDrain var(--fix-toast-duration) linear forwards;
 }
 
 @keyframes fixToastDrain {
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
+}
+
+@media (max-width: 640px) {
+    #fix-chat-toast {
+        width: calc(100vw - 14px);
+        bottom: 10px;
+    }
+
+    .fix-toast-card {
+        padding: 10px 11px 10px;
+        border-radius: 12px;
+    }
+
+    .fix-toast-body {
+        font-size: 0.83rem;
+    }
 }
 
 /* Copy Error Button - Matches Compile & Run button style, solid red */

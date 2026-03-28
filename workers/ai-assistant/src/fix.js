@@ -6,6 +6,8 @@ import { readJsonBody, normalizeOptionalString } from './validate.js';
 import { evaluateRateLimit } from './rateLimit.js';
 import { getOrCreateGuest, getOrCreateLoggedUser } from './db.js';
 
+const FIX_TOAST_DURATION_MS = 15000;
+
 // ─── Validation ───────────────────────────────────────────────────────────────
 
 function validateFixBody(body) {
@@ -294,6 +296,7 @@ export async function processFixRequest(request, env, ctx, corsHeaders) {
     {
       fixed_code: fixResult.fixed_code,
       chat: fixResult.chat,
+      toast_duration_ms: FIX_TOAST_DURATION_MS,
       fix_id: fixId,
       fix_attempt: fixAttempt,
       rate_limit: {

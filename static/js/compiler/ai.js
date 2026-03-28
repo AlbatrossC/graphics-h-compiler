@@ -2,6 +2,7 @@
     'use strict';
 
     const MAX_FIX_ATTEMPTS = 2;
+    const FIX_TOAST_DURATION_MS = 15000;
     const GUEST_FINGERPRINT_KEY = 'graphicsh_ai_guest_id_v1';
     const AI_RATE_LIMIT_CACHE_PREFIX = 'graphicsh_ai_rate_limit_v1';
 
@@ -43,6 +44,7 @@
 
     window.__aiPreviewPending = false;
     window.__suppressCompileRunSave = false;
+    window.__AI_FIX_TOAST_DURATION_MS = FIX_TOAST_DURATION_MS;
 
     function isLoggedInNow() {
         return typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn === true;
