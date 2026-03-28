@@ -3,12 +3,15 @@
 
     const GUEST_FINGERPRINT_KEY = 'graphicsh_ai_guest_id_v1';
     const MAX_FIX_BUTTON_ATTEMPTS = 3;
+    const FIX_TOAST_DURATION_MS = 10000;
 
     // ── State ──────────────────────────────────────────────────────────────────
     const FIX_STATE = {
         isBusy: false,
         fixAttempt: 0,
         currentError: '',
+        pendingChat: '',       // chat message waiting for compile success
+        awaitingCompile: false, // true while waiting for post-fix compile result
     };
 
     // ── DOM refs ───────────────────────────────────────────────────────────────
@@ -17,6 +20,59 @@
     const fixGeminiLogo = document.getElementById('fix-ai-gemini-logo');
 
     if (!fixBtn) return;
+
+    // ── Toast ──────────────────────────────────────────────────────────────────
+
+    let activeToast = null;
+    let toastTimer = null;
+
+    function dismissToast() {
+        if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+        if (activeToast) {
+            activeToast.classList.add('fix-toast-exit');
+            const el = activeToast;
+            activeToast = null;
+            setTimeout(() => { if (el.parentNode) el.remove(); }, 300);
+        }
+    }
+
+    function showFixToast(message) {
+        dismissToast();
+
+        const toast = document.createElement('div');
+        toast.className = 'fix-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+
+        const icon = document.createElement('img');
+        icon.src = '/static/gemini.svg';
+        icon.alt = '';
+        icon.className = 'fix-toast-icon';
+
+        const text = document.createElement('span');
+        text.className = 'fix-toast-text';
+        text.textContent = message;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'fix-toast-close';
+        closeBtn.type = 'button';
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+        closeBtn.addEventListener('click', dismissToast);
+
+        toast.appendChild(icon);
+        toast.appendChild(text);
+        toast.appendChild(closeBtn);
+        document.body.appendChild(toast);
+
+        // Force reflow then animate in
+        toast.offsetHeight; // eslint-disable-line no-unused-expressions
+        toast.classList.add('fix-toast-enter');
+
+        activeToast = toast;
+
+        toastTimer = setTimeout(dismissToast, FIX_TOAST_DURATION_MS);
+    }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -133,6 +189,7 @@
             }
 
             const fixedCode = payload?.fixed_code;
+            const chatMessage = payload?.chat || '';
 
             if (!fixedCode) {
                 throw new Error('AI returned empty fix');
@@ -146,6 +203,10 @@
                 }
             }
 
+            // Store chat and mark awaiting compile — toast shows after compile success
+            FIX_STATE.pendingChat = chatMessage;
+            FIX_STATE.awaitingCompile = true;
+
             // Trigger compile & run
             setButtonBusy(false);
             hideButton();
@@ -155,6 +216,12 @@
                     await runProgram();
                 } catch (runErr) {
                     if (typeof Logger !== 'undefined') Logger.error('[Fix] runProgram failed', runErr);
+                    // Show toast anyway on run failure so the user still sees the message
+                    if (FIX_STATE.pendingChat) {
+                        showFixToast(FIX_STATE.pendingChat);
+                        FIX_STATE.pendingChat = '';
+                        FIX_STATE.awaitingCompile = false;
+                    }
                 }
             }
 
@@ -175,9 +242,22 @@
         fixBtn.style.display = '';
         fixBtnText.textContent = 'Fix with AI';
         if (fixGeminiLogo) fixGeminiLogo.style.opacity = '';
+
+        // If there was a pending chat from a fix that failed to compile, show it now
+        if (FIX_STATE.awaitingCompile && FIX_STATE.pendingChat) {
+            showFixToast(FIX_STATE.pendingChat);
+            FIX_STATE.pendingChat = '';
+            FIX_STATE.awaitingCompile = false;
+        }
     });
 
     document.addEventListener('compiler-compile-success', () => {
+        // Show the pending fix toast now that compile succeeded
+        if (FIX_STATE.awaitingCompile && FIX_STATE.pendingChat) {
+            showFixToast(FIX_STATE.pendingChat);
+            FIX_STATE.pendingChat = '';
+            FIX_STATE.awaitingCompile = false;
+        }
         resetFixState();
         hideButton();
     });
