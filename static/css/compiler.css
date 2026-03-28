@@ -1196,6 +1196,126 @@ header {
     gap: 6px;
 }
 
+/* Fix with AI Button — inherits .btn base, styled like Ask AI */
+.fix-with-ai-btn {
+    height: 30px;
+    padding: 0 14px;
+    font-size: 0.8125rem;
+    background: #121924;
+    border-color: #2d425f;
+    color: #f5f7ff;
+    gap: 6px;
+}
+
+.fix-with-ai-btn:hover:not(:disabled) {
+    background: #182233;
+    border-color: #48668d;
+    transform: translateY(-1px);
+}
+
+.fix-with-ai-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Fix chat toast popup */
+#fix-chat-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    z-index: 9999;
+    background: #1a2233;
+    border: 1px solid #2d425f;
+    border-radius: 14px;
+    padding: 20px 24px;
+    max-width: 420px;
+    width: calc(100vw - 40px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+#fix-chat-toast.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.fix-toast-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.fix-toast-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #a0c4ff;
+}
+
+.fix-toast-title img {
+    width: 16px;
+    height: 16px;
+}
+
+.fix-toast-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color var(--transition-fast);
+}
+
+.fix-toast-close:hover {
+    color: var(--text-primary);
+}
+
+.fix-toast-close svg {
+    width: 16px;
+    height: 16px;
+}
+
+.fix-toast-body {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    line-height: 1.55;
+    white-space: pre-wrap;
+}
+
+.fix-toast-progress {
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.fix-toast-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: #4a80d4;
+    transform-origin: left;
+    animation: fixToastDrain var(--fix-toast-duration, 4s) linear forwards;
+}
+
+@keyframes fixToastDrain {
+    from { transform: scaleX(1); }
+    to   { transform: scaleX(0); }
+}
+
 /* Copy Error Button - Matches Compile & Run button style, solid red */
 .copy-error-btn {
     height: 30px;

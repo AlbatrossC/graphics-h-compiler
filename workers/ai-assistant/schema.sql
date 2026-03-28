@@ -4,7 +4,7 @@
 -- ═══════════════════════════════════════
 -- Table 1: guest_info
 -- One row per guest visitor
--- Rate limiting via sliding window
+-- Rate limiting via sliding window (separate windows for AI chat and Fix-with-AI)
 -- ═══════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS guest_info (
@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS guest_info (
   window_requests INTEGER NOT NULL DEFAULT 0,
   window_start TEXT NOT NULL,
   last_request_at TEXT,
+  fix_window_requests INTEGER NOT NULL DEFAULT 0,
+  fix_window_start TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -48,7 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_gl_fp ON guest_logs(fingerprint_id);
 -- ═══════════════════════════════════════
 -- Table 3: logged_users
 -- One row per signed-in user
--- Rate limiting via sliding window
+-- Rate limiting via sliding window (separate windows for AI chat and Fix-with-AI)
 -- ═══════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS logged_users (
@@ -59,6 +61,8 @@ CREATE TABLE IF NOT EXISTS logged_users (
   window_requests INTEGER NOT NULL DEFAULT 0,
   window_start TEXT NOT NULL,
   last_request_at TEXT,
+  fix_window_requests INTEGER NOT NULL DEFAULT 0,
+  fix_window_start TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -111,3 +115,27 @@ CREATE TABLE IF NOT EXISTS daily_usage (
   unique_users INTEGER NOT NULL DEFAULT 0,
   last_request_at TEXT
 );
+
+-- ═══════════════════════════════════════
+-- Table 6: fixes
+-- One row per Fix-with-AI button request
+-- Tracks editor_code, error, fixed_code, and attempt number
+-- fingerprint_id is set for guests, user_email for logged-in users
+-- ═══════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS fixes (
+  id TEXT PRIMARY KEY,
+  fingerprint_id TEXT,
+  user_email TEXT,
+  editor_code TEXT NOT NULL,
+  error TEXT NOT NULL,
+  fixed_code TEXT NOT NULL,
+  fix_attempt INTEGER NOT NULL DEFAULT 1,
+  api_key_used TEXT NOT NULL,
+  input_tokens INTEGER NOT NULL DEFAULT 0,
+  output_tokens INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_fixes_fp ON fixes(fingerprint_id);
+CREATE INDEX IF NOT EXISTS idx_fixes_email ON fixes(user_email);

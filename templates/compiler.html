@@ -662,6 +662,10 @@
             Compilation Errors
           </div>
           <div class="output-actions">
+            <button id="fix-with-ai-btn" class="btn fix-with-ai-btn" title="Fix this error with AI">
+              <img src="/static/gemini.svg" alt="" class="gemini-logo" id="fix-ai-gemini-logo" />
+              <span id="fix-ai-btn-text">Fix with AI</span>
+            </button>
             <button id="copy-error-btn" class="copy-error-btn" title="Copy errors to clipboard">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path
@@ -725,6 +729,7 @@
 
   <script src="/static/js/compiler/settings.js?v=codemirror_v5"></script>
   <script src="/static/js/compiler/ai.js?v=3"></script>
+  <script src="/static/js/compiler/fix.js?v=2"></script>
   <script src="/static/js/compiler/popup.js?v=4"></script>
   <script>
     (function () {
@@ -823,6 +828,25 @@
       });
     })();
   </script>
+
+  <!-- Fix with AI — chat toast -->
+  <div id="fix-chat-toast" role="status" aria-live="polite">
+    <div class="fix-toast-header">
+      <div class="fix-toast-title">
+        <img src="/static/gemini.svg" alt="" />
+        AI Fixed It
+      </div>
+      <button class="fix-toast-close" id="fix-toast-close-btn" aria-label="Dismiss">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="fix-toast-body" id="fix-toast-body"></div>
+    <div class="fix-toast-progress">
+      <div class="fix-toast-progress-bar" id="fix-toast-bar"></div>
+    </div>
+  </div>
 
 </body>
 

@@ -4,6 +4,10 @@ export const CONFIG = Object.freeze({
   RESET_HOURS: 12,
   MIN_REQUEST_GAP_SECONDS: 3,
   MAX_FIX_ATTEMPTS: 2,
+  // Fix-with-AI button: separate rate limit + max 3 attempts per error
+  MAX_FIX_BUTTON_ATTEMPTS: 3,
+  MAX_FIX_GUEST_REQUESTS: 25,
+  MAX_FIX_USER_REQUESTS: 25,
   MAX_CODE_LINES: 500,
   MAX_CODE_BYTES: 15_360,
   MAX_QUERY_LENGTH: 2_000,

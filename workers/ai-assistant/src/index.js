@@ -6,6 +6,7 @@ import {
   processSessionMessagesRequest,
   processDeleteSessionRequest,
 } from './handlers.js';
+import { processFixRequest } from './fix.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -26,6 +27,10 @@ export default {
 
       if (method === 'POST' && pathname === '/api/ai') {
         return await processAiRequest(request, env, ctx, corsHeaders);
+      }
+
+      if (method === 'POST' && pathname === '/api/ai/fix') {
+        return await processFixRequest(request, env, ctx, corsHeaders);
       }
 
       if (method === 'PATCH' && pathname === '/api/ai/action') {

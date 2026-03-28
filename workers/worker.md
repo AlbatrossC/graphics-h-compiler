@@ -1595,6 +1595,47 @@ Deletes all rows in `logged_sessions` where `user_email = ? AND session_id = ?`.
 
 ---
 
+### `POST /api/ai/fix` — Fix with AI (error panel button)
+
+A separate, lightweight endpoint for the **Fix with AI** button shown in the error panel after compilation fails. Unlike `POST /api/ai`, this does not create or modify chat sessions — it only takes the current editor code + compiler error and returns fixed code.
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `editor_code` | string | yes | Current editor content (max 15 360 bytes) |
+| `error` | string | yes | Compiler error output (max 4 000 chars) |
+| `fix_attempt` | integer | yes | Attempt number 1–3 |
+| `fingerprint_id` | string | guests only | Guest browser fingerprint ID |
+
+**Response (200):**
+
+```json
+{
+  "fixed_code": "...",
+  "chat": "Fixed the undeclared variable error.",
+  "fix_id": "fix_<uuid>",
+  "fix_attempt": 1,
+  "rate_limit": { "remaining": 24, "max": 25 }
+}
+```
+
+**Rate limits:**
+- Guests: 25 fix requests per 12-hour window
+- Logged-in users: 25 fix requests per 12-hour window
+- Max 3 fix attempts per error (enforced by `fix_attempt` field)
+
+**Error codes:**
+- `LIMIT_REACHED` (429) — Rate limit hit; message includes cooldown time
+- `FIX_ATTEMPTS_EXCEEDED` (400) — `fix_attempt` > 3
+- `bad_request` (400) — Missing required fields
+
+**DB table:** Each call inserts one row into the `fixes` table (`fingerprint_id` or `user_email`, `editor_code`, `error`, `fixed_code`, `fix_attempt`, tokens, timestamp).
+
+**System instruction:** Uses `fix-system-instruction.md` (separate from `system_instructions.md`) — instructs the model to fix only what the compiler errors report, preserving intent and structure.
+
+---
+
 ## AI-6. Gemini Integration
 
 ### Model
@@ -1607,11 +1648,12 @@ Each request sends `thinkingConfig: { thinkingBudget: 100 }` — minimal thinkin
 
 ### Prompt types
 
-| Type | Prompt structure |
-|---|---|
-| `new` | System instruction + header + `User request: {query}` |
-| `edit` | System instruction + header + current code + `Edit request: {query}` |
-| `error` | System instruction + header + broken code + compiler error + fix attempt count |
+| Type | Endpoint | Prompt structure |
+|---|---|---|
+| `new` | `POST /api/ai` | System instruction + header + `User request: {query}` |
+| `edit` | `POST /api/ai` | System instruction + header + current code + `Edit request: {query}` |
+| `error` | `POST /api/ai` | System instruction + header + broken code + compiler error + fix attempt count |
+| `fix` | `POST /api/ai/fix` | Fix system instruction + broken code + compiler error + attempt count (no session, no filename) |
 
 ### Key failover
 

@@ -385,6 +385,7 @@ def storage_proxy():
     return resp
 
 @app.route('/api/ai', methods=['POST', 'OPTIONS'])
+@app.route('/api/ai/fix', methods=['POST', 'OPTIONS'])
 @app.route('/api/ai/action', methods=['PATCH', 'OPTIONS'])
 @app.route('/api/ai/sessions', methods=['GET', 'OPTIONS'])
 @app.route('/api/ai/sessions/<session_id>', methods=['GET', 'DELETE', 'OPTIONS'])
@@ -424,6 +425,15 @@ def ai_proxy(session_id=None):
         else:
             log_warn(
                 f"AI request failed  (HTTP {status})  target={ai_worker_url}  "
+                f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
+                f"{response_excerpt}"
+            )
+    elif request.path == '/api/ai/fix':
+        if status < 300:
+            log_ok(f"AI fix completed  (HTTP {status})")
+        else:
+            log_warn(
+                f"AI fix failed  (HTTP {status})  target={ai_worker_url}  "
                 f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
                 f"{response_excerpt}"
             )
