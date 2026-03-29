@@ -308,7 +308,7 @@ function updateSaveIndicator() {
     if (!saveIndicator || !saveText) return;
     if (!DIRTY_FLAG.isDirty && SAVE_STATE.lastSavedHash) {
         saveIndicator.classList.add('saved');
-        saveText.textContent = isUserLoggedIn ? 'Saved to cloud' : 'Saved locally';
+        saveText.textContent = isUserLoggedIn ? 'Saved to cloud' : 'Saved';
     } else {
         saveIndicator.classList.remove('saved');
         saveText.textContent = 'Unsaved';
@@ -897,7 +897,7 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
         const code = editor.getValue();
         if (!isUserLoggedIn) {
             await persistLocalSave(code);
-            if (!silent) Logger.success(`[Save] Saved locally (${trigger})`);
+            if (!silent) Logger.success(`[Save] Saved (${trigger})`);
             return { success: true, local: true };
         }
         let info = activeFileInfo();

@@ -30,7 +30,7 @@
     --shadow: none;
     --header-height: 60px;
     --layout-gap: 8px;
-    --panel-radius: 10px;
+    --panel-radius: 0px;
 
     /* Performance optimization */
     --transition-fast: 0.15s ease;
@@ -615,12 +615,12 @@ header {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 0 12px;
-    height: 36px;
+    padding: 0 10px;
+    height: 32px;
     background: transparent;
     border: 1px solid transparent;
     border-radius: 6px;
-    font-size: 0.8125rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-secondary);
     cursor: pointer;
@@ -1692,8 +1692,8 @@ header {
 }
 
 #sidebar {
-    width: 320px;
-    min-width: 320px;
+    width: 250px;
+    min-width: 250px;
     background: var(--vscode-sidebar);
     border-right: 1px solid var(--border-color);
     display: flex;

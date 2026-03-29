@@ -392,7 +392,7 @@
     if (settingsActivityBtn) {
         settingsActivityBtn.addEventListener('click', () => {
             if (currentSidebarView === 'settings') {
-                showExplorerPanel();
+                if (sidebar) sidebar.classList.toggle('collapsed');
                 return;
             }
             showSettingsPanel();
@@ -402,7 +402,7 @@
     if (aiActivityBtn) {
         aiActivityBtn.addEventListener('click', () => {
             if (currentSidebarView === 'ai') {
-                showExplorerPanel();
+                if (sidebar) sidebar.classList.toggle('collapsed');
                 return;
             }
             showAiPanel();
