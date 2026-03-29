@@ -803,6 +803,8 @@ function updateLoginUI(loggedIn, user = null) {
         if (newFileBtn) {
             newFileBtn.style.display = 'flex';
         }
+        const explorerActions = document.querySelector('.explorer-actions');
+        if (explorerActions) explorerActions.style.display = '';
 
         // Hide auth section, show user profile
         authSection.style.display = 'none';
@@ -850,6 +852,8 @@ function updateLoginUI(loggedIn, user = null) {
         if (newFileBtn) {
             newFileBtn.style.display = 'none';
         }
+        const explorerActions = document.querySelector('.explorer-actions');
+        if (explorerActions) explorerActions.style.display = 'none';
 
         // Show auth section, hide user profile
         authSection.style.display = 'block';

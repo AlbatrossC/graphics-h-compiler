@@ -23,6 +23,8 @@
   <!-- Preload Hints for Faster Loading -->
   <link rel="preconnect" href="https://js-dos.com" />
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+  
+  <meta name="google-adsense-account" content="ca-pub-6918638598461716">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 
   <!-- Open Graph Meta Tags -->
@@ -141,16 +143,23 @@
           </svg>
           <span class="btn-text">Save</span>
         </button>
-      </div>
 
-      <div class="demo-selector">
-        <label for="demo-select">Demo:</label>
-        <select id="demo-select" class="demo-dropdown">
+
+      <div class="demo-selector" style="position: relative; display: flex; align-items: center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="position: absolute; left: 12px; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 12 12 17 22 12"></polyline>
+          <polyline points="2 17 12 22 22 17"></polyline>
+        </svg>
+        <select id="demo-select" class="demo-dropdown" style="padding-left: 36px; padding-right: 32px; appearance: none; background-color: var(--vscode-line-bg); font-weight: 500;">
           <option value="graphics-demo" selected>Graphics Demo</option>
           <option value="circle-pattern">Circle Pattern</option>
           <option value="bouncing-ball">Bouncing Ball</option>
           <option value="shooter-game">Shooter Game</option>
         </select>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="position: absolute; right: 12px; width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
       </div>
 
       <div class="save-indicator" id="save-indicator">
@@ -176,6 +185,7 @@
         <span class="btn-text btn-text-desktop">Compile and Run</span>
         <span class="btn-text btn-text-mobile" style="display: none">Run</span>
       </button>
+    </div>
     </div>
   </header>
 
@@ -263,7 +273,7 @@
           </button>
         </div>
 
-        <div class="explorer-actions">
+        <div class="explorer-actions" style="display: none;">
           <button id="new-folder-btn" class="explorer-action-btn" style="display: none">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -283,13 +293,27 @@
           </button>
         </div>
 
-        <div id="cloud-promo-view" class="cloud-promo">
-          <svg class="cloud-promo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <p class="cloud-promo-text">
-            Sign in to save your projects to the cloud
-          </p>
+        <div id="cloud-promo-view" class="cloud-promo" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 16px; padding: 24px 12px; flex-grow: 1;">
+          <div style="display: flex; align-items: center; gap: 14px; color: var(--primary);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 26px; height: 26px;">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px; opacity: 0.8;">
+              <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
+              <path d="M12 18h.01"></path>
+            </svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; opacity: 0.9;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0;">Save your files Online.</h3>
+            <p class="cloud-promo-text" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin: 0;">
+              Access them anywhere, on any device.
+            </p>
+          </div>
           <div id="auth-section" class="auth-section">
             <div id="google-btn-render" class="google-btn-render"></div>
             <button id="google-signin-btn" class="google-btn" style="display:none">

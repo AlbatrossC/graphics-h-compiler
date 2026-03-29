@@ -27,7 +27,7 @@
     --text-muted: #707070;
 
     --border-color: rgba(255, 255, 255, 0.12);
-    --shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    --shadow: none;
     --header-height: 60px;
     --layout-gap: 8px;
     --panel-radius: 10px;
@@ -60,7 +60,7 @@
     --text-muted: #64748b;
 
     --border-color: rgba(15, 23, 42, 0.13);
-    --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    --shadow: none;
 }
 
 /* Base Styles */
@@ -224,11 +224,11 @@ header {
 .demo-dropdown,
 .save-indicator,
 .theme-toggle {
-    height: 40px;
+    height: 38px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 0.875rem;
     font-weight: 600;
     transition: all var(--transition-fast);
@@ -266,12 +266,8 @@ header {
 .btn-primary:hover:not(:disabled) {
     background: var(--primary-hover);
     border-color: var(--primary-hover);
-    transform: translateY(-1px);
 }
 
-.btn-primary:active {
-    transform: scale(0.96);
-}
 
 .btn-primary:disabled {
     opacity: 0.5;
@@ -306,7 +302,6 @@ header {
 .btn-success:hover {
     background: var(--primary-hover);
     border-color: var(--primary-hover);
-    transform: translateY(-1px);
 }
 
 .btn-gemini {
@@ -318,7 +313,6 @@ header {
 .btn-gemini:hover {
     background: #182233;
     border-color: #48668d;
-    transform: translateY(-1px);
 }
 
 .btn-gemini-solid {
@@ -331,7 +325,6 @@ header {
 .btn-gemini-solid:hover {
     background: #1b45bf;
     border-color: #1b45bf;
-    transform: translateY(-1px);
 }
 
 .btn-ai-secondary {
@@ -369,8 +362,8 @@ header {
 
 /* Icon Buttons */
 .icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     padding: 0;
 }
 
@@ -386,8 +379,8 @@ header {
 }
 
 .theme-toggle {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     padding: 0;
 }
 
@@ -454,7 +447,6 @@ header {
 .demo-dropdown:hover {
     background: var(--vscode-line-bg);
     border-color: var(--primary);
-    transform: translateY(-1px);
 }
 
 .demo-dropdown:focus,
@@ -510,7 +502,7 @@ header {
     background: var(--vscode-editor);
     border: 1px solid var(--border-color);
     border-radius: var(--panel-radius);
-    box-shadow: var(--shadow);
+    box-shadow: none;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     position: relative;
     overflow: hidden;
@@ -519,11 +511,11 @@ header {
 }
 
 #editor-wrapper {
-    flex-grow: 1.2;
+    flex-grow: 2;
 }
 
 #terminal-wrapper {
-    flex-grow: 1.25;
+    flex-grow: 2;
 }
 
 #editor-wrapper:hover,
@@ -624,10 +616,10 @@ header {
     justify-content: center;
     gap: 6px;
     padding: 0 12px;
-    height: 34px;
+    height: 36px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 600;
     color: var(--text-secondary);
@@ -646,7 +638,6 @@ header {
     background: rgba(0, 255, 136, 0.1);
     border-color: var(--primary);
     color: var(--primary);
-    transform: translateY(-1px);
 }
 
 [data-theme="light"] .panel-action-btn:hover {
@@ -673,7 +664,7 @@ header {
     margin: 0;
     background: var(--vscode-line-bg);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 0;
 }
 
@@ -692,7 +683,7 @@ header {
     text-align: center;
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
-    height: 30px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -703,7 +694,7 @@ header {
     border-radius: 0;
     padding: 0 8px;
     width: 28px;
-    height: 30px;
+    height: 32px;
     /* Match container height */
     border: none;
     background: transparent;
@@ -863,7 +854,7 @@ header {
     background: var(--vscode-sidebar) !important;
     border: 1px solid var(--border-color) !important;
     border-radius: 6px;
-    box-shadow: var(--shadow);
+    box-shadow: none;
 }
 
 .cm-tooltip-autocomplete ul li {
@@ -1039,13 +1030,9 @@ header {
     /* Larger text */
     color: var(--text-secondary);
     transition: all var(--transition-normal);
-    transform: translateY(-10px);
     /* Initial slide from top */
 }
 
-.keyboard-blocker.active .blocker-message {
-    transform: translateY(0);
-}
 
 .blocker-message:hover {
     background: var(--vscode-line-bg);
@@ -1085,8 +1072,8 @@ header {
 }
 
 .spinner {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border: 3px solid rgba(0, 255, 136, 0.2);
     border-top-color: var(--primary);
     border-radius: 50%;
@@ -1137,7 +1124,6 @@ header {
     display: flex;
     flex-direction: column;
     z-index: 20;
-    transform: translateY(100%);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -1148,7 +1134,6 @@ header {
 }
 
 #output-panel.visible {
-    transform: translateY(0);
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -1198,7 +1183,7 @@ header {
 
 /* Fix with AI Button — inherits .btn base, styled like Ask AI */
 .fix-with-ai-btn {
-    height: 30px;
+    height: 32px;
     padding: 0 14px;
     font-size: 0.8125rem;
     background: #121924;
@@ -1211,7 +1196,6 @@ header {
 .fix-with-ai-btn:hover:not(:disabled) {
     background: #182233;
     border-color: #48668d;
-    transform: translateY(-1px);
 }
 
 .fix-with-ai-btn:disabled {
@@ -1223,7 +1207,7 @@ header {
 
 /* Copy Error Button - Matches Compile & Run button style, solid red */
 .copy-error-btn {
-    height: 30px;
+    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1234,7 +1218,7 @@ header {
     background: var(--danger);
     color: #fff;
     border: 1px solid var(--danger);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
@@ -1243,12 +1227,8 @@ header {
 .copy-error-btn:hover {
     background: #e03b3b;
     border-color: #e03b3b;
-    transform: translateY(-1px);
 }
 
-.copy-error-btn:active {
-    transform: translateY(0);
-}
 
 .copy-error-btn.copied {
     background: var(--danger);
@@ -1265,12 +1245,12 @@ header {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -1292,12 +1272,12 @@ header {
 }
 
 .close-output-btn {
-    height: 30px;
-    width: 30px;
+    height: 32px;
+    width: 32px;
     min-height: unset;
     border: 1px solid var(--border-color);
     background: transparent;
-    border-radius: 8px;
+    border-radius: 6px;
 }
 
 .close-output-btn:hover {
@@ -1418,12 +1398,10 @@ header {
 @keyframes fade-in {
     from {
         opacity: 0;
-        transform: translateY(-3px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
@@ -1491,7 +1469,7 @@ header {
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    border-radius: 10px;
+    border-radius: 6px;
     transition: all var(--transition-fast);
     position: relative;
 }
@@ -1499,22 +1477,29 @@ header {
 .activity-bar-btn:hover {
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.06);
-    transform: scale(1.05);
+}
+
+.activity-bar-btn:focus,
+.activity-bar-btn:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 [data-theme="light"] .activity-bar-btn:hover {
     background: rgba(0, 0, 0, 0.06);
-    transform: scale(1.05);
 }
 
 .activity-bar-btn.active {
     color: var(--primary);
-    background: rgba(0, 255, 136, 0.08);
+    background: transparent;
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 [data-theme="light"] .activity-bar-btn.active {
-    background: rgba(0, 168, 90, 0.14);
-    color: #067647;
+    background: transparent;
+    color: var(--primary);
 }
 
 .activity-bar-btn.active::before {
@@ -1524,9 +1509,9 @@ header {
     top: 50%;
     transform: translateY(-50%);
     width: 3px;
-    height: 20px;
+    height: 24px;
     background: var(--primary);
-    border-radius: 0 3px 3px 0;
+    border-radius: 0 4px 4px 0;
 }
 
 .activity-bar-btn svg {
@@ -1535,9 +1520,7 @@ header {
     transition: transform var(--transition-fast);
 }
 
-.activity-bar-btn:hover svg {
-    transform: scale(1.08);
-}
+
 
 /* Settings icon spin on hover */
 #settings-activity-btn:hover svg {
@@ -1701,9 +1684,7 @@ header {
     background: var(--text-muted);
 }
 
-.activity-bar-btn:hover svg {
-    transform: scale(1.08);
-}
+
 
 /* Settings icon spin on hover */
 #settings-activity-btn:hover svg {
@@ -2439,8 +2420,8 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     margin-right: 6px;
     background: transparent;
     border: none;
@@ -2683,8 +2664,8 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 }
 
 @keyframes ai-dot-fade {
-    0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
-    30% { opacity: 0.75; transform: translateY(-3px); }
+    0%, 60%, 100% { opacity: 0.2; }
+    30% { opacity: 0.75; }
 }
 
 /* Actions */
@@ -2709,7 +2690,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 
 .btn-ai-primary:hover {
     background: #00cc6a;
-    transform: translateY(-1px);
 }
 
 .btn-ai-secondary {
@@ -2743,7 +2723,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 .ai-composer:focus-within {
     border-color: var(--primary);
     box-shadow: 0 0 0 1px var(--primary);
-    transform: translateY(-1px);
 }
 
 .ai-input {
@@ -2839,7 +2818,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     border: 1px solid var(--primary);
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2852,7 +2831,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 .btn-ai-send:hover:not(:disabled) {
     background: var(--primary-hover);
     border-color: var(--primary-hover);
-    transform: translateY(-1px);
 }
 
 .btn-ai-send:disabled {
@@ -2922,7 +2900,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 .ai-session-loading {
     padding: 16px;
     border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: 6px;
     background: var(--vscode-line-bg);
     color: var(--text-secondary);
     font-size: 0.82rem;
@@ -2978,33 +2956,17 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     color: #067647;
 }
 
-@keyframes editor-ai-flash {
-    0% {
-        opacity: 0;
-        transform: scale(0.985);
-    }
-    35% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: scale(1.01);
-    }
-}
+
 
 @keyframes editor-ai-badge {
     0% {
         opacity: 0;
-        transform: translateY(-6px);
     }
     20% {
         opacity: 1;
-        transform: translateY(0);
     }
     100% {
         opacity: 0;
-        transform: translateY(0);
     }
 }
 
@@ -3031,7 +2993,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     background: #ffffff;
     color: #1f1f1f;
     border: 1px solid #dadce0;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
@@ -3043,7 +3005,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 .google-btn:hover {
     background: #f8faff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-    transform: translateY(-1px);
 }
 
 .google-icon {
@@ -3056,7 +3017,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     display: flex;
     justify-content: center;
     width: 100%;
-    min-height: 40px;
+    min-height: 38px;
 }
 
 /* User Profile */
@@ -3076,7 +3037,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     padding: 8px 10px;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
     text-align: left;
@@ -3088,8 +3049,8 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 }
 
 .user-avatar {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: var(--primary);
     display: flex;
@@ -3138,7 +3099,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     background: var(--vscode-bg);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    box-shadow: var(--shadow);
+    box-shadow: none;
     padding: 4px;
     display: none;
     z-index: 100;
@@ -3334,7 +3295,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     background: var(--vscode-sidebar);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    box-shadow: var(--shadow);
+    box-shadow: none;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -3385,7 +3346,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 }
 
 .modal-body textarea {
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid var(--border-color);
     background: var(--vscode-editor);
     color: var(--text-primary);
@@ -3408,7 +3369,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 }
 
 .modal-status {
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 10px 12px;
     font-size: 0.78rem;
     line-height: 1.5;
@@ -3432,7 +3393,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 
 .ai-feedback-modal .modal-header .icon-btn {
     width: 34px;
-    height: 34px;
+    height: 36px;
 }
 
 .modal-actions {
@@ -3611,9 +3572,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
         box-shadow var(--transition-fast);
 }
 
-.settings-range::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-}
+
 
 .settings-range::-moz-range-thumb {
     width: 14px;
@@ -3625,9 +3584,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     transition: transform var(--transition-fast);
 }
 
-.settings-range::-moz-range-thumb:hover {
-    transform: scale(1.2);
-}
+
 
 /* Toggle Group */
 .settings-toggle-group {
@@ -3685,7 +3642,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     position: absolute;
     inset: 0;
     background: var(--border-color);
-    border-radius: 10px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all var(--transition-fast);
 }
@@ -3695,7 +3652,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     position: absolute;
     left: 2px;
     top: 50%;
-    transform: translateY(-50%);
     width: 14px;
     height: 14px;
     border-radius: 50%;
@@ -3826,7 +3782,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
         order: 3;
         flex: 1 1 0;
         width: 100%;
-        height: 40px;
+        height: 38px;
         font-size: 0.9rem;
         border-radius: 12px;
         letter-spacing: 0.01em;
@@ -3842,7 +3798,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     #ask-ai-btn {
         order: 2;
         flex: 0 0 auto;
-        height: 40px;
+        height: 38px;
         padding: 0 12px;
         border-radius: 12px;
         font-size: 0.8rem;
@@ -3900,7 +3856,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     #settings-header-btn {
         display: inline-flex !important;
         width: 40px !important;
-        height: 40px;
+        height: 38px;
         padding: 0 !important;
         justify-content: center;
         align-items: center;
@@ -3924,7 +3880,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     #sidebar-toggle {
         display: inline-flex !important;
         width: 40px !important;
-        height: 40px;
+        height: 38px;
         padding: 0 !important;
         justify-content: center;
         align-items: center;
@@ -3937,7 +3893,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     #back-btn {
         display: inline-flex !important;
         width: 40px !important;
-        height: 40px;
+        height: 38px;
         padding: 0 !important;
         justify-content: center;
         align-items: center;

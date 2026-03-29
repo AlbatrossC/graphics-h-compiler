@@ -125,10 +125,10 @@
         if (mobileMenuAiBtn) mobileMenuAiBtn.classList.toggle('active', view === 'ai');
         if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.toggle('active', view === 'settings');
 
-        // Hide new-file/new-folder buttons when not in explorer view
+        // Hide new-file/new-folder buttons when not in explorer view or when logged out
         const explorerActionsEl = document.querySelector('.explorer-actions');
         if (explorerActionsEl) {
-            explorerActionsEl.style.display = view === 'explorer' ? '' : 'none';
+            explorerActionsEl.style.display = shouldShowExplorerFiles ? '' : 'none';
         }
 
         if (view === 'settings') {
