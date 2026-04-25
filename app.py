@@ -384,12 +384,8 @@ def storage_proxy():
 
     return resp
 
-@app.route('/api/ai', methods=['POST', 'OPTIONS'])
 @app.route('/api/ai/fix', methods=['POST', 'OPTIONS'])
-@app.route('/api/ai/action', methods=['PATCH', 'OPTIONS'])
-@app.route('/api/ai/sessions', methods=['GET', 'OPTIONS'])
-@app.route('/api/ai/sessions/<session_id>', methods=['GET', 'DELETE', 'OPTIONS'])
-def ai_proxy(session_id=None):
+def ai_proxy():
     ai_worker_url = os.getenv('AI_ASSISTANT_WORKER')
     if not ai_worker_url:
         return jsonify({'error': 'AI assistant worker is not configured'}), 503
@@ -419,16 +415,7 @@ def ai_proxy(session_id=None):
         ai_reason = ai_payload['debug'].get('reason') or ''
     retry_after = resp.headers.get('Retry-After', '')
 
-    if request.path == '/api/ai':
-        if status < 300:
-            log_ok(f"AI request completed  (HTTP {status})")
-        else:
-            log_warn(
-                f"AI request failed  (HTTP {status})  target={ai_worker_url}  "
-                f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
-                f"{response_excerpt}"
-            )
-    elif request.path == '/api/ai/fix':
+    if request.path == '/api/ai/fix':
         if status < 300:
             log_ok(f"AI fix completed  (HTTP {status})")
         else:
@@ -437,19 +424,6 @@ def ai_proxy(session_id=None):
                 f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
                 f"{response_excerpt}"
             )
-    elif request.path == '/api/ai/action':
-        if status < 300:
-            log_info("AI draft action recorded")
-        else:
-            log_warn(
-                f"AI draft action failed  (HTTP {status})  target={ai_worker_url}  "
-                f"code={ai_code or '?'}  reason={ai_reason or '?'}  {response_excerpt}"
-            )
-    elif request.path == '/api/ai/sessions':
-        if status < 300:
-            log_info("AI session history fetched")
-        else:
-            log_warn(f"AI session history failed  (HTTP {status})")
 
     return resp
 
@@ -671,48 +645,7 @@ def maintenance_message():
         return jsonify({'error': 'Failed to send message'}), 500
 
 
-@app.route('/api/ai-feedback', methods=['POST', 'OPTIONS'])
-def ai_feedback():
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-        return response, 200
 
-    if not os.getenv('DISCORD_WEBHOOK_URL'):
-        return jsonify({'error': 'Server configuration error'}), 500
-
-    try:
-        data = request.get_json() or {}
-        name = data.get('name', '').strip() or 'Anonymous'
-        suggestion = data.get('suggestion', '').strip()
-
-        if not suggestion:
-            return jsonify({'error': 'Suggestion is required'}), 400
-
-        payload = {
-            'content': 'AI assistant feedback from compiler',
-            'embeds': [{
-                'color': 0x5865F2,
-                'fields': [
-                    {'name': 'Name', 'value': truncate_discord_field(name), 'inline': False},
-                    {'name': 'Suggestion', 'value': truncate_discord_field(suggestion), 'inline': False},
-                    {'name': 'Page', 'value': '/compiler.html', 'inline': False},
-                ]
-            }]
-        }
-
-        webhook_sent = send_discord_webhook(payload)
-        if not webhook_sent:
-            return jsonify({'error': 'Failed to send feedback'}), 502
-
-        log_ok(f"AI feedback sent  from {BOLD}{name}{RESET}")
-        return jsonify({'success': True, 'message': 'Feedback sent successfully'}), 200
-
-    except Exception as e:
-        log_error(f'AI feedback error: {e}')
-        return jsonify({'error': 'Failed to send feedback'}), 500
 
 # Error handlers
 @app.errorhandler(404)

@@ -112,15 +112,6 @@
       </div>
 
       <div class="header-right">
-        <button id="ai-feedback-btn" class="btn btn-secondary" type="button" title="Share AI feedback">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M21 6h-2v9H7v2c0 .55.45 1 1 1h9l4 4V7c0-.55-.45-1-1-1zm-4 5V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z" />
-          </svg>
-          <span class="btn-text btn-text-desktop">Feedback</span>
-          <span class="btn-text btn-text-mobile" style="display: none">FB</span>
-        </button>
-
         <button id="settings-header-btn" class="icon-btn" title="Settings">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -172,12 +163,6 @@
 
       <!-- Status Message Removed -->
 
-      <button id="ask-ai-btn" class="btn btn-gemini" type="button" title="Ask AI">
-        <img src="/static/gemini.svg" alt="" class="gemini-logo" />
-        <span class="btn-text btn-text-desktop">Ask AI</span>
-        <span class="btn-text btn-text-mobile" style="display: none">AI</span>
-      </button>
-
       <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M8 5v14l11-7z" />
@@ -220,9 +205,6 @@
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
           </button>
-          <button id="ai-activity-btn" class="activity-bar-btn" title="Ask AI">
-            <img src="/static/gemini.svg" alt="" class="gemini-logo activity-gemini-logo" />
-          </button>
         </div>
         <div class="activity-bar-bottom">
           <button id="settings-activity-btn" class="activity-bar-btn" title="Settings">
@@ -259,10 +241,6 @@
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
             <span>Files</span>
-          </button>
-          <button id="mobile-menu-ai-btn" class="mobile-menu-btn" type="button">
-            <img src="/static/gemini.svg" alt="" class="gemini-logo mobile-gemini-logo" />
-            <span>AI</span>
           </button>
           <button id="mobile-menu-settings-btn" class="mobile-menu-btn" type="button">
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -354,91 +332,6 @@
           </div>
 
           <div class="file-list-flat" id="main-folder-files"></div>
-        </div>
-
-        <div id="ai-panel-view" class="ai-panel" style="display: none">
-          <!-- SESSIONS VIEW -->
-          <div id="ai-sessions-view" style="display: none; flex: 1; flex-direction: column; overflow: hidden;">
-            <div class="sidebar-header" style="justify-content: space-between;">
-              <div class="sidebar-header-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon" style="width: 14px; height: 14px;">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                <span>Your Sessions</span>
-              </div>
-              <button id="ai-create-new-session-btn" class="sidebar-action-btn" title="New Session" style="width: auto; padding: 0 8px; font-size: 0.75rem; font-weight: 600; gap: 4px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 13px; height: 13px">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span>New</span>
-              </button>
-            </div>
-            <div id="ai-session-history-list" class="ai-session-history-list" style="flex: 1; overflow-y: auto; padding-top: 8px;"></div>
-          </div>
-
-          <!-- CHAT VIEW -->
-          <div id="ai-chat-view" style="display: flex; flex: 1; flex-direction: column; min-height: 0;">
-            <div class="sidebar-header" id="ai-chat-header" style="display: none;">
-              <button id="ai-back-to-sessions-btn" class="sidebar-action-btn" style="width: auto; padding: 0 8px; font-size: 0.75rem; font-weight: 600; gap: 4px;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-                <span>Back</span>
-              </button>
-            </div>
-
-            <div class="ai-messages-container">
-              <div id="ai-messages" class="ai-messages" aria-live="polite"></div>
-              
-              <div id="ai-generating-indicator" class="ai-generating-indicator">
-                <div class="ai-generating-pulse"><span class="ai-generating-dot3"></span></div>
-              </div>
-
-              <div id="ai-empty-state" class="ai-empty-state">
-                <div class="ai-empty-content">
-                  <div class="ai-empty-icon">
-                    <img src="/static/gemini.svg" alt="AI Logic" />
-                  </div>
-                  <h3>What do you want to build?</h3>
-                  <p>Describe a shape, scene, or algorithm. The AI will write and repair the graphics code.</p>
-                </div>
-              </div>
-            </div>
-
-            <div id="ai-actions" class="ai-actions hidden">
-              <button id="ai-reject-btn" class="btn btn-ai-secondary" type="button">Discard</button>
-              <button id="ai-apply-btn" class="btn btn-ai-primary" type="button">Accept</button>
-            </div>
-
-            <div class="ai-composer-wrapper">
-              <form id="ai-form" class="ai-composer">
-                <label for="ai-input" class="sr-only">Ask the AI assistant</label>
-                <textarea id="ai-input" class="ai-input" rows="1"
-                  placeholder="Ask anything..." spellcheck="false"></textarea>
-                <div class="ai-composer-footer">
-                  <div class="ai-composer-meta">
-                    <div id="ai-rate-limit-bar" class="ai-rate-limit-bar">
-                      <div class="ai-rate-limit-info">
-                        <span class="ai-rate-limit-label">Requests</span>
-                        <span id="ai-rate-limit-text" class="ai-rate-limit-count">— / —</span>
-                      </div>
-                      <div class="ai-rate-limit-track">
-                        <div id="ai-rate-limit-fill" class="ai-rate-limit-fill"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <button id="ai-send-btn" class="btn-ai-send" type="submit" aria-label="Send">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                    </svg>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
         </div>
 
         <!-- Settings Panel -->
@@ -715,37 +608,6 @@
     </div>
   </div>
 
-  <div id="ai-feedback-modal" class="modal-overlay hidden" role="dialog" aria-modal="true"
-    aria-labelledby="ai-feedback-title">
-    <div class="modal ai-feedback-modal">
-      <div class="modal-header">
-        <h3 id="ai-feedback-title">AI assistant feedback</h3>
-        <button id="ai-feedback-close" class="icon-btn" type="button" aria-label="Close feedback form">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-          </svg>
-        </button>
-      </div>
-      <form id="ai-feedback-form" class="modal-body" autocomplete="off">
-        <p class="modal-hint">Share what worked, what felt off, or what the AI assistant should do better.</p>
-        <label for="ai-feedback-name">Name</label>
-        <input id="ai-feedback-name" name="name" type="text" maxlength="100" placeholder="Your name" />
-
-        <label for="ai-feedback-suggestion">Suggestion</label>
-        <textarea id="ai-feedback-suggestion" name="suggestion" rows="5" maxlength="2000"
-          placeholder="Tell us how the AI assistant can improve..." required></textarea>
-
-        <div id="ai-feedback-status" class="modal-status hidden" aria-live="polite"></div>
-
-        <div class="modal-actions">
-          <button id="ai-feedback-cancel" class="btn btn-secondary" type="button">Cancel</button>
-          <button id="ai-feedback-submit" class="btn btn-primary" type="submit">Send Feedback</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
 
   <script src="/static/js/compiler/core.js?v=3.1"></script>
   <script src="/static/js/compiler/storage.js?v=3.1"></script>
@@ -753,106 +615,9 @@
   <script src="/static/js/compiler/runtime.js?v=3.1"></script>
 
   <script src="/static/js/compiler/settings.js?v=3.1"></script>
-  <script src="/static/js/compiler/ai.js?v=3.1"></script>
   <script src="/static/js/compiler/fix.js?v=3.1"></script>
   <script src="/static/js/compiler/popup.js?v=3.1"></script>
-  <script>
-    (function () {
-      const feedbackBtn = document.getElementById('ai-feedback-btn');
-      const modal = document.getElementById('ai-feedback-modal');
-      const closeBtn = document.getElementById('ai-feedback-close');
-      const cancelBtn = document.getElementById('ai-feedback-cancel');
-      const form = document.getElementById('ai-feedback-form');
-      const submitBtn = document.getElementById('ai-feedback-submit');
-      const statusEl = document.getElementById('ai-feedback-status');
-      const nameInput = document.getElementById('ai-feedback-name');
-      const suggestionInput = document.getElementById('ai-feedback-suggestion');
 
-      if (!feedbackBtn || !modal || !form) {
-        return;
-      }
-
-      function setStatus(message, type) {
-        statusEl.textContent = message;
-        statusEl.className = 'modal-status';
-        statusEl.classList.add(type);
-      }
-
-      function clearStatus() {
-        statusEl.textContent = '';
-        statusEl.className = 'modal-status hidden';
-      }
-
-      function openModal() {
-        modal.classList.remove('hidden');
-        clearStatus();
-        window.setTimeout(function () {
-          nameInput.focus();
-        }, 0);
-      }
-
-      function closeModal() {
-        modal.classList.add('hidden');
-        clearStatus();
-      }
-
-      feedbackBtn.addEventListener('click', openModal);
-      closeBtn.addEventListener('click', closeModal);
-      cancelBtn.addEventListener('click', closeModal);
-
-      modal.addEventListener('click', function (event) {
-        if (event.target === modal) {
-          closeModal();
-        }
-      });
-
-      document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
-          closeModal();
-        }
-      });
-
-      form.addEventListener('submit', async function (event) {
-        event.preventDefault();
-        clearStatus();
-
-        const name = nameInput.value.trim();
-        const suggestion = suggestionInput.value.trim();
-
-        if (!suggestion) {
-          setStatus('Please enter your suggestion.', 'error');
-          suggestionInput.focus();
-          return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending...';
-
-        try {
-          const response = await fetch('/api/ai-feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, suggestion })
-          });
-
-          const data = await response.json();
-          if (!response.ok) {
-            setStatus(data.error || 'Unable to send feedback right now.', 'error');
-            return;
-          }
-
-          setStatus('Thanks for the feedback. It has been sent.', 'success');
-          form.reset();
-          window.setTimeout(closeModal, 1200);
-        } catch (error) {
-          setStatus('Network error. Please try again.', 'error');
-        } finally {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Send Feedback';
-        }
-      });
-    })();
-  </script>
 
 </body>
 

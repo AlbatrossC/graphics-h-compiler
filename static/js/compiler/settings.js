@@ -59,15 +59,11 @@
 
     // ==================== DOM ELEMENTS ====================
     const settingsHeaderBtn = document.getElementById('settings-header-btn');
-    const askAiBtn = document.getElementById('ask-ai-btn');
     const settingsActivityBtn = document.getElementById('settings-activity-btn');
-    const aiActivityBtn = document.getElementById('ai-activity-btn');
     const mobileMenuSettingsBtn = document.getElementById('mobile-menu-settings-btn');
     const mobileMenuFilesBtn = document.getElementById('mobile-menu-files-btn');
-    const mobileMenuAiBtn = document.getElementById('mobile-menu-ai-btn');
     const explorerActivityBtn = document.getElementById('explorer-activity-btn');
     const settingsPanel = document.getElementById('settings-panel-view');
-    const aiPanel = document.getElementById('ai-panel-view');
     const cloudPromoView = document.getElementById('cloud-promo-view');
     const fileExplorerView = document.getElementById('file-explorer-view');
     const sidebar = document.getElementById('sidebar');
@@ -110,7 +106,6 @@
         currentSidebarView = view;
 
         if (settingsPanel) settingsPanel.style.display = view === 'settings' ? 'flex' : 'none';
-        if (aiPanel) aiPanel.style.display = view === 'ai' ? 'flex' : 'none';
 
         const shouldShowExplorerFiles = view === 'explorer' && typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn;
         const shouldShowExplorerPromo = view === 'explorer' && !shouldShowExplorerFiles;
@@ -119,10 +114,8 @@
         if (cloudPromoView) cloudPromoView.style.display = shouldShowExplorerPromo ? 'flex' : 'none';
 
         if (explorerActivityBtn) explorerActivityBtn.classList.toggle('active', view === 'explorer');
-        if (aiActivityBtn) aiActivityBtn.classList.toggle('active', view === 'ai');
         if (settingsActivityBtn) settingsActivityBtn.classList.toggle('active', view === 'settings');
         if (mobileMenuFilesBtn) mobileMenuFilesBtn.classList.toggle('active', view === 'explorer');
-        if (mobileMenuAiBtn) mobileMenuAiBtn.classList.toggle('active', view === 'ai');
         if (mobileMenuSettingsBtn) mobileMenuSettingsBtn.classList.toggle('active', view === 'settings');
 
         // Hide new-file/new-folder buttons when not in explorer view or when logged out
@@ -134,8 +127,6 @@
         if (view === 'settings') {
             setSidebarHeading('Settings');
             syncUIFromSettings();
-        } else if (view === 'ai') {
-            setSidebarHeading('AI Assistant');
         } else {
             setSidebarHeading('Explorer');
         }
@@ -152,10 +143,7 @@
         setSidebarView('explorer', options);
     }
 
-    function showAiPanel() {
-        setSidebarView('ai', { forceMobileOpen: true });
-        document.dispatchEvent(new CustomEvent('ai-panel-opened'));
-    }
+
 
     function toggleSettingsPanel() {
         if (currentSidebarView === 'settings') {
@@ -374,21 +362,6 @@
     }
 
     // ==================== PANEL EVENT LISTENERS ====================
-    if (settingsHeaderBtn) {
-        settingsHeaderBtn.addEventListener('click', toggleSettingsPanel);
-    }
-
-    if (askAiBtn) {
-        askAiBtn.addEventListener('click', () => {
-            if (currentSidebarView === 'ai') {
-                setSidebarView('ai', { forceMobileOpen: true });
-                document.dispatchEvent(new CustomEvent('ai-panel-opened'));
-                return;
-            }
-            showAiPanel();
-        });
-    }
-
     if (settingsActivityBtn) {
         settingsActivityBtn.addEventListener('click', () => {
             if (currentSidebarView === 'settings') {
@@ -399,26 +372,12 @@
         });
     }
 
-    if (aiActivityBtn) {
-        aiActivityBtn.addEventListener('click', () => {
-            if (currentSidebarView === 'ai') {
-                if (sidebar) sidebar.classList.toggle('collapsed');
-                return;
-            }
-            showAiPanel();
-        });
-    }
-
     if (mobileMenuSettingsBtn) {
         mobileMenuSettingsBtn.addEventListener('click', showSettingsPanel);
     }
 
     if (mobileMenuFilesBtn) {
         mobileMenuFilesBtn.addEventListener('click', showExplorerPanel);
-    }
-
-    if (mobileMenuAiBtn) {
-        mobileMenuAiBtn.addEventListener('click', showAiPanel);
     }
 
     if (explorerActivityBtn) {
@@ -431,14 +390,9 @@
         if (currentSidebarView !== 'explorer') showExplorerPanel();
     });
 
-    document.addEventListener('request-show-ai', () => {
-        if (currentSidebarView !== 'ai') {
-            showAiPanel();
-        } else {
-            setSidebarView('ai', { forceMobileOpen: true });
-            document.dispatchEvent(new CustomEvent('ai-panel-opened'));
-        }
-    });
+    if (settingsHeaderBtn) {
+        settingsHeaderBtn.addEventListener('click', toggleSettingsPanel);
+    }
 
     document.addEventListener('request-show-settings', () => {
         if (currentSidebarView !== 'settings') showSettingsPanel();

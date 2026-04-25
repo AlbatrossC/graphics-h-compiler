@@ -286,9 +286,7 @@ header {
     border-color: var(--primary);
 }
 
-#ai-feedback-btn {
-    white-space: nowrap;
-}
+
 
 .btn-home,
 .btn-success {
@@ -3387,14 +3385,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     color: #ff8c8c;
 }
 
-.ai-feedback-modal {
-    width: min(480px, 100%);
-}
 
-.ai-feedback-modal .modal-header .icon-btn {
-    width: 34px;
-    height: 36px;
-}
 
 .modal-actions {
     display: flex;
@@ -3795,24 +3786,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
         height: 14px;
     }
 
-    #ask-ai-btn {
-        order: 2;
-        flex: 0 0 auto;
-        height: 38px;
-        padding: 0 12px;
-        border-radius: 12px;
-        font-size: 0.8rem;
-        gap: 6px;
-    }
 
-    #ask-ai-btn .btn-text-mobile {
-        display: inline !important;
-        font-weight: 700;
-    }
-
-    #ask-ai-btn .btn-text-desktop {
-        display: none !important;
-    }
 
     /* Hide desktop-only elements */
     .demo-selector,
