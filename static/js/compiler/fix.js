@@ -2,37 +2,65 @@
     'use strict';
 
     const GUEST_FINGERPRINT_KEY = 'graphicsh_ai_guest_id_v1';
-    const MAX_FIX_BUTTON_ATTEMPTS = 3;
+    const POLL_INTERVAL_MS = 1750;
+    const MAX_POLL_ATTEMPTS = 90;
     const FIX_TOAST_DURATION_MS = 10000;
+    const MAX_AUTO_RETRIES = 2;
 
-    // ── State ──────────────────────────────────────────────────────────────────
-    const FIX_STATE = {
-        isBusy: false,
-        fixAttempt: 0,
+    const state = {
+        busy: false,
         currentError: '',
-        pendingChat: '',       // chat message waiting for compile success
-        awaitingCompile: false, // true while waiting for post-fix compile result
+        currentJobId: '',
+        lastExplanation: '',
+        loadingTimer: null,
+        loadingBaseText: '',
+        awaitingAutoCompileResult: false,
+        autoRetryCount: 0,
+        isAutoRetrying: false,
     };
 
-    // ── DOM refs ───────────────────────────────────────────────────────────────
     const fixBtn = document.getElementById('fix-with-ai-btn');
     const fixBtnText = document.getElementById('fix-ai-btn-text');
     const fixGeminiLogo = document.getElementById('fix-ai-gemini-logo');
+    const explanationPanel = document.getElementById('fix-ai-explanation');
+    const explanationBody = document.getElementById('fix-ai-explanation-body');
 
-    if (!fixBtn) return;
-
-    // ── Toast ──────────────────────────────────────────────────────────────────
+    if (!fixBtn || !fixBtnText || !explanationPanel || !explanationBody) {
+        return;
+    }
 
     let activeToast = null;
     let toastTimer = null;
 
+    function shortenMessage(message, maxLength = 110) {
+        const text = String(message || '').replace(/\s+/g, ' ').trim();
+        if (!text) {
+            return 'Fix applied.';
+        }
+
+        const firstSentence = text.match(/^.*?[.!?](?:\s|$)/);
+        const candidate = firstSentence ? firstSentence[0].trim() : text;
+        if (candidate.length <= maxLength) {
+            return candidate;
+        }
+
+        return `${candidate.slice(0, maxLength - 1).trim()}…`;
+    }
+
     function dismissToast() {
-        if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+            toastTimer = null;
+        }
         if (activeToast) {
             activeToast.classList.add('fix-toast-exit');
-            const el = activeToast;
+            const toast = activeToast;
             activeToast = null;
-            setTimeout(() => { if (el.parentNode) el.remove(); }, 300);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
         }
     }
 
@@ -51,7 +79,7 @@
 
         const text = document.createElement('span');
         text.className = 'fix-toast-text';
-        text.textContent = message;
+        text.textContent = shortenMessage(message);
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'fix-toast-close';
@@ -65,213 +93,355 @@
         toast.appendChild(closeBtn);
         document.body.appendChild(toast);
 
-        // Force reflow then animate in
-        toast.offsetHeight; // eslint-disable-line no-unused-expressions
+        toast.offsetHeight;
         toast.classList.add('fix-toast-enter');
 
         activeToast = toast;
-
         toastTimer = setTimeout(dismissToast, FIX_TOAST_DURATION_MS);
     }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
 
     function getGuestFingerprintId() {
         try {
             let id = localStorage.getItem(GUEST_FINGERPRINT_KEY);
             if (!id) {
-                id = `fp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+                id = `fp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
                 localStorage.setItem(GUEST_FINGERPRINT_KEY, id);
             }
             return id;
         } catch {
-            return `fp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+            return `fp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
         }
     }
 
-    function isLoggedIn() {
-        return typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn === true;
+    function delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    function setButtonBusy(busy) {
-        FIX_STATE.isBusy = busy;
-        fixBtn.disabled = busy;
-        if (busy) {
-            fixBtnText.textContent = 'Fixing...';
-            if (fixGeminiLogo) fixGeminiLogo.style.opacity = '0.5';
-        } else {
-            fixBtnText.textContent = 'Fix with AI';
-            if (fixGeminiLogo) fixGeminiLogo.style.opacity = '';
+    async function requestJson(url, options) {
+        if (typeof fetchJson === 'function') {
+            return fetchJson(url, options);
         }
-    }
 
-    function setButtonFailed(message) {
-        FIX_STATE.isBusy = false;
-        fixBtn.disabled = false;
-        fixBtnText.textContent = message || 'Fix failed — retry';
-        if (fixGeminiLogo) fixGeminiLogo.style.opacity = '';
-    }
+        const response = await fetch(url, {
+            credentials: 'same-origin',
+            ...options,
+        });
 
-    function setButtonExhausted(message) {
-        FIX_STATE.isBusy = false;
-        fixBtn.disabled = true;
-        fixBtnText.textContent = message || "Can't fix — ask another";
-        if (fixGeminiLogo) fixGeminiLogo.style.opacity = '0.4';
-    }
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch {
+            payload = null;
+        }
 
-    function resetFixState() {
-        FIX_STATE.fixAttempt = 0;
-        FIX_STATE.currentError = '';
-        FIX_STATE.isBusy = false;
-        fixBtn.disabled = false;
-        fixBtnText.textContent = 'Fix with AI';
-        if (fixGeminiLogo) fixGeminiLogo.style.opacity = '';
-        fixBtn.style.display = '';
+        return { response, payload };
     }
 
     function hideButton() {
         fixBtn.style.display = 'none';
     }
 
-    // ── Core fix flow ──────────────────────────────────────────────────────────
+    function showButton() {
+        fixBtn.style.display = '';
+    }
 
-    async function triggerFix() {
-        if (FIX_STATE.isBusy) return;
-
-        const errorText = FIX_STATE.currentError;
-        if (!errorText) return;
-
-        const code = typeof editor !== 'undefined' && editor ? editor.getValue() : '';
-        if (!code.trim()) return;
-
-        FIX_STATE.fixAttempt += 1;
-
-        if (FIX_STATE.fixAttempt > MAX_FIX_BUTTON_ATTEMPTS) {
-            setButtonExhausted("My bad, I can't fix this — ask another");
-            return;
+    function stopButtonAnimation() {
+        if (state.loadingTimer) {
+            clearInterval(state.loadingTimer);
+            state.loadingTimer = null;
         }
+        state.loadingBaseText = '';
+        fixBtn.classList.remove('is-fixing');
+    }
 
-        setButtonBusy(true);
+    function startButtonAnimation(baseText) {
+        stopButtonAnimation();
+        state.loadingBaseText = baseText;
+        fixBtn.classList.add('is-fixing');
 
-        const body = {
-            editor_code: code,
-            error: errorText,
-            fix_attempt: FIX_STATE.fixAttempt,
-        };
+        let frame = 0;
+        const frames = [`${baseText}.`, `${baseText}..`, `${baseText}...`];
+        fixBtnText.textContent = frames[0];
 
-        if (!isLoggedIn()) {
-            body.fingerprint_id = getGuestFingerprintId();
+        state.loadingTimer = setInterval(() => {
+            frame = (frame + 1) % frames.length;
+            fixBtnText.textContent = frames[frame];
+        }, 420);
+    }
+
+    function setButtonState(text, disabled) {
+        state.busy = disabled;
+        fixBtn.disabled = disabled;
+        fixBtnText.textContent = text;
+        if (fixGeminiLogo) {
+            fixGeminiLogo.style.opacity = disabled ? '0.5' : '';
         }
-
-        try {
-            const { response, payload } = await fetchJson('/api/ai/fix', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
-
-            if (!response.ok) {
-                const errCode = payload?.code || '';
-                const errMsg = payload?.error || 'AI fix failed. Please try again.';
-
-                if (errCode === 'LIMIT_REACHED' || response.status === 429) {
-                    setButtonExhausted('Too many errors — cool down');
-                    if (typeof Logger !== 'undefined') Logger.warn('[Fix] Rate limit: ' + errMsg);
-                    return;
-                }
-
-                if (errCode === 'FIX_ATTEMPTS_EXCEEDED') {
-                    setButtonExhausted("My bad, I can't fix this — ask another");
-                    return;
-                }
-
-                throw new Error(errMsg);
-            }
-
-            const fixedCode = payload?.fixed_code;
-            const chatMessage = payload?.chat || '';
-
-            if (!fixedCode) {
-                throw new Error('AI returned empty fix');
-            }
-
-            // Apply fixed code into editor
-            if (typeof editor !== 'undefined' && editor) {
-                editor.setValue(fixedCode);
-                if (typeof Logger !== 'undefined') {
-                    Logger.success(`[Fix] Applied attempt ${FIX_STATE.fixAttempt}/${MAX_FIX_BUTTON_ATTEMPTS}`);
-                }
-            }
-
-            // Store chat and mark awaiting compile — toast shows after compile success
-            FIX_STATE.pendingChat = chatMessage;
-            FIX_STATE.awaitingCompile = true;
-
-            // Trigger compile & run
-            setButtonBusy(false);
-            hideButton();
-
-            if (typeof runProgram === 'function') {
-                try {
-                    await runProgram();
-                } catch (runErr) {
-                    if (typeof Logger !== 'undefined') Logger.error('[Fix] runProgram failed', runErr);
-                    // Show toast anyway on run failure so the user still sees the message
-                    if (FIX_STATE.pendingChat) {
-                        showFixToast(FIX_STATE.pendingChat);
-                        FIX_STATE.pendingChat = '';
-                        FIX_STATE.awaitingCompile = false;
-                    }
-                }
-            }
-
-        } catch (err) {
-            if (typeof Logger !== 'undefined') Logger.error('[Fix] Fix request failed', err?.message || err);
-            setButtonFailed('Fix failed — retry');
+        if (!disabled) {
+            stopButtonAnimation();
         }
     }
 
-    // ── Error panel integration ────────────────────────────────────────────────
+    function resetButton() {
+        stopButtonAnimation();
+        state.busy = false;
+        fixBtn.disabled = false;
+        fixBtnText.textContent = 'Fix with AI';
+        if (fixGeminiLogo) {
+            fixGeminiLogo.style.opacity = '';
+        }
+    }
+
+    function showExplanation(message) {
+        state.lastExplanation = message || '';
+        explanationBody.textContent = '';
+        explanationPanel.classList.add('hidden');
+    }
+
+    function hideExplanation() {
+        state.lastExplanation = '';
+        explanationBody.textContent = '';
+        explanationPanel.classList.add('hidden');
+    }
+
+    function getCurrentCode() {
+        if (typeof editor === 'undefined' || !editor) {
+            return '';
+        }
+        return editor.getValue();
+    }
+
+    function getFingerprintQuery() {
+        return `fingerprint_id=${encodeURIComponent(getGuestFingerprintId())}`;
+    }
+
+    function buildStatusUrl(jobId) {
+        return `/api/ai/fix/${encodeURIComponent(jobId)}?${getFingerprintQuery()}`;
+    }
+
+    function handleApiFailure(response, payload) {
+        const errorMessage = payload?.error || 'Fix with AI failed. Please try again.';
+
+        if (response.status === 429) {
+            throw new Error(errorMessage);
+        }
+
+        if (response.status === 401) {
+            throw new Error(errorMessage);
+        }
+
+        throw new Error(errorMessage);
+    }
+
+    async function createFixJob(code, errorText) {
+        const body = {
+            code,
+            error: errorText,
+            fingerprint_id: getGuestFingerprintId(),
+        };
+
+        const { response, payload } = await requestJson('/api/ai/fix', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            handleApiFailure(response, payload);
+        }
+
+        if (!payload?.job_id) {
+            throw new Error('Fix job was created without a job id.');
+        }
+
+        return payload;
+    }
+
+    async function pollFixJob(jobId) {
+        for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt += 1) {
+            const { response, payload } = await requestJson(buildStatusUrl(jobId), {
+                method: 'GET',
+                cache: 'no-cache',
+            });
+
+            if (!response.ok) {
+                handleApiFailure(response, payload);
+            }
+
+            if (!payload?.status) {
+                throw new Error('Fix job returned an invalid status response.');
+            }
+
+            if (payload.status === 'done' || payload.status === 'failed') {
+                return payload;
+            }
+
+            await delay(POLL_INTERVAL_MS);
+        }
+
+        throw new Error('Fix with AI is taking too long. Please try again.');
+    }
+
+    function applyFixedCode(fixedCode) {
+        if (typeof editor === 'undefined' || !editor) {
+            throw new Error('Editor is not ready yet.');
+        }
+
+        editor.setValue(fixedCode);
+        if (typeof editor.focus === 'function') {
+            editor.focus();
+        }
+    }
+
+    async function autoCompileFixedCode() {
+        if (typeof runProgram !== 'function') {
+            return;
+        }
+
+        state.awaitingAutoCompileResult = true;
+        setButtonState('Compiling...', true);
+        startButtonAnimation('Compiling');
+        await runProgram();
+    }
+
+    async function triggerFix(options = {}) {
+        if (state.busy) {
+            return;
+        }
+
+        const errorText = state.currentError;
+        const code = getCurrentCode();
+        const isAutoRetry = options.isAutoRetry === true;
+
+        if (!errorText || !code.trim()) {
+            return;
+        }
+
+        if (!isAutoRetry) {
+            state.autoRetryCount = 0;
+            state.isAutoRetrying = false;
+        }
+
+        state.currentJobId = '';
+        setButtonState('Starting...', true);
+        startButtonAnimation('Starting');
+
+        try {
+            const job = await createFixJob(code, errorText);
+            state.currentJobId = job.job_id;
+
+            if (job.status === 'done') {
+                const immediateResult = await requestJson(buildStatusUrl(job.job_id), {
+                    method: 'GET',
+                    cache: 'no-cache',
+                });
+                if (!immediateResult.response.ok) {
+                    handleApiFailure(immediateResult.response, immediateResult.payload);
+                }
+                applyFixedCode(immediateResult.payload.fixed_code || '');
+                showExplanation(immediateResult.payload.explanation || 'Fix applied.');
+                await autoCompileFixedCode();
+            } else {
+                setButtonState('Fixing...', true);
+                startButtonAnimation('Fixing');
+                const result = await pollFixJob(job.job_id);
+
+                if (result.status === 'failed') {
+                    throw new Error(result.error || 'Fix with AI could not repair this error.');
+                }
+
+                applyFixedCode(result.fixed_code || '');
+                showExplanation(result.explanation || 'Fix applied.');
+                await autoCompileFixedCode();
+            }
+        } catch (error) {
+            state.awaitingAutoCompileResult = false;
+            resetButton();
+            showButton();
+            state.isAutoRetrying = false;
+            showFixToast(
+                error instanceof Error
+                    ? error.message
+                    : 'Fix with AI could not repair this error.'
+            );
+            if (typeof Logger !== 'undefined') {
+                Logger.error('[Fix] Async fix flow failed', error);
+            }
+        }
+    }
 
     document.addEventListener('compiler-compilation-error', (event) => {
-        const errorContent = event.detail?.content || '';
-        FIX_STATE.currentError = errorContent;
-        FIX_STATE.fixAttempt = 0;
-        FIX_STATE.isBusy = false;
-        fixBtn.disabled = false;
-        fixBtn.style.display = '';
-        fixBtnText.textContent = 'Fix with AI';
-        if (fixGeminiLogo) fixGeminiLogo.style.opacity = '';
+        state.currentError = event.detail?.content || '';
+        state.currentJobId = '';
 
-        // If there was a pending chat from a fix that failed to compile, show it now
-        if (FIX_STATE.awaitingCompile && FIX_STATE.pendingChat) {
-            showFixToast(FIX_STATE.pendingChat);
-            FIX_STATE.pendingChat = '';
-            FIX_STATE.awaitingCompile = false;
+        if (state.awaitingAutoCompileResult) {
+            state.awaitingAutoCompileResult = false;
+
+            if (state.autoRetryCount < MAX_AUTO_RETRIES) {
+                state.autoRetryCount += 1;
+                state.isAutoRetrying = true;
+                showButton();
+                showFixToast(`Retrying fix ${state.autoRetryCount}/${MAX_AUTO_RETRIES}...`);
+                resetButton();
+                triggerFix({ isAutoRetry: true });
+                return;
+            }
+
+            state.isAutoRetrying = false;
+            resetButton();
+            showButton();
+            showFixToast('Auto-fix retries are exhausted. Review the latest compiler error and try again.');
+            return;
         }
+
+        state.autoRetryCount = 0;
+        state.isAutoRetrying = false;
+        resetButton();
+        showButton();
     });
 
     document.addEventListener('compiler-compile-success', () => {
-        // Show the pending fix toast now that compile succeeded
-        if (FIX_STATE.awaitingCompile && FIX_STATE.pendingChat) {
-            showFixToast(FIX_STATE.pendingChat);
-            FIX_STATE.pendingChat = '';
-            FIX_STATE.awaitingCompile = false;
+        state.currentError = '';
+        state.currentJobId = '';
+
+        if (state.awaitingAutoCompileResult) {
+            state.awaitingAutoCompileResult = false;
+            state.autoRetryCount = 0;
+            state.isAutoRetrying = false;
+            resetButton();
+            hideButton();
+            showFixToast(state.lastExplanation || 'Fix applied.');
+            return;
         }
-        resetFixState();
+
+        state.autoRetryCount = 0;
+        state.isAutoRetrying = false;
+        resetButton();
         hideButton();
     });
 
     document.addEventListener('compiler-run-success', () => {
-        resetFixState();
+        state.currentError = '';
+        state.currentJobId = '';
+
+        if (state.awaitingAutoCompileResult) {
+            state.awaitingAutoCompileResult = false;
+            state.autoRetryCount = 0;
+            state.isAutoRetrying = false;
+            resetButton();
+            hideButton();
+            showFixToast(state.lastExplanation || 'Fix applied.');
+            return;
+        }
+
+        state.autoRetryCount = 0;
+        state.isAutoRetrying = false;
+        resetButton();
         hideButton();
     });
 
     fixBtn.addEventListener('click', () => {
-        triggerFix();
+        triggerFix({ isAutoRetry: false });
     });
 
-    // Hidden by default — only visible when there's an error
     hideButton();
-
+    hideExplanation();
 })();

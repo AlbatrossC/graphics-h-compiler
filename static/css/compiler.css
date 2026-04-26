@@ -1202,6 +1202,55 @@ header {
     transform: none !important;
 }
 
+.fix-with-ai-btn.is-fixing {
+    position: relative;
+    overflow: hidden;
+}
+
+.fix-with-ai-btn.is-fixing::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        110deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.06) 35%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.06) 65%,
+        transparent 100%
+    );
+    transform: translateX(-100%);
+    animation: fix-ai-shimmer 1.2s linear infinite;
+    pointer-events: none;
+}
+
+.fix-with-ai-btn.is-fixing .gemini-logo {
+    animation: fix-ai-pulse 1s ease-in-out infinite;
+}
+
+@keyframes fix-ai-shimmer {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes fix-ai-pulse {
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.75;
+    }
+
+    50% {
+        transform: scale(1.12);
+        opacity: 1;
+    }
+}
+
 
 /* Copy Error Button - Matches Compile & Run button style, solid red */
 .copy-error-btn {
@@ -1300,6 +1349,34 @@ header {
     word-break: break-word;
     color: var(--text-primary);
     background: var(--vscode-bg);
+}
+
+.fix-ai-explanation {
+    border-top: 1px solid var(--border-color);
+    background: rgba(0, 255, 136, 0.05);
+    padding: 12px 16px 14px;
+}
+
+[data-theme="light"] .fix-ai-explanation {
+    background: rgba(0, 168, 90, 0.06);
+}
+
+.fix-ai-explanation-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.fix-ai-explanation-body {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .output-content::-webkit-scrollbar {
@@ -4291,6 +4368,15 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
         font-size: 0.75rem;
         line-height: 1.6;
     }
+
+    .fix-ai-explanation {
+        padding: 10px 12px 12px;
+    }
+
+    .fix-ai-explanation-header,
+    .fix-ai-explanation-body {
+        font-size: 0.75rem;
+    }
 }
 
 /* ============================================================
@@ -4417,7 +4503,8 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     font-size: 0.875rem;
     font-weight: 500;
     line-height: 1.55;
-    max-width: min(560px, calc(100vw - 32px));
+    max-width: min(720px, calc(100vw - 32px));
+    width: max-content;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease, transform 0.25s ease;

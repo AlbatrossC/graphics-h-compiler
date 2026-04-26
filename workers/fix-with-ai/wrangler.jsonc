@@ -1,0 +1,20 @@
+{
+  "name": "graphics-oc-fix-with-ai",
+  "main": "index.js",
+  "compatibility_date": "2026-04-26",
+  "d1_databases": [
+    {
+      "binding": "FIX_WITH_AI_DB",
+      "database_name": "graphics_oc_fix",
+      "database_id": "69c1c00a-153f-4543-b3de-c4c8b184cf9e"
+    }
+  ],
+  "vars": {
+    "GEMINI_MODEL": "gemini-2.5-flash",
+    "FIX_AI_TIMEOUT_MS": "45000",
+    "FIX_AI_EMAIL_LIMIT_PER_DAY": "20",
+    "FIX_AI_FINGERPRINT_LIMIT_PER_DAY": "10",
+    "FIX_AI_MAX_CODE_BYTES": "15360",
+    "FIX_AI_MAX_ERROR_BYTES": "4000"
+  }
+}

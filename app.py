@@ -303,7 +303,7 @@ def auth_config():
     return jsonify({
         'authEnabled': bool(os.getenv('USER_FILES_WORKERS') and os.getenv('GOOGLE_CLIENT_ID')),
         'storageEnabled': bool(os.getenv('USER_FILES_WORKERS')),
-        'aiEnabled': bool(os.getenv('AI_ASSISTANT_WORKER')),
+        'aiEnabled': bool(os.getenv('AI_ASSISTANT_WORKER') or os.getenv('FIX_WITH_AI_WORKER')),
         'googleClientId': os.getenv('GOOGLE_CLIENT_ID', ''),
         'supabaseUrl': os.getenv('SUPABASE_URL', ''),
         'supabaseAnonKey': os.getenv('SUPABASE_ANON_KEY', ''),
@@ -385,20 +385,21 @@ def storage_proxy():
     return resp
 
 @app.route('/api/ai/fix', methods=['POST', 'OPTIONS'])
-def ai_proxy():
-    ai_worker_url = os.getenv('AI_ASSISTANT_WORKER')
-    if not ai_worker_url:
-        return jsonify({'error': 'AI assistant worker is not configured'}), 503
+@app.route('/api/ai/fix/<path:job_id>', methods=['GET', 'OPTIONS'])
+def fix_ai_proxy(job_id=None):
+    fix_worker_url = os.getenv('FIX_WITH_AI_WORKER')
+    if not fix_worker_url:
+        return jsonify({'error': 'Fix with AI worker is not configured'}), 503
 
     body_bytes = request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None
     try:
-        resp = proxy_request(ai_worker_url, request.path, allow_redirects=False, body=body_bytes, read_timeout=120)
+        resp = proxy_request(fix_worker_url, request.path, allow_redirects=False, body=body_bytes, read_timeout=30)
     except req.exceptions.Timeout as exc:
-        log_warn(f"AI proxy timeout  path={request.path}  error={exc}")
-        return jsonify({'error': 'AI request timed out. Please try again.', 'code': 'timeout'}), 504
+        log_warn(f"Fix AI proxy timeout  path={request.path}  error={exc}")
+        return jsonify({'error': 'Fix with AI request timed out. Please try again.', 'code': 'timeout'}), 504
     except req.exceptions.RequestException as exc:
-        log_warn(f"AI proxy error  path={request.path}  error={exc}")
-        return jsonify({'error': 'AI service unreachable. Please try again.', 'code': 'proxy_error'}), 502
+        log_warn(f"Fix AI proxy error  path={request.path}  error={exc}")
+        return jsonify({'error': 'Fix with AI service unreachable. Please try again.', 'code': 'proxy_error'}), 502
     status = resp.status_code
     response_text = ''
     ai_payload = None
@@ -415,12 +416,21 @@ def ai_proxy():
         ai_reason = ai_payload['debug'].get('reason') or ''
     retry_after = resp.headers.get('Retry-After', '')
 
-    if request.path == '/api/ai/fix':
+    if request.method == 'POST' and request.path == '/api/ai/fix':
         if status < 300:
-            log_ok(f"AI fix completed  (HTTP {status})")
+            log_ok(f"Fix job accepted  (HTTP {status})")
         else:
             log_warn(
-                f"AI fix failed  (HTTP {status})  target={ai_worker_url}  "
+                f"Fix job create failed  (HTTP {status})  target={fix_worker_url}  "
+                f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
+                f"{response_excerpt}"
+            )
+    elif request.method == 'GET' and request.path.startswith('/api/ai/fix/'):
+        if status < 300 and isinstance(ai_payload, dict):
+            log_info(f"Fix job polled  status={ai_payload.get('status', '?')}  (HTTP {status})")
+        elif status >= 300:
+            log_warn(
+                f"Fix job poll failed  (HTTP {status})  target={fix_worker_url}  "
                 f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
                 f"{response_excerpt}"
             )
