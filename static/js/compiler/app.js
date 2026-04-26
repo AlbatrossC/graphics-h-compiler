@@ -127,13 +127,14 @@ function toggleTheme() {
 function updateThemeIcon(theme) {
     const darkIcon = document.getElementById('theme-icon-dark');
     const lightIcon = document.getElementById('theme-icon-light');
+    if (!darkIcon || !lightIcon) return;
 
     if (theme === 'dark') {
-        darkIcon.style.display = 'block';
-        lightIcon.style.display = 'none';
+        darkIcon.classList.remove('hidden');
+        lightIcon.classList.add('hidden');
     } else {
-        darkIcon.style.display = 'none';
-        lightIcon.style.display = 'block';
+        darkIcon.classList.add('hidden');
+        lightIcon.classList.remove('hidden');
     }
 }
 
@@ -189,94 +190,16 @@ const Logger = {
     }
 };
 
-// ==================== METRICS SYSTEM ====================
-// Global metrics object for observability (no behavioral impact)
+// ==================== METRICS ====================
 const metrics = {
-    // Editor activity tracking
     editor: {
         changeCount: 0,
-        lastChangeAt: null,
-        changeLogInterval: 10  // Log every N changes (not every keystroke)
+        lastChangeAt: null
     },
-
-    // Idle detection tracking
-    idle: {
-        timerStartedCount: 0,
-        idleTriggeredCount: 0,
-        lastIdleAt: null
-    },
-
-    // Storage operations tracking
-    storage: {
-        localDraftWrites: 0,
-        remoteWrites: 0,
-        remoteReads: 0,
-        remoteSkips: 0
-    },
-
-    // Autosave behavior tracking
-    autosave: {
-        scheduled: 0,
-        executed: 0,
-        skippedClean: 0,
-        skippedGuest: 0
-    },
-
-    // Authentication caching effectiveness
-    auth: {
-        clientCacheHits: 0,
-        clientCacheMisses: 0,
-        workerCacheHits: 0,
-        workerCacheMisses: 0
-    },
-
-    // Runtime/execution tracking
     runtime: {
         runCount: 0,
-        runtimeReuseErrors: 0,
         zipExtractionStarted: 0,
         zipExtractionCompleted: 0
-    }
-};
-
-// Print metrics summary to console
-function printMetricsSummary() {
-    console.group('[Metrics Summary]');
-    console.log('Editor changes:', metrics.editor.changeCount);
-    console.log('Idle triggers:', metrics.idle.idleTriggeredCount);
-    console.log('Local draft writes:', metrics.storage.localDraftWrites);
-    console.log('Remote writes:', metrics.storage.remoteWrites);
-    console.log('Remote reads:', metrics.storage.remoteReads);
-    console.log('Remote skips:', metrics.storage.remoteSkips);
-    console.log('Autosave scheduled:', metrics.autosave.scheduled);
-    console.log('Autosave executed:', metrics.autosave.executed);
-    console.log('Autosave skipped (clean):', metrics.autosave.skippedClean);
-    console.log('Autosave skipped (guest):', metrics.autosave.skippedGuest);
-    console.log('Auth client hits/misses:', `${metrics.auth.clientCacheHits} / ${metrics.auth.clientCacheMisses}`);
-    console.log('Auth worker hits/misses:', `${metrics.auth.workerCacheHits} / ${metrics.auth.workerCacheMisses}`);
-    console.log('Runs triggered:', metrics.runtime.runCount);
-    console.log('Runs blocked (reuse):', metrics.runtime.runtimeReuseErrors);
-    console.log('ZIP extractions started:', metrics.runtime.zipExtractionStarted);
-    console.log('ZIP extractions completed:', metrics.runtime.zipExtractionCompleted);
-    console.groupEnd();
-}
-
-// Make metrics accessible from console for debugging
-window.metricsDebug = {
-    metrics,
-    printSummary: printMetricsSummary,
-    reset() {
-        console.log('Resetting all metrics...');
-        Object.keys(metrics).forEach(category => {
-            if (typeof metrics[category] === 'object' && !Array.isArray(metrics[category])) {
-                Object.keys(metrics[category]).forEach(key => {
-                    if (typeof metrics[category][key] === 'number') {
-                        metrics[category][key] = 0;
-                    }
-                });
-            }
-        });
-        console.log('Metrics reset complete');
     }
 };
 
@@ -284,10 +207,8 @@ window.metricsDebug = {
 let dosInstance = null;
 let terminalFocused = false;
 let editor = null;
-let currentDemo = 'graphics-demo';
 let lastLoadedDemo = ''; // Track last loaded demo
 let scriptsLoaded = {
-    jsdos: false,
     codemirror: false
 };
 
@@ -310,23 +231,6 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 
 const AUTOSAVE_DELAY_MS = 20000;  // 20-second idle autosave (spec: save after 20s of no edits)
 const TYPING_DEBOUNCE_MS = 0;     // Timer resets immediately on every keystroke
-
-// ==================== FILE CONTENT CACHE (DISABLED) ====================
-function getCachedFileContent() {
-    return null;
-}
-
-function setCachedFileContent() {
-    // cache intentionally disabled
-}
-
-function clearCachedFileContent() {
-    // cache intentionally disabled
-}
-
-function clearAllFileCache() {
-    // cache intentionally disabled
-}
 
 // Demo files configuration - loaded dynamically from manifest.json
 let DEMO_FILES = {};
@@ -598,7 +502,6 @@ const saveText = document.getElementById("save-text");
 const outputPanel = document.getElementById("output-panel");
 const outputContent = document.getElementById("output-content");
 const closeOutputBtn = document.getElementById("close-output-btn");
-let errorUpdateInterval = null;
 let lastErrorContent = '';
 
 closeOutputBtn.addEventListener('click', () => {
@@ -684,53 +587,4 @@ expandOutputBtn.addEventListener('click', () => {
     Logger.info(`Output panel ${isOutputExpanded ? 'expanded' : 'collapsed'}`);
 });
 
-async function checkCompilationErrors() {
-    try {
-        // Access Emscripten FS through dosInstance.em (js-dos 6.22)
-        if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) {
-            return;
-        }
-
-        const FS = dosInstance.em.FS;
-        const filePath = "/TURBOC3/BIN/ERR.TXT";
-
-        // Check if file exists
-        try {
-            FS.stat(filePath);
-        } catch (statErr) {
-            return; // File doesn't exist yet
-        }
-
-        // Read the file content
-        let content;
-        try {
-            content = FS.readFile(filePath, { encoding: 'utf8' });
-        } catch (readErr) {
-            const data = FS.readFile(filePath);
-            content = new TextDecoder().decode(data);
-        }
-
-        // Only update if content changed and is not empty
-        if (content && content.trim() !== "" && content !== lastErrorContent) {
-            lastErrorContent = content;
-
-            // Check if it contains errors
-            if (content.includes("Error") || content.includes("Fatal")) {
-                outputContent.textContent = content;
-                outputContent.classList.remove('output-success');
-                outputContent.classList.add('output-error');
-
-                // Show panel only for errors
-                if (!outputPanel.classList.contains('visible')) {
-                    outputPanel.classList.add('visible');
-                    terminalWrapper.classList.add('has-panel');
-                    setTimeout(() => window.dispatchEvent(new Event('resize')), 310);
-                }
-            }
-            // For successful compilation, don't show the panel
-        }
-    } catch (e) {
-        // Silently ignore errors during polling
-    }
-}
 

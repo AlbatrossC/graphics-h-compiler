@@ -99,19 +99,25 @@
             sidebar.classList.add('open');
             const overlay = document.getElementById('sidebar-overlay');
             if (overlay) overlay.classList.add('active');
+            document.body.classList.add('sidebar-open-mobile');
         }
+    }
+
+    function setVisible(element, visible) {
+        if (!element) return;
+        element.classList.toggle('hidden', !visible);
     }
 
     function setSidebarView(view, options = {}) {
         currentSidebarView = view;
 
-        if (settingsPanel) settingsPanel.style.display = view === 'settings' ? 'flex' : 'none';
+        setVisible(settingsPanel, view === 'settings');
 
         const shouldShowExplorerFiles = view === 'explorer' && typeof isUserLoggedIn !== 'undefined' && isUserLoggedIn;
         const shouldShowExplorerPromo = view === 'explorer' && !shouldShowExplorerFiles;
 
-        if (fileExplorerView) fileExplorerView.style.display = shouldShowExplorerFiles ? 'flex' : 'none';
-        if (cloudPromoView) cloudPromoView.style.display = shouldShowExplorerPromo ? 'flex' : 'none';
+        setVisible(fileExplorerView, shouldShowExplorerFiles);
+        setVisible(cloudPromoView, shouldShowExplorerPromo);
 
         if (explorerActivityBtn) explorerActivityBtn.classList.toggle('active', view === 'explorer');
         if (settingsActivityBtn) settingsActivityBtn.classList.toggle('active', view === 'settings');
@@ -120,9 +126,7 @@
 
         // Hide new-file/new-folder buttons when not in explorer view or when logged out
         const explorerActionsEl = document.querySelector('.explorer-actions');
-        if (explorerActionsEl) {
-            explorerActionsEl.style.display = shouldShowExplorerFiles ? '' : 'none';
-        }
+        setVisible(explorerActionsEl, shouldShowExplorerFiles);
 
         if (view === 'settings') {
             setSidebarHeading('Settings');

@@ -11,7 +11,7 @@ async function loadCodeMirror() {
     updateLoadingProgress(30);
 
     try {
-        const bundle = await import('/static/js/codemirror.bundle.v1.js');
+        const bundle = await import('/static/js/compiler/codemirror.bundle.v1.js');
 
         cmModules = {
             cm: bundle.cmCore,
@@ -56,10 +56,9 @@ async function loadAllScripts() {
             (async () => {
                 try {
                     await ResourceLoader.loadScript('libs', 'jsdos');
-                    scriptsLoaded.jsdos = true;
                     Logger.info('JS-DOS loaded in background');
                 } catch (e) {
-                    Logger.warn('Failed to load JS-DOS', e);
+                    Logger.warn(`Failed to load JS-DOS: ${e.message}`);
                 }
             })(),
             (async () => {
@@ -68,7 +67,7 @@ async function loadAllScripts() {
                     await getTCZip();
                     Logger.success('TC.zip prefetched');
                 } catch (e) {
-                    Logger.warn('TC.zip prefetch skipped', e);
+                    Logger.warn(`TC.zip prefetch skipped: ${e.message}`);
                 }
             })()
         ]).then(() => {
@@ -106,7 +105,6 @@ demoSelect.addEventListener('change', async (e) => {
         Logger.info(`Reloading ${selectedDemo} demo (force refresh)`);
         await loadDemoFile(selectedDemo, true);
     } else {
-        currentDemo = selectedDemo;
         await loadDemoFile(selectedDemo, false);
     }
 });
@@ -123,7 +121,6 @@ async function loadDemoFile(demoKey, forceReload = false) {
                 editor.setValue(cachedCode);
 
                 lastLoadedDemo = demoKey;
-                currentDemo = demoKey;
                 localStorage.removeItem("tc_code");
 
                 updateEditorInfo();
@@ -159,7 +156,6 @@ async function loadDemoFile(demoKey, forceReload = false) {
             editor.setValue(code);
 
             lastLoadedDemo = demoKey;
-            currentDemo = demoKey;
 
             // Always write demo to IndexedDB (primary storage for guest, cache for logged-in)
             {
@@ -200,7 +196,7 @@ let activeLineCompartment = null;
 let cmView = null; // Store the EditorView instance
 
 // ==================== EDITOR WRAPPER API ====================
-// Provides the same API as the old Ace editor so storage.js, runtime.js, etc. work unchanged
+// Provides the same API as the old Ace editor so files.js, execution.js, etc. work unchanged
 
 function createEditorWrapper(view) {
     return {
@@ -254,7 +250,7 @@ function createEditorWrapper(view) {
             view.requestMeasure();
         },
 
-        // For compatibility with runtime.js
+        // For compatibility with execution.js
         requestMeasure() {
             view.requestMeasure();
         },

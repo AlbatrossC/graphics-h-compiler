@@ -1,0 +1,521 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Dark Theme (Default) */
+    --vscode-bg: #0a0a0a;
+    --vscode-sidebar: #151515;
+    --vscode-editor: #0a0a0a;
+    --vscode-line-bg: #1a1a1a;
+    --vscode-border: #262626;
+
+    /* Green Color Palette - Matching Landing Page */
+    --primary: #00ff88;
+    --primary-hover: #00cc6a;
+    --success: #00ff88;
+    --success-hover: #00cc6a;
+    --danger: #ff4444;
+    --warning: #ffaa00;
+    --accent: #00ff88;
+    --accent-dark: #00cc6a;
+
+    --text-primary: #fafafa;
+    --text-secondary: #a0a0a0;
+    --text-muted: #707070;
+
+    --border-color: rgba(255, 255, 255, 0.12);
+    --shadow: none;
+    --header-height: 60px;
+    --layout-gap: 8px;
+    --panel-radius: 0px;
+
+    /* Performance optimization */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --vscode-bg: #eef2f7;
+    --vscode-sidebar: #f8fafc;
+    --vscode-editor: #ffffff;
+    --vscode-line-bg: #edf3fa;
+    --vscode-border: #d6deea;
+
+    --primary: #00a85a;
+    --primary-hover: #008f4c;
+    --success: #00a85a;
+    --success-hover: #008f4c;
+    --danger: #dc2626;
+    --warning: #ca8a04;
+    --accent: #00a85a;
+    --accent-dark: #008f4c;
+
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+
+    --border-color: rgba(15, 23, 42, 0.13);
+    --shadow: none;
+}
+
+/* Base Styles */
+body {
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+        Cantarell, sans-serif;
+    background: var(--vscode-bg);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    transition:
+        background-color var(--transition-slow),
+        color var(--transition-slow);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessibility Focus Rings */
+*:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+button:focus-visible, 
+a:focus-visible, 
+input:focus-visible, 
+textarea:focus-visible, 
+select:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Header */
+header {
+    background: var(--vscode-sidebar);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition:
+        background-color var(--transition-slow),
+        border-color var(--transition-slow);
+}
+
+[data-theme="light"] header {
+    background: #ffffff;
+    border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+[data-theme="light"] #workspace {
+    background: var(--vscode-bg);
+}
+
+[data-theme="light"] #editor-wrapper,
+[data-theme="light"] #terminal-wrapper {
+    border-color: rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="light"] .panel-header,
+[data-theme="light"] .editor-footer,
+[data-theme="light"] .activity-bar,
+[data-theme="light"] #sidebar,
+[data-theme="light"] .files-header,
+[data-theme="light"] .file-tab,
+[data-theme="light"] .output-header {
+    background: #f7fafd;
+}
+
+[data-theme="light"] .file-tab.active {
+    background: #ffffff;
+}
+
+[data-theme="light"] .header-right .icon-btn,
+[data-theme="light"] .header-right .theme-toggle {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .header-right .icon-btn:hover,
+[data-theme="light"] .header-right .theme-toggle:hover {
+    background: rgba(0, 168, 90, 0.1);
+    border-color: rgba(0, 168, 90, 0.35);
+    color: #067647;
+}
+
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .btn-home,
+[data-theme="light"] .btn-success,
+[data-theme="light"] .editor-mode {
+    color: #ffffff;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    gap: 0.75rem;
+    min-height: var(--header-height);
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-right {
+    gap: 6px;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
+/* Logo */
+.logo {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    transition: color var(--transition-slow), opacity var(--transition-fast);
+    user-select: none;
+    cursor: default;
+}
+
+.logo:hover {
+    opacity: 0.85;
+}
+
+.logo-mobile {
+    display: none;
+}
+
+.btn-text-hidden {
+    display: none;
+}
+
+.logo-highlight {
+    color: var(--primary);
+    transition: color var(--transition-slow);
+}
+
+/* Header settings icon spin */
+#settings-header-btn:hover svg {
+    animation: settings-spin 0.6s ease;
+}
+
+@keyframes settings-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(90deg);
+    }
+}
+
+/* Button Base Styles - Optimized */
+.btn,
+.icon-btn,
+.demo-dropdown,
+.save-indicator,
+.theme-toggle {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    background: var(--vscode-sidebar);
+    color: var(--text-primary);
+}
+
+/* Header icon buttons — more subtle */
+.header-right .icon-btn,
+.header-right .theme-toggle {
+    border-color: transparent;
+    background: transparent;
+}
+
+.btn {
+    padding: 0 16px;
+    gap: 8px;
+}
+
+.btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Button Variants */
+.btn-primary {
+    background: var(--primary);
+    color: #0a0a0a;
+    border-color: var(--primary);
+    font-weight: 700;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-secondary {
+    background: var(--vscode-sidebar);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--vscode-line-bg);
+    border-color: var(--primary);
+}
+
+
+
+.btn-home,
+.btn-success {
+    background: var(--primary);
+    color: #0a0a0a;
+    border-color: var(--primary);
+    font-weight: 700;
+}
+
+.btn-home:hover,
+.btn-success:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.btn-gemini {
+    background: #121924;
+    border-color: #2d425f;
+    color: #f5f7ff;
+}
+
+.btn-gemini:hover {
+    background: #182233;
+    border-color: #48668d;
+}
+
+.btn-gemini-solid {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #1d4ed8;
+    font-weight: 700;
+}
+
+.btn-gemini-solid:hover {
+    background: #1b45bf;
+    border-color: #1b45bf;
+}
+
+.btn-ai-secondary {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary);
+}
+
+.btn-ai-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .btn-gemini {
+    background: #ffffff;
+    border-color: rgba(29, 78, 216, 0.22);
+    color: #122033;
+}
+
+[data-theme="light"] .btn-gemini:hover {
+    background: #eff4fb;
+    border-color: rgba(29, 78, 216, 0.38);
+}
+
+[data-theme="light"] .btn-ai-secondary {
+    border-color: rgba(15, 23, 42, 0.12);
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .btn-ai-secondary:hover {
+    background: rgba(15, 23, 42, 0.04);
+    border-color: rgba(15, 23, 42, 0.2);
+}
+
+/* Icon Buttons */
+.icon-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+}
+
+.icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.icon-btn:hover {
+    background: var(--vscode-line-bg);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.theme-toggle {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+}
+
+.theme-toggle:hover {
+    background: var(--vscode-line-bg);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.theme-toggle svg {
+    width: 18px;
+    height: 18px;
+}
+
+.theme-icon {
+    display: block;
+}
+
+.gemini-logo {
+    width: 18px;
+    height: 18px;
+    display: block;
+    flex-shrink: 0;
+}
+
+.activity-gemini-logo {
+    width: 26px;
+    height: 26px;
+}
+
+.mobile-gemini-logo {
+    width: 16px;
+    height: 16px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Demo Selector */
+.demo-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.demo-selector-compact {
+    position: relative;
+}
+
+.demo-selector label {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    transition: color var(--transition-slow);
+}
+
+.demo-dropdown {
+    padding: 0 12px;
+    min-width: 180px;
+    cursor: pointer;
+}
+
+.demo-dropdown-compact {
+    padding-left: 36px;
+    padding-right: 32px;
+    appearance: none;
+    background-color: var(--vscode-line-bg);
+    font-weight: 500;
+}
+
+.demo-dropdown:hover {
+    background: var(--vscode-line-bg);
+    border-color: var(--primary);
+}
+
+.demo-dropdown:focus,
+.demo-dropdown:active {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.demo-selector-icon {
+    position: absolute;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.demo-selector-icon-left {
+    left: 12px;
+    width: 16px;
+    height: 16px;
+}
+
+.demo-selector-icon-right {
+    right: 12px;
+    width: 14px;
+    height: 14px;
+}
+
+/* Save Indicator */
+.save-indicator {
+    padding: 0 10px;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: default;
+}
+
+.save-indicator.saved {
+    background: rgba(0, 255, 136, 0.08);
+    border-color: rgba(0, 255, 136, 0.25);
+    color: var(--success);
+}
+
+[data-theme="light"] .save-indicator.saved {
+    background: rgba(0, 204, 106, 0.08);
+    border-color: rgba(0, 204, 106, 0.25);
+}
+
+.save-indicator svg {
+    width: 13px;
+    height: 13px;
+    opacity: 0.7;
+}
+
+/* Light Theme Borders removed for elegance */
+

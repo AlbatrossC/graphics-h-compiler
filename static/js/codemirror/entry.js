@@ -6,7 +6,7 @@ import * as cmCommands from '@codemirror/commands';
 import * as cmAutocomplete from '@codemirror/autocomplete';
 import * as cmSearch from '@codemirror/search';
 import * as lezerHighlight from '@lezer/highlight';
-import * as themeEngine from './theme-engine.js';
+import * as themeEngine from './theme.js';
 
 export {
     cmCore,

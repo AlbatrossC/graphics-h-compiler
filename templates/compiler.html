@@ -91,15 +91,15 @@
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
           </svg>
-          <span class="btn-text btn-text-desktop" style="display: none">Menu</span>
-          <span class="btn-text btn-text-mobile" style="display: none"></span>
+          <span class="btn-text btn-text-desktop btn-text-hidden">Menu</span>
+          <span class="btn-text btn-text-mobile btn-text-hidden"></span>
         </button>
         <button id="back-btn" class="btn btn-home" onclick="window.location.href = '/'">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
           <span class="btn-text btn-text-desktop">Home</span>
-          <span class="btn-text btn-text-mobile" style="display: none">Home</span>
+          <span class="btn-text btn-text-mobile btn-text-hidden">Home</span>
         </button>
       </div>
 
@@ -119,10 +119,10 @@
           </svg>
         </button>
         <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
-          <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="currentColor" style="display: block">
+          <svg id="theme-icon-dark" class="theme-icon" viewBox="0 0 24 24" fill="currentColor">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
-          <svg id="theme-icon-light" viewBox="0 0 24 24" fill="currentColor" style="display: none">
+          <svg id="theme-icon-light" class="theme-icon hidden" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
           </svg>
@@ -135,20 +135,19 @@
           <span class="btn-text">Save</span>
         </button>
 
-
-      <div class="demo-selector" style="position: relative; display: flex; align-items: center;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="position: absolute; left: 12px; width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="demo-selector demo-selector-compact">
+        <svg class="demo-selector-icon demo-selector-icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
           <polyline points="2 12 12 17 22 12"></polyline>
           <polyline points="2 17 12 22 22 17"></polyline>
         </svg>
-        <select id="demo-select" class="demo-dropdown" style="padding-left: 36px; padding-right: 32px; appearance: none; background-color: var(--vscode-line-bg); font-weight: 500;">
+        <select id="demo-select" class="demo-dropdown demo-dropdown-compact">
           <option value="graphics-demo" selected>Graphics Demo</option>
           <option value="circle-pattern">Circle Pattern</option>
           <option value="bouncing-ball">Bouncing Ball</option>
           <option value="shooter-game">Shooter Game</option>
         </select>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="position: absolute; right: 12px; width: 14px; height: 14px; color: var(--text-muted); pointer-events: none;" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="demo-selector-icon demo-selector-icon-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="6 9 12 15 18 9"></polyline>
         </svg>
       </div>
@@ -168,7 +167,7 @@
           <path d="M8 5v14l11-7z" />
         </svg>
         <span class="btn-text btn-text-desktop">Compile and Run</span>
-        <span class="btn-text btn-text-mobile" style="display: none">Run</span>
+        <span class="btn-text btn-text-mobile btn-text-hidden">Run</span>
       </button>
     </div>
     </div>
@@ -222,7 +221,7 @@
             <span>Explorer</span>
           </div>
           <div class="sidebar-actions">
-            <button id="refresh-btn" class="sidebar-action-btn" title="Refresh Files" style="display: none;">
+            <button id="refresh-btn" class="sidebar-action-btn hidden" title="Refresh Files">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
@@ -251,8 +250,8 @@
           </button>
         </div>
 
-        <div class="explorer-actions" style="display: none;">
-          <button id="new-folder-btn" class="explorer-action-btn" style="display: none">
+        <div class="explorer-actions hidden">
+          <button id="new-folder-btn" class="explorer-action-btn hidden">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
               <line x1="12" y1="11" x2="12" y2="17"></line>
@@ -260,7 +259,7 @@
             </svg>
             <span>New Folder</span>
           </button>
-          <button id="new-file-btn" class="explorer-action-btn" style="display: none">
+          <button id="new-file-btn" class="explorer-action-btn hidden">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -271,30 +270,30 @@
           </button>
         </div>
 
-        <div id="cloud-promo-view" class="cloud-promo" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 16px; padding: 24px 12px; flex-grow: 1;">
-          <div style="display: flex; align-items: center; gap: 14px; color: var(--primary);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 26px; height: 26px;">
+        <div id="cloud-promo-view" class="cloud-promo cloud-promo-compact">
+          <div class="cloud-promo-icons">
+            <svg class="cloud-promo-icon cloud-promo-icon-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
             </svg>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px; opacity: 0.8;">
+            <svg class="cloud-promo-icon cloud-promo-icon-device" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
               <path d="M12 18h.01"></path>
             </svg>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 24px; height: 24px; opacity: 0.9;">
+            <svg class="cloud-promo-icon cloud-promo-icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
           </div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin: 0;">Save your files Online.</h3>
-            <p class="cloud-promo-text" style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin: 0;">
+          <div class="cloud-promo-copy">
+            <h3 class="cloud-promo-title">Save your files Online.</h3>
+            <p class="cloud-promo-text cloud-promo-subtitle">
               Access them anywhere, on any device.
             </p>
           </div>
           <div id="auth-section" class="auth-section">
             <div id="google-btn-render" class="google-btn-render"></div>
-            <button id="google-signin-btn" class="google-btn" style="display:none">
+            <button id="google-signin-btn" class="google-btn hidden">
               <svg class="google-icon" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M17.64 9.2c0-.637-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.562 2.684-3.863 2.684-6.615z"
@@ -317,13 +316,13 @@
           </p>
         </div>
 
-        <div id="file-explorer-view" class="file-explorer" style="display: none">
+        <div id="file-explorer-view" class="file-explorer hidden">
           <div class="files-header">
             <svg class="files-header-chevron" viewBox="0 0 24 24" fill="currentColor">
               <path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z" />
             </svg>
             <span class="files-title">WORKSPACE</span>
-            <span class="files-count" id="files-count" style="display: none;"></span>
+            <span class="files-count hidden" id="files-count"></span>
           </div>
 
           <div id="explorer-loading-state" class="explorer-loading hidden" aria-live="polite">
@@ -335,7 +334,7 @@
         </div>
 
         <!-- Settings Panel -->
-        <div id="settings-panel-view" class="settings-panel" style="display: none">
+        <div id="settings-panel-view" class="settings-panel hidden">
           <div class="settings-section">
             <div class="settings-section-title">
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -431,7 +430,7 @@
         </div>
 
         <!-- User Profile Section (shown when logged in) -->
-        <div id="user-profile-section" class="user-profile" style="display: none">
+        <div id="user-profile-section" class="user-profile hidden">
           <div id="user-profile-dropdown" class="user-profile-dropdown">
             <button id="signout-btn" class="dropdown-item danger">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -457,7 +456,7 @@
       <div class="panel-header">
         <div class="file-tabs">
           <button class="file-tab active" id="current-file-tab" data-file="main.cpp">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="color: #519aba">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="file-tab-icon">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z" />
               <path d="M9 13h6v2H9zm0 4h4v2H9z" opacity="0.6" />
             </svg>
@@ -616,16 +615,15 @@
   </div>
 
 
-  <script src="/static/js/compiler/core.js?v=3.1"></script>
-  <script src="/static/js/compiler/storage.js?v=3.1"></script>
+  <script src="/static/js/compiler/app.js?v=3.1"></script>
+  <script src="/static/js/compiler/files-ui.js?v=3.1"></script>
+  <script src="/static/js/compiler/files.js?v=3.1"></script>
   <script src="/static/js/compiler/editor.js?v=3.1"></script>
-  <script src="/static/js/compiler/runtime.js?v=3.1"></script>
+  <script src="/static/js/compiler/shell.js?v=3.1"></script>
+  <script src="/static/js/compiler/execution.js?v=3.1"></script>
 
-  <script src="/static/js/compiler/settings.js?v=3.1"></script>
-  <script src="/static/js/compiler/fix.js?v=3.1"></script>
-  <script src="/static/js/compiler/popup.js?v=3.1"></script>
-
-
+  <script src="/static/js/compiler/preferences.js?v=3.1"></script>
+  <script src="/static/js/compiler/ai-fix.js?v=3.1"></script>
 </body>
 
 </html>

@@ -2,9 +2,9 @@ import * as esbuild from 'esbuild';
 import path from 'path';
 
 esbuild.build({
-    entryPoints: ['static/js/compiler/cm-entry.js'],
+    entryPoints: ['static/js/codemirror/entry.js'],
     bundle: true,
-    outfile: 'static/js/codemirror.bundle.v1.js',
+    outfile: 'static/js/compiler/codemirror.bundle.v1.js',
     format: 'esm',
     minify: true,
     treeShaking: true,

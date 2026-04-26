@@ -1,0 +1,304 @@
+/* ============================================================
+   SETTINGS PANEL
+   ============================================================ */
+.settings-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    overflow-y: auto;
+    gap: 0;
+}
+
+.settings-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+.settings-panel::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 4px;
+    border: 2px solid var(--vscode-sidebar);
+}
+
+.settings-panel:hover::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+}
+
+.settings-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.settings-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid transparent;
+}
+
+.settings-section:not(:last-child) {
+    margin-bottom: 4px;
+}
+
+.settings-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.settings-section-title svg {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+/* Theme Dropdown */
+.settings-select {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    background: var(--vscode-editor);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0a0a0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+}
+
+.settings-select:hover {
+    border-color: var(--text-muted);
+}
+
+.settings-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.settings-select option {
+    background: var(--vscode-editor);
+    color: var(--text-primary);
+    padding: 8px;
+}
+
+[data-theme="light"] .settings-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23606060'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+}
+
+/* Font Size Control */
+.settings-font-size-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.settings-stepper-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--vscode-editor);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.settings-stepper-btn:hover {
+    background: var(--vscode-line-bg);
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+}
+
+.settings-stepper-value {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 20px;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    background: var(--vscode-editor);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+}
+
+/* Range Slider */
+.settings-range {
+    flex: 1 1 auto;
+    min-width: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    margin: 0 4px;
+}
+
+.settings-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+
+
+.settings-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    cursor: pointer;
+    border: none;
+    transition: transform var(--transition-fast);
+}
+
+
+
+/* Toggle Group */
+.settings-toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    margin: 0 -8px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background var(--transition-fast);
+}
+
+.settings-toggle:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] .settings-toggle:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.settings-toggle-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.settings-toggle:hover .settings-toggle-label {
+    color: var(--text-primary);
+}
+
+/* Clean UI Switch (IDE Style) */
+.settings-switch {
+    position: relative;
+    width: 32px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.settings-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.settings-switch-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.settings-switch-slider::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    transition: all cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.settings-switch input:checked+.settings-switch-slider {
+    background: var(--primary);
+}
+
+.settings-switch input:checked+.settings-switch-slider::before {
+    transform: translateY(-50%) translateX(14px);
+    background: #ffffff;
+}
+
+[data-theme="light"] .settings-switch input:checked+.settings-switch-slider::before {
+    background: #ffffff;
+}
+
+/* Reset Button */
+.settings-reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-top: 8px;
+}
+
+.settings-reset-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.settings-reset-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 4px;
+}
+
+[data-theme="light"] .settings-reset-btn:hover {
+    background: rgba(0, 0, 0, 0.03);
+}
+
