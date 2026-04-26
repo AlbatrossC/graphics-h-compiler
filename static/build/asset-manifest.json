@@ -1,0 +1,34 @@
+{
+  "compiler": {
+    "css": "/static/build/compiler.2156ef8cd237.css",
+    "js": "/static/build/compiler.7ff256edd893.js",
+    "css_sources": [
+      "static/css/compiler/base.css",
+      "static/css/compiler/panels.css",
+      "static/css/compiler/sidebar.css",
+      "static/css/compiler/preferences.css",
+      "static/css/compiler/responsive.css",
+      "static/css/compiler/toasts.css"
+    ],
+    "js_sources": [
+      "static/js/compiler/asset-sources.js",
+      "static/js/compiler/app.js",
+      "static/js/compiler/files-ui.js",
+      "static/js/compiler/files.js",
+      "static/js/compiler/editor.js",
+      "static/js/compiler/shell.js",
+      "static/js/compiler/execution.js",
+      "static/js/compiler/preferences.js",
+      "static/js/compiler/ai-fix.js"
+    ]
+  },
+  "separate": {
+    "codemirror_bundle": "/static/js/compiler/codemirror.bundle.v1.js",
+    "lazy_loaded": [
+      "/static/js/compiler/codemirror.bundle.v1.js",
+      "/libs/js-dos.js",
+      "/libs/wdosbox.js",
+      "/static/analytics.js"
+    ]
+  }
+}

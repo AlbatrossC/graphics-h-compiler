@@ -206,7 +206,6 @@ const THEME_DATA = {
     }
 };
 
-// Keep static theme metadata immutable to avoid accidental runtime mutation.
 Object.values(THEME_DATA).forEach((theme) => {
     Object.freeze(theme.highlights);
     Object.freeze(theme);
@@ -262,7 +261,6 @@ export function applyTheme(cmView, themeCompartment, themeName) {
     const resolvedName = resolveThemeName(themeName);
     const activeTheme = activeThemeByView.get(cmView);
 
-    // Avoid no-op reconfigure dispatches when requested theme is already active.
     if (activeTheme === resolvedName) return;
 
     const compiledTheme = compileTheme(resolvedName);

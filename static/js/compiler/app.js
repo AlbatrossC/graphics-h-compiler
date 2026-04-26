@@ -232,52 +232,69 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 const AUTOSAVE_DELAY_MS = 20000;  // 20-second idle autosave (spec: save after 20s of no edits)
 const TYPING_DEBOUNCE_MS = 0;     // Timer resets immediately on every keystroke
 
-// Demo files configuration - loaded dynamically from manifest.json
+// Demo files configuration
 let DEMO_FILES = {};
+let DEMO_FILE_CONTENTS = {};
+let demoBundlePromise = null;
 
-// TC.ZIP URL - loaded dynamically from manifest.json
+// Compiler ZIP source cache
 let TC_ZIP_URL = null;
+let compilerAssetsInitPromise = null;
 
-async function waitForResourceLoader(maxAttempts = 50, delayMs = 100) {
-    if (typeof ResourceLoader !== 'undefined') {
-        return ResourceLoader;
+// Initialize compiler asset sources
+async function initializeResourcesFromManifest() {
+    if (compilerAssetsInitPromise) {
+        return compilerAssetsInitPromise;
     }
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-        if (typeof ResourceLoader !== 'undefined') {
-            Logger.info(`ResourceLoader became available after ${attempt + 1} wait cycle(s)`);
-            return ResourceLoader;
+    compilerAssetsInitPromise = (async () => {
+        try {
+            DEMO_FILES = getCompilerDemoFiles();
+            TC_ZIP_URL = await resolveCompilerAssetUrl('assets', 'tc-zip');
+            Logger.success('Compiler asset sources initialized');
+        } catch (error) {
+            Logger.error('Failed to initialize compiler assets', error);
+            DEMO_FILES = {
+                'graphics-demo': '/compiler-assets/Demo_files/graphics_demo.cpp',
+                'circle-pattern': '/compiler-assets/Demo_files/circle_pattern.cpp',
+                'bouncing-ball': '/compiler-assets/Demo_files/bouncing_ball.cpp',
+                'shooter-game': '/compiler-assets/Demo_files/shooter_game.cpp'
+            };
+            TC_ZIP_URL = '/compiler-assets/zip-files/tc-v1.zip';
         }
-    }
+    })();
 
-    throw new Error('ResourceLoader is not available');
+    return compilerAssetsInitPromise;
 }
 
-// Initialize resources from manifest
-async function initializeResourcesFromManifest() {
-    try {
-        const loader = await waitForResourceLoader();
-        await loader.init();
+async function loadDemoBundle() {
+    if (demoBundlePromise) return demoBundlePromise;
 
-        // Load demo files mapping
-        DEMO_FILES = await loader.getDemoFiles();
-        Logger.success('Demo files loaded from manifest');
+    demoBundlePromise = (async () => {
+        const response = await fetchCompilerAsset('assets', 'demo-files-v1', {
+            fetchOptions: { cache: 'default' }
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to load demo bundle (HTTP ${response.status})`);
+        }
 
-        // Get TC ZIP URL (will handle fallback automatically)
-        TC_ZIP_URL = await loader.getResourceUrl('assets', 'tc-zip');
-        Logger.success('TC ZIP URL resolved from manifest');
-    } catch (error) {
-        Logger.error('Failed to initialize resources from manifest', error);
-        // Fallback to hardcoded values if manifest fails
-        DEMO_FILES = {
-            'graphics-demo': '/compiler-assets/Demo_files/graphics_demo.cpp',
-            'circle-pattern': '/compiler-assets/Demo_files/circle_pattern.cpp',
-            'bouncing-ball': '/compiler-assets/Demo_files/bouncing_ball.cpp',
-            'shooter-game': '/compiler-assets/Demo_files/shooter_game.cpp'
-        };
-        TC_ZIP_URL = '/compiler-assets/zip-files/tc-v1.zip';
-    }
+        const payload = await response.json();
+        const files = Array.isArray(payload?.files) ? payload.files : [];
+        DEMO_FILE_CONTENTS = {};
+
+        for (const file of files) {
+            if (!file?.demo_key || typeof file.code_content !== 'string') continue;
+            DEMO_FILE_CONTENTS[file.demo_key] = file.code_content;
+            if (file.file_name) {
+                DEMO_FILES[file.demo_key] = file.file_name;
+            }
+        }
+
+        Logger.success(`Demo bundle loaded (${files.length} demos)`);
+        return DEMO_FILE_CONTENTS;
+    })();
+
+    return demoBundlePromise;
 }
 
 // ==================== CACHING SYSTEM ====================
@@ -420,17 +437,7 @@ let tcZipPromise = null; // Shared promise to prevent duplicate downloads
 
 // Shared function to get TC ZIP - prevents race condition between warmup and run
 async function getTCZip() {
-    // Wait for manifest to load TC_ZIP_URL if not ready (up to 5 times, 500ms delay)
-    if (!TC_ZIP_URL) {
-        let retries = 0;
-        while (!TC_ZIP_URL && retries < 5) {
-            await new Promise(r => setTimeout(r, 500));
-            retries++;
-        }
-        if (!TC_ZIP_URL) {
-            throw new Error('Compiler URL not ready');
-        }
-    }
+    await initializeResourcesFromManifest();
 
     if (tcZipPromise) return tcZipPromise;
 
@@ -445,7 +452,7 @@ async function getTCZip() {
 
             // Download with manifest fallback chain (R2 -> local) and cache result.
             Logger.info('Downloading TC ZIP...');
-            const response = await ResourceLoader.fetchResource('assets', 'tc-zip');
+            const response = await fetchCompilerAsset('assets', 'tc-zip');
             if (!response.ok) {
                 throw new Error(`Failed to download compiler (HTTP ${response.status})`);
             }

@@ -71,10 +71,11 @@
       }
     </script>
 
-  <link rel="stylesheet" href="/static/css/compiler.css?v=3.1" />
+  {% for css_url in compiler_assets.css_urls %}
+  <link rel="stylesheet" href="{{ css_url }}" />
+  {% endfor %}
 
-  <script src="/static/analytics.js?v=3.1" defer></script>
-  <script src="/static/resource-loader.js?v=3.1"></script>
+  <script src="/static/analytics.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
@@ -613,17 +614,9 @@
       </div>
     </div>
   </div>
-
-
-  <script src="/static/js/compiler/app.js?v=3.1"></script>
-  <script src="/static/js/compiler/files-ui.js?v=3.1"></script>
-  <script src="/static/js/compiler/files.js?v=3.1"></script>
-  <script src="/static/js/compiler/editor.js?v=3.1"></script>
-  <script src="/static/js/compiler/shell.js?v=3.1"></script>
-  <script src="/static/js/compiler/execution.js?v=3.1"></script>
-
-  <script src="/static/js/compiler/preferences.js?v=3.1"></script>
-  <script src="/static/js/compiler/ai-fix.js?v=3.1"></script>
+  {% for js_url in compiler_assets.js_urls %}
+  <script src="{{ js_url }}" defer></script>
+  {% endfor %}
 </body>
 
 </html>

@@ -4,6 +4,7 @@ import requests as req
 import os
 import json
 import time
+from pathlib import Path
 from urllib.parse import urljoin
 
 load_dotenv()
@@ -145,6 +146,40 @@ DOCS_SLUG_TO_DESCRIPTION = {
     'advanced-functions': 'Explore advanced graphics.h functions and practical usage tips.',
     'error-codes': 'Learn graphics.h error codes and debugging techniques for initialization and drawing issues.',
 }
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_BUILD_DIR = BASE_DIR / 'static' / 'build'
+COMPILER_ASSET_MANIFEST = STATIC_BUILD_DIR / 'asset-manifest.json'
+
+
+def get_compiler_assets():
+    fallback = {
+        'css_urls': ['/static/css/compiler.css'],
+        'js_urls': [
+            '/static/js/compiler/asset-sources.js',
+            '/static/js/compiler/app.js',
+            '/static/js/compiler/files-ui.js',
+            '/static/js/compiler/files.js',
+            '/static/js/compiler/editor.js',
+            '/static/js/compiler/shell.js',
+            '/static/js/compiler/execution.js',
+            '/static/js/compiler/preferences.js',
+            '/static/js/compiler/ai-fix.js',
+        ],
+    }
+
+    try:
+        with COMPILER_ASSET_MANIFEST.open('r', encoding='utf-8') as handle:
+            manifest = json.load(handle)
+        compiler_manifest = manifest.get('compiler') or {}
+        css_url = compiler_manifest.get('css')
+        js_url = compiler_manifest.get('js')
+        if css_url and js_url:
+            return {'css_urls': [css_url], 'js_urls': [js_url]}
+    except Exception:
+        pass
+
+    return fallback
 
 
 def resolve_doc_template(slug):
@@ -295,7 +330,7 @@ def index():
 @app.route('/compiler')
 @app.route('/compiler.html')
 def compiler():
-    return render_template('compiler.html')
+    return render_template('compiler.html', compiler_assets=get_compiler_assets())
 
 
 @app.route('/api/auth/config')
@@ -520,7 +555,11 @@ def serve_static(path):
         response.cache_control.must_revalidate = True
     elif any(lower_path.endswith(ext) for ext in ('.js', '.css', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.mp4', '.webm')):
         response.cache_control.public = True
-        response.cache_control.max_age = 604800
+        if lower_path.startswith('build/compiler.'):
+            response.cache_control.max_age = 31536000
+            response.cache_control.immutable = True
+        else:
+            response.cache_control.max_age = 604800
     return response
 
 @app.route('/robots.txt')

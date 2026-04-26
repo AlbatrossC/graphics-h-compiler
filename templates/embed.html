@@ -77,8 +77,6 @@
             }
         }
     </style>
-    <!-- Load resources (wdosbox, zip) nicely like compiler does -->
-    <script src="/static/resource-loader.js?v=3.1"></script>
 </head>
 
 <body>
@@ -104,19 +102,55 @@
         let pendingRun = null; // { snippet, boilerplate, focus }
         let trustedParentOrigin = null;
         let currentZipObjUrl = null;
+        const EMBED_ASSET_SOURCES = {
+            wdosbox: {
+                urls: ['https://js-dos.com/6.22/current/wdosbox.js'],
+                localPath: '/libs/wdosbox.js'
+            },
+            tcZip: {
+                urls: [
+                    'https://r2-public-assets.albatrossc.workers.dev/system/tc-v1.zip',
+                    'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip'
+                ],
+                localPath: '/compiler-assets/zip-files/tc-v1.zip'
+            }
+        };
+
+        async function isReachable(url, timeout = 3000) {
+            if (!url) return false;
+            if (url.startsWith('/')) return true;
+            if (!navigator.onLine) return false;
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+                const response = await fetch(url, { method: 'HEAD', signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function resolveAssetUrl(asset) {
+            if (!asset) return '';
+            const candidates = navigator.onLine
+                ? [...(asset.urls || []), asset.localPath]
+                : [asset.localPath, ...(asset.urls || [])];
+
+            for (const url of candidates) {
+                if (!url) continue;
+                if (url.startsWith('/')) return url;
+                if (await isReachable(url)) return url;
+            }
+
+            return asset.localPath || '';
+        }
 
         async function init() {
-            await ResourceLoader.init();
-            wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
-            const tcZipConfig = await ResourceLoader.getAllUrls('assets', 'tc-zip');
-            tcZipSources = [];
-
-            if (!ResourceLoader.isOffline()) {
-                tcZipSources = tcZipSources.concat(tcZipConfig.urls || []);
-            }
-            if (tcZipConfig.localPath) {
-                tcZipSources.push(tcZipConfig.localPath);
-            }
+            wdosboxUrl = await resolveAssetUrl(EMBED_ASSET_SOURCES.wdosbox);
+            tcZipSources = navigator.onLine
+                ? [...EMBED_ASSET_SOURCES.tcZip.urls, EMBED_ASSET_SOURCES.tcZip.localPath]
+                : [EMBED_ASSET_SOURCES.tcZip.localPath, ...EMBED_ASSET_SOURCES.tcZip.urls];
         }
 
         // Standard batch script to compile and run silent

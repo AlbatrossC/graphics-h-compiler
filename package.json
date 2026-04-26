@@ -1,0 +1,10 @@
+{
+  "name": "graphics-h-online-compiler",
+  "private": true,
+  "scripts": {
+    "build": "python build.py"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
+}

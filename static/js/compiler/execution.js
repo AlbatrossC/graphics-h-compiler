@@ -280,9 +280,8 @@ async function runProgram() {
     try {
         updateLoadingProgress(20);
 
-        // Determine wdosbox URL using ResourceLoader with automatic fallback
-        let wdosboxUrl = await ResourceLoader.getResourceUrl('libs', 'wdosbox');
-        const usingOnline = !ResourceLoader.isOffline() && wdosboxUrl && !wdosboxUrl.startsWith('/');
+        let wdosboxUrl = await resolveCompilerAssetUrl('libs', 'wdosbox');
+        const usingOnline = Boolean(wdosboxUrl && !wdosboxUrl.startsWith('/'));
 
         Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
         updateLoadingProgress(40);
@@ -438,21 +437,17 @@ async function warmupJSDOS() {
 }
 
 async function prefetchDemoFiles() {
-    const entries = Object.entries(DEMO_FILES).filter(([key]) => !DemoCache.get(key));
-    if (entries.length === 0) return;
-
-    await Promise.allSettled(entries.map(async ([key, url]) => {
-        try {
-            const response = await fetch(url);
-            if (response.ok) {
-                const code = await response.text();
+    try {
+        const bundle = await loadDemoBundle();
+        Object.entries(bundle).forEach(([key, code]) => {
+            if (!DemoCache.get(key)) {
                 DemoCache.set(key, code);
-                Logger.info(`Pre-cached demo: ${key}`);
             }
-        } catch (e) {
-            // Silently fail for background prefetch
-        }
-    }));
+        });
+        Logger.info('Pre-cached demo bundle');
+    } catch (e) {
+        // Silently fail for background prefetch
+    }
 }
 
 // ==================== INITIALIZATION ====================

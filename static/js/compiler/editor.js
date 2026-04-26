@@ -40,12 +40,15 @@ async function loadAllScripts() {
         Logger.info('Loading dependencies with optimized flow...');
         updateLoadingProgress(10);
 
-        // Initialize resources from manifest first
+        // Initialize resource sources first
         await initializeResourcesFromManifest();
+        loadDemoBundle().catch((error) => {
+            Logger.warn(`Demo bundle preload skipped: ${error.message}`);
+        });
 
         // Load CodeMirror bundle immediately (Phase 2)
-        await loadCodeMirror();
-        scriptsLoaded.codemirror = true;
+                    await loadCodeMirror();
+                    scriptsLoaded.codemirror = true;
         updateLoadingProgress(50);
 
         // Initialize editor immediately, do not wait for JS-DOS
@@ -55,7 +58,7 @@ async function loadAllScripts() {
         Promise.all([
             (async () => {
                 try {
-                    await ResourceLoader.loadScript('libs', 'jsdos');
+                    await loadCompilerScript('libs', 'jsdos');
                     Logger.info('JS-DOS loaded in background');
                 } catch (e) {
                     Logger.warn(`Failed to load JS-DOS: ${e.message}`);
@@ -131,51 +134,34 @@ async function loadDemoFile(demoKey, forceReload = false) {
             }
         }
 
-        Logger.info(`Loading ${demoKey} demo using ResourceLoader...${forceReload ? ' (force reload)' : ''}`);
+        Logger.info(`Loading ${demoKey} demo from bundled demo JSON...${forceReload ? ' (force reload)' : ''}`);
 
-        let response;
-        try {
-            const fetchOptions = forceReload ? { cache: 'no-cache' } : {};
-            response = await ResourceLoader.fetchResource('demos', demoKey, fetchOptions);
-        } catch (resourceError) {
-            Logger.warn(`ResourceLoader failed for ${demoKey}, trying direct DEMO_FILES fallback`);
-            const demoUrl = DEMO_FILES[demoKey];
-            if (demoUrl) {
-                const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
-                response = await fetch(demoUrl + cacheBuster);
-            } else {
-                throw new Error(`Demo file not found: ${demoKey}`);
-            }
+        await loadDemoBundle();
+        const code = DEMO_FILE_CONTENTS[demoKey];
+        if (typeof code !== 'string') {
+            throw new Error(`Demo file not found: ${demoKey}`);
         }
 
-        if (response.ok) {
-            const code = await response.text();
+        DemoCache.set(demoKey, code);
 
-            DemoCache.set(demoKey, code);
+        editor.setValue(code);
 
-            editor.setValue(code);
+        lastLoadedDemo = demoKey;
 
-            lastLoadedDemo = demoKey;
-
-            // Always write demo to IndexedDB (primary storage for guest, cache for logged-in)
-            {
-                const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
-                const [folder, filename] = activeKey.split('/');
-                setLocalDraftImmediate(folder, filename, code);
-            }
-            if (isUserLoggedIn) {
-                CLOUD_STATE.lastSavedHash = null;
-            }
-            scheduleAutosave(); // Handles both guest and logged-in
-
-            updateEditorInfo();
-            updateSaveIndicator();
-
-            Logger.success(`Loaded ${demoKey} demo`);
-        } else {
-            Logger.error(`Failed to load demo: ${response.status}`);
-            alert('Failed to load demo file. Please try again.');
+        {
+            const activeKey = CLOUD_STATE.activeFileKey || 'root/main.cpp';
+            const [folder, filename] = activeKey.split('/');
+            setLocalDraftImmediate(folder, filename, code);
         }
+        if (isUserLoggedIn) {
+            CLOUD_STATE.lastSavedHash = null;
+        }
+        scheduleAutosave();
+
+        updateEditorInfo();
+        updateSaveIndicator();
+
+        Logger.success(`Loaded ${demoKey} demo`);
     } catch (e) {
         Logger.error('Error loading demo file', e);
         alert('Error loading demo file. Please check your connection or try offline mode.');
