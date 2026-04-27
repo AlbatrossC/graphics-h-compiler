@@ -42,6 +42,7 @@ JS_PRIORITY = [
 EXCLUDED_JS = {
     "analytics.js",
     "codemirror.bundle.v1.js",
+    "js-dos-loader.js",
     "dosbox.js",
     "dosbox.wasm",
 }
@@ -141,6 +142,7 @@ def build_compiler_assets() -> dict[str, object]:
                 "/static/js/compiler/codemirror.bundle.v1.js",
                 "/libs/js-dos.js",
                 "/libs/wdosbox.js",
+                "/libs/wdosbox.wasm",
                 "/static/analytics.js",
             ],
         },

@@ -60,6 +60,19 @@ function getCompilerAsset(category, resourceId) {
     return COMPILER_ASSET_SOURCES?.[category]?.[resourceId] || null;
 }
 
+function getCompilerAssetCandidateUrls(category, resourceId, options = {}) {
+    const asset = getCompilerAsset(category, resourceId);
+    if (!asset) return [];
+
+    const preferLocal = options.preferLocal === true || !navigator.onLine;
+    const remoteUrls = Array.isArray(asset.urls) ? asset.urls : [];
+    const localUrl = asset.localPath || null;
+
+    return preferLocal
+        ? [localUrl, ...remoteUrls].filter(Boolean)
+        : [...remoteUrls, localUrl].filter(Boolean);
+}
+
 async function isCompilerAssetUrlReachable(url, timeout = 3000) {
     if (!url) return false;
     if (url.startsWith('/')) return true;
@@ -90,15 +103,9 @@ async function isCompilerAssetUrlReachable(url, timeout = 3000) {
 }
 
 async function resolveCompilerAssetUrl(category, resourceId, options = {}) {
+    const candidateUrls = getCompilerAssetCandidateUrls(category, resourceId, options);
     const asset = getCompilerAsset(category, resourceId);
-    if (!asset) return null;
-
-    const preferLocal = options.preferLocal === true || !navigator.onLine;
-    const remoteUrls = Array.isArray(asset.urls) ? asset.urls : [];
-    const localUrl = asset.localPath || null;
-    const candidateUrls = preferLocal
-        ? [localUrl, ...remoteUrls]
-        : [...remoteUrls, localUrl];
+    const localUrl = asset?.localPath || null;
 
     for (const url of candidateUrls) {
         if (!url) continue;
@@ -119,12 +126,7 @@ async function fetchCompilerAsset(category, resourceId, options = {}) {
         throw new Error(`Unknown compiler asset: ${category}/${resourceId}`);
     }
 
-    const preferLocal = options.preferLocal === true || !navigator.onLine;
-    const remoteUrls = Array.isArray(asset.urls) ? asset.urls : [];
-    const localUrl = asset.localPath || null;
-    const candidateUrls = preferLocal
-        ? [localUrl, ...remoteUrls]
-        : [...remoteUrls, localUrl];
+    const candidateUrls = getCompilerAssetCandidateUrls(category, resourceId, options);
 
     let lastError = null;
     for (const url of candidateUrls) {

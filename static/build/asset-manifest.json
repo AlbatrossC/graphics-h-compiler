@@ -1,7 +1,7 @@
 {
   "compiler": {
     "css": "/static/build/compiler.2156ef8cd237.css",
-    "js": "/static/build/compiler.7ff256edd893.js",
+    "js": "/static/build/compiler.a89aa2a7c8a8.js",
     "css_sources": [
       "static/css/compiler/base.css",
       "static/css/compiler/panels.css",
@@ -28,6 +28,7 @@
       "/static/js/compiler/codemirror.bundle.v1.js",
       "/libs/js-dos.js",
       "/libs/wdosbox.js",
+      "/libs/wdosbox.wasm",
       "/static/analytics.js"
     ]
   }

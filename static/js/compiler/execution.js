@@ -280,10 +280,10 @@ async function runProgram() {
     try {
         updateLoadingProgress(20);
 
-        let wdosboxUrl = await resolveCompilerAssetUrl('libs', 'wdosbox');
-        const usingOnline = Boolean(wdosboxUrl && !wdosboxUrl.startsWith('/'));
+        await startPreload();
 
-        Logger.info(`Using ${usingOnline ? 'CDN' : 'local'} WDOSBOX: ${wdosboxUrl}`);
+        const wdosboxUrl = '/libs/wdosbox.js';
+        Logger.info(`Using local WDOSBOX runtime: ${wdosboxUrl}`);
         updateLoadingProgress(40);
 
 
@@ -391,51 +391,6 @@ window.addEventListener('beforeunload', () => {
 
 
 
-// ==================== JS-DOS BACKGROUND WARMUP ====================
-
-async function warmupJSDOS() {
-    if (warmupPromise) return warmupPromise;
-
-    warmupPromise = new Promise(async (resolve) => {
-        try {
-            Logger.info('Starting JS-DOS background warmup...');
-
-            // Pre-fetch and cache TC ZIP using shared function immediately
-            try {
-                await getTCZip();
-                Logger.success('TC ZIP ready for instant run');
-            } catch (e) {
-                Logger.warn('Failed to pre-cache TC ZIP: ' + e.message);
-            }
-
-            // Pre-cache all demo files in background
-            prefetchDemoFiles();
-
-            // Wait for JS-DOS to be available
-            if (typeof Dos === 'undefined') {
-                let attempts = 0;
-                while (typeof Dos === 'undefined' && attempts < 50) {
-                    await new Promise(r => setTimeout(r, 100));
-                    attempts++;
-                }
-                if (typeof Dos === 'undefined') {
-                    Logger.warn('JS-DOS not available for warmup');
-                    resolve(false);
-                    return;
-                }
-            }
-
-            Logger.success('JS-DOS warmup complete - Run will be instant!');
-            resolve(true);
-        } catch (e) {
-            Logger.warn('Warmup failed: ' + e.message);
-            resolve(false);
-        }
-    });
-
-    return warmupPromise;
-}
-
 async function prefetchDemoFiles() {
     try {
         const bundle = await loadDemoBundle();
@@ -458,9 +413,7 @@ async function prefetchDemoFiles() {
 
     const loaded = await loadAllScripts();
     if (loaded) {
-        // Start warmup after editor is ready
-        warmupJSDOS();
-        updateCacheStatus();
+        prefetchDemoFiles();
 
         Logger.success('Compiler ready');
     }

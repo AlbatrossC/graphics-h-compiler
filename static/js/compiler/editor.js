@@ -5,13 +5,14 @@
 // ==================== CODEMIRROR LOCAL BUNDLE LOADING ====================
 
 let cmModules = null;
+const editorPromise = import('/static/js/compiler/codemirror.bundle.v1.js');
 
 async function loadCodeMirror() {
     Logger.info('Loading CodeMirror via local bundle...');
     updateLoadingProgress(30);
 
     try {
-        const bundle = await import('/static/js/compiler/codemirror.bundle.v1.js');
+        const bundle = await editorPromise;
 
         cmModules = {
             cm: bundle.cmCore,
@@ -37,7 +38,7 @@ async function loadCodeMirror() {
 
 async function loadAllScripts() {
     try {
-        Logger.info('Loading dependencies with optimized flow...');
+        Logger.info('Loading dependencies with production preload flow...');
         updateLoadingProgress(10);
 
         // Initialize resource sources first
@@ -46,37 +47,27 @@ async function loadAllScripts() {
             Logger.warn(`Demo bundle preload skipped: ${error.message}`);
         });
 
-        // Load CodeMirror bundle immediately (Phase 2)
-                    await loadCodeMirror();
-                    scriptsLoaded.codemirror = true;
+        await loadCodeMirror();
+        scriptsLoaded.codemirror = true;
         updateLoadingProgress(50);
 
-        // Initialize editor immediately, do not wait for JS-DOS
-        initializeEditor();
+        await initializeEditor();
 
-        // Load JS-DOS and Prefetch TC in background in parallel (Phase 3)
-        Promise.all([
-            (async () => {
-                try {
-                    await loadCompilerScript('libs', 'jsdos');
-                    Logger.info('JS-DOS loaded in background');
-                } catch (e) {
-                    Logger.warn(`Failed to load JS-DOS: ${e.message}`);
-                }
-            })(),
-            (async () => {
-                try {
-                    Logger.info('Prefetching TC.zip in background...');
-                    await getTCZip();
-                    Logger.success('TC.zip prefetched');
-                } catch (e) {
-                    Logger.warn(`TC.zip prefetch skipped: ${e.message}`);
-                }
-            })()
-        ]).then(() => {
-            updateLoadingProgress(100);
-            Logger.success('All background dependencies loaded');
+        editorPromise.then(() => {
+            const queuePreload = () => {
+                startPreload()
+                    .then(() => updateCacheStatus())
+                    .catch((error) => Logger.warn(`Compiler preload skipped: ${error.message}`));
+            };
+
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(queuePreload);
+            } else {
+                Promise.resolve().then(queuePreload);
+            }
         });
+
+        updateLoadingProgress(100);
 
         return true;
     } catch (error) {

@@ -4,11 +4,43 @@
 <head>
   <meta charset="utf-8" />
   <title>Graphics.h Online Compiler | Turbo C++ DOS Emulation</title>
-  <!-- Google Fonts - JetBrains Mono for better code readability -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
-    rel="stylesheet" />
+  <link rel="preload" href="/static/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/static/fonts/JetBrainsMono-Medium.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/static/fonts/JetBrainsMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/static/fonts/JetBrainsMono-Bold.woff2" as="font" type="font/woff2" crossorigin />
+  <style>
+    @font-face {
+      font-family: 'JetBrains Mono';
+      src: url('/static/fonts/JetBrainsMono-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'JetBrains Mono';
+      src: url('/static/fonts/JetBrainsMono-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'JetBrains Mono';
+      src: url('/static/fonts/JetBrainsMono-SemiBold.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'JetBrains Mono';
+      src: url('/static/fonts/JetBrainsMono-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+  </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
     content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser." />
@@ -21,9 +53,8 @@
   <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
 
   <!-- Preload Hints for Faster Loading -->
-  <link rel="preconnect" href="https://js-dos.com" />
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-  
+  <link rel="preconnect" href="https://r2-public-assets.albatrossc.workers.dev" crossorigin />
+
   <meta name="google-adsense-account" content="ca-pub-6918638598461716">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
 

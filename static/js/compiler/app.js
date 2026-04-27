@@ -236,9 +236,6 @@ const TYPING_DEBOUNCE_MS = 0;     // Timer resets immediately on every keystroke
 let DEMO_FILES = {};
 let DEMO_FILE_CONTENTS = {};
 let demoBundlePromise = null;
-
-// Compiler ZIP source cache
-let TC_ZIP_URL = null;
 let compilerAssetsInitPromise = null;
 
 // Initialize compiler asset sources
@@ -250,7 +247,6 @@ async function initializeResourcesFromManifest() {
     compilerAssetsInitPromise = (async () => {
         try {
             DEMO_FILES = getCompilerDemoFiles();
-            TC_ZIP_URL = await resolveCompilerAssetUrl('assets', 'tc-zip');
             Logger.success('Compiler asset sources initialized');
         } catch (error) {
             Logger.error('Failed to initialize compiler assets', error);
@@ -260,7 +256,6 @@ async function initializeResourcesFromManifest() {
                 'bouncing-ball': '/compiler-assets/Demo_files/bouncing_ball.cpp',
                 'shooter-game': '/compiler-assets/Demo_files/shooter_game.cpp'
             };
-            TC_ZIP_URL = '/compiler-assets/zip-files/tc-v1.zip';
         }
     })();
 
@@ -299,98 +294,113 @@ async function loadDemoBundle() {
 
 // ==================== CACHING SYSTEM ====================
 const CACHE_CONFIG = {
-    TC_ZIP_CACHE_KEY: 'tc_zip_cache',
-    TC_ZIP_VERSION: 'tc-v1',
     DEMO_CACHE_PREFIX: 'demo_cache_',
     CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
-    DB_NAME: 'GraphicsHCompilerCache',
-    DB_VERSION: 1,
-    STORE_NAME: 'files'
+    COMPILER_CACHE_NAME: 'graphics-h-compiler-runtime-v1',
+    PRELOAD_WASM_URL: '/libs/wdosbox.wasm',
+    JSDOS_MODULE_URL: '/libs/js-dos.js'
 };
 
-// IndexedDB for large file caching (TC ZIP)
-let cacheAvailable = true; // Flag to prevent repeated IndexedDB retries
+const compilerFetchPromises = new Map();
+let preloadStarted = false;
+let preloadPromise = null;
 
-class CacheDB {
-    static db = null;
-
-    static async open() {
-        if (!cacheAvailable) return null; // Don't retry if previously failed
-        if (this.db) return this.db;
-
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(CACHE_CONFIG.DB_NAME, CACHE_CONFIG.DB_VERSION);
-
-            request.onerror = () => {
-                cacheAvailable = false; // Mark cache as unavailable
-                Logger.warn('IndexedDB not available, caching disabled');
-                resolve(null);
-            };
-
-            request.onsuccess = () => {
-                this.db = request.result;
-                resolve(this.db);
-            };
-
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains(CACHE_CONFIG.STORE_NAME)) {
-                    db.createObjectStore(CACHE_CONFIG.STORE_NAME, { keyPath: 'key' });
-                }
-            };
-        });
+async function openCompilerCache() {
+    if (typeof caches === 'undefined') {
+        return null;
     }
 
-    static async get(key) {
-        const db = await this.open();
-        if (!db) return null;
+    try {
+        return await caches.open(CACHE_CONFIG.COMPILER_CACHE_NAME);
+    } catch (error) {
+        Logger.warn(`Cache API unavailable: ${error.message}`);
+        return null;
+    }
+}
 
-        return new Promise((resolve) => {
-            try {
-                const transaction = db.transaction(CACHE_CONFIG.STORE_NAME, 'readonly');
-                const store = transaction.objectStore(CACHE_CONFIG.STORE_NAME);
-                const request = store.get(key);
+function normalizeCacheUrl(url) {
+    return new URL(url, window.location.origin).toString();
+}
 
-                request.onsuccess = () => {
-                    const result = request.result;
-                    if (result && result.timestamp) {
-                        const age = Date.now() - result.timestamp;
-                        if (age < CACHE_CONFIG.CACHE_TTL) {
-                            resolve(result.data);
-                            return;
-                        }
-                    }
-                    resolve(null);
-                };
+async function getCachedResponse(url) {
+    const cache = await openCompilerCache();
+    if (!cache) return null;
 
-                request.onerror = () => resolve(null);
-            } catch (e) {
-                resolve(null);
-            }
-        });
+    return cache.match(normalizeCacheUrl(url));
+}
+
+async function hasCachedCompilerAsset(category, resourceId) {
+    const candidateUrls = getCompilerAssetCandidateUrls(category, resourceId, { preferLocal: !navigator.onLine });
+    for (const url of candidateUrls) {
+        if (await getCachedResponse(url)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+async function cachedFetch(url, fetchOptions = {}) {
+    const normalizedUrl = normalizeCacheUrl(url);
+    const existingPromise = compilerFetchPromises.get(normalizedUrl);
+    if (existingPromise) {
+        return (await existingPromise).clone();
     }
 
-    static async set(key, data) {
-        const db = await this.open();
-        if (!db) return false;
+    const requestPromise = (async () => {
+        const cached = await getCachedResponse(normalizedUrl);
+        if (cached) {
+            Logger.info(`Cache hit: ${normalizedUrl}`);
+            return cached;
+        }
 
-        return new Promise((resolve) => {
-            try {
-                const transaction = db.transaction(CACHE_CONFIG.STORE_NAME, 'readwrite');
-                const store = transaction.objectStore(CACHE_CONFIG.STORE_NAME);
-                const request = store.put({
-                    key: key,
-                    data: data,
-                    timestamp: Date.now()
-                });
-
-                request.onsuccess = () => resolve(true);
-                request.onerror = () => resolve(false);
-            } catch (e) {
-                resolve(false);
-            }
+        Logger.info(`Fetching asset: ${normalizedUrl}`);
+        const response = await fetch(normalizedUrl, {
+            cache: 'default',
+            ...fetchOptions
         });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch ${normalizedUrl} (HTTP ${response.status})`);
+        }
+
+        const blob = await response.blob();
+        if (!blob.size) {
+            throw new Error(`Refusing to cache empty response for ${normalizedUrl}`);
+        }
+
+        const cacheableResponse = new Response(blob, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers
+        });
+
+        const cache = await openCompilerCache();
+        if (cache) {
+            await cache.put(normalizedUrl, cacheableResponse.clone());
+        }
+
+        return cacheableResponse;
+    })().finally(() => {
+        compilerFetchPromises.delete(normalizedUrl);
+    });
+
+    compilerFetchPromises.set(normalizedUrl, requestPromise);
+    return (await requestPromise).clone();
+}
+
+async function cachedFetchCompilerAsset(category, resourceId, options = {}) {
+    const candidateUrls = getCompilerAssetCandidateUrls(category, resourceId, options);
+    let lastError = null;
+
+    for (const url of candidateUrls) {
+        try {
+            return await cachedFetch(url, options.fetchOptions || {});
+        } catch (error) {
+            lastError = error;
+        }
     }
+
+    throw lastError || new Error(`Failed to fetch compiler asset: ${category}/${resourceId}`);
 }
 
 // Demo file cache using localStorage
@@ -432,7 +442,6 @@ const DemoCache = {
 };
 
 // ==================== JS-DOS WARMUP SYSTEM ====================
-let warmupPromise = null;
 let tcZipPromise = null; // Shared promise to prevent duplicate downloads
 
 // Shared function to get TC ZIP - prevents race condition between warmup and run
@@ -443,27 +452,9 @@ async function getTCZip() {
 
     tcZipPromise = (async () => {
         try {
-            // Try cache first
-            let blob = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
-            if (blob) {
-                Logger.info('TC ZIP loaded from cache');
-                return blob;
-            }
-
-            // Download with manifest fallback chain (R2 -> local) and cache result.
-            Logger.info('Downloading TC ZIP...');
-            const response = await fetchCompilerAsset('assets', 'tc-zip');
-            if (!response.ok) {
-                throw new Error(`Failed to download compiler (HTTP ${response.status})`);
-            }
-            blob = await response.blob();
-
-            // Cache for next time (async, don't block)
-            CacheDB.set(CACHE_CONFIG.TC_ZIP_CACHE_KEY, blob)
-                .then(cached => {
-                    if (cached) Logger.success('TC ZIP cached for future use');
-                });
-
+            const response = await cachedFetchCompilerAsset('assets', 'tc-zip');
+            const blob = await response.blob();
+            Logger.success('TC ZIP ready');
             return blob;
         } catch (error) {
             tcZipPromise = null; // Clear rejected promise
@@ -474,10 +465,33 @@ async function getTCZip() {
     return tcZipPromise;
 }
 
+async function startPreload() {
+    if (preloadStarted && preloadPromise) {
+        return preloadPromise;
+    }
+
+    preloadStarted = true;
+    preloadPromise = (async () => {
+        await initializeResourcesFromManifest();
+
+        Logger.info('Starting compiler preload sequence...');
+        await cachedFetch(CACHE_CONFIG.PRELOAD_WASM_URL);
+        await import(CACHE_CONFIG.JSDOS_MODULE_URL);
+        await cachedFetchCompilerAsset('assets', 'tc-zip');
+        Logger.success('Compiler preload finished');
+    })().catch((error) => {
+        preloadStarted = false;
+        preloadPromise = null;
+        throw error;
+    });
+
+    return preloadPromise;
+}
+
 // Update cache status indicator on Run button
 async function updateCacheStatus() {
     try {
-        const cached = await CacheDB.get(CACHE_CONFIG.TC_ZIP_CACHE_KEY);
+        const cached = await hasCachedCompilerAsset('assets', 'tc-zip');
         if (cached && runBtn) {
             runBtn.title = 'Run (cached - instant) [Ctrl+Enter]';
             Logger.info('Cache status: TC ZIP is cached');

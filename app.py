@@ -6,6 +6,7 @@ import json
 import time
 from pathlib import Path
 from urllib.parse import urljoin
+import re
 
 load_dotenv()
 
@@ -195,6 +196,9 @@ def resolve_doc_description(slug):
         return DOCS_SLUG_TO_DESCRIPTION[slug]
     title = resolve_doc_title(slug)
     return f'{title} guide for graphics.h online compiler documentation with examples and student-friendly explanations.'
+
+
+HASHED_COMPILER_ASSET_PATTERN = re.compile(r'^build/compiler\.[a-f0-9]+\.(css|js)$')
 
 # Maintenance mode check
 def is_maintenance_mode():
@@ -553,13 +557,21 @@ def serve_static(path):
         response.cache_control.public = True
         response.cache_control.max_age = 300
         response.cache_control.must_revalidate = True
+    elif HASHED_COMPILER_ASSET_PATTERN.match(lower_path):
+        response.cache_control.public = True
+        response.cache_control.max_age = 31536000
+        response.cache_control.immutable = True
+    elif lower_path in {'js/compiler/codemirror.bundle.v1.js', 'analytics.js'}:
+        response.cache_control.public = True
+        response.cache_control.max_age = 31536000
+        response.cache_control.immutable = True
+    elif lower_path.startswith('fonts/'):
+        response.cache_control.public = True
+        response.cache_control.max_age = 31536000
+        response.cache_control.immutable = True
     elif any(lower_path.endswith(ext) for ext in ('.js', '.css', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.mp4', '.webm')):
         response.cache_control.public = True
-        if lower_path.startswith('build/compiler.'):
-            response.cache_control.max_age = 31536000
-            response.cache_control.immutable = True
-        else:
-            response.cache_control.max_age = 604800
+        response.cache_control.max_age = 604800
     return response
 
 @app.route('/robots.txt')
@@ -580,7 +592,20 @@ def serve_sdk():
 
 @app.route('/libs/<path:filename>')
 def serve_libs(filename):
-    return send_from_directory('compiler-assets/libs', filename)
+    lower_name = filename.lower()
+
+    if lower_name == 'js-dos.js':
+        response = send_from_directory('static/js/compiler', 'js-dos-loader.js', mimetype='application/javascript')
+    elif lower_name == 'wdosbox.wasm':
+        response = send_from_directory('compiler-assets/libs', 'wdosbox.wasm.js', mimetype='application/wasm')
+    else:
+        response = send_from_directory('compiler-assets/libs', filename)
+
+    if lower_name in {'js-dos.js', 'wdosbox.js', 'wdosbox.wasm'}:
+        response.cache_control.public = True
+        response.cache_control.max_age = 31536000
+
+    return response
 
 # Serve compiler assets (demos, zip files) for offline mode
 @app.route('/compiler-assets/<path:filepath>')
@@ -589,7 +614,7 @@ def serve_compiler_assets(filepath):
     lower_path = filepath.lower()
     if any(lower_path.endswith(ext) for ext in ('.zip', '.cpp', '.js', '.wasm', '.data')):
         response.cache_control.public = True
-        response.cache_control.max_age = 604800
+        response.cache_control.max_age = 31536000
     return response
 
 
