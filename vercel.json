@@ -12,6 +12,10 @@
       "use": "@vercel/static"
     },
     {
+      "src": "compiler-assets/fonts/**/*",
+      "use": "@vercel/static"
+    },
+    {
       "src": "app.py",
       "use": "@vercel/python"
     }
@@ -47,7 +51,7 @@
     },
     {
       "src": "/libs/js-dos\\.js",
-      "dest": "/static/js/compiler/js-dos-loader.js",
+      "dest": "/compiler-assets/libs/js-dos.js",
       "headers": {
         "cache-control": "public, max-age=31536000"
       }
@@ -62,6 +66,13 @@
     {
       "src": "/libs/(.*)",
       "dest": "/compiler-assets/libs/$1"
+    },
+    {
+      "src": "/compiler-assets/fonts/(.*)",
+      "dest": "/compiler-assets/fonts/$1",
+      "headers": {
+        "cache-control": "public, max-age=31536000, immutable"
+      }
     },
     {
       "src": "/static/(.*)",
