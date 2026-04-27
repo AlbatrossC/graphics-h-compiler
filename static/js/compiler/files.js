@@ -550,11 +550,10 @@ async function initGoogleIdentity(clientId) {
         const renderTarget = document.getElementById('google-btn-render');
         if (renderTarget) {
             window.google.accounts.id.renderButton(renderTarget, {
-                theme: 'outline',
+                theme: 'filled_blue',
                 size: 'large',
                 shape: 'pill',
                 text: 'signin_with',
-                width: 240,
             });
         }
 

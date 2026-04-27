@@ -1443,7 +1443,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     border-top: none;
     margin-top: 8px;
     width: 100%;
-    max-width: 250px;
 }
 
 .google-btn {
@@ -1480,7 +1479,14 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     display: flex;
     justify-content: center;
     width: 100%;
-    min-height: 38px;
+    min-height: 44px;
+    overflow: visible;
+}
+
+/* Ensure the Google-rendered iframe scales naturally */
+.google-btn-render iframe {
+    max-width: 100%;
+    border-radius: 20px;
 }
 
 /* User Profile */
