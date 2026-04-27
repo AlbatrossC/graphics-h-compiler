@@ -257,15 +257,6 @@ async function runProgram() {
         toggleEditorFullscreen(false);
     }
 
-    const iframe = document.getElementById('dos-iframe');
-    if (!iframe || !iframe.contentWindow) {
-        alert('DOS terminal is not available.');
-        loading.classList.remove('active');
-        runBtn.disabled = false;
-        runBtn.classList.remove('loading');
-        return;
-    }
-
     outputPanel.classList.remove('visible');
     outputPanel.classList.remove('expanded');
     expandOutputBtn.classList.remove('expanded');
@@ -278,6 +269,11 @@ async function runProgram() {
     lastErrorContent = '';
     outputContent.textContent = '';
     try {
+        const iframe = await ensureDosRunnerFrame();
+        if (!iframe.contentWindow) {
+            throw new Error('DOS terminal is not available.');
+        }
+
         updateLoadingProgress(20);
 
         await startPreload();

@@ -4,41 +4,14 @@
 <head>
   <meta charset="utf-8" />
   <title>Graphics.h Online Compiler | Turbo C++ DOS Emulation</title>
-  <link rel="preload" href="/static/fonts/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/static/fonts/JetBrainsMono-Medium.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/static/fonts/JetBrainsMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/static/fonts/JetBrainsMono-Bold.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/compiler-assets/fonts/JetBrainsMono-Variable.woff2" as="font" type="font/woff2" crossorigin />
   <style>
     @font-face {
       font-family: 'JetBrains Mono';
-      src: url('/static/fonts/JetBrainsMono-Regular.woff2') format('woff2');
-      font-weight: 400;
+      src: url('/compiler-assets/fonts/JetBrainsMono-Variable.woff2') format('woff2');
+      font-weight: 100 800;
       font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: 'JetBrains Mono';
-      src: url('/static/fonts/JetBrainsMono-Medium.woff2') format('woff2');
-      font-weight: 500;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: 'JetBrains Mono';
-      src: url('/static/fonts/JetBrainsMono-SemiBold.woff2') format('woff2');
-      font-weight: 600;
-      font-style: normal;
-      font-display: swap;
-    }
-
-    @font-face {
-      font-family: 'JetBrains Mono';
-      src: url('/static/fonts/JetBrainsMono-Bold.woff2') format('woff2');
-      font-weight: 700;
-      font-style: normal;
-      font-display: swap;
+      font-display: optional;
     }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -535,8 +508,11 @@
       </div>
 
       <div id="editor-loading-overlay" class="editor-loading-overlay">
-        <div class="editor-loading-spinner"></div>
-        <div class="editor-loading-text">Loading editor...</div>
+        <div class="editor-loading-card">
+          <div class="editor-loading-spinner"></div>
+          <div class="editor-loading-text" id="editor-loading-text">Loading editor...</div>
+          <div class="editor-loading-subtext" id="editor-loading-subtext">Preparing CodeMirror and workspace UI.</div>
+        </div>
       </div>
 
       <div id="editor" data-clarity-unmask="true"></div>
@@ -596,7 +572,11 @@
       </div>
 
       <div class="terminal-canvas-wrap">
-        <iframe id="dos-iframe" src="{{ url_for('static', filename='dos-runner.html') }}" title="DOS Terminal"
+        <div id="terminal-idle-state" class="terminal-idle-state">
+          <div class="terminal-idle-title">DOS runtime loads after the editor is ready.</div>
+          <div class="terminal-idle-copy">We bring up the editor and demo first, then warm the compiler runtime in the background.</div>
+        </div>
+        <iframe id="dos-iframe" data-src="{{ url_for('static', filename='dos-runner.html') }}" title="DOS Terminal"
           sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
       </div>
 

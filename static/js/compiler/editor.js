@@ -39,33 +39,40 @@ async function loadCodeMirror() {
 async function loadAllScripts() {
     try {
         Logger.info('Loading dependencies with production preload flow...');
+        updateEditorLoadingState('Loading editor shell...', 'Preparing compiler assets and workspace UI.');
         updateLoadingProgress(10);
 
         // Initialize resource sources first
         await initializeResourcesFromManifest();
-        loadDemoBundle().catch((error) => {
-            Logger.warn(`Demo bundle preload skipped: ${error.message}`);
-        });
 
+        updateEditorLoadingState('Loading CodeMirror...', 'Fetching the local editor bundle and language support.');
         await loadCodeMirror();
         scriptsLoaded.codemirror = true;
         updateLoadingProgress(50);
 
         await initializeEditor();
+        updateEditorLoadingState('Loading starter code...', 'Restoring your draft or fetching the default demo.');
+        await loadDefaultCode();
+        updateEditorLoadingState('Preparing DOS runner...', 'Mounting the terminal frame after the editor is ready.');
+        await ensureDosRunnerFrame();
+        updateEditorLoadingState('Warming compiler runtime...', 'Caching DOS runtime files in the background.');
 
-        editorPromise.then(() => {
-            const queuePreload = () => {
-                startPreload()
-                    .then(() => updateCacheStatus())
-                    .catch((error) => Logger.warn(`Compiler preload skipped: ${error.message}`));
-            };
+        const queuePreload = () => {
+            startPreload()
+                .then(() => updateCacheStatus())
+                .catch((error) => Logger.warn(`Compiler preload skipped: ${error.message}`));
+        };
 
-            if (window.requestIdleCallback) {
-                window.requestIdleCallback(queuePreload);
-            } else {
-                Promise.resolve().then(queuePreload);
-            }
-        });
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(queuePreload);
+        } else {
+            Promise.resolve().then(queuePreload);
+        }
+
+        const editorLoadingOverlay = document.getElementById('editor-loading-overlay');
+        if (editorLoadingOverlay) {
+            editorLoadingOverlay.classList.add('hidden');
+        }
 
         updateLoadingProgress(100);
 
@@ -486,8 +493,6 @@ async function initializeEditor() {
         });
     }
 
-    loadDefaultCode(); // Fire and forget. Editor will not block.
-
     // Delay heavy features to keep editor instant
     const executeHeavyFeatures = () => {
         const { history, historyKeymap } = cmModules.commands;
@@ -570,11 +575,6 @@ async function initializeEditor() {
     setTimeout(() => {
         editor.focus();
         editorWrapper.classList.add('active');
-
-        const editorLoadingOverlay = document.getElementById('editor-loading-overlay');
-        if (editorLoadingOverlay) {
-            editorLoadingOverlay.classList.add('hidden');
-        }
     }, 100);
 
     // Auto-fullscreen editor on mobile when clicked/focused

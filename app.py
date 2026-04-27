@@ -217,12 +217,43 @@ def check_maintenance():
             and not request.path.startswith('/static/'):
         return render_template('maintenance.html', maintenance_date=get_maintenance_date())
 
+
+@app.route('/static/fonts/<path:filename>')
+def serve_static_fonts(filename):
+    response = send_from_directory('static/fonts', filename)
+    response.cache_control.public = True
+    response.cache_control.max_age = 31536000
+    response.cache_control.immutable = True
+    return response
+
+
+@app.route('/static/build/<path:filename>')
+def serve_static_build(filename):
+    response = send_from_directory('static/build', filename)
+    response.cache_control.public = True
+    response.cache_control.max_age = 31536000
+    response.cache_control.immutable = True
+    return response
+
 @app.after_request
 def apply_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['X-XSS-Protection'] = '1; mode=block'
+
+    request_path = (request.path or '').lower()
+    if request_path.startswith('/static/'):
+        static_path = request_path.removeprefix('/static/')
+        if HASHED_COMPILER_ASSET_PATTERN.match(static_path) or static_path in {'js/compiler/codemirror.bundle.v1.js', 'analytics.js'}:
+            response.cache_control.public = True
+            response.cache_control.max_age = 31536000
+            response.cache_control.immutable = True
+        elif static_path.startswith('fonts/'):
+            response.cache_control.public = True
+            response.cache_control.max_age = 31536000
+            response.cache_control.immutable = True
+
     return response
 
 def get_missing_env(keys):
@@ -594,9 +625,7 @@ def serve_sdk():
 def serve_libs(filename):
     lower_name = filename.lower()
 
-    if lower_name == 'js-dos.js':
-        response = send_from_directory('static/js/compiler', 'js-dos-loader.js', mimetype='application/javascript')
-    elif lower_name == 'wdosbox.wasm':
+    if lower_name == 'wdosbox.wasm':
         response = send_from_directory('compiler-assets/libs', 'wdosbox.wasm.js', mimetype='application/wasm')
     else:
         response = send_from_directory('compiler-assets/libs', filename)
@@ -604,6 +633,7 @@ def serve_libs(filename):
     if lower_name in {'js-dos.js', 'wdosbox.js', 'wdosbox.wasm'}:
         response.cache_control.public = True
         response.cache_control.max_age = 31536000
+        response.cache_control.immutable = True
 
     return response
 
@@ -612,9 +642,10 @@ def serve_libs(filename):
 def serve_compiler_assets(filepath):
     response = send_from_directory('compiler-assets', filepath)
     lower_path = filepath.lower()
-    if any(lower_path.endswith(ext) for ext in ('.zip', '.cpp', '.js', '.wasm', '.data')):
+    if any(lower_path.endswith(ext) for ext in ('.zip', '.cpp', '.js', '.wasm', '.data', '.woff', '.woff2')):
         response.cache_control.public = True
         response.cache_control.max_age = 31536000
+        response.cache_control.immutable = True
     return response
 
 

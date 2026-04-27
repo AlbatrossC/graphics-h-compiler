@@ -267,8 +267,35 @@
             // ==================== SCRIPT LOADING ====================
             async function ensureJsdos() {
                 if (jsdosReady && typeof Dos !== 'undefined') return;
+                if (window.__graphicsCompilerJSDosPromise) {
+                    await window.__graphicsCompilerJSDosPromise;
+                    jsdosReady = true;
+                    return;
+                }
+
+                window.__graphicsCompilerJSDosPromise = new Promise((resolve, reject) => {
+                    const existing = document.querySelector('script[data-graphics-compiler-jsdos="true"]');
+                    if (existing) {
+                        existing.addEventListener('load', () => resolve(), { once: true });
+                        existing.addEventListener('error', () => reject(new Error('Failed to load /libs/js-dos.js')), { once: true });
+                        return;
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = '/libs/js-dos.js';
+                    script.async = true;
+                    script.dataset.graphicsCompilerJsdos = 'true';
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error('Failed to load /libs/js-dos.js'));
+                    document.head.appendChild(script);
+                }).catch((error) => {
+                    window.__graphicsCompilerJSDosPromise = null;
+                    throw error;
+                });
+
+                await window.__graphicsCompilerJSDosPromise;
                 if (typeof Dos === 'undefined') {
-                    await import('/libs/js-dos.js');
+                    throw new Error('JS-DOS runtime loaded without exposing Dos.');
                 }
                 jsdosReady = true;
             }

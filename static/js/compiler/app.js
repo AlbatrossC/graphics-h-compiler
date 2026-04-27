@@ -297,13 +297,16 @@ const CACHE_CONFIG = {
     DEMO_CACHE_PREFIX: 'demo_cache_',
     CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
     COMPILER_CACHE_NAME: 'graphics-h-compiler-runtime-v1',
+    JSDOS_RUNTIME_URL: '/libs/js-dos.js',
+    WDOSBOX_SCRIPT_URL: '/libs/wdosbox.js',
     PRELOAD_WASM_URL: '/libs/wdosbox.wasm',
-    JSDOS_MODULE_URL: '/libs/js-dos.js'
+    DOS_RUNNER_URL: '/static/dos-runner.html'
 };
 
 const compilerFetchPromises = new Map();
 let preloadStarted = false;
 let preloadPromise = null;
+let dosRunnerFramePromise = null;
 
 async function openCompilerCache() {
     if (typeof caches === 'undefined') {
@@ -475,8 +478,9 @@ async function startPreload() {
         await initializeResourcesFromManifest();
 
         Logger.info('Starting compiler preload sequence...');
+        await cachedFetch(CACHE_CONFIG.JSDOS_RUNTIME_URL);
+        await cachedFetch(CACHE_CONFIG.WDOSBOX_SCRIPT_URL);
         await cachedFetch(CACHE_CONFIG.PRELOAD_WASM_URL);
-        await import(CACHE_CONFIG.JSDOS_MODULE_URL);
         await cachedFetchCompilerAsset('assets', 'tc-zip');
         Logger.success('Compiler preload finished');
     })().catch((error) => {
@@ -507,6 +511,8 @@ async function updateCacheStatus() {
 const loading = document.getElementById("loading");
 const loadingText = document.getElementById("loading-text");
 const loadingProgressBar = document.getElementById("loading-progress-bar");
+const editorLoadingText = document.getElementById("editor-loading-text");
+const editorLoadingSubtext = document.getElementById("editor-loading-subtext");
 const runBtn = document.getElementById("run-btn");
 const terminalWrapper = document.getElementById("terminal-wrapper");
 const keyboardBlocker = document.getElementById("keyboard-blocker");
@@ -516,6 +522,58 @@ const clearBtn = document.getElementById("clear-btn");
 const editorInfo = document.getElementById("editor-info");
 const saveIndicator = document.getElementById("save-indicator");
 const saveText = document.getElementById("save-text");
+const terminalIdleState = document.getElementById("terminal-idle-state");
+
+function updateEditorLoadingState(title, detail) {
+    if (editorLoadingText && title) {
+        editorLoadingText.textContent = title;
+    }
+    if (editorLoadingSubtext && detail) {
+        editorLoadingSubtext.textContent = detail;
+    }
+}
+
+function ensureDosRunnerFrame() {
+    if (dosRunnerFramePromise) {
+        return dosRunnerFramePromise;
+    }
+
+    const iframe = document.getElementById('dos-iframe');
+    if (!iframe) {
+        return Promise.reject(new Error('DOS terminal iframe is missing.'));
+    }
+
+    if (iframe.dataset.loaded === 'true' && iframe.src) {
+        dosRunnerFramePromise = Promise.resolve(iframe);
+        return dosRunnerFramePromise;
+    }
+
+    dosRunnerFramePromise = new Promise((resolve, reject) => {
+        const handleLoad = () => {
+            iframe.dataset.loaded = 'true';
+            if (terminalIdleState) {
+                terminalIdleState.classList.add('hidden');
+            }
+            resolve(iframe);
+        };
+
+        const handleError = () => {
+            dosRunnerFramePromise = null;
+            reject(new Error('Failed to load DOS runner frame.'));
+        };
+
+        iframe.addEventListener('load', handleLoad, { once: true });
+        iframe.addEventListener('error', handleError, { once: true });
+
+        if (!iframe.src) {
+            iframe.src = iframe.dataset.src || CACHE_CONFIG.DOS_RUNNER_URL;
+        } else if (iframe.dataset.loaded === 'true') {
+            handleLoad();
+        }
+    });
+
+    return dosRunnerFramePromise;
+}
 
 // ==================== OUTPUT PANEL HANDLERS ====================
 
