@@ -322,6 +322,71 @@ function createSelectedMatchHighlightExtension() {
     });
 }
 
+function createBracketClosingExtension() {
+    const { EditorView, keymap } = cmModules.view;
+    const pairs = new Map([
+        ['(', ')'],
+        ['[', ']'],
+        ['{', '}'],
+        ['"', '"'],
+        ["'", "'"],
+    ]);
+    const closingChars = new Set([...pairs.values()]);
+
+    const inputHandler = EditorView.inputHandler.of((view, from, to, text) => {
+        if (text.length !== 1) return false;
+
+        const close = pairs.get(text);
+        if (close) {
+            const selectedText = view.state.sliceDoc(from, to);
+            view.dispatch({
+                changes: { from, to, insert: text + selectedText + close },
+                selection: {
+                    anchor: from + 1,
+                    head: from + 1 + selectedText.length
+                },
+                userEvent: 'input.type'
+            });
+            return true;
+        }
+
+        if (closingChars.has(text) && from === to && view.state.sliceDoc(from, from + 1) === text) {
+            view.dispatch({
+                selection: { anchor: from + 1 },
+                userEvent: 'select'
+            });
+            return true;
+        }
+
+        return false;
+    });
+
+    const deletePairedBrackets = ({ state, dispatch }) => {
+        const range = state.selection.main;
+        if (!range.empty || range.from === 0 || range.from >= state.doc.length) {
+            return false;
+        }
+
+        const before = state.sliceDoc(range.from - 1, range.from);
+        const after = state.sliceDoc(range.from, range.from + 1);
+        if (pairs.get(before) !== after) {
+            return false;
+        }
+
+        dispatch(state.update({
+            changes: { from: range.from - 1, to: range.from + 1, insert: '' },
+            selection: { anchor: range.from - 1 },
+            userEvent: 'delete.backward'
+        }));
+        return true;
+    };
+
+    return [
+        inputHandler,
+        keymap.of([{ key: 'Backspace', run: deletePairedBrackets }])
+    ];
+}
+
 
 // ==================== EDITOR INITIALIZATION ====================
 
@@ -375,6 +440,7 @@ async function initializeEditor() {
         drawSelection(),
         indentOnInput(),
         cpp(),
+        createBracketClosingExtension(),
         keymap.of([
             ...defaultKeymap,
             indentWithTab,
