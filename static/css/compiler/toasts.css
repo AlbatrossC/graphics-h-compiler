@@ -72,10 +72,6 @@
     background: rgba(255, 255, 255, 0.06);
 }
 
-[data-theme="light"] .fix-toast-close:hover {
-    background: rgba(0, 0, 0, 0.06);
-}
-
 .fix-toast-close svg {
     width: 16px;
     height: 16px;

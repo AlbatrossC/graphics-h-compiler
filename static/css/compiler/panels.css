@@ -38,11 +38,6 @@
     border-color: rgba(255, 255, 255, 0.15);
 }
 
-[data-theme="light"] #editor-wrapper:hover,
-[data-theme="light"] #terminal-wrapper:hover {
-    border-color: rgba(0, 0, 0, 0.15);
-}
-
 #editor-wrapper.active {
     border-color: var(--primary) !important;
 }
@@ -153,10 +148,6 @@
     background: rgba(0, 255, 136, 0.1);
     border-color: var(--primary);
     color: var(--primary);
-}
-
-[data-theme="light"] .panel-action-btn:hover {
-    background: rgba(0, 204, 106, 0.1);
 }
 
 #clear-btn:hover {
@@ -302,11 +293,6 @@
     background: rgba(0, 255, 136, 0.15) !important;
 }
 
-[data-theme="light"] .cm-editor .cm-selectionBackground,
-[data-theme="light"] .cm-editor.cm-focused .cm-selectionBackground {
-    background: rgba(0, 204, 106, 0.2) !important;
-}
-
 /* Selection matches */
 .cm-editor .cm-selectionMatch {
     background: rgba(153, 255, 119, 0.22);
@@ -316,28 +302,10 @@
     background: rgba(153, 255, 119, 0.3);
 }
 
-[data-theme="light"] .cm-editor .cm-selectionMatch {
-    background: rgba(0, 160, 80, 0.16);
-}
-
-[data-theme="light"] .cm-editor .cm-selectionMatch-main {
-    background: rgba(0, 160, 80, 0.24);
-}
-
 /* Matching Brackets */
 .cm-editor .cm-matchingBracket {
     background: rgba(0, 255, 136, 0.25);
     outline: 1px solid rgba(0, 255, 136, 0.4);
-}
-
-/* Light theme gutter overrides */
-[data-theme="light"] .cm-editor .cm-gutters {
-    background: var(--vscode-sidebar);
-    color: var(--text-secondary);
-}
-
-[data-theme="light"] .cm-editor .cm-activeLineGutter {
-    background: var(--vscode-line-bg);
 }
 
 /* CodeMirror focused state */
@@ -362,79 +330,6 @@
 
 .cm-editor .cm-scroller::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
-}
-
-/* Tooltip / autocomplete panel */
-.cm-tooltip {
-    background: var(--vscode-sidebar) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 6px;
-    box-shadow: none;
-}
-
-.cm-tooltip-autocomplete ul li {
-    padding: 4px 8px;
-    font-family: "JetBrains Mono", monospace;
-    font-size: 0.8125rem;
-}
-
-.cm-tooltip-autocomplete ul li[aria-selected] {
-    background: rgba(0, 255, 136, 0.15);
-    color: var(--text-primary);
-}
-
-[data-theme="light"] .cm-tooltip {
-    background: var(--vscode-sidebar) !important;
-    border-color: var(--border-color) !important;
-}
-
-[data-theme="light"] .cm-tooltip-autocomplete ul li[aria-selected] {
-    background: rgba(0, 204, 106, 0.15);
-}
-
-/* Force dark editor surfaces for dark editor themes even when UI chrome is light */
-[data-editor-theme="monokai"] .cm-editor,
-[data-editor-theme="monokai"] .cm-editor .cm-scroller {
-    background: #272822 !important;
-    color: #f8f8f2 !important;
-}
-
-[data-editor-theme="monokai"] .cm-editor .cm-gutters {
-    background: #272822 !important;
-    color: #a7a79b !important;
-    border-right: 1px solid #3e3d32 !important;
-}
-
-[data-editor-theme="monokai"] .cm-editor .cm-activeLine,
-[data-editor-theme="monokai"] .cm-editor .cm-activeLineGutter {
-    background: #313228 !important;
-}
-
-[data-editor-theme="monokai"] .cm-editor .cm-selectionBackground,
-[data-editor-theme="monokai"] .cm-editor.cm-focused .cm-selectionBackground {
-    background: rgba(97, 97, 82, 0.65) !important;
-}
-
-[data-editor-theme="github-dark"] .cm-editor,
-[data-editor-theme="github-dark"] .cm-editor .cm-scroller {
-    background: #0d1117 !important;
-    color: #e6edf3 !important;
-}
-
-[data-editor-theme="github-dark"] .cm-editor .cm-gutters {
-    background: #0d1117 !important;
-    color: #8b949e !important;
-    border-right: 1px solid #21262d !important;
-}
-
-[data-editor-theme="github-dark"] .cm-editor .cm-activeLine,
-[data-editor-theme="github-dark"] .cm-editor .cm-activeLineGutter {
-    background: #161b22 !important;
-}
-
-[data-editor-theme="github-dark"] .cm-editor .cm-selectionBackground,
-[data-editor-theme="github-dark"] .cm-editor.cm-focused .cm-selectionBackground {
-    background: rgba(56, 139, 253, 0.35) !important;
 }
 
 /* Editor Footer */
@@ -547,7 +442,6 @@
     transition: all var(--transition-normal);
     /* Initial slide from top */
 }
-
 
 .blocker-message:hover {
     background: var(--vscode-line-bg);
@@ -768,7 +662,6 @@
     }
 }
 
-
 /* Copy Error Button - Matches Compile & Run button style, solid red */
 .copy-error-btn {
     height: 32px;
@@ -792,7 +685,6 @@
     background: #e03b3b;
     border-color: #e03b3b;
 }
-
 
 .copy-error-btn.copied {
     background: var(--danger);
@@ -872,10 +764,6 @@
     border-top: 1px solid var(--border-color);
     background: rgba(0, 255, 136, 0.05);
     padding: 12px 16px 14px;
-}
-
-[data-theme="light"] .fix-ai-explanation {
-    background: rgba(0, 168, 90, 0.06);
 }
 
 .fix-ai-explanation-header {
@@ -1307,8 +1195,6 @@
     border: 1px solid rgba(255, 68, 68, 0.25);
     color: #ff8c8c;
 }
-
-
 
 .modal-actions {
     display: flex;

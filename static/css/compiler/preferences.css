@@ -90,10 +90,6 @@
     padding: 8px;
 }
 
-[data-theme="light"] .settings-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23606060'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-}
-
 /* Font Size Control */
 .settings-font-size-control {
     display: flex;
@@ -168,8 +164,6 @@
         box-shadow var(--transition-fast);
 }
 
-
-
 .settings-range::-moz-range-thumb {
     width: 14px;
     height: 14px;
@@ -179,8 +173,6 @@
     border: none;
     transition: transform var(--transition-fast);
 }
-
-
 
 /* Toggle Group */
 .settings-toggle-group {
@@ -202,10 +194,6 @@
 
 .settings-toggle:hover {
     background: rgba(255, 255, 255, 0.03);
-}
-
-[data-theme="light"] .settings-toggle:hover {
-    background: rgba(0, 0, 0, 0.03);
 }
 
 .settings-toggle-label {
@@ -265,10 +253,6 @@
     background: #ffffff;
 }
 
-[data-theme="light"] .settings-switch input:checked+.settings-switch-slider::before {
-    background: #ffffff;
-}
-
 /* Reset Button */
 .settings-reset-btn {
     display: flex;
@@ -296,9 +280,5 @@
     color: var(--text-primary);
     background: rgba(255, 255, 255, 0.03);
     border-radius: 4px;
-}
-
-[data-theme="light"] .settings-reset-btn:hover {
-    background: rgba(0, 0, 0, 0.03);
 }
 

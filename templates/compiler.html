@@ -123,15 +123,6 @@
               d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" />
           </svg>
         </button>
-        <button id="theme-toggle" class="theme-toggle" title="Toggle Theme">
-          <svg id="theme-icon-dark" class="theme-icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-          <svg id="theme-icon-light" class="theme-icon hidden" viewBox="0 0 24 24" fill="currentColor">
-            <path
-              d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
-          </svg>
-        </button>
         <button id="save-btn" class="btn btn-success" onclick="saveCode()">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -343,24 +334,6 @@
           <div class="settings-section">
             <div class="settings-section-title">
               <svg viewBox="0 0 24 24" fill="currentColor">
-                <path
-                  d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-1 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
-              </svg>
-              Editor Theme
-            </div>
-            <select id="settings-editor-theme" class="settings-select">
-              <option value="vscode-dark">VS Code Dark</option>
-              <option value="vscode-light">VS Code Light</option>
-              <option value="monokai">Monokai</option>
-              <option value="github-dark">GitHub Dark</option>
-              <option value="solarized-dark">Solarized Dark</option>
-              <option value="one-dark">One Dark Pro</option>
-            </select>
-          </div>
-
-          <div class="settings-section">
-            <div class="settings-section-title">
-              <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z" />
               </svg>
               Font Size
@@ -396,13 +369,6 @@
                 <span class="settings-toggle-label">Line Numbers</span>
                 <div class="settings-switch">
                   <input type="checkbox" id="settings-line-numbers" checked />
-                  <span class="settings-switch-slider"></span>
-                </div>
-              </label>
-              <label class="settings-toggle">
-                <span class="settings-toggle-label">Autocomplete</span>
-                <div class="settings-switch">
-                  <input type="checkbox" id="settings-autocomplete" checked />
                   <span class="settings-switch-slider"></span>
                 </div>
               </label>

@@ -7,17 +7,13 @@
     // Removed duplicate bundle import here, using global cmModules instead.
     const SETTINGS_DEFAULTS = (typeof APP_SETTINGS_DEFAULTS !== 'undefined')
         ? {
-            uiTheme: APP_SETTINGS_DEFAULTS.uiTheme,
             editor: { ...APP_SETTINGS_DEFAULTS.editor }
         }
         : {
-            uiTheme: (typeof UI_THEME_DARK !== 'undefined' ? UI_THEME_DARK : 'dark'),
             editor: {
-                theme: (typeof THEME_VSCODE_DARK !== 'undefined' ? THEME_VSCODE_DARK : 'vscode-dark'),
                 fontSize: 16,
                 wordWrap: true,
                 lineNumbers: true,
-                autocomplete: true,
                 bracketMatching: true,
                 activeLine: true
             }
@@ -25,7 +21,6 @@
 
     function cloneSettings(settings = SETTINGS_DEFAULTS) {
         return {
-            uiTheme: settings.uiTheme,
             editor: { ...settings.editor }
         };
     }
@@ -70,14 +65,12 @@
     const sidebarHeader = document.querySelector('.sidebar-header');
 
     // Settings controls
-    const themeSelect = document.getElementById('settings-editor-theme');
     const fontRange = document.getElementById('settings-font-range');
     const fontSizeValue = document.getElementById('settings-font-size-value');
     const fontDecrease = document.getElementById('settings-font-decrease');
     const fontIncrease = document.getElementById('settings-font-increase');
     const wordWrapToggle = document.getElementById('settings-word-wrap');
     const lineNumbersToggle = document.getElementById('settings-line-numbers');
-    const autocompleteToggle = document.getElementById('settings-autocomplete');
     const bracketMatchingToggle = document.getElementById('settings-bracket-matching');
     const activeLineToggle = document.getElementById('settings-active-line');
     const resetBtn = document.getElementById('settings-reset-btn');
@@ -165,45 +158,6 @@
         emitSettingsChanged();
     }
 
-    function updateUiThemeDom(uiTheme) {
-        document.documentElement.setAttribute('data-theme', uiTheme);
-        if (typeof updateThemeIcon === 'function') {
-            updateThemeIcon(uiTheme);
-        }
-    }
-
-    function updateEditorThemeDom(editorTheme) {
-        document.documentElement.setAttribute('data-editor-theme', editorTheme || 'vscode-dark');
-    }
-
-    async function applyEditorTheme(themeName, save = true) {
-        if (!cmView || !themeCompartment) return;
-
-        try {
-            if (typeof cmModules === 'undefined' || !cmModules.themeEngine) return;
-            const themeEngine = cmModules.themeEngine;
-            const resolvedTheme = themeName || themeEngine.THEME_VSCODE_DARK;
-            themeEngine.applyTheme(cmView, themeCompartment, resolvedTheme);
-
-            currentSettings = {
-                ...currentSettings,
-                editor: {
-                    ...currentSettings.editor,
-                    theme: resolvedTheme
-                }
-            };
-
-            // Keep UI theme independent from editor theme selection.
-            // This allows light UI with any editor theme (not only vscode-light).
-            updateUiThemeDom(currentSettings.uiTheme);
-            updateEditorThemeDom(resolvedTheme);
-
-            if (save) persistSettings();
-        } catch (error) {
-            Logger.error('Failed to apply editor theme', error);
-        }
-    }
-
     function applyFontSize(size, save = true) {
         const normalized = clampFontSize(size);
 
@@ -264,36 +218,6 @@
         if (save) persistSettings();
     }
 
-    function applyAutocomplete(enabled, save = true) {
-        if (!cmView || !autocompleteCompartment || !cmModules) return;
-        const { closeBrackets, autocompletion } = cmModules.autocomplete;
-
-        const extensions = [];
-        if (enabled) {
-            extensions.push(closeBrackets());
-            if (window.customCompletionSource) {
-                extensions.push(autocompletion({
-                    activateOnTyping: true,
-                    override: [window.customCompletionSource]
-                }));
-            }
-        }
-
-        cmView.dispatch({
-            effects: autocompleteCompartment.reconfigure(extensions)
-        });
-
-        currentSettings = {
-            ...currentSettings,
-            editor: {
-                ...currentSettings.editor,
-                autocomplete: !!enabled
-            }
-        };
-
-        if (save) persistSettings();
-    }
-
     function applyBracketMatching(enabled, save = true) {
         if (!cmView || !bracketMatchCompartment || !cmModules) return;
         const { bracketMatching } = cmModules.language;
@@ -335,12 +259,10 @@
     }
 
     function syncUIFromSettings() {
-        if (themeSelect) themeSelect.value = currentSettings.editor.theme;
         if (fontRange) fontRange.value = String(currentSettings.editor.fontSize);
         if (fontSizeValue) fontSizeValue.textContent = String(currentSettings.editor.fontSize);
         if (wordWrapToggle) wordWrapToggle.checked = currentSettings.editor.wordWrap;
         if (lineNumbersToggle) lineNumbersToggle.checked = currentSettings.editor.lineNumbers;
-        if (autocompleteToggle) autocompleteToggle.checked = currentSettings.editor.autocomplete;
         if (bracketMatchingToggle) bracketMatchingToggle.checked = currentSettings.editor.bracketMatching;
         if (activeLineToggle) activeLineToggle.checked = currentSettings.editor.activeLine;
         if (headerFontDisplay) headerFontDisplay.textContent = String(currentSettings.editor.fontSize);
@@ -352,12 +274,9 @@
         currentSettings = loadSettingsState();
         syncUIFromSettings();
 
-        updateUiThemeDom(currentSettings.uiTheme);
-        await applyEditorTheme(currentSettings.editor.theme, false);
         applyFontSize(currentSettings.editor.fontSize, false);
         applyWordWrap(currentSettings.editor.wordWrap, false);
         applyLineNumbers(currentSettings.editor.lineNumbers, false);
-        applyAutocomplete(currentSettings.editor.autocomplete, false);
         applyBracketMatching(currentSettings.editor.bracketMatching, false);
         applyActiveLine(currentSettings.editor.activeLine, false);
 
@@ -409,12 +328,6 @@
     });
 
     // ==================== SETTINGS CONTROL EVENTS ====================
-    if (themeSelect) {
-        themeSelect.addEventListener('change', (event) => {
-            applyEditorTheme(event.target.value, true);
-        });
-    }
-
     if (fontRange) {
         fontRange.addEventListener('input', (event) => {
             applyFontSize(event.target.value, true);
@@ -445,12 +358,6 @@
         });
     }
 
-    if (autocompleteToggle) {
-        autocompleteToggle.addEventListener('change', (event) => {
-            applyAutocomplete(event.target.checked, true);
-        });
-    }
-
     if (bracketMatchingToggle) {
         bracketMatchingToggle.addEventListener('change', (event) => {
             applyBracketMatching(event.target.checked, true);
@@ -464,13 +371,11 @@
     }
 
     if (resetBtn) {
-        resetBtn.addEventListener('click', async () => {
+        resetBtn.addEventListener('click', () => {
             currentSettings = cloneSettings(SETTINGS_DEFAULTS);
-            await applyEditorTheme(currentSettings.editor.theme, false);
             applyFontSize(currentSettings.editor.fontSize, false);
             applyWordWrap(currentSettings.editor.wordWrap, false);
             applyLineNumbers(currentSettings.editor.lineNumbers, false);
-            applyAutocomplete(currentSettings.editor.autocomplete, false);
             applyBracketMatching(currentSettings.editor.bracketMatching, false);
             applyActiveLine(currentSettings.editor.activeLine, false);
             syncUIFromSettings();
@@ -487,18 +392,6 @@
     document.addEventListener('editor-font-size-change-requested', (event) => {
         const requestedSize = event.detail?.fontSize;
         applyFontSize(requestedSize, true);
-    });
-
-    document.addEventListener('ui-theme-toggled', (event) => {
-        const eventSettings = event.detail?.settings;
-        if (eventSettings) {
-            currentSettings = cloneSettings(eventSettings);
-        } else {
-            currentSettings = loadSettingsState();
-        }
-        syncUIFromSettings();
-        applyEditorTheme(currentSettings.editor.theme, false);
-        persistSettings();
     });
 
     syncUIFromSettings();

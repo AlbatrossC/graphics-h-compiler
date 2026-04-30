@@ -1,22 +1,13 @@
 // ==================== APP SETTINGS ====================
 
 const SETTINGS_STORAGE_KEY = 'editor_settings';
-const LEGACY_THEME_STORAGE_KEY = 'theme';
 const LEGACY_FONT_STORAGE_KEY = 'editor_font_size';
 
-const UI_THEME_DARK = 'dark';
-const UI_THEME_LIGHT = 'light';
-const THEME_VSCODE_DARK = 'vscode-dark';
-const THEME_VSCODE_LIGHT = 'vscode-light';
-
 const APP_SETTINGS_DEFAULTS = Object.freeze({
-    uiTheme: UI_THEME_DARK,
     editor: {
-        theme: THEME_VSCODE_DARK,
         fontSize: 16,
         wordWrap: true,
         lineNumbers: true,
-        autocomplete: true,
         bracketMatching: true,
         activeLine: true
     }
@@ -24,7 +15,6 @@ const APP_SETTINGS_DEFAULTS = Object.freeze({
 
 function cloneDefaultSettings() {
     return {
-        uiTheme: APP_SETTINGS_DEFAULTS.uiTheme,
         editor: { ...APP_SETTINGS_DEFAULTS.editor }
     };
 }
@@ -38,28 +28,15 @@ function clampFontSize(value) {
 function normalizeAppSettings(rawSettings) {
     const base = cloneDefaultSettings();
     const raw = (rawSettings && typeof rawSettings === 'object') ? rawSettings : {};
-    const legacyTheme = localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
     const legacyFontSize = localStorage.getItem(LEGACY_FONT_STORAGE_KEY);
 
     const rawEditor = raw.editor && typeof raw.editor === 'object' ? raw.editor : {};
-    const legacyEditorTheme = raw.editorTheme;
-    const legacyUiTheme = raw.uiTheme || legacyTheme;
-
-    const resolvedUiTheme = legacyUiTheme === UI_THEME_LIGHT ? UI_THEME_LIGHT : UI_THEME_DARK;
-    const resolvedEditorTheme = (
-        rawEditor.theme ||
-        legacyEditorTheme ||
-        (resolvedUiTheme === UI_THEME_LIGHT ? THEME_VSCODE_LIGHT : THEME_VSCODE_DARK)
-    );
 
     return {
-        uiTheme: resolvedUiTheme,
         editor: {
-            theme: resolvedEditorTheme,
             fontSize: clampFontSize(rawEditor.fontSize ?? raw.fontSize ?? legacyFontSize),
             wordWrap: rawEditor.wordWrap ?? raw.wordWrap ?? base.editor.wordWrap,
             lineNumbers: rawEditor.lineNumbers ?? raw.lineNumbers ?? base.editor.lineNumbers,
-            autocomplete: rawEditor.autocomplete ?? raw.autocomplete ?? base.editor.autocomplete,
             bracketMatching: rawEditor.bracketMatching ?? raw.bracketMatching ?? base.editor.bracketMatching,
             activeLine: rawEditor.activeLine ?? raw.activeLine ?? base.editor.activeLine
         }
@@ -81,67 +58,9 @@ function loadAppSettings() {
 function saveAppSettings(settings) {
     const normalized = normalizeAppSettings(settings);
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
-    localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
     localStorage.removeItem(LEGACY_FONT_STORAGE_KEY);
     return normalized;
 }
-
-function updateAppSettings(mutator) {
-    const current = loadAppSettings();
-    const next = mutator(current);
-    return saveAppSettings(next);
-}
-
-// ==================== THEME TOGGLE ====================
-
-function initializeTheme() {
-    const settings = saveAppSettings(loadAppSettings());
-    document.documentElement.setAttribute('data-theme', settings.uiTheme);
-    updateThemeIcon(settings.uiTheme);
-}
-
-function toggleTheme() {
-    const updatedSettings = updateAppSettings((current) => {
-        const nextUiTheme = current.uiTheme === UI_THEME_DARK ? UI_THEME_LIGHT : UI_THEME_DARK;
-        const nextEditorTheme = nextUiTheme === UI_THEME_LIGHT ? THEME_VSCODE_LIGHT : THEME_VSCODE_DARK;
-
-        return {
-            ...current,
-            uiTheme: nextUiTheme,
-            editor: {
-                ...current.editor,
-                theme: nextEditorTheme
-            }
-        };
-    });
-
-    document.documentElement.setAttribute('data-theme', updatedSettings.uiTheme);
-    updateThemeIcon(updatedSettings.uiTheme);
-    document.dispatchEvent(new CustomEvent('ui-theme-toggled', {
-        detail: { settings: updatedSettings }
-    }));
-
-    Logger.info(`Theme switched to ${updatedSettings.uiTheme}`);
-}
-
-function updateThemeIcon(theme) {
-    const darkIcon = document.getElementById('theme-icon-dark');
-    const lightIcon = document.getElementById('theme-icon-light');
-    if (!darkIcon || !lightIcon) return;
-
-    if (theme === 'dark') {
-        darkIcon.classList.remove('hidden');
-        lightIcon.classList.add('hidden');
-    } else {
-        darkIcon.classList.add('hidden');
-        lightIcon.classList.remove('hidden');
-    }
-}
-
-document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
-// Initialize theme on page load
-initializeTheme();
 
 // ==================== LOGGER ====================
 const Logger = {

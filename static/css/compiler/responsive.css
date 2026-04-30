@@ -46,7 +46,8 @@
     }
 
     .header-content {
-        flex-wrap: nowrap;
+        display: grid;
+        grid-template-columns: auto auto auto auto minmax(96px, 1fr);
         padding: 8px 10px;
         gap: 8px;
         min-height: var(--header-height);
@@ -54,9 +55,7 @@
     }
 
     .header-left {
-        order: 1;
-        gap: 8px;
-        flex: 0 0 auto;
+        display: contents;
     }
 
     .header-center {
@@ -64,14 +63,12 @@
     }
 
     .header-right {
-        order: 2;
-        gap: 8px;
-        flex: 0 0 auto;
+        display: contents;
     }
 
     /* Run button is the center anchor action */
     #run-btn {
-        order: 3;
+        order: 5;
         flex: 1 1 0;
         width: 100%;
         height: 38px;
@@ -82,21 +79,30 @@
         min-width: 0;
     }
 
+    #sidebar-toggle {
+        order: 1;
+    }
+
+    #back-btn {
+        order: 2;
+    }
+
+    #settings-header-btn {
+        order: 3;
+    }
+
+    #save-btn {
+        order: 4;
+    }
+
+    .demo-selector,
+    .save-indicator {
+        display: none !important;
+    }
+
     #run-btn svg {
         width: 14px;
         height: 14px;
-    }
-
-
-
-    /* Hide desktop-only elements */
-    .demo-selector,
-    #status-message,
-    .save-indicator,
-    .editor-mode,
-    .logo-full,
-    #theme-toggle {
-        display: none !important;
     }
 
     .logo-mobile {
@@ -234,12 +240,6 @@
         background: rgba(0, 255, 136, 0.16);
         border-color: rgba(0, 255, 136, 0.45);
         color: #d4ffe9;
-    }
-
-    [data-theme="light"] .mobile-tab.active {
-        background: rgba(0, 204, 106, 0.14);
-        border-color: rgba(0, 204, 106, 0.4);
-        color: var(--primary);
     }
 
     .mobile-tab.active::after {
@@ -393,12 +393,6 @@
     .mobile-menu-btn.active {
         color: var(--primary);
         background: rgba(0, 255, 136, 0.08);
-    }
-
-    [data-theme="light"] .mobile-menu-btn:hover,
-    [data-theme="light"] .mobile-menu-btn.active {
-        color: var(--primary);
-        background: rgba(0, 168, 90, 0.08);
     }
 
     /* Sidebar overlay */
@@ -608,22 +602,13 @@
    ============================================================ */
 @media (max-width: 480px) {
     .header-content {
-        padding: 0.4rem;
+        grid-template-columns: auto auto auto minmax(88px, 1fr);
+        padding: 7px 8px;
+        gap: 7px;
     }
 
     .logo {
         font-size: 0.75rem;
-    }
-
-    .btn,
-    .icon-btn,
-    .theme-toggle {
-        height: 32px;
-    }
-
-    .icon-btn,
-    .theme-toggle {
-        width: 32px;
     }
 
     #workspace {
@@ -642,6 +627,10 @@
         width: 14px;
         height: 14px;
     }
+
+    #save-btn {
+        display: none !important;
+    }
 }
 
 /* ============================================================
@@ -658,11 +647,15 @@
     }
 
     #run-btn {
-        order: 2;
+        order: 5;
         flex: 1 1 auto;
         width: auto;
         height: 32px;
         font-size: 0.8rem;
+    }
+
+    #save-btn {
+        display: none !important;
     }
 
     .mobile-tab-bar {
@@ -706,4 +699,3 @@
         box-shadow: none !important;
     }
 }
-

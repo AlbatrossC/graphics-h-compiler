@@ -5,7 +5,7 @@
 }
 
 :root {
-    /* Dark Theme (Default) */
+    /* Fixed VS Code palette */
     --vscode-bg: #0a0a0a;
     --vscode-sidebar: #151515;
     --vscode-editor: #0a0a0a;
@@ -36,31 +36,6 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.2s ease;
     --transition-slow: 0.3s ease;
-}
-
-/* Light Theme */
-[data-theme="light"] {
-    --vscode-bg: #eef2f7;
-    --vscode-sidebar: #f8fafc;
-    --vscode-editor: #ffffff;
-    --vscode-line-bg: #edf3fa;
-    --vscode-border: #d6deea;
-
-    --primary: #00a85a;
-    --primary-hover: #008f4c;
-    --success: #00a85a;
-    --success-hover: #008f4c;
-    --danger: #dc2626;
-    --warning: #ca8a04;
-    --accent: #00a85a;
-    --accent-dark: #008f4c;
-
-    --text-primary: #0f172a;
-    --text-secondary: #334155;
-    --text-muted: #64748b;
-
-    --border-color: rgba(15, 23, 42, 0.13);
-    --shadow: none;
 }
 
 /* Base Styles */
@@ -106,54 +81,6 @@ header {
         border-color var(--transition-slow);
 }
 
-[data-theme="light"] header {
-    background: #ffffff;
-    border-bottom-color: rgba(15, 23, 42, 0.1);
-}
-
-[data-theme="light"] #workspace {
-    background: var(--vscode-bg);
-}
-
-[data-theme="light"] #editor-wrapper,
-[data-theme="light"] #terminal-wrapper {
-    border-color: rgba(15, 23, 42, 0.12);
-}
-
-[data-theme="light"] .panel-header,
-[data-theme="light"] .editor-footer,
-[data-theme="light"] .activity-bar,
-[data-theme="light"] #sidebar,
-[data-theme="light"] .files-header,
-[data-theme="light"] .file-tab,
-[data-theme="light"] .output-header {
-    background: #f7fafd;
-}
-
-[data-theme="light"] .file-tab.active {
-    background: #ffffff;
-}
-
-[data-theme="light"] .header-right .icon-btn,
-[data-theme="light"] .header-right .theme-toggle {
-    background: rgba(15, 23, 42, 0.04);
-    border-color: rgba(15, 23, 42, 0.08);
-}
-
-[data-theme="light"] .header-right .icon-btn:hover,
-[data-theme="light"] .header-right .theme-toggle:hover {
-    background: rgba(0, 168, 90, 0.1);
-    border-color: rgba(0, 168, 90, 0.35);
-    color: #067647;
-}
-
-[data-theme="light"] .btn-primary,
-[data-theme="light"] .btn-home,
-[data-theme="light"] .btn-success,
-[data-theme="light"] .editor-mode {
-    color: #ffffff;
-}
-
 .header-content {
     display: flex;
     align-items: center;
@@ -172,11 +99,25 @@ header {
 
 .header-right {
     gap: 6px;
+    justify-content: flex-end;
 }
 
 .header-center {
     flex: 1;
     text-align: center;
+}
+
+@media (min-width: 769px) {
+    .header-left,
+    .header-right {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .header-center {
+        flex: 0 0 auto;
+        min-width: 280px;
+    }
 }
 
 /* Logo */
@@ -222,12 +163,10 @@ header {
     }
 }
 
-/* Button Base Styles - Optimized */
 .btn,
 .icon-btn,
 .demo-dropdown,
-.save-indicator,
-.theme-toggle {
+.save-indicator {
     height: 38px;
     display: inline-flex;
     align-items: center;
@@ -240,13 +179,6 @@ header {
     cursor: pointer;
     background: var(--vscode-sidebar);
     color: var(--text-primary);
-}
-
-/* Header icon buttons — more subtle */
-.header-right .icon-btn,
-.header-right .theme-toggle {
-    border-color: transparent;
-    background: transparent;
 }
 
 .btn {
@@ -272,7 +204,6 @@ header {
     border-color: var(--primary-hover);
 }
 
-
 .btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -289,8 +220,6 @@ header {
     background: var(--vscode-line-bg);
     border-color: var(--primary);
 }
-
-
 
 .btn-home,
 .btn-success {
@@ -341,27 +270,6 @@ header {
     color: var(--text-primary);
 }
 
-[data-theme="light"] .btn-gemini {
-    background: #ffffff;
-    border-color: rgba(29, 78, 216, 0.22);
-    color: #122033;
-}
-
-[data-theme="light"] .btn-gemini:hover {
-    background: #eff4fb;
-    border-color: rgba(29, 78, 216, 0.38);
-}
-
-[data-theme="light"] .btn-ai-secondary {
-    border-color: rgba(15, 23, 42, 0.12);
-    color: var(--text-secondary);
-}
-
-[data-theme="light"] .btn-ai-secondary:hover {
-    background: rgba(15, 23, 42, 0.04);
-    border-color: rgba(15, 23, 42, 0.2);
-}
-
 /* Icon Buttons */
 .icon-btn {
     width: 38px;
@@ -378,27 +286,6 @@ header {
     background: var(--vscode-line-bg);
     border-color: var(--primary);
     color: var(--primary);
-}
-
-.theme-toggle {
-    width: 38px;
-    height: 38px;
-    padding: 0;
-}
-
-.theme-toggle:hover {
-    background: var(--vscode-line-bg);
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.theme-toggle svg {
-    width: 18px;
-    height: 18px;
-}
-
-.theme-icon {
-    display: block;
 }
 
 .gemini-logo {
@@ -498,17 +385,13 @@ header {
     font-size: 0.75rem;
     font-weight: 500;
     cursor: default;
+    white-space: nowrap;
 }
 
 .save-indicator.saved {
     background: rgba(0, 255, 136, 0.08);
     border-color: rgba(0, 255, 136, 0.25);
     color: var(--success);
-}
-
-[data-theme="light"] .save-indicator.saved {
-    background: rgba(0, 204, 106, 0.08);
-    border-color: rgba(0, 204, 106, 0.25);
 }
 
 .save-indicator svg {

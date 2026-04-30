@@ -1,6 +1,5 @@
 // ==================== CODEMIRROR 6 EDITOR ====================
-// Lightweight code editor with basic C++ syntax highlighting
-// and auto-close brackets. No heavy IDE features.
+// Lightweight code editor with basic C++ syntax highlighting. No heavy IDE features.
 
 // ==================== CODEMIRROR LOCAL BUNDLE LOADING ====================
 
@@ -21,10 +20,8 @@ async function loadCodeMirror() {
             language: bundle.cmLanguage,
             cpp: bundle.cmCpp,
             commands: bundle.cmCommands,
-            autocomplete: bundle.cmAutocomplete,
             search: bundle.cmSearch,
-            highlight: bundle.lezerHighlight,
-            themeEngine: bundle.themeEngine
+            highlight: bundle.lezerHighlight
         };
 
         Logger.success('CodeMirror bundle loaded');
@@ -167,20 +164,16 @@ async function loadDemoFile(demoKey, forceReload = false) {
 }
 
 
-// ==================== CODEMIRROR THEME CONFIGURATION ====================
-
-// Theme compartment for live theme switching
-let themeCompartment = null;
+let editorStyleCompartment = null;
 let fontSizeCompartment = null;
 let wordWrapCompartment = null;
 let lineNumbersCompartment = null;
-let autocompleteCompartment = null;
 let bracketMatchCompartment = null;
 let activeLineCompartment = null;
 let cmView = null; // Store the EditorView instance
 
 // ==================== EDITOR WRAPPER API ====================
-// Provides the same API as the old Ace editor so files.js, execution.js, etc. work unchanged
+// Provides the editor API expected by files.js, execution.js, etc.
 
 function createEditorWrapper(view) {
     return {
@@ -251,9 +244,55 @@ function createEditorWrapper(view) {
             }
         },
 
-        // Theme compatibility
-        setTheme() { }
     };
+}
+
+function createVsCodeEditorStyleExtension() {
+    const { EditorView } = cmModules.view;
+    const { HighlightStyle, syntaxHighlighting } = cmModules.language;
+    const { tags } = cmModules.highlight;
+
+    const highlight = HighlightStyle.define([
+        { tag: tags.keyword, color: '#f92672' },
+        { tag: tags.name, color: '#f8f8f2' },
+        { tag: tags.typeName, color: '#66d9ef' },
+        { tag: tags.variableName, color: '#f8f8f2' },
+        { tag: tags.propertyName, color: '#a6e22e' },
+        { tag: tags.function(tags.variableName), color: '#a6e22e' },
+        { tag: tags.string, color: '#e6db74' },
+        { tag: tags.number, color: '#ae81ff' },
+        { tag: tags.bool, color: '#ae81ff' },
+        { tag: tags.comment, color: '#75715e' },
+        { tag: tags.operator, color: '#f92672' },
+        { tag: tags.bracket, color: '#f8f8f2' },
+        { tag: tags.meta, color: '#f92672' },
+        { tag: tags.processingInstruction, color: '#f92672' },
+        { tag: tags.definition(tags.variableName), color: '#a6e22e' },
+        { tag: tags.macroName, color: '#a6e22e' },
+    ]);
+
+    return [
+        EditorView.theme({
+            '&': { backgroundColor: 'transparent' },
+            '.cm-scroller': { backgroundColor: 'transparent' },
+            '.cm-content': { color: '#f8f8f2' },
+            '.cm-cursor': { borderLeftColor: '#00ff88' },
+            '.cm-activeLine': { backgroundColor: '#1a1a1a' },
+            '.cm-activeLineGutter': { backgroundColor: '#1a1a1a' },
+            '.cm-gutters': {
+                backgroundColor: '#151515',
+                color: '#a0a0a0',
+                borderRight: '1px solid #262626'
+            },
+            '.cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
+            '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
+            '.cm-matchingBracket': {
+                backgroundColor: 'rgba(0, 255, 136, 0.25)',
+                outline: '1px solid rgba(0, 255, 136, 0.4)'
+            },
+        }, { dark: true }),
+        syntaxHighlighting(highlight)
+    ];
 }
 
 function createSelectedMatchHighlightExtension() {
@@ -297,17 +336,14 @@ async function initializeEditor() {
     const { indentOnInput, bracketMatching } = cmModules.language;
     const { cpp } = cmModules.cpp;
     const { defaultKeymap, indentWithTab, history, historyKeymap } = cmModules.commands;
-    const { closeBrackets, closeBracketsKeymap } = cmModules.autocomplete;
     const { highlightSelectionMatches } = cmModules.search;
 
     const defaultEditorSettings = (typeof APP_SETTINGS_DEFAULTS !== 'undefined' && APP_SETTINGS_DEFAULTS.editor)
         ? APP_SETTINGS_DEFAULTS.editor
         : {
-            theme: THEME_VSCODE_DARK,
             fontSize: 16,
             wordWrap: true,
             lineNumbers: true,
-            autocomplete: true,
             bracketMatching: true,
             activeLine: true
         };
@@ -322,60 +358,15 @@ async function initializeEditor() {
     };
 
     const initialFontSize = Math.max(10, Math.min(32, Number.parseInt(initialEditorSettings.fontSize, 10) || defaultEditorSettings.fontSize));
-    const themeEngine = cmModules.themeEngine;
-    const initialThemeName = initialEditorSettings.theme || THEME_VSCODE_DARK;
-    document.documentElement.setAttribute('data-editor-theme', initialThemeName);
 
     // Create compartments for dynamic reconfiguration
-    themeCompartment = new Compartment();
+    editorStyleCompartment = new Compartment();
     fontSizeCompartment = new Compartment();
     wordWrapCompartment = new Compartment();
     lineNumbersCompartment = new Compartment();
-    autocompleteCompartment = new Compartment();
     bracketMatchCompartment = new Compartment();
     activeLineCompartment = new Compartment();
     const heavyFeaturesCompartment = new Compartment();
-
-    // Autocomplete Source configuration
-    const BGI_FUNCTIONS = ["arc", "bar", "bar3d", "circle", "cleardevice", "clearviewport", "closegraph", "delay", "detectgraph", "drawpoly", "ellipse", "fillellipse", "fillpoly", "floodfill", "getarccoords", "getbkcolor", "getcolor", "getdefaultpalette", "getdrivername", "getimage", "getlinesettings", "getmaxcolor", "getmaxmode", "getmaxx", "getmaxy", "getmodename", "getmoderange", "getpalette", "getpalettesize", "getpixel", "gettextsettings", "getviewsettings", "getx", "gety", "graphdefaults", "grapherrormsg", "graphresult", "imagesize", "initgraph", "initwindow", "installuserdriver", "installuserfont", "line", "linerel", "lineto", "moverel", "moveto", "outtext", "outtextxy", "pieslice", "putimage", "putpixel", "rectangle", "registerbgidriver", "registerbgifont", "restorecrtmode", "sector", "setactivepage", "setallpalette", "setbkcolor", "setcolor", "setfillpattern", "setfillstyle", "setgraphbufsize", "setgraphmode", "setlinestyle", "setpalette", "settextjustify", "settextstyle", "setusercharsize", "setviewport", "setvisualpage", "swapbuffers", "textheight", "textwidth"];
-    const BGI_CONSTANTS = ["BLACK", "BLUE", "GREEN", "CYAN", "RED", "MAGENTA", "BROWN", "LIGHTGRAY", "DARKGRAY", "LIGHTBLUE", "LIGHTGREEN", "LIGHTCYAN", "LIGHTRED", "LIGHTMAGENTA", "YELLOW", "WHITE"];
-    const CPP_KEYWORDS = ["alignas", "alignof", "and", "and_eq", "asm", "auto", "bitand", "bitor", "bool", "break", "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class", "compl", "concept", "const", "consteval", "constexpr", "constinit", "const_cast", "continue", "co_await", "co_return", "co_yield", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected", "public", "register", "reinterpret_cast", "requires", "return", "short", "signed", "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "template", "this", "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using", "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq"];
-
-    function customCompletionSource(context) {
-        const { snippetCompletion } = cmModules.autocomplete;
-        let word = context.matchBefore(/\w*/);
-        if (!word || (word.from === word.to && !context.explicit)) return null;
-
-        let options = [];
-        let lower = word.text.toLowerCase();
-
-        for (let fn of BGI_FUNCTIONS) {
-            if (fn.toLowerCase().startsWith(lower)) options.push({ label: fn, type: "function", apply: fn + "()" });
-        }
-        for (let c of BGI_CONSTANTS) {
-            if (c.toLowerCase().startsWith(lower)) options.push({ label: c, type: "constant" });
-        }
-        for (let kw of CPP_KEYWORDS) {
-            if (kw.toLowerCase().startsWith(lower)) options.push({ label: kw, type: "keyword" });
-        }
-
-        if ("main".startsWith(lower)) {
-            options.push(snippetCompletion("#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, (char*)\"\");\n\n    ${1}\n\n    getch();\n    closegraph();\n    return 0;\n}", {
-                label: "main",
-                detail: "graphics boilerplate",
-                type: "snippet"
-            }));
-        }
-
-        return {
-            from: word.from,
-            options: options,
-            validFor: /^\w*$/
-        };
-    }
-
-    // Export to global scope for settings panel to re-apply the exact same source
-    window.customCompletionSource = customCompletionSource;
 
     // Build initial essential extensions only
     const extensions = [
@@ -388,7 +379,7 @@ async function initializeEditor() {
             ...defaultKeymap,
             indentWithTab,
         ]),
-        themeCompartment.of([]),
+        editorStyleCompartment.of(createVsCodeEditorStyleExtension()),
         fontSizeCompartment.of(
             EditorView.theme({
                 '.cm-content, .cm-gutters': { fontSize: `${initialFontSize}px` }
@@ -417,9 +408,8 @@ async function initializeEditor() {
         parent: editorContainer
     });
 
-    // Create the wrapper that provides Ace-compatible API
+    // Create the wrapper used by the rest of the compiler modules
     editor = createEditorWrapper(cmView);
-    themeEngine.applyTheme(cmView, themeCompartment, initialThemeName);
 
     // Font Size Controls
     const increaseFontBtn = document.getElementById('increase-font-btn');
@@ -496,24 +486,15 @@ async function initializeEditor() {
     // Delay heavy features to keep editor instant
     const executeHeavyFeatures = () => {
         const { history, historyKeymap } = cmModules.commands;
-        const { closeBrackets, closeBracketsKeymap, autocompletion } = cmModules.autocomplete;
         const { highlightSelectionMatches } = cmModules.search;
         const { bracketMatching } = cmModules.language;
 
         const heavyExtensions = [
             bracketMatchCompartment.of(initialEditorSettings.bracketMatching ? bracketMatching() : []),
-            autocompleteCompartment.of(initialEditorSettings.autocomplete ? [
-                closeBrackets(),
-                autocompletion({
-                    activateOnTyping: true,
-                    override: [customCompletionSource]
-                })
-            ] : []),
             history(),
             highlightSelectionMatches(),
             createSelectedMatchHighlightExtension(),
             keymap.of([
-                ...closeBracketsKeymap,
                 ...historyKeymap
             ])
         ];
