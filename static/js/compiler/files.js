@@ -552,8 +552,9 @@ async function initGoogleIdentity(clientId) {
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
                 size: 'large',
-                shape: 'pill',
+                shape: 'rectangular',
                 text: 'signin_with',
+                width: 220
             });
         }
 

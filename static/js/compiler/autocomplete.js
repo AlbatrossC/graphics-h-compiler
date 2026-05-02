@@ -207,6 +207,8 @@ function buildTooltipHTML(info) {
     dom.className = 'cm-func-tooltip';
 
     let html = `<div class="tooltip-signature">${info.signature}</div>`;
+    html += `<div class="tooltip-scroll-area">`;
+    
     if (info.description) {
         html += `<div class="tooltip-description">${info.description}</div>`;
     }
@@ -226,6 +228,8 @@ function buildTooltipHTML(info) {
         }
         html += `</div>`;
     }
+    
+    html += `</div>`;
 
     dom.innerHTML = html;
     return dom;
@@ -365,7 +369,10 @@ window.setupAutocomplete = function (editorView) {
             border: "1px solid #454545",
             borderRadius: "6px",
             overflow: "hidden",
-            maxWidth: "450px",
+            maxWidth: "400px",
+            maxHeight: "220px",
+            display: "flex",
+            flexDirection: "column",
             boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
             fontFamily: "system-ui, -apple-system, sans-serif",
             color: "#cccccc",
@@ -373,41 +380,59 @@ window.setupAutocomplete = function (editorView) {
         ".tooltip-signature": {
             backgroundColor: "#1e1e1e",
             borderBottom: "1px solid #454545",
-            padding: "10px 14px",
+            padding: "8px 12px",
             color: "#dcdcaa",
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "13.5px",
+            fontSize: "12.5px",
+            flexShrink: 0
+        },
+        ".tooltip-scroll-area": {
+            overflowY: "auto",
+            flex: 1
+        },
+        ".tooltip-scroll-area::-webkit-scrollbar": {
+            width: "6px"
+        },
+        ".tooltip-scroll-area::-webkit-scrollbar-track": {
+            background: "transparent"
+        },
+        ".tooltip-scroll-area::-webkit-scrollbar-thumb": {
+            backgroundColor: "#424242",
+            borderRadius: "4px"
+        },
+        ".tooltip-scroll-area::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: "#4f4f4f"
         },
         ".tooltip-description": {
-            padding: "12px 14px 8px",
+            padding: "10px 12px 6px",
             color: "#cccccc",
-            fontSize: "13px",
-            lineHeight: "1.5",
+            fontSize: "12px",
+            lineHeight: "1.4",
         },
         ".tooltip-params": {
-            padding: "4px 14px 14px",
+            padding: "4px 12px 10px",
             display: "flex",
             flexDirection: "column",
-            gap: "8px",
+            gap: "6px",
         },
         ".tooltip-param": {
             color: "#cccccc",
-            fontSize: "13px",
-            lineHeight: "1.5",
+            fontSize: "12px",
+            lineHeight: "1.4",
             display: "flex",
             alignItems: "flex-start",
-            gap: "8px"
+            gap: "6px"
         },
         ".tooltip-param-name": {
             color: "#9cdcfe",
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "13px",
+            fontSize: "12px",
             fontWeight: "normal",
             whiteSpace: "nowrap",
         },
         ".tooltip-param-arrow": {
             color: "#858585",
-            fontSize: "13px",
+            fontSize: "12px",
         },
         ".tooltip-param-desc": {
             flex: "1"

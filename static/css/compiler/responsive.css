@@ -47,7 +47,7 @@
 
     .header-content {
         display: grid;
-        grid-template-columns: auto auto auto auto minmax(96px, 1fr);
+        grid-template-columns: auto auto minmax(96px, 1fr);
         padding: 8px 10px;
         gap: 8px;
         min-height: var(--header-height);
@@ -79,20 +79,16 @@
         min-width: 0;
     }
 
-    #sidebar-toggle {
+    #back-btn {
         order: 1;
     }
 
-    #back-btn {
+    #sidebar-toggle {
         order: 2;
     }
 
-    #settings-header-btn {
-        order: 3;
-    }
-
-    #save-btn {
-        order: 4;
+    #settings-header-btn, #save-btn {
+        display: none !important;
     }
 
     .demo-selector,
@@ -117,7 +113,8 @@
     }
 
     #sidebar-toggle .btn-text-mobile {
-        display: none !important;
+        display: inline !important;
+        font-weight: 500;
     }
 
     #back-btn .btn-text-mobile {
@@ -135,16 +132,7 @@
 
     #save-btn,
     #settings-header-btn {
-        display: inline-flex !important;
-        width: 40px !important;
-        height: 38px;
-        padding: 0 !important;
-        justify-content: center;
-        align-items: center;
-        border-radius: 12px;
-        border: 1px solid var(--border-color);
-        background: var(--vscode-line-bg);
-        color: var(--text-primary);
+        display: none !important;
     }
 
     #save-btn svg,
@@ -160,9 +148,10 @@
 
     #sidebar-toggle {
         display: inline-flex !important;
-        width: 40px !important;
+        width: auto !important;
         height: 38px;
-        padding: 0 !important;
+        padding: 0 12px !important;
+        gap: 6px;
         justify-content: center;
         align-items: center;
         border-radius: 12px;
@@ -191,11 +180,17 @@
     }
 
     #sidebar-toggle:hover,
-    #back-btn:hover,
-    #save-btn:hover,
-    #settings-header-btn:hover {
+    #back-btn:hover {
         background: var(--vscode-sidebar);
         border-color: var(--text-primary);
+    }
+
+    .icon-menu {
+        display: none !important;
+    }
+
+    .icon-files {
+        display: block !important;
     }
 
     .mobile-tab-bar {
@@ -595,6 +590,28 @@
     .fix-ai-explanation-body {
         font-size: 0.75rem;
     }
+
+    /* Tooltip Mobile Overrides */
+    .cm-tooltip.cm-tooltip-autocomplete {
+        max-height: 40vh !important;
+        width: 80vw !important;
+        max-width: 320px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .cm-tooltip-autocomplete > ul {
+        max-height: 40vh !important;
+    }
+
+    .cm-tooltip-autocomplete > ul > li {
+        padding: 6px 8px !important;
+        font-size: 0.8rem !important;
+        line-height: 1.2 !important;
+    }
+    
+    .cm-tooltip.cm-completionInfo {
+        display: none !important; /* Hide extra info pane on mobile */
+    }
 }
 
 /* ============================================================
@@ -602,7 +619,7 @@
    ============================================================ */
 @media (max-width: 480px) {
     .header-content {
-        grid-template-columns: auto auto auto minmax(88px, 1fr);
+        grid-template-columns: auto auto minmax(88px, 1fr);
         padding: 7px 8px;
         gap: 7px;
     }

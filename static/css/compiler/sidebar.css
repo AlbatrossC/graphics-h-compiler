@@ -1350,7 +1350,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 /* Ensure the Google-rendered iframe scales naturally */
 .google-btn-render iframe {
     max-width: 100%;
-    border-radius: 20px;
+    border: none;
 }
 
 /* User Profile */
