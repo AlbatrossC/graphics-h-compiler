@@ -382,9 +382,36 @@ function createBracketClosingExtension() {
         return true;
     };
 
+    const splitBrackets = ({ state, dispatch }) => {
+        const range = state.selection.main;
+        if (!range.empty || range.from === 0 || range.from >= state.doc.length) {
+            return false;
+        }
+
+        const before = state.sliceDoc(range.from - 1, range.from);
+        const after = state.sliceDoc(range.from, range.from + 1);
+        if (pairs.get(before) === after && (before === '{' || before === '[' || before === '(')) {
+            const line = state.doc.lineAt(range.from);
+            const indentStr = line.text.match(/^\s*/)[0];
+            const indentUnit = "    ";
+            
+            const insert = '\n' + indentStr + indentUnit + '\n' + indentStr;
+            dispatch(state.update({
+                changes: { from: range.from, to: range.from, insert: insert },
+                selection: { anchor: range.from + 1 + indentStr.length + indentUnit.length },
+                userEvent: 'input.type'
+            }));
+            return true;
+        }
+        return false;
+    };
+
     return [
         inputHandler,
-        keymap.of([{ key: 'Backspace', run: deletePairedBrackets }])
+        keymap.of([
+            { key: 'Backspace', run: deletePairedBrackets },
+            { key: 'Enter', run: splitBrackets }
+        ])
     ];
 }
 
@@ -459,6 +486,7 @@ async function initializeEditor() {
             '.cm-scroller': { overflow: 'auto' }
         }),
         EditorState.tabSize.of(4),
+        cmModules.language.indentUnit.of("    "),
         wordWrapCompartment.of(initialEditorSettings.wordWrap ? EditorView.lineWrapping : []),
         heavyFeaturesCompartment.of([]), // Placeholder for delayed extensions
     ];

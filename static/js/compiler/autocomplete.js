@@ -12,17 +12,17 @@ async function loadData() {
         const response = await fetch('/static/assets/functions.1.json');
         if (!response.ok) throw new Error('Failed to load functions data');
         const data = await response.json();
-        
+
         for (const func of data.functions) {
             functionsMap[func.name] = func;
         }
-        
+
         if (data.constants) {
             for (const [key, values] of Object.entries(data.constants)) {
                 constantsMap[key] = values;
             }
         }
-        
+
         dataLoaded = true;
     } catch (error) {
         console.error('Autocomplete: failed to load data', error);
@@ -36,10 +36,10 @@ loadData();
 function detectContext(state, pos) {
     const line = state.doc.lineAt(pos);
     const textUpToCursor = line.text.slice(0, pos - line.from);
-    
+
     let counter = 0;
     let openParenIndex = -1;
-    
+
     // Scan left from cursor
     for (let i = textUpToCursor.length - 1; i >= 0; i--) {
         const char = textUpToCursor[i];
@@ -53,7 +53,7 @@ function detectContext(state, pos) {
             }
         }
     }
-    
+
     // Context: Outside parens
     if (openParenIndex === -1) {
         // Find typed prefix
@@ -61,18 +61,18 @@ function detectContext(state, pos) {
         const prefix = match ? match[0] : '';
         return { type: 'functions', prefix: prefix };
     }
-    
+
     // Context: Inside parens
     // Extract function name (word before the '(')
     const textBeforeParen = textUpToCursor.slice(0, openParenIndex);
     const funcMatch = textBeforeParen.match(/[\w]+$/);
     const funcName = funcMatch ? funcMatch[0] : '';
-    
+
     // Count commas between '(' and cursor at the same nesting level
     let commaCount = 0;
     let innerCounter = 0;
     const innerText = textUpToCursor.slice(openParenIndex + 1);
-    
+
     for (let i = 0; i < innerText.length; i++) {
         const char = innerText[i];
         if (char === '(') {
@@ -83,58 +83,65 @@ function detectContext(state, pos) {
             commaCount++;
         }
     }
-    
+
     const paramIndex = commaCount.toString();
-    
+
     // Find typed prefix for the constant
     // Match word characters right before cursor
     const prefixMatch = innerText.match(/[\w]+$/);
     const prefix = prefixMatch ? prefixMatch[0] : '';
-    
+
     return { type: 'constants', funcName, paramIndex, prefix };
 }
 
 // --- STEP 4 & 5: COMPLETIONS ---
 function getCompletions(context) {
     if (!dataLoaded) return null;
-    
+
     const state = context.state;
     const pos = context.pos;
-    
+
     const detected = detectContext(state, pos);
-    
+
     const word = context.matchBefore(/\w*/);
-    if (!word || (word.from === word.to && !context.explicit)) {
-        return null;
+    if (!word) return null;
+    if (word.from === word.to && !context.explicit) {
+        if (detected.type === 'functions') {
+            return null;
+        } else if (detected.type === 'constants') {
+            const charBefore = state.sliceDoc(pos - 1, pos);
+            if (!['(', ',', ' '].includes(charBefore)) {
+                return null;
+            }
+        }
     }
 
     if (detected.type === 'functions') {
         const options = [];
         for (const [name, func] of Object.entries(functionsMap)) {
-            if (name.startsWith(detected.prefix)) {
-                options.push({
-                    label: name,
-                    detail: "()",
-                    type: 'function',
-                    apply: (view, completion, from, to) => {
-                        const isInside = func.cursor === 'inside';
-                        const insertText = name + '()';
-                        view.dispatch({
-                            changes: { from: word.from, to: word.to, insert: insertText },
-                            selection: { anchor: word.from + name.length + (isInside ? 1 : 2) }
-                        });
-                        
-                        // Show tooltip after selection
-                        view.dispatch({
-                            effects: showSelectionTooltip.of(name)
-                        });
-                    }
-                });
-            }
+            options.push({
+                label: name,
+                detail: "()",
+                type: 'function',
+                apply: (view, completion, from, to) => {
+                    const isInside = func.cursor === 'inside';
+                    const insertText = name + '()';
+                    view.dispatch({
+                        changes: { from, to, insert: insertText },
+                        selection: { anchor: from + name.length + (isInside ? 1 : 2) }
+                    });
+
+                    // Show tooltip after selection
+                    view.dispatch({
+                        effects: showSelectionTooltip.of(name)
+                    });
+                }
+            });
         }
         return {
             from: word.from,
-            options: options
+            options: options,
+            validFor: /^\w*$/
         };
     } else if (detected.type === 'constants') {
         const func = functionsMap[detected.funcName];
@@ -142,58 +149,55 @@ function getCompletions(context) {
             // Fallback: Unknown function, show functions
             const options = [];
             for (const name of Object.keys(functionsMap)) {
-                if (name.startsWith(detected.prefix)) {
-                    options.push({
-                        label: name,
-                        detail: "()",
-                        type: 'function',
-                        apply: (view, completion, from, to) => {
-                            const insertText = name + '()';
-                            const isInside = functionsMap[name].cursor === 'inside';
-                            view.dispatch({
-                                changes: { from: word.from, to: word.to, insert: insertText },
-                                selection: { anchor: word.from + name.length + (isInside ? 1 : 2) }
-                            });
-                        }
-                    });
-                }
+                options.push({
+                    label: name,
+                    detail: "()",
+                    type: 'function',
+                    apply: (view, completion, from, to) => {
+                        const insertText = name + '()';
+                        const isInside = functionsMap[name].cursor === 'inside';
+                        view.dispatch({
+                            changes: { from, to, insert: insertText },
+                            selection: { anchor: from + name.length + (isInside ? 1 : 2) }
+                        });
+                    }
+                });
             }
-            return { from: word.from, options: options };
+            return { from: word.from, options: options, validFor: /^\w*$/ };
         }
-        
+
         if (!func.accepts || !func.accepts[detected.paramIndex]) {
             // Known function, but no constants for this parameter
             return null;
         }
-        
+
         // Allowed groups for this parameter
         const groups = func.accepts[detected.paramIndex];
         const options = [];
-        
+
         for (const group of groups) {
             const constants = constantsMap[group] || [];
             for (const constant of constants) {
-                if (constant.startsWith(detected.prefix)) {
-                    options.push({
-                        label: constant,
-                        type: 'constant',
-                        apply: (view, completion, from, to) => {
-                            view.dispatch({
-                                changes: { from: word.from, to: word.to, insert: constant },
-                                selection: { anchor: word.from + constant.length }
-                            });
-                        }
-                    });
-                }
+                options.push({
+                    label: constant,
+                    type: 'constant',
+                    apply: (view, completion, from, to) => {
+                        view.dispatch({
+                            changes: { from, to, insert: constant },
+                            selection: { anchor: from + constant.length }
+                        });
+                    }
+                });
             }
         }
-        
+
         return {
             from: word.from,
-            options: options
+            options: options,
+            validFor: /^\w*$/
         };
     }
-    
+
     return null;
 }
 
@@ -201,12 +205,12 @@ function getCompletions(context) {
 function buildTooltipHTML(info) {
     const dom = document.createElement('div');
     dom.className = 'cm-func-tooltip';
-    
+
     let html = `<div class="tooltip-signature">${info.signature}</div>`;
     if (info.description) {
         html += `<div class="tooltip-description">${info.description}</div>`;
     }
-    
+
     if (info.params && info.params.length > 0) {
         html += `<div class="tooltip-params">`;
         for (const param of info.params) {
@@ -222,7 +226,7 @@ function buildTooltipHTML(info) {
         }
         html += `</div>`;
     }
-    
+
     dom.innerHTML = html;
     return dom;
 }
@@ -231,7 +235,7 @@ let showSelectionTooltip;
 let hideSelectionTooltip;
 
 // --- EXPORT ---
-window.setupAutocomplete = function(editorView) {
+window.setupAutocomplete = function (editorView) {
     const { hoverTooltip, showTooltip } = cmModules.view;
     const { StateField, StateEffect } = cmModules.state;
     const { autocompletion } = cmModules.autocomplete;
@@ -283,93 +287,127 @@ window.setupAutocomplete = function(editorView) {
         },
         // Autocomplete dropdown — must override base with higher specificity
         ".cm-tooltip.cm-tooltip-autocomplete": {
-            backgroundColor: "#1e1e1e",
-            border: "1px solid #333",
+            backgroundColor: "#252526",
+            border: "1px solid #454545",
             borderRadius: "6px",
-            padding: "6px",
-            boxShadow: "0 8px 24px rgba(0,0,0,.4)",
+            padding: "4px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: "13.5px",
         },
         ".cm-tooltip-autocomplete ul": { margin: "0", padding: "0" },
+        ".cm-tooltip-autocomplete ul::-webkit-scrollbar": {
+            width: "10px"
+        },
+        ".cm-tooltip-autocomplete ul::-webkit-scrollbar-track": {
+            background: "transparent"
+        },
+        ".cm-tooltip-autocomplete ul::-webkit-scrollbar-thumb": {
+            backgroundColor: "#424242",
+            borderRadius: "6px",
+            border: "2px solid #252526"
+        },
+        ".cm-tooltip-autocomplete ul::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: "#4f4f4f"
+        },
         ".cm-tooltip-autocomplete ul li": {
-            padding: "6px 10px",
-            color: "#ccc",
+            padding: "4px 8px",
+            color: "#cccccc",
             borderRadius: "4px",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            gap: "8px"
+            lineHeight: "1.4"
         },
         ".cm-tooltip-autocomplete ul li[aria-selected]": {
-            backgroundColor: "rgba(74,222,128,.13)",
-            color: "#e8e8e8",
+            backgroundColor: "#04395e",
+            color: "#ffffff",
         },
-        ".cm-completionIcon": { display: "none" },
+        ".cm-completionIcon": {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "16px",
+            height: "16px",
+            marginRight: "6px",
+            opacity: "0.9"
+        },
+        ".cm-completionIcon-function::after": {
+            content: "'ƒ'",
+            color: "#c586c0",
+            fontWeight: "bold",
+            fontStyle: "italic",
+            fontFamily: "serif",
+            fontSize: "15px"
+        },
+        ".cm-completionIcon-constant::after": {
+            content: "'[c]'",
+            color: "#4fc1ff",
+            fontFamily: "monospace",
+            fontSize: "11px",
+            letterSpacing: "-1px"
+        },
         ".cm-completionMatchedText": {
-            color: "#4ade80",
+            color: "#569cd6",
             textDecoration: "none",
-            fontWeight: "600",
+            fontWeight: "bold",
         },
         ".cm-completionDetail": {
-            color: "#666",
+            color: "#858585",
             fontStyle: "normal",
             marginLeft: "2px",
-            fontSize: "13px"
+            fontSize: "13px",
+            fontFamily: "'JetBrains Mono', monospace"
         },
         // Function tooltip card
         ".cm-func-tooltip": {
             backgroundColor: "#252526",
-            border: "1px solid #3c3c43",
-            borderRadius: "8px",
+            border: "1px solid #454545",
+            borderRadius: "6px",
             overflow: "hidden",
-            maxWidth: "420px",
-            boxShadow: "0 8px 24px rgba(0,0,0,.4)",
+            maxWidth: "450px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
             fontFamily: "system-ui, -apple-system, sans-serif",
-            color: "#ccc",
+            color: "#cccccc",
         },
         ".tooltip-signature": {
             backgroundColor: "#1e1e1e",
-            borderBottom: "1px solid #3c3c43",
+            borderBottom: "1px solid #454545",
             padding: "10px 14px",
-            color: "#4ade80",
+            color: "#dcdcaa",
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "13px",
+            fontSize: "13.5px",
         },
         ".tooltip-description": {
             padding: "12px 14px 8px",
-            color: "#bbb",
-            fontSize: "12.5px",
-            lineHeight: "1.6",
+            color: "#cccccc",
+            fontSize: "13px",
+            lineHeight: "1.5",
         },
         ".tooltip-params": {
             padding: "4px 14px 14px",
             display: "flex",
             flexDirection: "column",
-            gap: "6px",
+            gap: "8px",
         },
         ".tooltip-param": {
-            color: "#999",
-            fontSize: "12.5px",
-            lineHeight: "1.6",
+            color: "#cccccc",
+            fontSize: "13px",
+            lineHeight: "1.5",
             display: "flex",
             alignItems: "flex-start",
             gap: "8px"
         },
         ".tooltip-param-name": {
-            color: "#4ade80",
+            color: "#9cdcfe",
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "12.5px",
-            backgroundColor: "transparent",
-            padding: "0",
-            border: "none",
-            borderRadius: "0",
+            fontSize: "13px",
             fontWeight: "normal",
             whiteSpace: "nowrap",
         },
         ".tooltip-param-arrow": {
-            color: "#666",
-            fontSize: "12.5px",
+            color: "#858585",
+            fontSize: "13px",
         },
         ".tooltip-param-desc": {
             flex: "1"
