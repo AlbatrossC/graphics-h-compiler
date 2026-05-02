@@ -550,7 +550,7 @@ async function initGoogleIdentity(clientId) {
         const renderTarget = document.getElementById('google-btn-render');
         if (renderTarget) {
             window.google.accounts.id.renderButton(renderTarget, {
-                theme: 'filled_blue',
+                theme: 'outline',
                 size: 'large',
                 shape: 'pill',
                 text: 'signin_with',
