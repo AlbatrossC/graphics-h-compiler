@@ -129,7 +129,7 @@
             setSidebarHeading('Settings');
             syncUIFromSettings();
         } else {
-            setSidebarHeading('Explorer');
+            setSidebarHeading('Files Explorer');
         }
 
         openSidebarIfNeeded(options.forceMobileOpen === true);
