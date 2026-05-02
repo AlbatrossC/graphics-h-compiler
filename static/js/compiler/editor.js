@@ -21,6 +21,7 @@ async function loadCodeMirror() {
             cpp: bundle.cmCpp,
             commands: bundle.cmCommands,
             search: bundle.cmSearch,
+            autocomplete: bundle.cmAutocomplete,
             highlight: bundle.lezerHighlight
         };
 
@@ -473,6 +474,10 @@ async function initializeEditor() {
         }),
         parent: editorContainer
     });
+
+    if (typeof setupAutocomplete === 'function') {
+        setupAutocomplete(cmView);
+    }
 
     // Create the wrapper used by the rest of the compiler modules
     editor = createEditorWrapper(cmView);

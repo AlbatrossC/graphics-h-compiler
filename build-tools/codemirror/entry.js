@@ -4,6 +4,7 @@ import * as cmLanguage from '@codemirror/language';
 import * as cmCpp from '@codemirror/lang-cpp';
 import * as cmCommands from '@codemirror/commands';
 import * as cmSearch from '@codemirror/search';
+import * as cmAutocomplete from '@codemirror/autocomplete';
 import * as lezerHighlight from '@lezer/highlight';
 
 export {
@@ -13,5 +14,6 @@ export {
     cmCpp,
     cmCommands,
     cmSearch,
+    cmAutocomplete,
     lezerHighlight,
 };

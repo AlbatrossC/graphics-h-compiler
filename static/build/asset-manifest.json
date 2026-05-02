@@ -1,7 +1,7 @@
 {
   "compiler": {
     "css": "/static/build/compiler.2568dcc02e6f.css",
-    "js": "/static/build/compiler.cd6023225f6d.js",
+    "js": "/static/build/compiler.902ca8d4b457.js",
     "css_sources": [
       "static/css/compiler/base.css",
       "static/css/compiler/panels.css",
@@ -15,6 +15,7 @@
       "static/js/compiler/app.js",
       "static/js/compiler/files-ui.js",
       "static/js/compiler/files.js",
+      "static/js/compiler/autocomplete.js",
       "static/js/compiler/editor.js",
       "static/js/compiler/shell.js",
       "static/js/compiler/execution.js",

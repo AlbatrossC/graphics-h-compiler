@@ -1,0 +1,1021 @@
+Example: Autocompletion
+The @codemirror/autocomplete package provides functionality for displaying input suggestions in the editor. This example shows how to enable it and how to write your own completion sources.
+
+Setting Up
+Autocompletion is enabled by including the autocompletion extension (which is included in the basic setup) in your configuration. Some language packages come with support for proper autocompletion built in, such as the HTML package.
+
+1
+2
+3
+4
+⌄
+<!doctype html>
+<html>
+  
+</html>
+By default, the plugin will look for completions whenever the user types something, but you can configure it to only run when activated explicitly via a command.
+
+The default completion keymap binds Ctrl-Space to start completion, arrows to select a completion, Enter to pick it, and Escape to close the tooltip. It is activated by default when you add the extension, but you can disable that if you want to provide your own bindings.
+
+The default bindings do not bind Tab to acceptCompletion, for reasons outlined in the Tab-handling example.
+
+Providing Completions
+The completions that the extension shows come from one or more completion sources, which are functions that take a completion context—an object with information about the completion being requested—and return an object that describes the range that's being completed and the options to show. Sources may run asynchronously by returning a promise.
+
+The easiest way to connect a completion source to an editor is to use the override option.
+
+1
+2
+Press Ctrl-Space in here...
+
+This editor uses the following completion function:
+
+import {CompletionContext} from "@codemirror/autocomplete"
+
+function myCompletions(context: CompletionContext) {
+  let word = context.matchBefore(/\w*/)
+  if (word.from == word.to && !context.explicit)
+    return null
+  return {
+    from: word.from,
+    options: [
+      {label: "match", type: "keyword"},
+      {label: "hello", type: "variable", info: "(World)"},
+      {label: "magic", type: "text", apply: "⠁⭒*.✩.*⭒⠁", detail: "macro"}
+    ]
+  }
+}
+This is a very crude way to provide completions, without really looking at the editing context at all. But it demonstrates the basic things a completion function must do.
+
+Figure out which bit of text before the cursor could be completed. Here we use the matchBefore method to determine it with a regular expression.
+
+Check whether completion is appropriate at all. The explicit flag indicates whether the completion was started explicitly, via the command, or implicitly, by typing. You should generally only return results when the completion happens explicitly or the completion position is after some construct that can be completed.
+
+Build up a list of completions and return it, along with its start position. (The end position defaults to the position where completion happens.)
+
+Completions themselves are objects with a label property, which provides both the text to show in the options list and the text to insert when the completion is picked.
+
+By default, the completion list shows only the label. You'll usually also want to provide a type property, which determines the icon shown next to the completion. detail can be given to show a short string after the label, and info can be used for longer text, shown in a window to the side of the list when the completion is selected.
+
+To override what happens when a completion is picked, you can use the apply property, which can be either a string to replace the completion range with, or a function that will be called to apply an arbitrary action.
+
+When you are providing your completion source as a generic extension, or working with mixed-language documents, setting a global source is not practical. When no override is given, the plugin uses EditorState.languageDataAt with the name "autocomplete" to look up language-appropriate completion functions. Registering those is done with a language object's data facet. For example by including something like this in your state configuration:
+
+myLanguage.data.of({
+  autocomplete: myCompletions
+})
+You can also directly put an array of completion objects in this property, which will cause the library to simply use those (wrapped by completeFromList) as a source.
+
+Sorting and Filtering
+The trivial completion source used above didn't have to filter completions against the input—the plugin will take care of that. It uses a form of fuzzy matching to filter and rank completions against the currently typed text, and will highlight the letters in each completion that match.
+
+To influence the ranking of completions, you can give completion objects a boost property, which adds to or subtracts from their match score.
+
+If you really do want to filter and order completions yourself, you can include a filter: false property in your result object to disable the built-in filtering.
+
+Completion Result Validity
+Some sources need to recompute their results on every keypress, but for many of them, this is unnecessary and inefficient. They return a full list of completions for a given construct, and as long as the user is typing (or backspacing) inside that construct, that same list can be used (filtered for the currently typed input) to populate the completion list.
+
+This is why it is very much recommended to provide a validFor property on your completion result. It should contain a function or regular expression that tells the extension that, as long as the updated input (the range between the result's from property and the completion point) matches that value, it can continue to use the list of completions.
+
+In the myCompletions function above, since all its completions are simple words, a value like validFor: /^\w*$/ would be appropriate.
+
+Completing from Syntax
+To make a completion source a bit more intelligent, it is often useful to inspect the syntax tree around the completion point, and use that to get a better picture of what kind of construct is being completed.
+
+As an example, this completion source for JavaScript will complete (some) JSDoc tags in block comments.
+
+import {CompletionContext} from "@codemirror/autocomplete"
+import {syntaxTree} from "@codemirror/language"
+
+const tagOptions = [
+  "constructor", "deprecated", "link", "param", "returns", "type"
+].map(tag => ({label: "@" + tag, type: "keyword"}))
+
+function completeJSDoc(context: CompletionContext) {
+  let nodeBefore = syntaxTree(context.state).resolveInner(context.pos, -1)
+  if (nodeBefore.name != "BlockComment" ||
+      context.state.sliceDoc(nodeBefore.from, nodeBefore.from + 3) != "/**")
+    return null
+  let textBefore = context.state.sliceDoc(nodeBefore.from, context.pos)
+  let tagBefore = /@\w*$/.exec(textBefore)
+  if (!tagBefore && !context.explicit) return null
+  return {
+    from: tagBefore ? nodeBefore.from + tagBefore.index : context.pos,
+    options: tagOptions,
+    validFor: /^(@\w*)?$/
+  }
+}
+The function starts by finding the syntax node directly in front of the completion position. If that is not a block comment, or it is a block comment without a /** start marker, it returns null to indicate it has no completions.
+
+If the completion does happen in a block comment, we check whether there is an existing tag in front of it. If there is, that is included in the completion (see the from property in the returned object). If there isn't, we only complete if the completion was explicitly started.
+
+You can now use an extension like this to enable this completion source for JavaScript content.
+
+import {javascriptLanguage} from "@codemirror/lang-javascript"
+
+const jsDocCompletions = javascriptLanguage.data.of({
+  autocomplete: completeJSDoc
+})
+# Autocomplete System — Full Plan
+
+---
+
+## What Are We Building?
+
+A smart autocomplete system inside a **CodeMirror v6** editor.
+
+It does two things:
+1. **Suggests functions** when you type normally
+2. **Suggests constants** only when you are typing inside `()`
+
+It also shows **tooltips** with function info — both after selecting a function and when hovering over one.
+
+---
+
+## The One Core Rule
+
+> **Constants NEVER appear outside parentheses. Functions NEVER appear inside parentheses.**
+
+This is the foundation of everything. Every decision in this system comes back to this rule.
+
+---
+
+## JSON Data Structure
+
+This is the full shape of the JSON file. Read this carefully — everything in the system is built from this.
+
+---
+
+### The `info` Object (Tooltip Content)
+
+The old approach was `info` as a plain string. That's not enough to make a beautiful tooltip.
+
+Instead, `info` is now a **structured object** with three parts:
+
+```
+┌─────────────────────────────────────────────────┐
+│  void circle(int x, int y, int r)               │  ← signature  (bold heading)
+│                                                 │
+│  Draws a circle on the screen using the         │  ← description (subtext)
+│  current drawing color.                         │
+│                                                 │
+│  x → x coordinate of center                    │  ← params      (list, one per line)
+│  y → y coordinate of center                    │
+│  r → radius of circle                          │
+└─────────────────────────────────────────────────┘
+```
+
+Each part maps to a CSS class so you can style them independently:
+
+| Part | JSON field | CSS class | Purpose |
+|---|---|---|---|
+| Top line | `info.signature` | `.tooltip-signature` | Function signature shown as heading |
+| Middle text | `info.description` | `.tooltip-description` | What the function does |
+| Bottom lines | `info.params` | `.tooltip-param` | One line per parameter |
+
+---
+
+### Full JSON Example
+
+```json
+{
+  "functions": [
+    {
+      "name": "setcolor",
+      "cursor": "inside",
+      "accepts": {
+        "0": ["COLORS"]
+      },
+      "info": {
+        "signature": "void setcolor(int color)",
+        "description": "Sets the current drawing color for all shapes and text.",
+        "params": [
+          "color → a color constant (e.g. RED, BLUE)"
+        ]
+      }
+    },
+    {
+      "name": "setbkcolor",
+      "cursor": "inside",
+      "accepts": {
+        "0": ["COLORS"]
+      },
+      "info": {
+        "signature": "void setbkcolor(int color)",
+        "description": "Sets the background color of the graphics window.",
+        "params": [
+          "color → a color constant (e.g. WHITE, BLACK)"
+        ]
+      }
+    },
+    {
+      "name": "settextstyle",
+      "cursor": "inside",
+      "accepts": {
+        "0": ["FONTS"],
+        "1": ["DIRECTIONS"],
+        "2": []
+      },
+      "info": {
+        "signature": "void settextstyle(int font, int direction, int charsize)",
+        "description": "Sets the font, direction, and character size for text output.",
+        "params": [
+          "font      → font constant (e.g. DEFAULT_FONT, SANS_SERIF_FONT)",
+          "direction → HORIZ_DIR or VERT_DIR",
+          "charsize  → character size multiplier (integer, no constants)"
+        ]
+      }
+    },
+    {
+      "name": "setfillstyle",
+      "cursor": "inside",
+      "accepts": {
+        "0": ["FILL_STYLES"],
+        "1": ["COLORS"]
+      },
+      "info": {
+        "signature": "void setfillstyle(int pattern, int color)",
+        "description": "Sets the fill pattern and fill color used by bar, fillellipse, etc.",
+        "params": [
+          "pattern → fill style constant (e.g. SOLID_FILL, HATCH_FILL)",
+          "color   → a color constant (e.g. RED, BLUE)"
+        ]
+      }
+    },
+    {
+      "name": "circle",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void circle(int x, int y, int r)",
+        "description": "Draws a circle on the screen using the current drawing color.",
+        "params": [
+          "x → x coordinate of center",
+          "y → y coordinate of center",
+          "r → radius of circle"
+        ]
+      }
+    },
+    {
+      "name": "rectangle",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void rectangle(int left, int top, int right, int bottom)",
+        "description": "Draws a rectangle outline using the current drawing color.",
+        "params": [
+          "left   → x coordinate of top-left corner",
+          "top    → y coordinate of top-left corner",
+          "right  → x coordinate of bottom-right corner",
+          "bottom → y coordinate of bottom-right corner"
+        ]
+      }
+    },
+    {
+      "name": "line",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void line(int x1, int y1, int x2, int y2)",
+        "description": "Draws a line between two points using the current drawing color.",
+        "params": [
+          "x1 → x coordinate of start point",
+          "y1 → y coordinate of start point",
+          "x2 → x coordinate of end point",
+          "y2 → y coordinate of end point"
+        ]
+      }
+    },
+    {
+      "name": "ellipse",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void ellipse(int x, int y, int stangle, int endangle, int xr, int yr)",
+        "description": "Draws an elliptical arc using the current drawing color.",
+        "params": [
+          "x        → x coordinate of center",
+          "y        → y coordinate of center",
+          "stangle  → starting angle in degrees",
+          "endangle → ending angle in degrees",
+          "xr       → horizontal radius",
+          "yr       → vertical radius"
+        ]
+      }
+    },
+    {
+      "name": "arc",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void arc(int x, int y, int stangle, int endangle, int r)",
+        "description": "Draws a circular arc using the current drawing color.",
+        "params": [
+          "x        → x coordinate of center",
+          "y        → y coordinate of center",
+          "stangle  → starting angle in degrees",
+          "endangle → ending angle in degrees",
+          "r        → radius"
+        ]
+      }
+    },
+    {
+      "name": "bar",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void bar(int left, int top, int right, int bottom)",
+        "description": "Draws a filled rectangle using the current fill style and color.",
+        "params": [
+          "left   → x coordinate of top-left corner",
+          "top    → y coordinate of top-left corner",
+          "right  → x coordinate of bottom-right corner",
+          "bottom → y coordinate of bottom-right corner"
+        ]
+      }
+    },
+    {
+      "name": "outtextxy",
+      "cursor": "inside",
+      "accepts": {},
+      "info": {
+        "signature": "void outtextxy(int x, int y, char *text)",
+        "description": "Outputs a string at the specified position using current text settings.",
+        "params": [
+          "x    → x coordinate of text start",
+          "y    → y coordinate of text start",
+          "text → string to display"
+        ]
+      }
+    },
+    {
+      "name": "getcolor",
+      "cursor": "end",
+      "accepts": {},
+      "info": {
+        "signature": "int getcolor(void)",
+        "description": "Returns the current foreground drawing color as an integer.",
+        "params": []
+      }
+    },
+    {
+      "name": "getbkcolor",
+      "cursor": "end",
+      "accepts": {},
+      "info": {
+        "signature": "int getbkcolor(void)",
+        "description": "Returns the current background color as an integer.",
+        "params": []
+      }
+    },
+    {
+      "name": "getmaxx",
+      "cursor": "end",
+      "accepts": {},
+      "info": {
+        "signature": "int getmaxx(void)",
+        "description": "Returns the maximum x coordinate for the current graphics mode.",
+        "params": []
+      }
+    },
+    {
+      "name": "getmaxy",
+      "cursor": "end",
+      "accepts": {},
+      "info": {
+        "signature": "int getmaxy(void)",
+        "description": "Returns the maximum y coordinate for the current graphics mode.",
+        "params": []
+      }
+    },
+    {
+      "name": "cleardevice",
+      "cursor": "end",
+      "accepts": {},
+      "info": {
+        "signature": "void cleardevice(void)",
+        "description": "Clears the graphics screen and moves the cursor to (0,0).",
+        "params": []
+      }
+    },
+    {
+      "name": "closegraph",
+      "cursor": "end",
+      "accepts": {},
+      "info": {
+        "signature": "void closegraph(void)",
+        "description": "Shuts down the graphics system and restores the original screen mode.",
+        "params": []
+      }
+    }
+  ],
+  "constants": {
+    "COLORS": [
+      "BLACK", "BLUE", "GREEN", "CYAN", "RED", "MAGENTA",
+      "BROWN", "LIGHTGRAY", "DARKGRAY", "LIGHTBLUE", "LIGHTGREEN",
+      "LIGHTCYAN", "LIGHTRED", "LIGHTMAGENTA", "YELLOW", "WHITE"
+    ],
+    "FONTS": [
+      "DEFAULT_FONT", "TRIPLEX_FONT", "SMALL_FONT",
+      "SANS_SERIF_FONT", "GOTHIC_FONT"
+    ],
+    "DIRECTIONS": [
+      "HORIZ_DIR", "VERT_DIR"
+    ],
+    "FILL_STYLES": [
+      "EMPTY_FILL", "SOLID_FILL", "LINE_FILL", "LTSLASH_FILL",
+      "SLASH_FILL", "BKSLASH_FILL", "LTBKSLASH_FILL", "HATCH_FILL",
+      "XHATCH_FILL", "INTERLEAVE_FILL", "WIDE_DOT_FILL", "CLOSE_DOT_FILL"
+    ]
+  }
+}
+```
+
+---
+
+### Field Explanations
+
+| Field | Type | What it means |
+|---|---|---|
+| `name` | string | Function name used for matching and display |
+| `cursor` | `"inside"` or `"end"` | Where cursor lands after inserting the function |
+| `accepts` | object | Maps param index → constant group names. `{}` = no constants at all |
+| `info.signature` | string | Shown as bold heading in tooltip — the full function signature |
+| `info.description` | string | Shown as subtext in tooltip — what the function does |
+| `info.params` | array of strings | Each string is one line in the tooltip — describes each parameter |
+
+---
+
+### `cursor` values explained
+
+- `"inside"` → cursor lands **between** the parens after insert: `circle(|)`
+- `"end"` → cursor lands **after** the closing paren after insert: `getcolor()|`
+
+Use `"end"` for functions that take no arguments (like `getcolor`, `getmaxx`, `cleardevice`).
+
+---
+
+### `accepts` explained
+
+- Key = parameter index as a string (`"0"`, `"1"`, `"2"`)
+- Value = array of group names from the `constants` block
+- Empty object `{}` = this function takes no constants at any position (e.g. `circle`, `line`)
+- Empty array `[]` at a specific index = that slot takes no constants (e.g. `charsize` in `settextstyle`)
+
+**Which functions get `accepts` and which don't:**
+
+| Function | Has `accepts`? | Why |
+|---|---|---|
+| `setcolor` | ✅ Yes | param 0 must be a color constant |
+| `setbkcolor` | ✅ Yes | param 0 must be a color constant |
+| `setfillstyle` | ✅ Yes | param 0 = fill style, param 1 = color |
+| `settextstyle` | ✅ Yes | param 0 = font, param 1 = direction |
+| `circle` | ❌ No | takes only numbers (x, y, r) |
+| `rectangle` | ❌ No | takes only numbers |
+| `line` | ❌ No | takes only numbers |
+| `getcolor` | ❌ No | takes no arguments at all |
+| `cleardevice` | ❌ No | takes no arguments at all |
+
+---
+
+## How Context Detection Works
+
+This is the brain of the system. Every time the user types, we run this to decide what to suggest.
+
+---
+
+### The Big Idea — Slots
+
+Think of a function call as **slots separated by commas**:
+
+```
+settextstyle( [slot 0] , [slot 1] , [slot 2] )
+```
+
+- Slot 0 = between `(` and first `,`
+- Slot 1 = between first `,` and second `,`
+- Slot 2 = between second `,` and `)`
+
+**Wherever the cursor is, that slot number = the parameter index.**
+
+We use that index to look up which constants to show.
+
+---
+
+### Visual Example
+
+```
+settextstyle( SANS_SERIF_FONT , HORIZ_DIR , 10 )
+              ^^^^^^^^^^^^^^   ^^^^^^^^^   ^^
+              slot 0           slot 1      slot 2
+              index = 0        index = 1   index = 2
+```
+
+So if cursor is in slot 1, index = 1, and we show whatever `accepts["1"]` says.
+
+---
+
+### The Algorithm (Step by Step)
+
+**Step 1: Get text from line start → cursor**
+
+```
+Full line:  "settextstyle(SANS_SERIF_FONT, |"
+                                           ^ cursor
+Up to cursor: "settextstyle(SANS_SERIF_FONT, "
+```
+
+---
+
+**Step 2: Scan LEFT from cursor using a counter**
+
+Walk backwards through the text one character at a time:
+- See `)` → counter + 1
+- See `(` → counter - 1
+- Counter goes below 0 → **STOP. You found the opening paren.**
+
+```
+"settextstyle(SANS_SERIF_FONT, "
+                              ← scanning left
+             (  ← counter hits -1 → STOP here
+```
+
+If counter never goes below 0 → cursor is **outside all parens** → show functions only, stop here.
+
+---
+
+**Step 3: Extract function name**
+
+Read backwards from the `(` you found, grab the word before it:
+
+```
+settextstyle(
+^^^^^^^^^^^^
+→ function = "settextstyle"
+```
+
+---
+
+**Step 4: Count commas between `(` and cursor = parameter index**
+
+Only count commas that are at the **same level** (not inside nested parens).
+
+```
+settextstyle(SANS_SERIF_FONT, |
+                            ^
+                            1 comma found → index = 1
+```
+
+More examples:
+
+```
+setcolor( |              → 0 commas → index = 0
+settextstyle( a, |       → 1 comma  → index = 1
+settextstyle( a, b, |    → 2 commas → index = 2
+```
+
+---
+
+**Step 5: Look up `accepts[index]` from JSON**
+
+```
+function = "settextstyle"
+index    = 1
+accepts  = { "0": ["FONTS"], "1": ["DIRECTIONS"], "2": [] }
+
+accepts["1"] = ["DIRECTIONS"]
+→ expand DIRECTIONS group → ["HORIZ_DIR", "VERT_DIR"]
+→ show these as suggestions
+```
+
+---
+
+**Step 6: Get the typed prefix and filter**
+
+The text the user has already typed in the current slot = the prefix. Filter suggestions by it.
+
+```
+settextstyle(SANS_SERIF_FONT, HO|
+                              ^^
+                              prefix = "HO"
+→ HORIZ_DIR matches ✅
+→ VERT_DIR does not ❌
+→ show: HORIZ_DIR
+```
+
+---
+
+## All Scenarios (With Examples)
+
+---
+
+### Scenario 1 — Typing a function name (outside parens)
+
+**User types:**
+```
+se
+```
+
+**What happens:**
+- Scan left → no unmatched `(` found
+- Context = outside parens
+- Show ONLY functions that start with "se"
+
+**Result:**
+```
+setcolor
+settextstyle
+setbkcolor
+```
+
+**What does NOT appear:** RED, BLUE, HORIZ_DIR, or any constant.
+
+---
+
+### Scenario 2 — Opening a function call (empty parens)
+
+**User types:**
+```
+setcolor(
+```
+
+**What happens:**
+- Scan left → find `(` → function = "setcolor"
+- Count commas = 0 → parameter index = 0
+- `accepts["0"]` = ["COLORS"]
+- No typed prefix yet
+- Show ALL items from COLORS group
+
+**Result:**
+```
+RED
+BLUE
+GREEN
+YELLOW
+WHITE
+BLACK
+CYAN
+MAGENTA
+```
+
+---
+
+### Scenario 3 — Filtering constants by prefix
+
+**User types:**
+```
+setcolor(R
+```
+
+**What happens:**
+- Same as Scenario 2 but prefix = "R"
+- Filter COLORS group by prefix "R"
+
+**Result:**
+```
+RED
+```
+
+---
+
+### Scenario 4 — Second parameter
+
+**User types:**
+```
+settextstyle(SANS_SERIF_FONT, 
+```
+
+**What happens:**
+- Function = "settextstyle"
+- 1 comma found → parameter index = 1
+- `accepts["1"]` = ["DIRECTIONS"]
+- Show DIRECTIONS group
+
+**Result:**
+```
+HORIZ_DIR
+VERT_DIR
+```
+
+---
+
+### Scenario 5 — Third parameter with no constants
+
+**User types:**
+```
+settextstyle(SANS_SERIF_FONT, HORIZ_DIR, 
+```
+
+**What happens:**
+- Function = "settextstyle"
+- 2 commas found → parameter index = 2
+- `accepts["2"]` = [] (empty array)
+- No constants to show
+
+**Result:** Nothing shown (or fallback to functions — see Scenario 7)
+
+---
+
+### Scenario 6 — Function with no `accepts` at all
+
+**User types:**
+```
+circle(
+```
+
+**What happens:**
+- Function = "circle"
+- `accepts` = {} (empty object)
+- No constants for any parameter
+
+**Result:** Nothing shown (or fallback to functions)
+
+---
+
+### Scenario 7 — Unknown function name
+
+**User types:**
+```
+blahblah(
+```
+
+**What happens:**
+- Function = "blahblah"
+- Not found in JSON
+- Fallback: show functions only
+
+**Result:**
+```
+setcolor
+circle
+settextstyle
+... (all functions)
+```
+
+---
+
+### Scenario 8 — Cursor moves back outside parens
+
+**User types:**
+```
+setcolor(RED)|
+             ^ cursor is after the )
+```
+
+**What happens:**
+- Scan left → counter never goes negative
+- Context = outside parens
+- Show functions only
+
+**Result:** Function suggestions, no constants.
+
+---
+
+### Scenario 9 — Nested function call
+
+**User types:**
+```
+setcolor(getcolor(|))
+                  ^ cursor here
+```
+
+**What happens:**
+- Scan left from cursor
+- First `(` found belongs to `getcolor`
+- Function = "getcolor"
+- `accepts` = {} → no constants
+
+**Result:** Nothing shown (inner function has no constants)
+
+---
+
+### Scenario 10 — Nested call where outer function would show constants
+
+**User types:**
+```
+setcolor(getmaxcolor(|))
+                     ^ cursor here
+```
+
+**What happens:**
+- Innermost open paren = `getmaxcolor(`
+- Function = "getmaxcolor"
+- We use the INNER context, not the outer one
+- If `getmaxcolor` has no `accepts` → show nothing
+
+**Key rule:** Always use the **innermost** unmatched paren. The outer `setcolor(` is ignored because a closer unmatched `(` exists.
+
+---
+
+## Insert Behavior
+
+### Inserting a Function
+
+When user selects a function from the suggestion list:
+
+| `cursor` value | What gets inserted | Where cursor lands |
+|---|---|---|
+| `"inside"` | `circle()` | `circle(|)` — between parens |
+| `"end"` | `getcolor()` | `getcolor()|` — after closing paren |
+
+The typed prefix is replaced. Example:
+
+```
+User typed:  cir
+User selects: circle
+Result:      circle(|)   ← cursor between parens
+```
+
+### Inserting a Constant
+
+When user selects a constant from the suggestion list:
+
+```
+User typed:  setcolor(R
+User selects: RED
+Result:      setcolor(RED|)   ← cursor after constant
+```
+
+Rules:
+- Only the prefix after `(` or `,` is replaced
+- No parentheses are added
+- Cursor lands right after the inserted constant
+
+---
+
+## Tooltip System
+
+### When to Show
+
+| Trigger | Action |
+|---|---|
+| User selects a function from autocomplete | Show tooltip for that function |
+| User hovers mouse over a function name | Show tooltip for that function |
+
+### When to Hide
+
+| Trigger | Action |
+|---|---|
+| User types the next character | Hide tooltip |
+| Cursor moves away from the function word | Hide tooltip |
+| User clicks elsewhere in editor | Hide tooltip |
+
+### What the Tooltip Shows
+
+The tooltip is built from the three parts of `info` and rendered as HTML so CSS can style each part:
+
+```
+┌─────────────────────────────────────────────────┐
+│  void settextstyle(int font, int dir, int size) │  ← .tooltip-signature  (bold, monospace)
+│                                                 │
+│  Sets the font, direction, and character size   │  ← .tooltip-description (lighter, smaller)
+│  for text output.                               │
+│                                                 │
+│  font      → font constant (e.g. DEFAULT_FONT)  │  ← .tooltip-param (one line each, muted color)
+│  direction → HORIZ_DIR or VERT_DIR              │
+│  charsize  → character size multiplier          │
+└─────────────────────────────────────────────────┘
+```
+
+The tooltip renderer reads `info` from JSON and builds HTML like this:
+
+```html
+<div class="tooltip-box">
+  <div class="tooltip-signature">void settextstyle(int font, int direction, int charsize)</div>
+  <div class="tooltip-description">Sets the font, direction, and character size for text output.</div>
+  <div class="tooltip-params">
+    <div class="tooltip-param">font      → font constant (e.g. DEFAULT_FONT, SANS_SERIF_FONT)</div>
+    <div class="tooltip-param">direction → HORIZ_DIR or VERT_DIR</div>
+    <div class="tooltip-param">charsize  → character size multiplier (integer, no constants)</div>
+  </div>
+</div>
+```
+
+For functions with no params (like `getcolor`), the params block is simply not rendered.
+
+```
+┌──────────────────────────────────────────┐
+│  int getcolor(void)                      │  ← .tooltip-signature
+│                                          │
+│  Returns the current foreground drawing  │  ← .tooltip-description
+│  color as an integer.                    │
+└──────────────────────────────────────────┘
+```
+
+### How Hover Detection Works
+
+1. User moves mouse over text in editor
+2. Check the word under the mouse position
+3. Look up that word in the functions list
+4. If found → show tooltip with that function's `info`
+5. If not found → hide any visible tooltip
+
+Use CodeMirror's `hoverTooltip()` API for this.
+
+---
+
+## CodeMirror APIs to Use
+
+| Feature | CM6 API |
+|---|---|
+| Autocomplete suggestions | `autocompletion()`, `CompletionSource` |
+| Hover tooltip | `hoverTooltip()` from `@codemirror/view` |
+| Tooltip after selection | `StateField` to track tooltip state |
+| Reading cursor position | `view.state.selection.main.head` |
+| Reading text before cursor | `state.doc.lineAt(pos)` |
+
+---
+
+## Data Loading
+
+- Load `functions.json` **once** on page load
+- Store in memory as two maps for fast lookup:
+
+```
+functionsMap: { "setcolor": { info, cursor, accepts }, ... }
+constantsMap: { "COLORS": ["RED", "BLUE", ...], ... }
+```
+
+- Never fetch again during typing
+- Never modify the JSON data
+
+---
+
+## Filtering / Matching
+
+- Use **prefix matching** (not fuzzy)
+- CodeMirror's default autocomplete does this automatically
+- Do not implement custom ranking or sorting
+- Example: typing `RE` matches `RED` but not `DARKRED`
+
+---
+
+## What NEVER to Do
+
+- Never show constants outside parentheses
+- Never insert `circle(x, y, r)` style parameter hints — only `circle()`
+- Never use `setTimeout` or `setInterval` anywhere
+- Never modify the JSON file or its structure
+- Never fetch the JSON more than once
+
+---
+
+## Summary Flowchart
+
+```
+User types a character
+        │
+        ▼
+   Get text from line start → cursor
+        │
+        ▼
+   Scan left with stack counter
+        │
+        ├─ No unmatched ( found
+        │         │
+        │         ▼
+        │    Show FUNCTIONS only
+        │    (filter by typed prefix)
+        │
+        └─ Unmatched ( found
+                  │
+                  ▼
+          Extract function name
+                  │
+                  ▼
+          Count commas → param index
+                  │
+                  ▼
+          Lookup accepts[index]
+                  │
+                  ├─ Empty or missing
+                  │         │
+                  │         ▼
+                  │    Show nothing
+                  │    (or functions fallback)
+                  │
+                  └─ Has groups
+                            │
+                            ▼
+                    Expand groups → flat list
+                            │
+                            ▼
+                    Filter by typed prefix
+                            │
+                            ▼
+                    Show CONSTANTS only
+```
+
+---
+
+## Quick Reference Table
+
+| Situation | What is Shown |
+|---|---|
+| Typing outside parens | Functions only |
+| Inside parens, function has `accepts` for that param | Constants only |
+| Inside parens, function has empty `accepts` | Nothing |
+| Inside parens, function not found in JSON | Functions only (fallback) |
+| Inside nested parens | Use innermost function's `accepts` |
+| Cursor just after `)` | Functions only |

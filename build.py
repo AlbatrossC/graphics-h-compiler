@@ -32,6 +32,7 @@ JS_PRIORITY = [
     "app.js",
     "files-ui.js",
     "files.js",
+    "autocomplete.js",
     "editor.js",
     "shell.js",
     "execution.js",
