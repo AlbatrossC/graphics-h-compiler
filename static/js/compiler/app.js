@@ -9,7 +9,9 @@ const APP_SETTINGS_DEFAULTS = Object.freeze({
         wordWrap: true,
         lineNumbers: true,
         bracketMatching: true,
-        activeLine: true
+        activeLine: true,
+        autocomplete: true,
+        hoverTooltips: true
     }
 });
 
@@ -38,7 +40,9 @@ function normalizeAppSettings(rawSettings) {
             wordWrap: rawEditor.wordWrap ?? raw.wordWrap ?? base.editor.wordWrap,
             lineNumbers: rawEditor.lineNumbers ?? raw.lineNumbers ?? base.editor.lineNumbers,
             bracketMatching: rawEditor.bracketMatching ?? raw.bracketMatching ?? base.editor.bracketMatching,
-            activeLine: rawEditor.activeLine ?? raw.activeLine ?? base.editor.activeLine
+            activeLine: rawEditor.activeLine ?? raw.activeLine ?? base.editor.activeLine,
+            autocomplete: rawEditor.autocomplete ?? raw.autocomplete ?? base.editor.autocomplete,
+            hoverTooltips: rawEditor.hoverTooltips ?? raw.hoverTooltips ?? base.editor.hoverTooltips
         }
     };
 }

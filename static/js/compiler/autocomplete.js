@@ -254,7 +254,7 @@ window.setupAutocomplete = function (editorView) {
             pos: word.from, end: word.to, above: false,
             create() { return { dom: buildTooltipHTML(func.info) }; }
         };
-    });
+    }, { hoverTime: 80 });
 
     const selectionTooltipField = StateField.define({
         create() { return null; },
@@ -421,13 +421,34 @@ window.setupAutocomplete = function (editorView) {
         }
     });
 
+    const autocompleteCompartment = new cmModules.state.Compartment();
+    const tooltipCompartment = new cmModules.state.Compartment();
+
+    const appSettings = (typeof loadAppSettings === 'function') ? loadAppSettings() : {};
+    const initAc = appSettings?.editor?.autocomplete !== false;
+    const initTt = appSettings?.editor?.hoverTooltips !== false;
+
+    const acExtension = autocompletion({ override: [getCompletions] });
+    const ttExtension = [hoverTooltipSource, selectionTooltipField, tooltipHideListener];
+
     editorView.dispatch({
         effects: cmModules.state.StateEffect.appendConfig.of([
-            autocompletion({ override: [getCompletions] }),
-            hoverTooltipSource,
-            selectionTooltipField,
-            tooltipTheme,
-            tooltipHideListener,
+            autocompleteCompartment.of(initAc ? acExtension : []),
+            tooltipCompartment.of(initTt ? ttExtension : []),
+            tooltipTheme
         ])
+    });
+
+    document.addEventListener('editor-settings-changed', (event) => {
+        const settings = event.detail?.settings?.editor || {};
+        const enableAc = settings.autocomplete !== false;
+        const enableTt = settings.hoverTooltips !== false;
+        
+        editorView.dispatch({
+            effects: [
+                autocompleteCompartment.reconfigure(enableAc ? acExtension : []),
+                tooltipCompartment.reconfigure(enableTt ? ttExtension : [])
+            ]
+        });
     });
 };

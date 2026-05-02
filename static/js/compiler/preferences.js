@@ -15,7 +15,9 @@
                 wordWrap: true,
                 lineNumbers: true,
                 bracketMatching: true,
-                activeLine: true
+                activeLine: true,
+                autocomplete: true,
+                hoverTooltips: true
             }
         };
 
@@ -73,6 +75,8 @@
     const lineNumbersToggle = document.getElementById('settings-line-numbers');
     const bracketMatchingToggle = document.getElementById('settings-bracket-matching');
     const activeLineToggle = document.getElementById('settings-active-line');
+    const autocompleteToggle = document.getElementById('settings-autocomplete');
+    const hoverTooltipsToggle = document.getElementById('settings-hover-tooltips');
     const resetBtn = document.getElementById('settings-reset-btn');
     const headerFontDisplay = document.getElementById('font-size-display');
 
@@ -258,6 +262,28 @@
         if (save) persistSettings();
     }
 
+    function applyAutocomplete(enabled, save = true) {
+        currentSettings = {
+            ...currentSettings,
+            editor: {
+                ...currentSettings.editor,
+                autocomplete: !!enabled
+            }
+        };
+        if (save) persistSettings();
+    }
+
+    function applyHoverTooltips(enabled, save = true) {
+        currentSettings = {
+            ...currentSettings,
+            editor: {
+                ...currentSettings.editor,
+                hoverTooltips: !!enabled
+            }
+        };
+        if (save) persistSettings();
+    }
+
     function syncUIFromSettings() {
         if (fontRange) fontRange.value = String(currentSettings.editor.fontSize);
         if (fontSizeValue) fontSizeValue.textContent = String(currentSettings.editor.fontSize);
@@ -265,6 +291,8 @@
         if (lineNumbersToggle) lineNumbersToggle.checked = currentSettings.editor.lineNumbers;
         if (bracketMatchingToggle) bracketMatchingToggle.checked = currentSettings.editor.bracketMatching;
         if (activeLineToggle) activeLineToggle.checked = currentSettings.editor.activeLine;
+        if (autocompleteToggle) autocompleteToggle.checked = currentSettings.editor.autocomplete !== false;
+        if (hoverTooltipsToggle) hoverTooltipsToggle.checked = currentSettings.editor.hoverTooltips !== false;
         if (headerFontDisplay) headerFontDisplay.textContent = String(currentSettings.editor.fontSize);
     }
 
@@ -279,6 +307,8 @@
         applyLineNumbers(currentSettings.editor.lineNumbers, false);
         applyBracketMatching(currentSettings.editor.bracketMatching, false);
         applyActiveLine(currentSettings.editor.activeLine, false);
+        applyAutocomplete(currentSettings.editor.autocomplete !== false, false);
+        applyHoverTooltips(currentSettings.editor.hoverTooltips !== false, false);
 
         currentSettings = saveSettingsState(currentSettings);
         emitSettingsChanged();
@@ -370,6 +400,18 @@
         });
     }
 
+    if (autocompleteToggle) {
+        autocompleteToggle.addEventListener('change', (event) => {
+            applyAutocomplete(event.target.checked, true);
+        });
+    }
+
+    if (hoverTooltipsToggle) {
+        hoverTooltipsToggle.addEventListener('change', (event) => {
+            applyHoverTooltips(event.target.checked, true);
+        });
+    }
+
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
             currentSettings = cloneSettings(SETTINGS_DEFAULTS);
@@ -378,6 +420,8 @@
             applyLineNumbers(currentSettings.editor.lineNumbers, false);
             applyBracketMatching(currentSettings.editor.bracketMatching, false);
             applyActiveLine(currentSettings.editor.activeLine, false);
+            applyAutocomplete(currentSettings.editor.autocomplete !== false, false);
+            applyHoverTooltips(currentSettings.editor.hoverTooltips !== false, false);
             syncUIFromSettings();
             persistSettings();
             Logger.info('Settings reset to defaults');
