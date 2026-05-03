@@ -87,10 +87,11 @@
         order: 2;
     }
 
-    #settings-header-btn, #save-btn {
+    #settings-header-btn, #save-btn, #theme-toggle-btn {
         display: none !important;
     }
 
+    .clean-dropdown,
     .demo-selector,
     .save-indicator {
         display: none !important;
@@ -115,6 +116,7 @@
     #sidebar-toggle .btn-text-mobile {
         display: inline !important;
         font-weight: 500;
+        font-size: 0.85rem;
     }
 
     #back-btn .btn-text-mobile {
@@ -131,7 +133,8 @@
     }
 
     #save-btn,
-    #settings-header-btn {
+    #settings-header-btn,
+    #theme-toggle-btn {
         display: none !important;
     }
 
@@ -168,9 +171,9 @@
         justify-content: center;
         align-items: center;
         border-radius: 12px;
-        border: 1px solid var(--border-color);
-        background: var(--vscode-line-bg);
-        color: var(--text-primary);
+        border: 1px solid var(--border-color) !important;
+        background: var(--vscode-line-bg) !important;
+        color: var(--text-primary) !important;
     }
 
     #sidebar-toggle svg,

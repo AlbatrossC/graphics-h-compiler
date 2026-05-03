@@ -254,44 +254,44 @@ function createVsCodeEditorStyleExtension() {
     const { tags } = cmModules.highlight;
 
     const highlight = HighlightStyle.define([
-        { tag: tags.keyword, color: '#f92672' },
-        { tag: tags.name, color: '#f8f8f2' },
-        { tag: tags.typeName, color: '#66d9ef' },
-        { tag: tags.variableName, color: '#f8f8f2' },
-        { tag: tags.propertyName, color: '#a6e22e' },
-        { tag: tags.function(tags.variableName), color: '#a6e22e' },
-        { tag: tags.string, color: '#e6db74' },
-        { tag: tags.number, color: '#ae81ff' },
-        { tag: tags.bool, color: '#ae81ff' },
-        { tag: tags.comment, color: '#75715e' },
-        { tag: tags.operator, color: '#f92672' },
-        { tag: tags.bracket, color: '#f8f8f2' },
-        { tag: tags.meta, color: '#f92672' },
-        { tag: tags.processingInstruction, color: '#f92672' },
-        { tag: tags.definition(tags.variableName), color: '#a6e22e' },
-        { tag: tags.macroName, color: '#a6e22e' },
+        { tag: tags.keyword, color: 'var(--syn-keyword)' },
+        { tag: tags.name, color: 'var(--syn-name)' },
+        { tag: tags.typeName, color: 'var(--syn-type)' },
+        { tag: tags.variableName, color: 'var(--syn-name)' },
+        { tag: tags.propertyName, color: 'var(--syn-property)' },
+        { tag: tags.function(tags.variableName), color: 'var(--syn-property)' },
+        { tag: tags.string, color: 'var(--syn-string)' },
+        { tag: tags.number, color: 'var(--syn-number)' },
+        { tag: tags.bool, color: 'var(--syn-number)' },
+        { tag: tags.comment, color: 'var(--syn-comment)' },
+        { tag: tags.operator, color: 'var(--syn-keyword)' },
+        { tag: tags.bracket, color: 'var(--syn-name)' },
+        { tag: tags.meta, color: 'var(--syn-meta)' },
+        { tag: tags.processingInstruction, color: 'var(--syn-meta)' },
+        { tag: tags.definition(tags.variableName), color: 'var(--syn-property)' },
+        { tag: tags.macroName, color: 'var(--syn-property)' },
     ]);
 
     return [
         EditorView.theme({
             '&': { backgroundColor: 'transparent' },
             '.cm-scroller': { backgroundColor: 'transparent' },
-            '.cm-content': { color: '#f8f8f2' },
-            '.cm-cursor': { borderLeftColor: '#00ff88' },
-            '.cm-activeLine': { backgroundColor: '#1a1a1a' },
-            '.cm-activeLineGutter': { backgroundColor: '#1a1a1a' },
+            '.cm-content': { color: 'var(--text-primary)' },
+            '.cm-cursor': { borderLeftColor: 'var(--primary)' },
+            '.cm-activeLine': { backgroundColor: 'var(--vscode-line-bg)' },
+            '.cm-activeLineGutter': { backgroundColor: 'var(--vscode-line-bg)' },
             '.cm-gutters': {
-                backgroundColor: '#151515',
-                color: '#a0a0a0',
-                borderRight: '1px solid #262626'
+                backgroundColor: 'var(--vscode-sidebar)',
+                color: 'var(--text-muted)',
+                borderRight: '1px solid var(--vscode-border)'
             },
-            '.cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
-            '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(0, 255, 136, 0.15) !important' },
+            '.cm-selectionBackground': { backgroundColor: 'rgba(var(--color-rgb-primary, 0, 255, 136), 0.15) !important' },
+            '&.cm-focused .cm-selectionBackground': { backgroundColor: 'rgba(var(--color-rgb-primary, 0, 255, 136), 0.15) !important' },
             '.cm-matchingBracket': {
-                backgroundColor: 'rgba(0, 255, 136, 0.25)',
-                outline: '1px solid rgba(0, 255, 136, 0.4)'
+                backgroundColor: 'rgba(var(--color-rgb-primary, 0, 255, 136), 0.25)',
+                outline: '1px solid rgba(var(--color-rgb-primary, 0, 255, 136), 0.4)'
             },
-        }, { dark: true }),
+        }),
         syntaxHighlighting(highlight)
     ];
 }

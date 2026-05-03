@@ -69,7 +69,7 @@
 .fix-toast-close:hover {
     color: var(--text-primary);
     border-color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(var(--color-rgb-white), 0.06);
 }
 
 .fix-toast-close svg {

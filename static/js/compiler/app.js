@@ -420,10 +420,10 @@ async function updateCacheStatus() {
     try {
         const cached = await hasCachedCompilerAsset('assets', 'tc-zip');
         if (cached && runBtn) {
-            runBtn.title = 'Run (cached - instant) [Ctrl+Enter]';
+            runBtn.title = 'Run this program [Ctrl+Enter]';
             Logger.info('Cache status: TC ZIP is cached');
         } else if (runBtn) {
-            runBtn.title = 'Run [Ctrl+Enter]';
+            runBtn.title = 'Run this program [Ctrl+Enter]';
         }
     } catch (e) {
         // Silently ignore

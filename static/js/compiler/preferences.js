@@ -65,6 +65,11 @@
     const fileExplorerView = document.getElementById('file-explorer-view');
     const sidebar = document.getElementById('sidebar');
     const sidebarHeader = document.querySelector('.sidebar-header');
+    
+    // Theme controls
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeIconSun = document.getElementById('theme-icon-sun');
+    const themeIconMoon = document.getElementById('theme-icon-moon');
 
     // Settings controls
     const fontRange = document.getElementById('settings-font-range');
@@ -427,6 +432,33 @@
             Logger.info('Settings reset to defaults');
         });
     }
+
+    // ==================== THEME TOGGLE LOGIC ====================
+    function applyTheme(theme, save = true) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            if (themeIconSun) themeIconSun.style.display = 'none';
+            if (themeIconMoon) themeIconMoon.style.display = 'block';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            if (themeIconSun) themeIconSun.style.display = 'block';
+            if (themeIconMoon) themeIconMoon.style.display = 'none';
+        }
+        if (save) {
+            localStorage.setItem('app-theme', theme);
+        }
+    }
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            applyTheme(isLight ? 'dark' : 'light');
+        });
+    }
+
+    // Load saved theme on startup
+    const savedTheme = localStorage.getItem('app-theme') || 'dark';
+    applyTheme(savedTheme, false);
 
     // ==================== CROSS-MODULE EVENTS ====================
     document.addEventListener('editor-ready', () => {

@@ -5,6 +5,7 @@
 }
 
 :root {
+    --color-rgb-white: 255, 255, 255;
     /* Fixed VS Code palette */
     --vscode-bg: #0a0a0a;
     --vscode-sidebar: #151515;
@@ -12,9 +13,21 @@
     --vscode-line-bg: #1a1a1a;
     --vscode-border: #262626;
 
+    /* Syntax Highlighting */
+    --syn-keyword: #f92672;
+    --syn-name: #f8f8f2;
+    --syn-type: #66d9ef;
+    --syn-string: #e6db74;
+    --syn-number: #ae81ff;
+    --syn-comment: #75715e;
+    --syn-property: #a6e22e;
+    --syn-meta: #f92672;
+
     /* Green Color Palette - Matching Landing Page */
+    --color-rgb-primary: 0, 255, 136;
     --primary: #00ff88;
     --primary-hover: #00cc6a;
+    --primary-text: #0a0a0a;
     --success: #00ff88;
     --success-hover: #00cc6a;
     --danger: #ff4444;
@@ -26,16 +39,56 @@
     --text-secondary: #a0a0a0;
     --text-muted: #707070;
 
-    --border-color: rgba(255, 255, 255, 0.12);
+    --border-color: rgba(var(--color-rgb-white), 0.12);
+    --border-color-hover: rgba(var(--color-rgb-white), 0.25);
     --shadow: none;
-    --header-height: 60px;
-    --layout-gap: 8px;
-    --panel-radius: 0px;
+    --header-height: 58px;
+    --layout-gap: 4px;
+    --panel-radius: 6px;
 
     /* Performance optimization */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.2s ease;
     --transition-slow: 0.3s ease;
+}
+
+[data-theme="light"] {
+    --color-rgb-white: 0, 0, 0;
+    /* Light Theme Palette */
+    --vscode-bg: #f6f8fa;
+    --vscode-sidebar: #f6f8fa;
+    --vscode-editor: #ffffff;
+    --vscode-line-bg: #f0f3f6;
+    --vscode-border: #d0d7de;
+    --border-color: #d0d7de;
+
+    /* Syntax Highlighting (Light Theme) */
+    --syn-keyword: #d73a49;
+    --syn-name: #24292e;
+    --syn-type: #005cc5;
+    --syn-string: #032f62;
+    --syn-number: #005cc5;
+    --syn-comment: #6a737d;
+    --syn-property: #6f42c1;
+    --syn-meta: #d73a49;
+
+    --color-rgb-primary: 0, 168, 89;
+    --primary: #00a859;
+    --primary-hover: #008f4c;
+    --primary-text: #ffffff;
+    --success: #00a859;
+    --success-hover: #008f4c;
+    --danger: #d32f2f;
+    --warning: #f57c00;
+    --accent: #00a859;
+    --accent-dark: #008f4c;
+
+    --text-primary: #1a1a1a;
+    --text-secondary: #5e5e5e;
+    --text-muted: #808080;
+
+    --border-color-hover: #99aab5;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Base Styles */
@@ -164,26 +217,53 @@ header {
 }
 
 .btn,
-.icon-btn,
-.demo-dropdown,
-.save-indicator {
-    height: 38px;
+.demo-dropdown {
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 500;
     transition: all var(--transition-fast);
-    border: 1px solid var(--border-color);
+    border: none;
     cursor: pointer;
-    background: var(--vscode-sidebar);
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.btn:hover,
+.demo-dropdown:hover {
+    background: var(--vscode-line-bg);
+    color: var(--text-primary);
+}
+
+.icon-btn {
+    height: 36px;
+    width: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all var(--transition-fast);
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.icon-btn:hover {
+    background: var(--vscode-line-bg);
     color: var(--text-primary);
 }
 
 .btn {
     padding: 0 16px;
     gap: 8px;
+}
+
+.btn-text {
+    white-space: nowrap;
 }
 
 .btn svg {
@@ -194,14 +274,13 @@ header {
 /* Button Variants */
 .btn-primary {
     background: var(--primary);
-    color: #0a0a0a;
-    border-color: var(--primary);
-    font-weight: 700;
+    color: var(--primary-text);
+    border: none;
+    font-weight: 600;
 }
 
 .btn-primary:hover:not(:disabled) {
     background: var(--primary-hover);
-    border-color: var(--primary-hover);
 }
 
 .btn-primary:disabled {
@@ -211,28 +290,29 @@ header {
     transform: none;
 }
 
-.btn-secondary {
-    background: var(--vscode-sidebar);
-    border-color: var(--border-color);
-}
-
-.btn-secondary:hover {
-    background: var(--vscode-line-bg);
-    border-color: var(--primary);
-}
-
-.btn-home,
+.btn-secondary,
 .btn-success {
-    background: var(--primary);
-    color: #0a0a0a;
-    border-color: var(--primary);
-    font-weight: 700;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-weight: 500;
 }
 
-.btn-home:hover,
+.btn-secondary:hover,
 .btn-success:hover {
+    background: var(--vscode-line-bg);
+    color: var(--text-primary);
+}
+
+.btn-home {
+    background: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    font-weight: 600;
+}
+
+.btn-home:hover {
     background: var(--primary-hover);
-    border-color: var(--primary-hover);
 }
 
 .btn-gemini {
@@ -260,13 +340,13 @@ header {
 
 .btn-ai-secondary {
     background: transparent;
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(var(--color-rgb-white), 0.12);
     color: var(--text-secondary);
 }
 
 .btn-ai-secondary:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(var(--color-rgb-white), 0.05);
+    border-color: rgba(var(--color-rgb-white), 0.22);
     color: var(--text-primary);
 }
 
@@ -317,80 +397,66 @@ header {
     border: 0;
 }
 
-/* Demo Selector */
-.demo-selector {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-}
-
-.demo-selector-compact {
+/* Clean Dropdown */
+.clean-dropdown {
     position: relative;
+    display: inline-flex;
+    align-items: center;
 }
 
-.demo-selector label {
-    font-size: 0.8125rem;
-    font-weight: 400;
-    color: var(--text-muted);
-    transition: color var(--transition-slow);
-}
-
-.demo-dropdown {
-    padding: 0 12px;
-    min-width: 180px;
-    cursor: pointer;
-}
-
-.demo-dropdown-compact {
-    padding-left: 36px;
-    padding-right: 32px;
+.clean-dropdown select {
     appearance: none;
-    background-color: var(--vscode-line-bg);
+    -webkit-appearance: none;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 28px 6px 12px;
+    font-size: 0.85rem;
     font-weight: 500;
-}
-
-.demo-dropdown:hover {
-    background: var(--vscode-line-bg);
-    border-color: var(--primary);
-}
-
-.demo-dropdown:focus,
-.demo-dropdown:active {
+    cursor: pointer;
     outline: none;
-    border-color: var(--primary);
+    transition: all var(--transition-fast);
 }
 
-.demo-selector-icon {
+.clean-dropdown select:hover,
+.clean-dropdown select:focus {
+    background: var(--vscode-line-bg);
+    border-color: var(--border-color-hover);
+}
+
+.clean-dropdown svg {
     position: absolute;
-    color: var(--text-muted);
-    pointer-events: none;
-}
-
-.demo-selector-icon-left {
-    left: 12px;
-    width: 16px;
-    height: 16px;
-}
-
-.demo-selector-icon-right {
-    right: 12px;
+    right: 8px;
     width: 14px;
     height: 14px;
+    pointer-events: none;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.clean-dropdown select:hover + svg,
+.clean-dropdown select:focus + svg {
+    color: var(--text-primary);
 }
 
 /* Save Indicator */
 .save-indicator {
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 0 10px;
     gap: 5px;
     font-size: 0.75rem;
     font-weight: 500;
     cursor: default;
     white-space: nowrap;
+    background: transparent;
+    color: var(--text-secondary);
 }
 
 .save-indicator.saved {
-    background: rgba(0, 255, 136, 0.08);
-    border-color: rgba(0, 255, 136, 0.25);
     color: var(--success);
 }
 

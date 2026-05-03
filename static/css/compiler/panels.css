@@ -35,7 +35,7 @@
 
 #editor-wrapper:hover,
 #terminal-wrapper:hover {
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-color-hover);
 }
 
 #editor-wrapper.active {
@@ -70,7 +70,7 @@
     justify-content: space-between;
     background: var(--vscode-sidebar);
     border-bottom: 1px solid var(--border-color);
-    min-height: 54px;
+    min-height: 44px;
     flex-shrink: 0;
     transition:
         background-color var(--transition-slow),
@@ -83,7 +83,7 @@
 }
 
 .panel-header:not(:has(.file-tabs)) {
-    padding: 12px 20px;
+    padding: 8px 14px;
 }
 
 .panel-title {
@@ -625,9 +625,9 @@
     background: linear-gradient(
         110deg,
         transparent 0%,
-        rgba(255, 255, 255, 0.06) 35%,
-        rgba(255, 255, 255, 0.2) 50%,
-        rgba(255, 255, 255, 0.06) 65%,
+        rgba(var(--color-rgb-white), 0.06) 35%,
+        rgba(var(--color-rgb-white), 0.2) 50%,
+        rgba(var(--color-rgb-white), 0.06) 65%,
         transparent 100%
     );
     transform: translateX(-100%);
@@ -913,7 +913,7 @@
     align-items: center;
     gap: 7px;
     padding: 0 16px;
-    height: 46px;
+    height: 44px;
     font-size: 0.8125rem;
     font-weight: 500;
     color: var(--text-secondary);

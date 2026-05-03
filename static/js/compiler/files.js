@@ -554,7 +554,7 @@ async function initGoogleIdentity(clientId) {
                 size: 'large',
                 shape: 'rectangular',
                 text: 'signin_with',
-                width: 220
+                width: 196
             });
         }
 
