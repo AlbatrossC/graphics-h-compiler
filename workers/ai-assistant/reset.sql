@@ -1,6 +1,0 @@
-DROP TABLE IF EXISTS guest_logs;
-DROP TABLE IF EXISTS logged_sessions;
-DROP TABLE IF EXISTS guest_info;
-DROP TABLE IF EXISTS logged_users;
-DROP TABLE IF EXISTS daily_usage;
-DROP TABLE IF EXISTS fixes;

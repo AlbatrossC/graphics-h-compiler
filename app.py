@@ -165,7 +165,6 @@ def get_compiler_assets():
             '/static/js/compiler/shell.js',
             '/static/js/compiler/execution.js',
             '/static/js/compiler/preferences.js',
-            '/static/js/compiler/ai-fix.js',
         ],
     }
 
@@ -373,10 +372,7 @@ def auth_config():
     return jsonify({
         'authEnabled': bool(os.getenv('USER_FILES_WORKERS') and os.getenv('GOOGLE_CLIENT_ID')),
         'storageEnabled': bool(os.getenv('USER_FILES_WORKERS')),
-        'aiEnabled': bool(os.getenv('AI_ASSISTANT_WORKER') or os.getenv('FIX_WITH_AI_WORKER')),
         'googleClientId': os.getenv('GOOGLE_CLIENT_ID', ''),
-        'supabaseUrl': os.getenv('SUPABASE_URL', ''),
-        'supabaseAnonKey': os.getenv('SUPABASE_ANON_KEY', ''),
     })
 
 
@@ -451,59 +447,6 @@ def storage_proxy():
 
     else:
         log_request(request.method, request.path, status)
-
-    return resp
-
-@app.route('/api/ai/fix', methods=['POST', 'OPTIONS'])
-@app.route('/api/ai/fix/<path:job_id>', methods=['GET', 'OPTIONS'])
-def fix_ai_proxy(job_id=None):
-    fix_worker_url = os.getenv('FIX_WITH_AI_WORKER')
-    if not fix_worker_url:
-        return jsonify({'error': 'Fix with AI worker is not configured'}), 503
-
-    body_bytes = request.get_data() if request.method in {'POST', 'PUT', 'PATCH', 'DELETE'} else None
-    try:
-        resp = proxy_request(fix_worker_url, request.path, allow_redirects=False, body=body_bytes, read_timeout=30)
-    except req.exceptions.Timeout as exc:
-        log_warn(f"Fix AI proxy timeout  path={request.path}  error={exc}")
-        return jsonify({'error': 'Fix with AI request timed out. Please try again.', 'code': 'timeout'}), 504
-    except req.exceptions.RequestException as exc:
-        log_warn(f"Fix AI proxy error  path={request.path}  error={exc}")
-        return jsonify({'error': 'Fix with AI service unreachable. Please try again.', 'code': 'proxy_error'}), 502
-    status = resp.status_code
-    response_text = ''
-    ai_payload = None
-    try:
-        response_text = resp.get_data(as_text=True)
-        ai_payload = json.loads(response_text) if response_text else None
-    except Exception:
-        response_text = response_text[:300] if response_text else ''
-
-    response_excerpt = response_text[:300] if response_text else ''
-    ai_code = ai_payload.get('code') if isinstance(ai_payload, dict) else ''
-    ai_reason = ''
-    if isinstance(ai_payload, dict) and isinstance(ai_payload.get('debug'), dict):
-        ai_reason = ai_payload['debug'].get('reason') or ''
-    retry_after = resp.headers.get('Retry-After', '')
-
-    if request.method == 'POST' and request.path == '/api/ai/fix':
-        if status < 300:
-            log_ok(f"Fix job accepted  (HTTP {status})")
-        else:
-            log_warn(
-                f"Fix job create failed  (HTTP {status})  target={fix_worker_url}  "
-                f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
-                f"{response_excerpt}"
-            )
-    elif request.method == 'GET' and request.path.startswith('/api/ai/fix/'):
-        if status < 300 and isinstance(ai_payload, dict):
-            log_info(f"Fix job polled  status={ai_payload.get('status', '?')}  (HTTP {status})")
-        elif status >= 300:
-            log_warn(
-                f"Fix job poll failed  (HTTP {status})  target={fix_worker_url}  "
-                f"code={ai_code or '?'}  reason={ai_reason or '?'}  retry_after={retry_after or 'n/a'}  "
-                f"{response_excerpt}"
-            )
 
     return resp
 

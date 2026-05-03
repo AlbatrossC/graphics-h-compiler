@@ -1,7 +1,7 @@
 {
   "compiler": {
     "css": "/static/build/compiler.237e24618da0.css",
-    "js": "/static/build/compiler.090acb7ee45a.js",
+    "js": "/static/build/compiler.7d610faa6b6c.js",
     "css_sources": [
       "static/css/compiler/base.css",
       "static/css/compiler/panels.css",
@@ -19,8 +19,7 @@
       "static/js/compiler/editor.js",
       "static/js/compiler/shell.js",
       "static/js/compiler/execution.js",
-      "static/js/compiler/preferences.js",
-      "static/js/compiler/ai-fix.js"
+      "static/js/compiler/preferences.js"
     ]
   },
   "separate": {

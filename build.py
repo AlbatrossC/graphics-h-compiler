@@ -37,7 +37,6 @@ JS_PRIORITY = [
     "shell.js",
     "execution.js",
     "preferences.js",
-    "ai-fix.js",
 ]
 
 EXCLUDED_JS = {
