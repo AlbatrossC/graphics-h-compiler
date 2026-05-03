@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, render_template, send_file
 
 from ..compiler_assets import BASE_DIR
@@ -6,6 +8,16 @@ from ..hooks import get_maintenance_date
 
 
 pages_bp = Blueprint('pages', __name__)
+
+# ── SSR docs data (loaded once at import time) ──────────────────────
+_DOCS_JSON_PATH = BASE_DIR / 'static' / 'assets' / 'docs.1.json'
+_DOCS_CATEGORIES = []
+
+try:
+    with _DOCS_JSON_PATH.open('r', encoding='utf-8') as _fh:
+        _DOCS_CATEGORIES = json.load(_fh).get('categories', [])
+except Exception:
+    _DOCS_CATEGORIES = []
 
 
 @pages_bp.route('/')
@@ -17,7 +29,11 @@ def index():
 @pages_bp.route('/compiler')
 @pages_bp.route('/compiler.html')
 def compiler():
-    return render_template('compiler.html', compiler_assets=get_compiler_assets())
+    return render_template(
+        'compiler.html',
+        compiler_assets=get_compiler_assets(),
+        docs_categories=_DOCS_CATEGORIES,
+    )
 
 
 @pages_bp.route('/maintenance.html')

@@ -596,6 +596,329 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SSR Documentation Reference – crawlable, SEO-friendly content
+       Only ONE card visible at a time for performance.
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="docs-reference" id="docs-reference" aria-label="graphics.h Function Reference">
+    <div class="docs-reference-inner">
+
+      <div class="docs-ref-header">
+        <h2>Complete <span class="highlight">graphics.h</span> Function Reference</h2>
+        <p>Browse every graphics.h function — syntax, parameters, examples &amp; notes — all in one place.</p>
+      </div>
+
+      <div class="docs-ref-layout">
+
+        <!-- ── Left Sidebar: Function Navigation ── -->
+        <nav class="docs-ref-sidebar" id="docs-ref-sidebar" aria-label="Function list">
+          <div class="docs-ref-sidebar-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Function Index
+            <span class="docs-ref-total-count">99</span>
+          </div>
+          <div class="docs-ref-search">
+            <svg class="docs-ref-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="docs-ref-search-input" placeholder="Search functions…" autocomplete="off" />
+          </div>
+          {% for category in docs_categories %}
+          <div class="docs-ref-cat-group" data-cat="{{ category.slug }}">
+            <div class="docs-ref-cat-heading">
+              <span>{{ category.name }}</span>
+              <span class="docs-ref-cat-count">{{ category.functions | length }}</span>
+            </div>
+            {% for fn in category.functions %}
+            <a class="docs-ref-fn-link{% if loop.first and loop.parent is not defined %} active{% endif %}" href="#fn-{{ fn.slug }}" data-fn="{{ fn.slug }}" data-name="{{ fn.name | lower }}">{{ fn.name }}()</a>
+            {% endfor %}
+          </div>
+          {% endfor %}
+          <div class="docs-ref-no-results" id="docs-ref-no-results">No matching functions found.</div>
+        </nav>
+
+        <!-- ── Right Content: Single Function View ── -->
+        <div class="docs-ref-content" id="docs-ref-content">
+          {% for category in docs_categories %}
+          {% for fn in category.functions %}
+          <article class="docs-fn-card" id="fn-{{ fn.slug }}" data-fn-slug="{{ fn.slug }}" data-cat-slug="{{ category.slug }}" data-cat-name="{{ category.name }}">
+
+            <!-- Breadcrumb -->
+            <div class="docs-fn-breadcrumb">
+              <span>{{ category.name }}</span>
+              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+              <span class="docs-fn-breadcrumb-current">{{ fn.name }}()</span>
+            </div>
+
+            <!-- Header -->
+            <div class="docs-fn-card-header">
+              <h3 class="docs-fn-name">{{ fn.name }}()</h3>
+              {% if fn.returns %}
+              <span class="docs-fn-returns">Returns: {{ fn.returns }}</span>
+              {% endif %}
+            </div>
+
+            <!-- Description -->
+            <p class="docs-fn-desc">{{ fn.description }}</p>
+
+            <!-- Syntax -->
+            <div class="docs-fn-section">
+              <div class="docs-fn-label">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                Syntax
+              </div>
+              <div class="docs-fn-syntax"><code>{{ fn.syntax }}</code></div>
+            </div>
+
+            <!-- Parameters -->
+            {% if fn.parameters %}
+            <div class="docs-fn-section">
+              <div class="docs-fn-label">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+                Parameters
+              </div>
+              <table class="docs-fn-params">
+                <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+                <tbody>
+                  {% for p in fn.parameters %}
+                  <tr>
+                    <td class="docs-fn-param-name">{{ p.name }}</td>
+                    <td class="docs-fn-param-type">{{ p.type }}</td>
+                    <td class="docs-fn-param-desc">{{ p.description }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+
+            <!-- Example -->
+            {% if fn.example and fn.example.code %}
+            <div class="docs-fn-section">
+              <div class="docs-fn-label">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                Example
+              </div>
+              <div class="docs-fn-example-code">{{ fn.example.code }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if fn.notes %}
+            <div class="docs-fn-section">
+              <div class="docs-fn-label">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                Notes
+              </div>
+              <ul class="docs-fn-notes">
+                {% for note in fn.notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            <!-- Related & Keywords -->
+            <div class="docs-fn-meta">
+              {% if fn.related %}
+              <div class="docs-fn-meta-group">
+                <div class="docs-fn-label">Related Functions</div>
+                <div class="docs-fn-tags">
+                  {% for rel in fn.related %}
+                  <a class="docs-fn-tag docs-fn-tag-link" href="#fn-{{ rel }}" data-fn="{{ rel }}">{{ rel }}()</a>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+              {% if fn.keywords %}
+              <div class="docs-fn-meta-group">
+                <div class="docs-fn-label">Keywords</div>
+                <div class="docs-fn-tags">
+                  {% for kw in fn.keywords %}
+                  <span class="docs-fn-tag">{{ kw }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Internal detail link for SEO -->
+            <a class="docs-fn-detail-link" href="https://graphics-h-compiler.vercel.app/docs/{{ fn.slug }}">
+              View full {{ fn.name }}() documentation
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </a>
+
+          </article>
+          {% endfor %}
+          {% endfor %}
+        </div>
+
+      </div><!-- .docs-ref-layout -->
+    </div><!-- .docs-reference-inner -->
+  </section>
+
+  <!-- Docs reference controller + C syntax highlighter (inline, <2KB) -->
+  <script>
+  (function(){
+    var sidebar = document.getElementById('docs-ref-sidebar');
+    var content = document.getElementById('docs-ref-content');
+    var searchInput = document.getElementById('docs-ref-search-input');
+    var noResults = document.getElementById('docs-ref-no-results');
+    if (!sidebar || !content) return;
+
+    var fnLinks = sidebar.querySelectorAll('.docs-ref-fn-link');
+    var catGroups = sidebar.querySelectorAll('.docs-ref-cat-group');
+    var cards = content.querySelectorAll('.docs-fn-card');
+    var cardMap = {};
+    cards.forEach(function(c){ cardMap[c.getAttribute('data-fn-slug')] = c; });
+    var linkMap = {};
+    fnLinks.forEach(function(l){ linkMap[l.getAttribute('data-fn')] = l; });
+
+    /* ── Lightweight C syntax highlighter ─────────── */
+    var hlCache = {};
+    var C_KW = /\b(if|else|for|while|do|switch|case|default|break|continue|return|goto|sizeof|typedef|struct|union|enum|extern|static|const|volatile|register|auto|signed|unsigned|inline|restrict)\b/g;
+    var C_TY = /\b(void|int|char|short|long|float|double|far|near|huge|size_t|FILE|NULL)\b/g;
+
+    function hlEsc(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function highlightC(raw) {
+      /* Tokenise to preserve strings & comments from keyword replacement */
+      var tokens = [];
+      var out = '';
+      var i = 0;
+      while (i < raw.length) {
+        /* Line comment */
+        if (raw[i]==='/' && raw[i+1]==='/') {
+          var end = raw.indexOf('\n', i);
+          if (end === -1) end = raw.length;
+          tokens.push('<span class="docs-hl-cmt">' + hlEsc(raw.slice(i, end)) + '</span>');
+          i = end; continue;
+        }
+        /* Block comment */
+        if (raw[i]==='/' && raw[i+1]==='*') {
+          var end = raw.indexOf('*/', i+2);
+          if (end === -1) end = raw.length; else end += 2;
+          tokens.push('<span class="docs-hl-cmt">' + hlEsc(raw.slice(i, end)) + '</span>');
+          i = end; continue;
+        }
+        /* String */
+        if (raw[i]==='"') {
+          var j = i+1;
+          while (j < raw.length && !(raw[j]==='"' && raw[j-1]!=='\\')) j++;
+          j++;
+          tokens.push('<span class="docs-hl-str">' + hlEsc(raw.slice(i, j)) + '</span>');
+          i = j; continue;
+        }
+        /* Preprocessor */
+        if (raw[i]==='#' && (i===0 || raw[i-1]==='\n')) {
+          var end = raw.indexOf('\n', i);
+          if (end === -1) end = raw.length;
+          var ppLine = raw.slice(i, end);
+          /* Highlight the #directive part, keep rest normal */
+          var ppMatch = ppLine.match(/^(#\s*\w+)(.*)/);
+          if (ppMatch) {
+            tokens.push('<span class="docs-hl-pp">' + hlEsc(ppMatch[1]) + '</span>');
+            /* Highlight <...> in includes */
+            var rest = ppMatch[2].replace(/(<[^>]+>)/g, function(m){ return '<span class="docs-hl-str">' + hlEsc(m) + '</span>'; });
+            tokens.push(rest);
+          } else {
+            tokens.push('<span class="docs-hl-pp">' + hlEsc(ppLine) + '</span>');
+          }
+          i = end; continue;
+        }
+        /* Collect plain code chunk */
+        var chunk = '';
+        while (i < raw.length && raw[i]!=='/' && raw[i]!=='"' && !(raw[i]==='#' && (i===0||raw[i-1]==='\n'))) {
+          chunk += raw[i]; i++;
+        }
+        if (chunk) {
+          chunk = hlEsc(chunk);
+          /* Keywords */
+          chunk = chunk.replace(C_KW, '<span class="docs-hl-kw">$1</span>');
+          /* Types */
+          chunk = chunk.replace(C_TY, '<span class="docs-hl-ty">$1</span>');
+          /* Numbers */
+          chunk = chunk.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="docs-hl-num">$1</span>');
+          /* Function calls: word followed by ( */
+          chunk = chunk.replace(/\b([a-zA-Z_]\w*)\s*(?=\()/g, '<span class="docs-hl-fn">$1</span>');
+          tokens.push(chunk);
+        }
+      }
+      return tokens.join('');
+    }
+
+    function highlightCard(card) {
+      var slug = card.getAttribute('data-fn-slug');
+      if (hlCache[slug]) return;
+      hlCache[slug] = true;
+      var codeBlocks = card.querySelectorAll('.docs-fn-example-code');
+      codeBlocks.forEach(function(el) {
+        var raw = el.textContent;
+        el.innerHTML = highlightC(raw);
+      });
+    }
+
+    /* ── Show a single card ──────────────────────── */
+    function showCard(slug, skipScroll) {
+      cards.forEach(function(c){ c.classList.remove('active'); });
+      fnLinks.forEach(function(l){ l.classList.remove('active'); });
+      var card = cardMap[slug];
+      var link = linkMap[slug];
+      if (card) {
+        card.classList.add('active');
+        highlightCard(card);
+      }
+      if (link) {
+        link.classList.add('active');
+        if (!skipScroll) link.scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    /* ── Sidebar click ───────────────────────────── */
+    sidebar.addEventListener('click', function(e) {
+      var link = e.target.closest('.docs-ref-fn-link');
+      if (!link) return;
+      e.preventDefault();
+      showCard(link.getAttribute('data-fn'));
+    });
+
+    /* ── Related function tag click ──────────────── */
+    content.addEventListener('click', function(e) {
+      var tag = e.target.closest('.docs-fn-tag-link');
+      if (!tag) return;
+      e.preventDefault();
+      showCard(tag.getAttribute('data-fn'));
+      document.getElementById('docs-reference').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* ── Search filter ───────────────────────────── */
+    searchInput.addEventListener('input', function() {
+      var q = this.value.trim().toLowerCase();
+      var anyVisible = false;
+      var firstMatch = null;
+      catGroups.forEach(function(group) {
+        var links = group.querySelectorAll('.docs-ref-fn-link');
+        var catVisible = false;
+        links.forEach(function(link) {
+          var match = !q || link.getAttribute('data-name').indexOf(q) !== -1;
+          link.style.display = match ? '' : 'none';
+          if (match) {
+            catVisible = true; anyVisible = true;
+            if (!firstMatch) firstMatch = link.getAttribute('data-fn');
+          }
+        });
+        group.style.display = catVisible ? '' : 'none';
+      });
+      noResults.style.display = anyVisible ? 'none' : 'block';
+      if (firstMatch && q) showCard(firstMatch, true);
+    });
+
+    /* ── Init: show first card ───────────────────── */
+    if (fnLinks.length) showCard(fnLinks[0].getAttribute('data-fn'), true);
+  })();
+  </script>
+
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>
   {% endfor %}
