@@ -1,10 +1,13 @@
 import json
+import re
+from copy import deepcopy
 
-from flask import Blueprint, render_template, send_file
+from flask import Blueprint, redirect, render_template, send_file
 
 from ..compiler_assets import BASE_DIR
 from ..compiler_assets import get_compiler_assets
 from ..hooks import get_maintenance_date
+from ..docs_data import DOCS_SLUG_TO_TEMPLATE
 
 
 pages_bp = Blueprint('pages', __name__)
@@ -13,9 +16,130 @@ pages_bp = Blueprint('pages', __name__)
 _DOCS_JSON_PATH = BASE_DIR / 'static' / 'assets' / 'docs.1.json'
 _DOCS_CATEGORIES = []
 
+_DOCS_CATEGORY_PAGE_FALLBACKS = {
+    'graphics-initialization': 'graphics-initialization',
+    'drawing-cursor-movement': 'line-and-movement',
+    'basic-shapes': 'line',
+    'polygons-fill': 'polygons-and-fill',
+    'colors-palette': 'colors-and-palette',
+    'line-fill-styles': 'fill-and-patterns',
+    'screen-viewport': 'viewport-and-screen',
+    'text-fonts': 'text-and-fonts',
+    'image-pixel-operations': 'image-handling',
+    'arc-coordinates': 'advanced-functions',
+    'drivers-registration': 'drivers-and-modes',
+    'memory-management': 'advanced-functions',
+    'error-handling': 'error-codes',
+    'error-codes-reference': 'error-codes',
+}
+
+_DOCS_FUNCTION_PAGE_OVERRIDES = {
+    'cleardevice': 'advanced-functions',
+}
+
+_DOCS_FUNCTION_ANCHOR_OVERRIDES = {
+    'drawpoly': 'drawpoly-function',
+    'fillpoly': 'fillpoly-function',
+    'floodfill': 'floodfill-function',
+    'setcolor': 'core',
+    'getcolor': 'core',
+    'setbkcolor': 'core',
+    'getbkcolor': 'core',
+    'getmaxcolor': 'core',
+    'setpalette': 'palette',
+    'setallpalette': 'palette',
+    'getpalette': 'palette',
+    'getdefaultpalette': 'palette',
+    'getpalettesize': 'palette',
+    'setrgbpalette': 'palette',
+    'setaspectratio': 'palette',
+    'getaspectratio': 'palette',
+    'setfillstyle': 'setfillstyle',
+    'setfillpattern': 'setfillpattern',
+    'setlinestyle': 'how-fill-works',
+    'getlinesettings': 'how-fill-works',
+    'getfillsettings': 'how-fill-works',
+    'getfillpattern': 'how-fill-works',
+    'clearviewport': 'core',
+    'setviewport': 'core',
+    'getviewsettings': 'core',
+    'setactivepage': 'core',
+    'setvisualpage': 'core',
+    'setwritemode': 'core',
+    'outtext': 'core',
+    'outtextxy': 'core',
+    'settextstyle': 'font-style',
+    'settextjustify': 'font-style',
+    'setusercharsize': 'font-style',
+    'gettextsettings': 'font-style',
+    'textheight': 'core',
+    'textwidth': 'core',
+    'getarccoords': 'viewport',
+    'graphgetmem': 'full-program',
+    'graphfreemem': 'full-program',
+    'setgraphbufsize': 'full-program',
+    'grOk': 'common',
+    'grnoinitgraph': 'common',
+    'grnotdetected': 'common',
+    'grfilenotfound': 'common',
+    'grinvaliddriver': 'common',
+    'grnoloadmem': 'common',
+    'grnoscanmem': 'common',
+    'grnofloadmem': 'common',
+    'grfontnotfound': 'common',
+    'grnofontmem': 'common',
+    'grinvalidmode': 'common',
+    'grerror': 'common',
+    'grioerror': 'common',
+    'grinvalidfont': 'common',
+    'grinvalidfontnum': 'common',
+    'grinvalidversion': 'common',
+}
+
+
+def _load_doc_section_ids():
+    section_ids_by_slug = {}
+    section_id_pattern = re.compile(r'<section\b[^>]*\bid="([^"]+)"', re.IGNORECASE)
+    for slug, template_name in DOCS_SLUG_TO_TEMPLATE.items():
+        template_path = BASE_DIR / 'templates' / template_name
+        try:
+            template_source = template_path.read_text(encoding='utf-8')
+        except OSError:
+            section_ids_by_slug[slug] = set()
+            continue
+        section_ids_by_slug[slug] = set(section_id_pattern.findall(template_source))
+    return section_ids_by_slug
+
+
+_DOC_SECTION_IDS_BY_SLUG = _load_doc_section_ids()
+
+
+def _build_detail_url(page_slug, anchor=None):
+    if not page_slug:
+        return '/docs'
+    return f'/docs/{page_slug}#{anchor}' if anchor else f'/docs/{page_slug}'
+
+
+def _build_docs_reference_categories(raw_categories):
+    categories = deepcopy(raw_categories)
+    for category in categories:
+        category_page_slug = _DOCS_CATEGORY_PAGE_FALLBACKS.get(category.get('slug'))
+        for fn in category.get('functions', []):
+            fn_slug = fn.get('slug')
+            page_slug = _DOCS_FUNCTION_PAGE_OVERRIDES.get(fn_slug)
+            if not page_slug:
+                page_slug = fn_slug if fn_slug in DOCS_SLUG_TO_TEMPLATE else category_page_slug
+
+            anchor = _DOCS_FUNCTION_ANCHOR_OVERRIDES.get(fn_slug)
+            if not anchor and page_slug and fn_slug in _DOC_SECTION_IDS_BY_SLUG.get(page_slug, set()):
+                anchor = fn_slug
+
+            fn['detail_url'] = _build_detail_url(page_slug, anchor)
+    return categories
+
 try:
     with _DOCS_JSON_PATH.open('r', encoding='utf-8') as _fh:
-        _DOCS_CATEGORIES = json.load(_fh).get('categories', [])
+        _DOCS_CATEGORIES = _build_docs_reference_categories(json.load(_fh).get('categories', []))
 except Exception:
     _DOCS_CATEGORIES = []
 
@@ -27,13 +151,17 @@ def index():
 
 
 @pages_bp.route('/compiler')
-@pages_bp.route('/compiler.html')
 def compiler():
     return render_template(
         'compiler.html',
         compiler_assets=get_compiler_assets(),
         docs_categories=_DOCS_CATEGORIES,
     )
+
+
+@pages_bp.route('/compiler.html')
+def compiler_html_redirect():
+    return redirect('/compiler', code=301)
 
 
 @pages_bp.route('/maintenance.html')

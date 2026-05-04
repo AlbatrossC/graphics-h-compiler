@@ -5,7 +5,6 @@ DOCS_SLUG_TO_TEMPLATE = {
     'hello-graphics': 'docs/getting-started/hello-graphics.html',
     'graphics-initialization': 'docs/initialization/graphics-initialization.html',
     'line-and-movement': 'docs/drawing/line-and-movement.html',
-    'line': 'docs/drawing/line.html',
     'circle': 'docs/drawing/circle.html',
     'rectangle': 'docs/drawing/rectangle.html',
     'bar': 'docs/drawing/bar.html',
@@ -28,6 +27,10 @@ DOCS_SLUG_TO_TEMPLATE = {
 DEFAULT_DOCS_SLUG = 'what-is-graphicsh'
 DOCS_SITE_TITLE = 'graphics.h online compiler docs'
 
+DOCS_CANONICAL_SLUGS = {
+    'what-is-graphics': 'what-is-graphicsh',
+}
+
 DOCS_SLUG_TO_TITLE = {
     'what-is-graphicsh': 'What is graphics.h',
     'what-is-graphics': 'What is graphics.h',
@@ -35,7 +38,6 @@ DOCS_SLUG_TO_TITLE = {
     'hello-graphics': 'Hello Graphics Program',
     'graphics-initialization': 'Graphics Initialization',
     'line-and-movement': 'Line and Cursor Movement',
-    'line': 'line()',
     'circle': 'circle()',
     'rectangle': 'rectangle()',
     'bar': 'bar()',
@@ -62,7 +64,6 @@ DOCS_SLUG_TO_DESCRIPTION = {
     'hello-graphics': 'Build and run your first graphics.h hello graphics program with step-by-step explanation, code sample, and DOS output preview.',
     'graphics-initialization': 'Understand graphics.h initialization using initgraph, detectgraph, graphresult, grapherrormsg, closegraph, and restorecrtmode.',
     'line-and-movement': 'Learn line drawing and cursor movement concepts in graphics.h with beginner-friendly examples.',
-    'line': 'Explore graphics.h line() function syntax, parameters, and usage examples.',
     'circle': 'Explore graphics.h circle() function syntax, parameters, and usage examples.',
     'rectangle': 'Explore graphics.h rectangle() function syntax, parameters, and usage examples.',
     'bar': 'Explore graphics.h bar() function syntax, parameters, and usage examples.',

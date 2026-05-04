@@ -7,7 +7,7 @@
                 {
                     "name": "initgraph",
                     "slug": "initgraph",
-                    "description": "Initializes the graphics system by loading a graphics driver from disk and putting the system into graphics mode. This must be called before any other graphics function.",
+                    "description": "The graphics.h initgraph() function initializes the graphics system by loading a graphics driver from disk and putting the system into graphics mode. Call it before using other graphics.h drawing functions.",
                     "syntax": "void far initgraph(int far *graphdriver, int far *graphmode, const char far *pathtodriver);",
                     "returns": "void",
                     "parameters": [
@@ -29,7 +29,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdlib.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    if (graphresult() != grOk) {\n        printf(\"Graphics error: %s\\n\", grapherrormsg(graphresult()));\n        return 1;\n    }\n    outtextxy(100, 100, \"Hello, Graphics World!\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdlib.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    if (graphresult() != grOk) {\n        printf(\"Graphics error: %s\\n\", grapherrormsg(graphresult()));\n        return 1;\n    }\n    outtextxy(100, 100, \"Hello, Graphics World!\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -55,13 +55,13 @@
                 {
                     "name": "closegraph",
                     "slug": "closegraph",
-                    "description": "Shuts down the graphics system, deallocates memory allocated by the graphics system, and restores the screen to the mode it was in before initgraph() was called.",
+                    "description": "The graphics.h closegraph() function shuts down the graphics system, frees graphics memory, and restores the screen to the mode it was in before initgraph() was called.",
                     "syntax": "void far closegraph(void);",
                     "returns": "void",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    closegraph(); /* Restores text mode and frees memory */\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -84,7 +84,7 @@
                 {
                     "name": "detectgraph",
                     "slug": "detectgraph",
-                    "description": "Checks the hardware and determines the graphics driver and mode to use. Does not switch to graphics mode—use initgraph() for that.",
+                    "description": "The graphics.h detectgraph() function checks the hardware and determines the graphics driver and mode to use. It does not switch to graphics mode; use initgraph() for that.",
                     "syntax": "void far detectgraph(int far *graphdriver, int far *graphmode);",
                     "returns": "void",
                     "parameters": [
@@ -123,13 +123,13 @@
                 {
                     "name": "restorecrtmode",
                     "slug": "restorecrtmode",
-                    "description": "Temporarily restores the screen to the text mode that was active before initgraph() was called, without deallocating graphics memory.",
+                    "description": "The graphics.h restorecrtmode() function temporarily restores the screen to the text mode that was active before initgraph() was called, without deallocating graphics memory.",
                     "syntax": "void far restorecrtmode(void);",
                     "returns": "void",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    restorecrtmode(); /* Back to text mode temporarily */\n    printf(\"Now in text mode. Press a key...\");\n    getch();\n    setgraphmode(getgraphmode()); /* Return to graphics */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    restorecrtmode();\n    printf(\"Now in text mode. Press a key...\");\n    getch();\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -153,13 +153,13 @@
                 {
                     "name": "graphdefaults",
                     "slug": "graphdefaults",
-                    "description": "Resets all graphics settings to their defaults: moves the current position to (0,0), resets viewport to the full screen, sets colors to white on black, and resets line style, fill style, and text settings.",
+                    "description": "In graphics.h, resets all graphics settings to their defaults: moves the current position to (0,0), resets viewport to the full screen, sets colors to white on black, and resets line style, fill style, and text settings.",
                     "syntax": "void far graphdefaults(void);",
                     "returns": "void",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(RED);\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    line(0, 0, 200, 200);\n    getch();\n    graphdefaults(); /* Reset everything */\n    line(0, 0, 200, 200); /* Now drawn in default white, solid, thin */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(RED);\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    line(0, 0, 200, 200);\n    getch();\n    graphdefaults();\n    line(0, 0, 200, 200);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -183,7 +183,7 @@
                 {
                     "name": "setgraphmode",
                     "slug": "setgraphmode",
-                    "description": "Selects a graphics mode different from the one set by initgraph(), clears the screen, and resets all graphics settings to their defaults.",
+                    "description": "The graphics.h setgraphmode() function selects a graphics mode different from the one set by initgraph(), clears the screen, and resets all graphics settings to their defaults.",
                     "syntax": "void far setgraphmode(int mode);",
                     "returns": "void",
                     "parameters": [
@@ -195,7 +195,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    outtextxy(10, 10, \"High resolution mode\");\n    getch();\n    setgraphmode(VGALO); /* Switch to lower resolution */\n    outtextxy(10, 10, \"Low resolution mode\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    outtextxy(10, 10, \"High resolution mode\");\n    getch();\n    setgraphmode(VGALO);\n    outtextxy(10, 10, \"Low resolution mode\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -220,13 +220,13 @@
                 {
                     "name": "getgraphmode",
                     "slug": "getgraphmode",
-                    "description": "Returns the current graphics mode set by initgraph() or setgraphmode().",
+                    "description": "The graphics.h getgraphmode() function returns the current graphics mode set by initgraph() or setgraphmode().",
                     "syntax": "int far getgraphmode(void);",
                     "returns": "int — the current graphics mode number",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Current mode: %d\\n\", getgraphmode());\n    setgraphmode(getgraphmode()); /* Restore graphics */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Current mode: %d\\n\", getgraphmode());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -249,13 +249,13 @@
                 {
                     "name": "getmaxmode",
                     "slug": "getmaxmode",
-                    "description": "Returns the maximum valid mode number for the current graphics driver.",
+                    "description": "The graphics.h getmaxmode() function returns the maximum valid mode number for the current graphics driver.",
                     "syntax": "int far getmaxmode(void);",
                     "returns": "int — the maximum mode number for the loaded driver",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Max mode: %d\\n\", getmaxmode());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Max mode: %d\\n\", getmaxmode());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -279,7 +279,7 @@
                 {
                     "name": "getmodename",
                     "slug": "getmodename",
-                    "description": "Returns a string containing the name of a specified graphics mode.",
+                    "description": "The graphics.h getmodename() function returns a string containing the name of a specified graphics mode.",
                     "syntax": "char far * far getmodename(int mode_number);",
                     "returns": "char * — pointer to a string describing the mode (e.g., \"640 x 480 VGA\")",
                     "parameters": [
@@ -291,7 +291,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    int max = getmaxmode();\n    for (int i = 0; i <= max; i++)\n        printf(\"Mode %d: %s\\n\", i, getmodename(i));\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    int max = getmaxmode();\n    for (int i = 0; i <= max; i++)\n        printf(\"Mode %d: %s\\n\", i, getmodename(i));\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -314,7 +314,7 @@
                 {
                     "name": "getmoderange",
                     "slug": "getmoderange",
-                    "description": "Returns the lowest and highest valid mode numbers for a specified graphics driver.",
+                    "description": "The graphics.h getmoderange() function returns the lowest and highest valid mode numbers for a specified graphics driver.",
                     "syntax": "void far getmoderange(int graphdriver, int far *lomode, int far *himode);",
                     "returns": "void",
                     "parameters": [
@@ -357,13 +357,13 @@
                 {
                     "name": "getdrivername",
                     "slug": "getdrivername",
-                    "description": "Returns a pointer to a string containing the name of the current graphics driver.",
+                    "description": "The graphics.h getdrivername() function returns a pointer to a string containing the name of the current graphics driver.",
                     "syntax": "char far * far getdrivername(void);",
                     "returns": "char * — pointer to a string with the driver name (e.g., \"VGA\")",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Driver: %s\\n\", getdrivername());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Driver: %s\\n\", getdrivername());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -385,13 +385,13 @@
                 {
                     "name": "getmaxx",
                     "slug": "getmaxx",
-                    "description": "Returns the maximum x-coordinate (screen width minus 1) for the current graphics mode.",
+                    "description": "The graphics.h getmaxx() function returns the maximum x-coordinate (screen width minus 1) for the current graphics mode.",
                     "syntax": "int far getmaxx(void);",
                     "returns": "int — the maximum x pixel coordinate",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw a line across the full screen width */\n    line(0, getmaxy() / 2, getmaxx(), getmaxy() / 2);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    line(0, getmaxy() / 2, getmaxx(), getmaxy() / 2);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -415,13 +415,13 @@
                 {
                     "name": "getmaxy",
                     "slug": "getmaxy",
-                    "description": "Returns the maximum y-coordinate (screen height minus 1) for the current graphics mode.",
+                    "description": "The graphics.h getmaxy() function returns the maximum y-coordinate (screen height minus 1) for the current graphics mode.",
                     "syntax": "int far getmaxy(void);",
                     "returns": "int — the maximum y pixel coordinate",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw diagonal from top-left to bottom-right */\n    line(0, 0, getmaxx(), getmaxy());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    line(0, 0, getmaxx(), getmaxy());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -451,7 +451,7 @@
                 {
                     "name": "moveto",
                     "slug": "moveto",
-                    "description": "Moves the current drawing position (CP) to the specified absolute coordinate (x, y) without drawing anything.",
+                    "description": "The graphics.h moveto() function moves the current drawing position (CP) to the specified absolute coordinate (x, y) without drawing anything.",
                     "syntax": "void far moveto(int x, int y);",
                     "returns": "void",
                     "parameters": [
@@ -468,7 +468,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100); /* Move CP to (100,100) */\n    lineto(300, 300); /* Draw line from (100,100) to (300,300) */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100);\n    lineto(300, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -494,7 +494,7 @@
                 {
                     "name": "moverel",
                     "slug": "moverel",
-                    "description": "Moves the current drawing position (CP) by a relative offset (dx, dy) from its current location, without drawing.",
+                    "description": "The graphics.h moverel() function moves the current drawing position (CP) by a relative offset (dx, dy) from its current location, without drawing.",
                     "syntax": "void far moverel(int dx, int dy);",
                     "returns": "void",
                     "parameters": [
@@ -511,7 +511,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100);\n    moverel(50, 50); /* CP is now at (150, 150) */\n    lineto(300, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100);\n    moverel(50, 50);\n    lineto(300, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -536,7 +536,7 @@
                 {
                     "name": "lineto",
                     "slug": "lineto",
-                    "description": "Draws a line from the current drawing position (CP) to the specified absolute coordinate, then updates the CP to that endpoint.",
+                    "description": "The graphics.h lineto() function draws a line from the current drawing position (CP) to the specified absolute coordinate, then updates the CP to that endpoint.",
                     "syntax": "void far lineto(int x, int y);",
                     "returns": "void",
                     "parameters": [
@@ -553,7 +553,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(50, 50);\n    lineto(200, 50);\n    lineto(200, 200);\n    lineto(50, 200);\n    lineto(50, 50); /* Draw a square */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(50, 50);\n    lineto(200, 50);\n    lineto(200, 200);\n    lineto(50, 200);\n    lineto(50, 50);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -576,7 +576,7 @@
                 {
                     "name": "linerel",
                     "slug": "linerel",
-                    "description": "Draws a line from the current drawing position to a point offset by (dx, dy), then moves the CP to that new point.",
+                    "description": "The graphics.h linerel() function draws a line from the current drawing position to a point offset by (dx, dy), then moves the CP to that new point.",
                     "syntax": "void far linerel(int dx, int dy);",
                     "returns": "void",
                     "parameters": [
@@ -593,7 +593,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100);\n    linerel(100, 0);  /* Draw right */\n    linerel(0, 100);  /* Draw down */\n    linerel(-100, 0); /* Draw left */\n    linerel(0, -100); /* Draw up (close square) */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100);\n    linerel(100, 0);\n    linerel(0, 100);\n    linerel(-100, 0);\n    linerel(0, -100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -616,7 +616,7 @@
                 {
                     "name": "line",
                     "slug": "line",
-                    "description": "Draws a line between two specified absolute coordinates (x1, y1) and (x2, y2) without changing the current drawing position.",
+                    "description": "The graphics.h line() function draws a line between two specified absolute coordinates (x1, y1) and (x2, y2) without changing the current drawing position.",
                     "syntax": "void far line(int x1, int y1, int x2, int y2);",
                     "returns": "void",
                     "parameters": [
@@ -643,7 +643,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    line(0, 0, 639, 479); /* Diagonal across screen */\n    line(639, 0, 0, 479); /* Crossing diagonal */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    line(0, 0, 639, 479);\n    line(639, 0, 0, 479);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -667,13 +667,13 @@
                 {
                     "name": "getx",
                     "slug": "getx",
-                    "description": "Returns the x-coordinate of the current drawing position (CP).",
+                    "description": "The graphics.h getx() function returns the x-coordinate of the current drawing position (CP).",
                     "syntax": "int far getx(void);",
                     "returns": "int — the current x position",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(150, 200);\n    restorecrtmode();\n    printf(\"Current X: %d\\n\", getx());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(150, 200);\n    restorecrtmode();\n    printf(\"Current X: %d\\n\", getx());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -696,13 +696,13 @@
                 {
                     "name": "gety",
                     "slug": "gety",
-                    "description": "Returns the y-coordinate of the current drawing position (CP).",
+                    "description": "The graphics.h gety() function returns the y-coordinate of the current drawing position (CP).",
                     "syntax": "int far gety(void);",
                     "returns": "int — the current y position",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(150, 200);\n    restorecrtmode();\n    printf(\"Current Y: %d\\n\", gety());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(150, 200);\n    restorecrtmode();\n    printf(\"Current Y: %d\\n\", gety());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -731,7 +731,7 @@
                 {
                     "name": "circle",
                     "slug": "circle",
-                    "description": "Draws a circle with a specified center and radius using the current drawing color.",
+                    "description": "The graphics.h circle() function draws a circle with a specified center and radius using the current drawing color.",
                     "syntax": "void far circle(int x, int y, int radius);",
                     "returns": "void",
                     "parameters": [
@@ -753,7 +753,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(YELLOW);\n    circle(320, 240, 100); /* Circle at center of 640x480 screen */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(YELLOW);\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -779,7 +779,7 @@
                 {
                     "name": "arc",
                     "slug": "arc",
-                    "description": "Draws a circular arc from stangle to endangle with the specified center and radius, using the current drawing color.",
+                    "description": "The graphics.h arc() function draws a circular arc from stangle to endangle with the specified center and radius, using the current drawing color.",
                     "syntax": "void far arc(int x, int y, int stangle, int endangle, int radius);",
                     "returns": "void",
                     "parameters": [
@@ -811,7 +811,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    arc(320, 240, 0, 180, 100); /* Upper semicircle */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    arc(320, 240, 0, 180, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -837,7 +837,7 @@
                 {
                     "name": "ellipse",
                     "slug": "ellipse",
-                    "description": "Draws an elliptical arc from stangle to endangle with specified x and y radii. Use stangle=0 and endangle=360 to draw a complete ellipse.",
+                    "description": "The graphics.h ellipse() function draws an elliptical arc from stangle to endangle with specified x and y radii. Use stangle=0 and endangle=360 to draw a complete ellipse.",
                     "syntax": "void far ellipse(int x, int y, int stangle, int endangle, int xradius, int yradius);",
                     "returns": "void",
                     "parameters": [
@@ -874,7 +874,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    ellipse(320, 240, 0, 360, 200, 100); /* Horizontal ellipse */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    ellipse(320, 240, 0, 360, 200, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -899,7 +899,7 @@
                 {
                     "name": "fillellipse",
                     "slug": "fillellipse",
-                    "description": "Draws a filled ellipse with the specified center and x/y radii, using the current fill color and fill pattern.",
+                    "description": "The graphics.h fillellipse() function draws a filled ellipse with the specified center and x/y radii, using the current fill color and fill pattern.",
                     "syntax": "void far fillellipse(int x, int y, int xradius, int yradius);",
                     "returns": "void",
                     "parameters": [
@@ -926,7 +926,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, GREEN);\n    fillellipse(320, 240, 150, 80); /* Filled green ellipse */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, GREEN);\n    fillellipse(320, 240, 150, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -950,7 +950,7 @@
                 {
                     "name": "rectangle",
                     "slug": "rectangle",
-                    "description": "Draws a rectangle outline with the specified corner coordinates using the current drawing color.",
+                    "description": "The graphics.h rectangle() function draws a rectangle outline with the specified corner coordinates using the current drawing color.",
                     "syntax": "void far rectangle(int left, int top, int right, int bottom);",
                     "returns": "void",
                     "parameters": [
@@ -977,7 +977,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(CYAN);\n    rectangle(100, 100, 400, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(CYAN);\n    rectangle(100, 100, 400, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1001,7 +1001,7 @@
                 {
                     "name": "bar",
                     "slug": "bar",
-                    "description": "Draws a filled (solid) rectangular bar using the current fill style and fill color. No border is drawn.",
+                    "description": "The graphics.h bar() function draws a filled (solid) rectangular bar using the current fill style and fill color. No border is drawn.",
                     "syntax": "void far bar(int left, int top, int right, int bottom);",
                     "returns": "void",
                     "parameters": [
@@ -1028,7 +1028,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, BLUE);\n    bar(100, 100, 300, 300); /* Filled blue rectangle */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, BLUE);\n    bar(100, 100, 300, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1052,7 +1052,7 @@
                 {
                     "name": "bar3d",
                     "slug": "bar3d",
-                    "description": "Draws a three-dimensional filled rectangular bar with an optional top face, useful for creating bar charts with depth.",
+                    "description": "The graphics.h bar3d() function draws a three-dimensional filled rectangular bar with an optional top face, useful for creating bar charts with depth.",
                     "syntax": "void far bar3d(int left, int top, int right, int bottom, int depth, int topflag);",
                     "returns": "void",
                     "parameters": [
@@ -1089,7 +1089,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, CYAN);\n    bar3d(100, 100, 200, 400, 20, 1);\n    setfillstyle(SOLID_FILL, GREEN);\n    bar3d(220, 200, 320, 400, 20, 1);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, CYAN);\n    bar3d(100, 100, 200, 400, 20, 1);\n    setfillstyle(SOLID_FILL, GREEN);\n    bar3d(220, 200, 320, 400, 20, 1);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1113,7 +1113,7 @@
                 {
                     "name": "pieslice",
                     "slug": "pieslice",
-                    "description": "Draws and fills a pie slice (sector of a circle) with a specified center, start angle, end angle, and radius.",
+                    "description": "The graphics.h pieslice() function draws and fills a pie slice (sector of a circle) with a specified center, start angle, end angle, and radius.",
                     "syntax": "void far pieslice(int x, int y, int stangle, int endangle, int radius);",
                     "returns": "void",
                     "parameters": [
@@ -1145,7 +1145,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, RED);\n    pieslice(320, 240, 0, 90, 100);  /* 25% slice */\n    setfillstyle(SOLID_FILL, BLUE);\n    pieslice(320, 240, 90, 270, 100); /* 50% slice */\n    setfillstyle(SOLID_FILL, GREEN);\n    pieslice(320, 240, 270, 360, 100); /* 25% slice */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, RED);\n    pieslice(320, 240, 0, 90, 100);\n    setfillstyle(SOLID_FILL, BLUE);\n    pieslice(320, 240, 90, 270, 100);\n    setfillstyle(SOLID_FILL, GREEN);\n    pieslice(320, 240, 270, 360, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1170,7 +1170,7 @@
                 {
                     "name": "sector",
                     "slug": "sector",
-                    "description": "Draws and fills an elliptical sector (pie slice shape based on an ellipse) with specified center, angles, and x/y radii.",
+                    "description": "The graphics.h sector() function draws and fills an elliptical sector (pie slice shape based on an ellipse) with specified center, angles, and x/y radii.",
                     "syntax": "void far sector(int x, int y, int stangle, int endangle, int xradius, int yradius);",
                     "returns": "void",
                     "parameters": [
@@ -1207,7 +1207,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, MAGENTA);\n    sector(320, 240, 30, 150, 150, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, MAGENTA);\n    sector(320, 240, 30, 150, 150, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1238,7 +1238,7 @@
                 {
                     "name": "drawpoly",
                     "slug": "drawpoly",
-                    "description": "Draws a polygon outline by connecting a series of points. To close the polygon, the last point should equal the first.",
+                    "description": "The graphics.h drawpoly() function draws a polygon outline by connecting a series of points. To close the polygon, the last point should equal the first.",
                     "syntax": "void far drawpoly(int numpoints, const int far *polypoints);",
                     "returns": "void",
                     "parameters": [
@@ -1255,7 +1255,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Triangle points — close by repeating first point */\n    int pts[] = {200, 100, 400, 400, 100, 400, 200, 100};\n    setcolor(WHITE);\n    drawpoly(4, pts);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    int pts[] = {200, 100, 400, 400, 100, 400, 200, 100};\n    setcolor(WHITE);\n    drawpoly(4, pts);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1279,7 +1279,7 @@
                 {
                     "name": "fillpoly",
                     "slug": "fillpoly",
-                    "description": "Draws and fills a polygon using the current fill style and color. The polygon is automatically closed.",
+                    "description": "The graphics.h fillpoly() function draws and fills a polygon using the current fill style and color. The polygon is automatically closed.",
                     "syntax": "void far fillpoly(int numpoints, const int far *polypoints);",
                     "returns": "void",
                     "parameters": [
@@ -1296,7 +1296,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int pts[] = {320, 100, 450, 350, 190, 350}; /* Triangle */\n    setfillstyle(HATCH_FILL, RED);\n    fillpoly(3, pts);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int pts[] = {320, 100, 450, 350, 190, 350};\n    setfillstyle(HATCH_FILL, RED);\n    fillpoly(3, pts);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1320,7 +1320,7 @@
                 {
                     "name": "floodfill",
                     "slug": "floodfill",
-                    "description": "Flood-fills an enclosed area starting from the point (x, y). The fill stops at pixels matching the specified border color.",
+                    "description": "The graphics.h floodfill() function flood-fills an enclosed area starting from the point (x, y). The fill stops at pixels matching the specified border color.",
                     "syntax": "void far floodfill(int x, int y, int border);",
                     "returns": "void",
                     "parameters": [
@@ -1342,7 +1342,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(WHITE);\n    rectangle(100, 100, 300, 300);\n    setfillstyle(SOLID_FILL, RED);\n    floodfill(200, 200, WHITE); /* Fill inside the white rectangle */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(WHITE);\n    rectangle(100, 100, 300, 300);\n    setfillstyle(SOLID_FILL, RED);\n    floodfill(200, 200, WHITE);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1373,7 +1373,7 @@
                 {
                     "name": "setcolor",
                     "slug": "setcolor",
-                    "description": "Sets the current drawing (foreground) color used for lines, borders, text, and outlines.",
+                    "description": "The graphics.h setcolor() function sets the current drawing (foreground) color used for lines, borders, text, and outlines.",
                     "syntax": "void far setcolor(int color);",
                     "returns": "void",
                     "parameters": [
@@ -1385,7 +1385,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(RED);\n    circle(200, 200, 80);\n    setcolor(LIGHTBLUE);\n    circle(400, 200, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(RED);\n    circle(200, 200, 80);\n    setcolor(LIGHTBLUE);\n    circle(400, 200, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1410,13 +1410,13 @@
                 {
                     "name": "getcolor",
                     "slug": "getcolor",
-                    "description": "Returns the current drawing (foreground) color.",
+                    "description": "The graphics.h getcolor() function returns the current drawing (foreground) color.",
                     "syntax": "int far getcolor(void);",
                     "returns": "int — the current foreground color index",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(CYAN);\n    restorecrtmode();\n    printf(\"Current color: %d\\n\", getcolor()); /* Prints 3 */\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(CYAN);\n    restorecrtmode();\n    printf(\"Current color: %d\\n\", getcolor());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1439,7 +1439,7 @@
                 {
                     "name": "setbkcolor",
                     "slug": "setbkcolor",
-                    "description": "Sets the background color of the graphics screen. The entire background is filled with this color.",
+                    "description": "The graphics.h setbkcolor() function sets the background color of the graphics screen. The entire background is filled with this color.",
                     "syntax": "void far setbkcolor(int color);",
                     "returns": "void",
                     "parameters": [
@@ -1451,7 +1451,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setbkcolor(BLUE);\n    setcolor(YELLOW);\n    outtextxy(200, 200, \"Yellow on Blue\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setbkcolor(BLUE);\n    setcolor(YELLOW);\n    outtextxy(200, 200, \"Yellow on Blue\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1474,13 +1474,13 @@
                 {
                     "name": "getbkcolor",
                     "slug": "getbkcolor",
-                    "description": "Returns the current background color.",
+                    "description": "The graphics.h getbkcolor() function returns the current background color.",
                     "syntax": "int far getbkcolor(void);",
                     "returns": "int — the current background color index",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setbkcolor(CYAN);\n    restorecrtmode();\n    printf(\"Background: %d\\n\", getbkcolor()); /* 3 = CYAN */\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setbkcolor(CYAN);\n    restorecrtmode();\n    printf(\"Background: %d\\n\", getbkcolor());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1501,13 +1501,13 @@
                 {
                     "name": "getmaxcolor",
                     "slug": "getmaxcolor",
-                    "description": "Returns the maximum valid color index for the current graphics mode.",
+                    "description": "The graphics.h getmaxcolor() function returns the maximum valid color index for the current graphics mode.",
                     "syntax": "int far getmaxcolor(void);",
                     "returns": "int — the highest valid color index",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Max color: %d\\n\", getmaxcolor()); /* 15 for VGA */\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Max color: %d\\n\", getmaxcolor());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1532,7 +1532,7 @@
                 {
                     "name": "setpalette",
                     "slug": "setpalette",
-                    "description": "Changes one entry in the color palette, remapping a palette index to a new color value.",
+                    "description": "The graphics.h setpalette() function changes one entry in the color palette, remapping a palette index to a new color value.",
                     "syntax": "void far setpalette(int colornum, int color);",
                     "returns": "void",
                     "parameters": [
@@ -1549,7 +1549,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setpalette(RED, EGA_LIGHTGREEN); /* RED index now shows light green */\n    setcolor(RED);\n    circle(320, 240, 100); /* Appears light green */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setpalette(RED, EGA_LIGHTGREEN);\n    setcolor(RED);\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1574,7 +1574,7 @@
                 {
                     "name": "setallpalette",
                     "slug": "setallpalette",
-                    "description": "Sets all palette entries at once using a palettetype structure.",
+                    "description": "The graphics.h setallpalette() function sets all palette entries at once using a palettetype structure.",
                     "syntax": "void far setallpalette(const struct palettetype far *palette);",
                     "returns": "void",
                     "parameters": [
@@ -1586,7 +1586,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct palettetype pal;\n    getpalette(&pal);\n    /* Swap RED and GREEN entries */\n    signed char tmp = pal.colors[RED];\n    pal.colors[RED] = pal.colors[GREEN];\n    pal.colors[GREEN] = tmp;\n    setallpalette(&pal);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct palettetype pal;\n    getpalette(&pal);\n\n    signed char tmp = pal.colors[RED];\n    pal.colors[RED] = pal.colors[GREEN];\n    pal.colors[GREEN] = tmp;\n    setallpalette(&pal);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1609,7 +1609,7 @@
                 {
                     "name": "getpalette",
                     "slug": "getpalette",
-                    "description": "Retrieves the current palette settings into a palettetype structure.",
+                    "description": "The graphics.h getpalette() function retrieves the current palette settings into a palettetype structure.",
                     "syntax": "void far getpalette(struct palettetype far *palette);",
                     "returns": "void",
                     "parameters": [
@@ -1621,7 +1621,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct palettetype pal;\n    getpalette(&pal);\n    restorecrtmode();\n    printf(\"Palette size: %d\\n\", pal.size);\n    for (int i = 0; i < pal.size; i++)\n        printf(\"Color[%d] = %d\\n\", i, pal.colors[i]);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct palettetype pal;\n    getpalette(&pal);\n    restorecrtmode();\n    printf(\"Palette size: %d\\n\", pal.size);\n    for (int i = 0; i < pal.size; i++)\n        printf(\"Color[%d] = %d\\n\", i, pal.colors[i]);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1645,13 +1645,13 @@
                 {
                     "name": "getdefaultpalette",
                     "slug": "getdefaultpalette",
-                    "description": "Returns a pointer to the default palette for the current graphics driver.",
+                    "description": "The graphics.h getdefaultpalette() function returns a pointer to the default palette for the current graphics driver.",
                     "syntax": "struct palettetype far * far getdefaultpalette(void);",
                     "returns": "struct palettetype far * — pointer to the default palette",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct palettetype *defpal = getdefaultpalette();\n    /* Restore default palette after custom changes */\n    setallpalette(defpal);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct palettetype *defpal = getdefaultpalette();\n\n    setallpalette(defpal);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1673,13 +1673,13 @@
                 {
                     "name": "getpalettesize",
                     "slug": "getpalettesize",
-                    "description": "Returns the number of entries in the color palette for the current driver and mode.",
+                    "description": "The graphics.h getpalettesize() function returns the number of entries in the color palette for the current driver and mode.",
                     "syntax": "int far getpalettesize(void);",
                     "returns": "int — number of palette entries",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Palette size: %d\\n\", getpalettesize());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    restorecrtmode();\n    printf(\"Palette size: %d\\n\", getpalettesize());\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1701,7 +1701,7 @@
                 {
                     "name": "setrgbpalette",
                     "slug": "setrgbpalette",
-                    "description": "Sets a palette entry to a specific RGB color. Only valid for IBM8514 and VGA drivers that support direct RGB palette setting.",
+                    "description": "The graphics.h setrgbpalette() function sets a palette entry to a specific RGB color. Only valid for IBM8514 and VGA drivers that support direct RGB palette setting.",
                     "syntax": "void far setrgbpalette(int colornum, int red, int green, int blue);",
                     "returns": "void",
                     "parameters": [
@@ -1728,7 +1728,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = IBM8514, gm = IBM8514LO;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setrgbpalette(10, 63, 20, 10); /* Custom orange-ish color */\n    setcolor(10);\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = IBM8514, gm = IBM8514LO;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setrgbpalette(10, 63, 20, 10);\n    setcolor(10);\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph() with IBM8514 or compatible driver"
@@ -1751,7 +1751,7 @@
                 {
                     "name": "setaspectratio",
                     "slug": "setaspectratio",
-                    "description": "Overrides the default aspect ratio used when drawing circles and arcs, allowing correction for non-square pixels.",
+                    "description": "The graphics.h setaspectratio() function overrides the default aspect ratio used when drawing circles and arcs, allowing correction for non-square pixels.",
                     "syntax": "void far setaspectratio(int xasp, int yasp);",
                     "returns": "void",
                     "parameters": [
@@ -1768,7 +1768,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int xasp, yasp;\n    getaspectratio(&xasp, &yasp);\n    setaspectratio(xasp, yasp); /* No change, just illustrating usage */\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int xasp, yasp;\n    getaspectratio(&xasp, &yasp);\n    setaspectratio(xasp, yasp);\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1791,7 +1791,7 @@
                 {
                     "name": "getaspectratio",
                     "slug": "getaspectratio",
-                    "description": "Returns the current aspect ratio used by the graphics system for circular shapes.",
+                    "description": "The graphics.h getaspectratio() function returns the current aspect ratio used by the graphics system for circular shapes.",
                     "syntax": "void far getaspectratio(int far *xasp, int far *yasp);",
                     "returns": "void",
                     "parameters": [
@@ -1808,7 +1808,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int xasp, yasp;\n    getaspectratio(&xasp, &yasp);\n    restorecrtmode();\n    printf(\"X: %d, Y: %d\\n\", xasp, yasp);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int xasp, yasp;\n    getaspectratio(&xasp, &yasp);\n    restorecrtmode();\n    printf(\"X: %d, Y: %d\\n\", xasp, yasp);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1836,7 +1836,7 @@
                 {
                     "name": "setlinestyle",
                     "slug": "setlinestyle",
-                    "description": "Sets the style (solid, dashed, dotted, etc.), pattern, and thickness for lines drawn by line(), lineto(), etc.",
+                    "description": "The graphics.h setlinestyle() function sets the style (solid, dashed, dotted, etc.), pattern, and thickness for lines drawn by line(), lineto(), etc.",
                     "syntax": "void far setlinestyle(int linestyle, unsigned upattern, int thickness);",
                     "returns": "void",
                     "parameters": [
@@ -1858,7 +1858,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    line(50, 100, 500, 100);\n    setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);\n    line(50, 200, 500, 200);\n    setlinestyle(USERBIT_LINE, 0xF0F0, NORM_WIDTH); /* Custom pattern */\n    line(50, 300, 500, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    line(50, 100, 500, 100);\n    setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);\n    line(50, 200, 500, 200);\n    setlinestyle(USERBIT_LINE, 0xF0F0, NORM_WIDTH);\n    line(50, 300, 500, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1884,7 +1884,7 @@
                 {
                     "name": "getlinesettings",
                     "slug": "getlinesettings",
-                    "description": "Retrieves the current line style, pattern, and thickness settings into a linesettingstype structure.",
+                    "description": "The graphics.h getlinesettings() function retrieves the current line style, pattern, and thickness settings into a linesettingstype structure.",
                     "syntax": "void far getlinesettings(struct linesettingstype far *lineinfo);",
                     "returns": "void",
                     "parameters": [
@@ -1896,7 +1896,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct linesettingstype ls;\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    getlinesettings(&ls);\n    restorecrtmode();\n    printf(\"Style: %d, Thickness: %d\\n\", ls.linestyle, ls.thickness);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    struct linesettingstype ls;\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    getlinesettings(&ls);\n    restorecrtmode();\n    printf(\"Style: %d, Thickness: %d\\n\", ls.linestyle, ls.thickness);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1917,7 +1917,7 @@
                 {
                     "name": "setfillstyle",
                     "slug": "setfillstyle",
-                    "description": "Sets the fill pattern and fill color used by filled drawing functions like bar(), fillpoly(), and floodfill().",
+                    "description": "The graphics.h setfillstyle() function sets the fill pattern and fill color used by filled drawing functions like bar(), fillpoly(), and floodfill().",
                     "syntax": "void far setfillstyle(int pattern, int color);",
                     "returns": "void",
                     "parameters": [
@@ -1934,7 +1934,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw bars with different fill styles */\n    int x = 50;\n    int patterns[] = {SOLID_FILL, HATCH_FILL, XHATCH_FILL, SLASH_FILL, LINE_FILL};\n    for (int i = 0; i < 5; i++) {\n        setfillstyle(patterns[i], i + 1);\n        bar(x, 100, x + 80, 350);\n        x += 100;\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    int x = 50;\n    int patterns[] = {SOLID_FILL, HATCH_FILL, XHATCH_FILL, SLASH_FILL, LINE_FILL};\n    for (int i = 0; i < 5; i++) {\n        setfillstyle(patterns[i], i + 1);\n        bar(x, 100, x + 80, 350);\n        x += 100;\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1962,7 +1962,7 @@
                 {
                     "name": "getfillsettings",
                     "slug": "getfillsettings",
-                    "description": "Retrieves the current fill pattern and color settings into a fillsettingstype structure.",
+                    "description": "The graphics.h getfillsettings() function retrieves the current fill pattern and color settings into a fillsettingstype structure.",
                     "syntax": "void far getfillsettings(struct fillsettingstype far *fillinfo);",
                     "returns": "void",
                     "parameters": [
@@ -1974,7 +1974,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(HATCH_FILL, CYAN);\n    struct fillsettingstype fs;\n    getfillsettings(&fs);\n    restorecrtmode();\n    printf(\"Pattern: %d, Color: %d\\n\", fs.pattern, fs.color);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(HATCH_FILL, CYAN);\n    struct fillsettingstype fs;\n    getfillsettings(&fs);\n    restorecrtmode();\n    printf(\"Pattern: %d, Color: %d\\n\", fs.pattern, fs.color);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -1996,7 +1996,7 @@
                 {
                     "name": "setfillpattern",
                     "slug": "setfillpattern",
-                    "description": "Selects a user-defined 8x8 fill pattern (8 bytes, one per row) and a fill color for USER_FILL mode.",
+                    "description": "The graphics.h setfillpattern() function selects a user-defined 8x8 fill pattern (8 bytes, one per row) and a fill color for USER_FILL mode.",
                     "syntax": "void far setfillpattern(const char far *upattern, int color);",
                     "returns": "void",
                     "parameters": [
@@ -2013,7 +2013,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Checkerboard pattern */\n    char pat[] = {0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55};\n    setfillpattern(pat, GREEN);\n    bar(100, 100, 400, 350);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    char pat[] = {0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55};\n    setfillpattern(pat, GREEN);\n    bar(100, 100, 400, 350);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2036,7 +2036,7 @@
                 {
                     "name": "getfillpattern",
                     "slug": "getfillpattern",
-                    "description": "Copies the current user-defined fill pattern into the provided 8-byte array.",
+                    "description": "The graphics.h getfillpattern() function copies the current user-defined fill pattern into the provided 8-byte array.",
                     "syntax": "void far getfillpattern(char far *pattern);",
                     "returns": "void",
                     "parameters": [
@@ -2048,7 +2048,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    char pat[8];\n    getfillpattern(pat);\n    restorecrtmode();\n    for (int i = 0; i < 8; i++)\n        printf(\"Row %d: 0x%02X\\n\", i, (unsigned char)pat[i]);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    char pat[8];\n    getfillpattern(pat);\n    restorecrtmode();\n    for (int i = 0; i < 8; i++)\n        printf(\"Row %d: 0x%02X\\n\", i, (unsigned char)pat[i]);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2075,13 +2075,13 @@
                 {
                     "name": "cleardevice",
                     "slug": "cleardevice",
-                    "description": "Clears the entire graphics screen by filling it with the current background color and moves the current position to (0,0).",
+                    "description": "The graphics.h cleardevice() function clears the entire graphics screen by filling it with the current background color and moves the current position to (0,0).",
                     "syntax": "void far cleardevice(void);",
                     "returns": "void",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    cleardevice(); /* Erase everything */\n    outtextxy(200, 200, \"Screen cleared!\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    cleardevice();\n    outtextxy(200, 200, \"Screen cleared!\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2105,13 +2105,13 @@
                 {
                     "name": "clearviewport",
                     "slug": "clearviewport",
-                    "description": "Clears only the current viewport (not the entire screen) by filling it with the background color, and moves the CP to the viewport's top-left corner.",
+                    "description": "The graphics.h clearviewport() function clears only the current viewport (not the entire screen) by filling it with the background color, and moves the CP to the viewport's top-left corner.",
                     "syntax": "void far clearviewport(void);",
                     "returns": "void",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setviewport(100, 100, 400, 350, 1);\n    rectangle(0, 0, 299, 249);\n    outtextxy(50, 100, \"Inside viewport\");\n    getch();\n    clearviewport();\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setviewport(100, 100, 400, 350, 1);\n    rectangle(0, 0, 299, 249);\n    outtextxy(50, 100, \"Inside viewport\");\n    getch();\n    clearviewport();\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2134,7 +2134,7 @@
                 {
                     "name": "setviewport",
                     "slug": "setviewport",
-                    "description": "Defines a rectangular viewport (clipping region). After this call, all drawing is relative to the viewport's top-left corner.",
+                    "description": "The graphics.h setviewport() function defines a rectangular viewport (clipping region). After this call, all drawing is relative to the viewport's top-left corner.",
                     "syntax": "void far setviewport(int left, int top, int right, int bottom, int clip);",
                     "returns": "void",
                     "parameters": [
@@ -2166,7 +2166,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw in a 300x200 viewport at (100,100) with clipping */\n    setviewport(100, 100, 400, 300, 1);\n    rectangle(0, 0, 299, 199); /* Relative to viewport origin */\n    circle(150, 100, 120);     /* Clipped at viewport edges */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    setviewport(100, 100, 400, 300, 1);\n    rectangle(0, 0, 299, 199);\n    circle(150, 100, 120);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2190,7 +2190,7 @@
                 {
                     "name": "getviewsettings",
                     "slug": "getviewsettings",
-                    "description": "Retrieves the current viewport coordinates and clipping flag into a viewporttype structure.",
+                    "description": "The graphics.h getviewsettings() function retrieves the current viewport coordinates and clipping flag into a viewporttype structure.",
                     "syntax": "void far getviewsettings(struct viewporttype far *viewport);",
                     "returns": "void",
                     "parameters": [
@@ -2202,7 +2202,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setviewport(50, 50, 300, 200, 1);\n    struct viewporttype vp;\n    getviewsettings(&vp);\n    restorecrtmode();\n    printf(\"Viewport: (%d,%d) to (%d,%d), clip=%d\\n\",\n           vp.left, vp.top, vp.right, vp.bottom, vp.clip);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setviewport(50, 50, 300, 200, 1);\n    struct viewporttype vp;\n    getviewsettings(&vp);\n    restorecrtmode();\n    printf(\"Viewport: (%d,%d) to (%d,%d), clip=%d\\n\",\n           vp.left, vp.top, vp.right, vp.bottom, vp.clip);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2224,7 +2224,7 @@
                 {
                     "name": "setactivepage",
                     "slug": "setactivepage",
-                    "description": "Sets the active graphics page for drawing. Drawing goes to the specified page, which may or may not be the currently visible page.",
+                    "description": "The graphics.h setactivepage() function sets the active graphics page for drawing. Drawing goes to the specified page, which may or may not be the currently visible page.",
                     "syntax": "void far setactivepage(int page);",
                     "returns": "void",
                     "parameters": [
@@ -2236,7 +2236,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = EGA, gm = EGAHI;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setactivepage(1);          /* Draw on page 1 */\n    circle(320, 175, 100);\n    setvisualpage(1);          /* Display page 1 */\n    getch();\n    setactivepage(0);          /* Back to page 0 */\n    setvisualpage(0);\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = EGA, gm = EGAHI;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setactivepage(1);\n    circle(320, 175, 100);\n    setvisualpage(1);\n    getch();\n    setactivepage(0);\n    setvisualpage(0);\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph() with a driver/mode supporting multiple pages (e.g., EGA, VGA)"
@@ -2258,7 +2258,7 @@
                 {
                     "name": "setvisualpage",
                     "slug": "setvisualpage",
-                    "description": "Sets the page number that is currently displayed on screen, enabling page-flipping for smooth animation.",
+                    "description": "The graphics.h setvisualpage() function sets the page number that is currently displayed on screen, enabling page-flipping for smooth animation.",
                     "syntax": "void far setvisualpage(int page);",
                     "returns": "void",
                     "parameters": [
@@ -2270,7 +2270,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = EGA, gm = EGAHI;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw frame on page 1, show it */\n    setactivepage(1);\n    cleardevice();\n    circle(320, 175, 80);\n    setvisualpage(1); /* Instantly show page 1 */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = EGA, gm = EGAHI;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    setactivepage(1);\n    cleardevice();\n    circle(320, 175, 80);\n    setvisualpage(1);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph() with multi-page driver/mode"
@@ -2292,7 +2292,7 @@
                 {
                     "name": "setwritemode",
                     "slug": "setwritemode",
-                    "description": "Sets the logical write mode for line drawing. The default is COPY_PUT; XOR_PUT allows lines to be erased by redrawing them.",
+                    "description": "The graphics.h setwritemode() function sets the logical write mode for line drawing. The default is COPY_PUT; XOR_PUT allows lines to be erased by redrawing them.",
                     "syntax": "void far setwritemode(int mode);",
                     "returns": "void",
                     "parameters": [
@@ -2304,7 +2304,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setwritemode(XOR_PUT);\n    line(100, 100, 400, 300); /* Draw */\n    getch();\n    line(100, 100, 400, 300); /* XOR again = erase */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setwritemode(XOR_PUT);\n    line(100, 100, 400, 300);\n    getch();\n    line(100, 100, 400, 300);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2334,7 +2334,7 @@
                 {
                     "name": "outtext",
                     "slug": "outtext",
-                    "description": "Displays a string at the current drawing position (CP) using the current font, text direction, size, and color.",
+                    "description": "The graphics.h outtext() function displays a string at the current drawing position (CP) using the current font, text direction, size, and color.",
                     "syntax": "void far outtext(const char far *textstring);",
                     "returns": "void",
                     "parameters": [
@@ -2346,7 +2346,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 200);\n    outtext(\"Hello from outtext!\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 200);\n    outtext(\"Hello from outtext!\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2373,7 +2373,7 @@
                 {
                     "name": "outtextxy",
                     "slug": "outtextxy",
-                    "description": "Displays a string at a specified (x, y) position using the current font settings.",
+                    "description": "The graphics.h outtextxy() function displays a string at a specified (x, y) position using the current font settings.",
                     "syntax": "void far outtextxy(int x, int y, const char far *textstring);",
                     "returns": "void",
                     "parameters": [
@@ -2395,7 +2395,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    setcolor(YELLOW);\n    outtextxy(100, 200, \"Hello Graphics!\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    setcolor(YELLOW);\n    outtextxy(100, 200, \"Hello Graphics!\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2421,7 +2421,7 @@
                 {
                     "name": "settextstyle",
                     "slug": "settextstyle",
-                    "description": "Sets the font, direction (horizontal or vertical), and character size for subsequent text output.",
+                    "description": "The graphics.h settextstyle() function sets the font, direction (horizontal or vertical), and character size for subsequent text output.",
                     "syntax": "void far settextstyle(int font, int direction, int charsize);",
                     "returns": "void",
                     "parameters": [
@@ -2443,7 +2443,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(GOTHIC_FONT, HORIZ_DIR, 4);\n    outtextxy(100, 150, \"Gothic Font\");\n    settextstyle(SANS_SERIF_FONT, VERT_DIR, 3);\n    outtextxy(400, 400, \"Vertical Text\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(GOTHIC_FONT, HORIZ_DIR, 4);\n    outtextxy(100, 150, \"Gothic Font\");\n    settextstyle(SANS_SERIF_FONT, VERT_DIR, 3);\n    outtextxy(400, 400, \"Vertical Text\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()",
@@ -2470,7 +2470,7 @@
                 {
                     "name": "settextjustify",
                     "slug": "settextjustify",
-                    "description": "Sets the horizontal and vertical alignment of text drawn by outtext() and outtextxy() relative to the given position.",
+                    "description": "The graphics.h settextjustify() function sets the horizontal and vertical alignment of text drawn by outtext() and outtextxy() relative to the given position.",
                     "syntax": "void far settextjustify(int horiz, int vert);",
                     "returns": "void",
                     "parameters": [
@@ -2487,7 +2487,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);\n    /* Centered text at screen center */\n    settextjustify(CENTER_TEXT, CENTER_TEXT);\n    outtextxy(320, 240, \"Centered!\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);\n\n    settextjustify(CENTER_TEXT, CENTER_TEXT);\n    outtextxy(320, 240, \"Centered!\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2512,7 +2512,7 @@
                 {
                     "name": "setusercharsize",
                     "slug": "setusercharsize",
-                    "description": "Defines a custom character size for stroked fonts when charsize is set to USER_CHAR_SIZE (0) in settextstyle().",
+                    "description": "The graphics.h setusercharsize() function defines a custom character size for stroked fonts when charsize is set to USER_CHAR_SIZE (0) in settextstyle().",
                     "syntax": "void far setusercharsize(int multx, int divx, int multy, int divy);",
                     "returns": "void",
                     "parameters": [
@@ -2539,7 +2539,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, USER_CHAR_SIZE);\n    setusercharsize(3, 1, 2, 1); /* 3x wide, 2x tall */\n    outtextxy(50, 200, \"Custom Size\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, USER_CHAR_SIZE);\n    setusercharsize(3, 1, 2, 1);\n    outtextxy(50, 200, \"Custom Size\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()",
@@ -2562,7 +2562,7 @@
                 {
                     "name": "gettextsettings",
                     "slug": "gettextsettings",
-                    "description": "Retrieves the current text font, direction, size, and justification settings into a textsettingstype structure.",
+                    "description": "The graphics.h gettextsettings() function retrieves the current text font, direction, size, and justification settings into a textsettingstype structure.",
                     "syntax": "void far gettextsettings(struct textsettingstype far *texttypeinfo);",
                     "returns": "void",
                     "parameters": [
@@ -2574,7 +2574,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 2);\n    struct textsettingstype ts;\n    gettextsettings(&ts);\n    restorecrtmode();\n    printf(\"Font: %d, Direction: %d, Size: %d\\n\",\n           ts.font, ts.direction, ts.charsize);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 2);\n    struct textsettingstype ts;\n    gettextsettings(&ts);\n    restorecrtmode();\n    printf(\"Font: %d, Direction: %d, Size: %d\\n\",\n           ts.font, ts.direction, ts.charsize);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2595,7 +2595,7 @@
                 {
                     "name": "textheight",
                     "slug": "textheight",
-                    "description": "Returns the height of a string in pixels based on the current font and character size.",
+                    "description": "The graphics.h textheight() function returns the height of a string in pixels based on the current font and character size.",
                     "syntax": "int far textheight(const char far *textstring);",
                     "returns": "int — height of the text in pixels",
                     "parameters": [
@@ -2607,7 +2607,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    int h = textheight(\"Sample\");\n    /* Center text vertically */\n    int y = (getmaxy() - h) / 2;\n    outtextxy(100, y, \"Centered vertically\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    int h = textheight(\"Sample\");\n\n    int y = (getmaxy() - h) / 2;\n    outtextxy(100, y, \"Centered vertically\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2631,7 +2631,7 @@
                 {
                     "name": "textwidth",
                     "slug": "textwidth",
-                    "description": "Returns the width in pixels of the specified string with the current font and character size.",
+                    "description": "The graphics.h textwidth() function returns the width in pixels of the specified string with the current font and character size.",
                     "syntax": "int far textwidth(const char far *textstring);",
                     "returns": "int — width of the text string in pixels",
                     "parameters": [
@@ -2643,7 +2643,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);\n    char msg[] = \"Centered text\";\n    int w = textwidth(msg);\n    int x = (getmaxx() - w) / 2; /* Center horizontally */\n    outtextxy(x, 240, msg);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);\n    char msg[] = \"Centered text\";\n    int w = textwidth(msg);\n    int x = (getmaxx() - w) / 2;\n    outtextxy(x, 240, msg);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2673,7 +2673,7 @@
                 {
                     "name": "putpixel",
                     "slug": "putpixel",
-                    "description": "Sets the color of a single pixel at the specified (x, y) coordinate.",
+                    "description": "The graphics.h putpixel() function sets the color of a single pixel at the specified (x, y) coordinate.",
                     "syntax": "void far putpixel(int x, int y, int color);",
                     "returns": "void",
                     "parameters": [
@@ -2695,7 +2695,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <math.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw a sine wave using putpixel */\n    for (int x = 0; x <= getmaxx(); x++) {\n        int y = 240 + (int)(100 * sin(x * 0.05));\n        putpixel(x, y, YELLOW);\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <math.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    for (int x = 0; x <= getmaxx(); x++) {\n        int y = 240 + (int)(100 * sin(x * 0.05));\n        putpixel(x, y, YELLOW);\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2720,7 +2720,7 @@
                 {
                     "name": "getpixel",
                     "slug": "getpixel",
-                    "description": "Returns the color of the pixel at the specified (x, y) coordinate.",
+                    "description": "The graphics.h getpixel() function returns the color of the pixel at the specified (x, y) coordinate.",
                     "syntax": "unsigned far getpixel(int x, int y);",
                     "returns": "unsigned — the color index of the pixel at (x, y)",
                     "parameters": [
@@ -2737,7 +2737,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    putpixel(300, 200, RED);\n    unsigned c = getpixel(300, 200);\n    restorecrtmode();\n    printf(\"Pixel color: %u (expected %d)\\n\", c, RED);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    putpixel(300, 200, RED);\n    unsigned c = getpixel(300, 200);\n    restorecrtmode();\n    printf(\"Pixel color: %u (expected %d)\\n\", c, RED);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2759,7 +2759,7 @@
                 {
                     "name": "getimage",
                     "slug": "getimage",
-                    "description": "Saves a rectangular region of the screen into a memory buffer for later restoration with putimage().",
+                    "description": "The graphics.h getimage() function saves a rectangular region of the screen into a memory buffer for later restoration with putimage().",
                     "syntax": "void far getimage(int left, int top, int right, int bottom, void far *bitmap);",
                     "returns": "void",
                     "parameters": [
@@ -2791,7 +2791,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <alloc.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    /* Draw something to save */\n    setfillstyle(SOLID_FILL, RED);\n    bar(100, 100, 200, 200);\n    unsigned size = imagesize(100, 100, 200, 200);\n    void *buf = malloc(size);\n    getimage(100, 100, 200, 200, buf); /* Save region */\n    cleardevice();\n    putimage(250, 150, buf, COPY_PUT); /* Restore elsewhere */\n    free(buf);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <alloc.h>\n#include <stdlib.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n\n    setfillstyle(SOLID_FILL, RED);\n    bar(100, 100, 200, 200);\n    unsigned size = imagesize(100, 100, 200, 200);\n    void *buf = malloc(size);\n    getimage(100, 100, 200, 200, buf);\n    cleardevice();\n    putimage(250, 150, buf, COPY_PUT);\n    free(buf);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()",
@@ -2815,7 +2815,7 @@
                 {
                     "name": "putimage",
                     "slug": "putimage",
-                    "description": "Draws a bitmap image (previously saved by getimage()) onto the screen at the specified position, using a bitwise operation.",
+                    "description": "The graphics.h putimage() function draws a bitmap image (previously saved by getimage()) onto the screen at the specified position, using a bitwise operation.",
                     "syntax": "void far putimage(int left, int top, const void far *bitmap, int op);",
                     "returns": "void",
                     "parameters": [
@@ -2842,7 +2842,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <alloc.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(50, 50, 40);\n    unsigned sz = imagesize(10, 10, 90, 90);\n    void *img = malloc(sz);\n    getimage(10, 10, 90, 90, img);\n    /* Stamp the saved image across the screen */\n    for (int x = 0; x < 600; x += 100)\n        putimage(x, 200, img, COPY_PUT);\n    free(img);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <alloc.h>\n#include <stdlib.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(50, 50, 40);\n    unsigned sz = imagesize(10, 10, 90, 90);\n    void *img = malloc(sz);\n    getimage(10, 10, 90, 90, img);\n\n    for (int x = 0; x < 600; x += 100)\n        putimage(x, 200, img, COPY_PUT);\n    free(img);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()",
@@ -2867,7 +2867,7 @@
                 {
                     "name": "imagesize",
                     "slug": "imagesize",
-                    "description": "Returns the number of bytes required to store a bitmap of the specified rectangular region, for use with getimage().",
+                    "description": "The graphics.h imagesize() function returns the number of bytes required to store a bitmap of the specified rectangular region, for use with getimage().",
                     "syntax": "unsigned far imagesize(int left, int top, int right, int bottom);",
                     "returns": "unsigned — bytes needed to store the region",
                     "parameters": [
@@ -2894,7 +2894,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <alloc.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    unsigned bytes = imagesize(0, 0, 99, 99);\n    void *buf = malloc(bytes);\n    if (buf == NULL) {\n        outtextxy(10, 10, \"Not enough memory!\");\n    } else {\n        getimage(0, 0, 99, 99, buf);\n        free(buf);\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <alloc.h>\n#include <stdlib.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    unsigned bytes = imagesize(0, 0, 99, 99);\n    void *buf = malloc(bytes);\n    if (buf == NULL) {\n        outtextxy(10, 10, \"Not enough memory!\");\n    } else {\n        getimage(0, 0, 99, 99, buf);\n        free(buf);\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()"
@@ -2923,7 +2923,7 @@
                 {
                     "name": "getarccoords",
                     "slug": "getarccoords",
-                    "description": "Retrieves the start and end pixel coordinates of the most recently drawn arc or pieslice.",
+                    "description": "The graphics.h getarccoords() function retrieves the start and end pixel coordinates of the most recently drawn arc or pieslice.",
                     "syntax": "void far getarccoords(struct arccoordstype far *arccoords);",
                     "returns": "void",
                     "parameters": [
@@ -2935,7 +2935,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    arc(320, 240, 30, 150, 100);\n    struct arccoordstype ac;\n    getarccoords(&ac);\n    restorecrtmode();\n    printf(\"Center: (%d,%d)\\n\", ac.x, ac.y);\n    printf(\"Start:  (%d,%d)\\n\", ac.xstart, ac.ystart);\n    printf(\"End:    (%d,%d)\\n\", ac.xend, ac.yend);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    arc(320, 240, 30, 150, 100);\n    struct arccoordstype ac;\n    getarccoords(&ac);\n    restorecrtmode();\n    printf(\"Center: (%d,%d)\\n\", ac.x, ac.y);\n    printf(\"Start:  (%d,%d)\\n\", ac.xstart, ac.ystart);\n    printf(\"End:    (%d,%d)\\n\", ac.xend, ac.yend);\n    setgraphmode(getgraphmode());\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "initgraph()",
@@ -2965,7 +2965,7 @@
                 {
                     "name": "installuserdriver",
                     "slug": "installuserdriver",
-                    "description": "Installs a user-supplied graphics driver into the BGI device driver table, allowing custom hardware support.",
+                    "description": "The graphics.h installuserdriver() function installs a user-supplied graphics driver into the BGI device driver table, allowing custom hardware support.",
                     "syntax": "int far installuserdriver(const char far *name, int huge (*detect)(void));",
                     "returns": "int — the driver number assigned, or a negative error code",
                     "parameters": [
@@ -2982,7 +2982,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\n/* Placeholder: actual custom driver detect function */\nint huge myDetect(void) { return 0; }\n\nint main() {\n    int driverNum = installuserdriver(\"MYDRV\", myDetect);\n    int gd = driverNum, gm = 0;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    if (graphresult() != grOk) {\n        printf(\"Error: %s\\n\", grapherrormsg(graphresult()));\n        return 1;\n    }\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint huge myDetect(void) { return 0; }\n\nint main() {\n    int driverNum = installuserdriver(\"MYDRV\", myDetect);\n    int gd = driverNum, gm = 0;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    if (graphresult() != grOk) {\n        printf(\"Error: %s\\n\", grapherrormsg(graphresult()));\n        return 1;\n    }\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -3004,7 +3004,7 @@
                 {
                     "name": "installuserfont",
                     "slug": "installuserfont",
-                    "description": "Loads and installs a stroked font (.CHR file) that is not part of the standard BGI font set.",
+                    "description": "The graphics.h installuserfont() function loads and installs a stroked font (.CHR file) that is not part of the standard BGI font set.",
                     "syntax": "int far installuserfont(const char far *name);",
                     "returns": "int — font number assigned, or a negative error code",
                     "parameters": [
@@ -3016,7 +3016,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    int fontNum = installuserfont(\"C:\\\\TC\\\\BGI\\\\MYFONT\");\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    if (fontNum < 0) {\n        outtextxy(10, 10, \"Font install failed\");\n    } else {\n        settextstyle(fontNum, HORIZ_DIR, 3);\n        outtextxy(100, 200, \"Custom Font!\");\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    int fontNum = installuserfont(\"C:\\\\TC\\\\BGI\\\\MYFONT\");\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    if (fontNum < 0) {\n        outtextxy(10, 10, \"Font install failed\");\n    } else {\n        settextstyle(fontNum, HORIZ_DIR, 3);\n        outtextxy(100, 200, \"Custom Font!\");\n    }\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -3037,7 +3037,7 @@
                 {
                     "name": "registerbgidriver",
                     "slug": "registerbgidriver",
-                    "description": "Registers a graphics driver that has been linked directly into the executable (as an object file), so it does not need to be loaded from disk.",
+                    "description": "The graphics.h registerbgidriver() function registers a graphics driver that has been linked directly into the executable (as an object file), so it does not need to be loaded from disk.",
                     "syntax": "int _Cdecl registerbgidriver(void (*driver)(void));",
                     "returns": "int — 0 on success, or a negative error code",
                     "parameters": [
@@ -3049,7 +3049,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    /* Register EGAVGA driver linked into the .EXE */\n    registerbgidriver(EGAVGA_driver);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\"); /* Empty path: driver is built-in */\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n\n    registerbgidriver(EGAVGA_driver);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "Link the corresponding driver object (e.g., EGAVGA.OBJ) into your project"
@@ -3073,7 +3073,7 @@
                 {
                     "name": "registerfarbgidriver",
                     "slug": "registerfarbgidriver",
-                    "description": "Registers a graphics driver located in far memory (e.g., the _far arrays like EGAVGA_driver_far).",
+                    "description": "The graphics.h registerfarbgidriver() function registers a graphics driver located in far memory (e.g., the _far arrays like EGAVGA_driver_far).",
                     "syntax": "int far registerfarbgidriver(void far *driver);",
                     "returns": "int — 0 on success, or a negative error code",
                     "parameters": [
@@ -3085,7 +3085,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    registerfarbgidriver(EGAVGA_driver_far);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    circle(320, 240, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    registerfarbgidriver(EGAVGA_driver_far);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    circle(320, 240, 80);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "Link the appropriate far driver object file"
@@ -3108,7 +3108,7 @@
                 {
                     "name": "registerbgifont",
                     "slug": "registerbgifont",
-                    "description": "Registers a BGI font that has been linked into the executable so it can be used without a .CHR file on disk.",
+                    "description": "The graphics.h registerbgifont() function registers a BGI font that has been linked into the executable so it can be used without a .CHR file on disk.",
                     "syntax": "int _Cdecl registerbgifont(void (*font)(void));",
                     "returns": "int — 0 on success, or a negative error code",
                     "parameters": [
@@ -3120,7 +3120,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    registerbgifont(triplex_font); /* Link TRIP.OBJ into project */\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 4);\n    outtextxy(100, 200, \"Built-in Triplex\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    registerbgifont(triplex_font);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 4);\n    outtextxy(100, 200, \"Built-in Triplex\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "Link corresponding font object file (e.g., TRIP.OBJ)"
@@ -3144,7 +3144,7 @@
                 {
                     "name": "registerfarbgifont",
                     "slug": "registerfarbgifont",
-                    "description": "Registers a BGI font stored in far memory (using the _far[] array variants).",
+                    "description": "The graphics.h registerfarbgifont() function registers a BGI font stored in far memory (using the _far[] array variants).",
                     "syntax": "int far registerfarbgifont(void far *font);",
                     "returns": "int — 0 on success, or a negative error code",
                     "parameters": [
@@ -3156,7 +3156,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    registerfarbgifont(triplex_font_far);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    outtextxy(100, 200, \"Far Font\");\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    registerfarbgifont(triplex_font_far);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    outtextxy(100, 200, \"Far Font\");\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "Link corresponding far font object file"
@@ -3184,7 +3184,7 @@
                 {
                     "name": "_graphgetmem",
                     "slug": "graphgetmem",
-                    "description": "Allocates memory for the graphics system. This is an internal function used by the BGI; it can be replaced to use a custom memory allocator.",
+                    "description": "The graphics.h _graphgetmem() function allocates a block of memory for graphics-related work and returns a pointer to that memory.",
                     "syntax": "void far * far _graphgetmem(unsigned size);",
                     "returns": "void far * — pointer to allocated memory, or NULL on failure",
                     "parameters": [
@@ -3196,7 +3196,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <alloc.h>\n\n/* Override default allocator with custom one */\nvoid far * far _graphgetmem(unsigned size) {\n    return farmalloc(size);\n}\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <alloc.h>\n#include <stdlib.h>\n\nvoid far * far _graphgetmem(unsigned size) {\n    return farmalloc(size);\n}\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -3216,7 +3216,7 @@
                 {
                     "name": "_graphfreemem",
                     "slug": "graphfreemem",
-                    "description": "Frees memory previously allocated by _graphgetmem(). This is an internal BGI function that can be replaced for custom memory management.",
+                    "description": "The graphics.h _graphfreemem() function frees memory that was previously allocated for graphics-related work.",
                     "syntax": "void far _graphfreemem(void far *ptr, unsigned size);",
                     "returns": "void",
                     "parameters": [
@@ -3233,7 +3233,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <alloc.h>\n\nvoid far _graphfreemem(void far *ptr, unsigned size) {\n    (void)size; /* size parameter unused with farfree */\n    farfree(ptr);\n}\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <alloc.h>\n#include <stdlib.h>\n\nvoid far _graphfreemem(void far *ptr, unsigned size) {\n    (void)size;\n    farfree(ptr);\n}\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -3253,7 +3253,7 @@
                 {
                     "name": "setgraphbufsize",
                     "slug": "setgraphbufsize",
-                    "description": "Sets the size of the internal buffer used by the graphics system for scan-line fill operations. Call before initgraph().",
+                    "description": "The graphics.h setgraphbufsize() function sets the size of the internal buffer used by the graphics system for scan-line fill operations. Call before initgraph().",
                     "syntax": "unsigned far setgraphbufsize(unsigned bufsize);",
                     "returns": "unsigned — the previous buffer size",
                     "parameters": [
@@ -3265,7 +3265,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n\nint main() {\n    unsigned oldsize = setgraphbufsize(8192); /* Larger fill buffer */\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, RED);\n    floodfill(320, 240, WHITE); /* Complex fill may need larger buffer */\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    unsigned oldsize = setgraphbufsize(8192);\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, RED);\n    floodfill(320, 240, WHITE);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [
                         "Must be called BEFORE initgraph()"
@@ -3295,13 +3295,13 @@
                 {
                     "name": "graphresult",
                     "slug": "graphresult",
-                    "description": "Returns the error code for the last unsuccessful graphics operation, then resets the internal error code to grOk (0).",
+                    "description": "The graphics.h graphresult() function returns the error code for the last unsuccessful graphics operation, then resets the internal error code to grOk (0).",
                     "syntax": "int far graphresult(void);",
                     "returns": "int — error code from the graphics_errors enum (0 = grOk, negative = error)",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int err = graphresult();\n    if (err != grOk) {\n        fprintf(stderr, \"Graphics error: %s\\n\", grapherrormsg(err));\n        exit(1);\n    }\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <conio.h>\n#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    int err = graphresult();\n    if (err != grOk) {\n        fprintf(stderr, \"Graphics error: %s\\n\", grapherrormsg(err));\n        exit(1);\n    }\n    circle(320, 240, 100);\n    getch();\n    closegraph();\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -3323,7 +3323,7 @@
                 {
                     "name": "grapherrormsg",
                     "slug": "grapherrormsg",
-                    "description": "Returns a human-readable string describing the specified graphics error code.",
+                    "description": "The graphics.h grapherrormsg() function returns a human-readable string describing the specified graphics error code.",
                     "syntax": "char far * far grapherrormsg(int errorcode);",
                     "returns": "char * — pointer to an error message string",
                     "parameters": [
@@ -3335,7 +3335,7 @@
                     ],
                     "example": {
                         "language": "c",
-                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n    /* Print all error messages */\n    for (int i = 0; i >= -18; i--)\n        printf(\"Code %d: %s\\n\", i, grapherrormsg(i));\n    return 0;\n}"
+                        "code": "#include <graphics.h>\n#include <stdio.h>\n\nint main() {\n\n    for (int i = 0; i >= -18; i--)\n        printf(\"Code %d: %s\\n\", i, grapherrormsg(i));\n    return 0;\n}"
                     },
                     "requirements": [],
                     "notes": [
@@ -3361,13 +3361,13 @@
                 {
                     "name": "grOk",
                     "slug": "grok",
-                    "description": "No error. The graphics operation completed successfully.",
+                    "description": "grOk indicates that the last graphics.h operation completed successfully and no error was reported.",
                     "syntax": "grOk = 0",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grOk) { /* success */ }"
+                        "code": "if (graphresult() == grOk) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3387,13 +3387,13 @@
                 {
                     "name": "grNoInitGraph",
                     "slug": "grnoinitgraph",
-                    "description": "Error code -1: A graphics function was called before initgraph() was called.",
+                    "description": "grNoInitGraph means the graphics system was not initialized before the function call.",
                     "syntax": "grNoInitGraph = -1",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "circle(100,100,50); /* Without initgraph → graphresult() == grNoInitGraph */"
+                        "code": "circle(100,100,50);"
                     },
                     "requirements": [],
                     "notes": [
@@ -3412,13 +3412,13 @@
                 {
                     "name": "grNotDetected",
                     "slug": "grnotdetected",
-                    "description": "Error code -2: No graphics hardware was detected by the auto-detection routine.",
+                    "description": "grNotDetected means no supported graphics hardware or graphics driver could be detected.",
                     "syntax": "grNotDetected = -2",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "/* Check after initgraph with DETECT */\nif (graphresult() == grNotDetected) { /* No graphics card */ }"
+                        "code": "if (graphresult() == grNotDetected) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3437,13 +3437,13 @@
                 {
                     "name": "grFileNotFound",
                     "slug": "grfilenotfound",
-                    "description": "Error code -3: The specified BGI driver or font file could not be found on disk.",
+                    "description": "grFileNotFound means a required graphics driver or font file could not be found.",
                     "syntax": "grFileNotFound = -3",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "/* Occurs if path is wrong in initgraph() */\ninitgraph(&gd, &gm, \"WRONG_PATH\");\nif (graphresult() == grFileNotFound) { /* bad path */ }"
+                        "code": "initgraph(&gd, &gm, \"WRONG_PATH\");\nif (graphresult() == grFileNotFound) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3463,13 +3463,13 @@
                 {
                     "name": "grInvalidDriver",
                     "slug": "grinvaliddriver",
-                    "description": "Error code -4: The found BGI file is not a valid graphics driver.",
+                    "description": "grInvalidDriver means the selected graphics driver is not valid for the current setup.",
                     "syntax": "grInvalidDriver = -4",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grInvalidDriver) { /* Corrupt or wrong .BGI */ }"
+                        "code": "if (graphresult() == grInvalidDriver) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3489,13 +3489,13 @@
                 {
                     "name": "grNoLoadMem",
                     "slug": "grnoloadmem",
-                    "description": "Error code -5: Not enough memory to load the graphics driver.",
+                    "description": "grNoLoadMem means there was not enough memory to load the graphics driver.",
                     "syntax": "grNoLoadMem = -5",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grNoLoadMem) { /* Insufficient RAM for driver */ }"
+                        "code": "if (graphresult() == grNoLoadMem) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3515,13 +3515,13 @@
                 {
                     "name": "grNoScanMem",
                     "slug": "grnoscanmem",
-                    "description": "Error code -6: Not enough memory to perform a scan-fill operation (e.g., floodfill).",
+                    "description": "grNoScanMem means there was not enough memory for scan conversion during drawing.",
                     "syntax": "grNoScanMem = -6",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "floodfill(100, 100, WHITE);\nif (graphresult() == grNoScanMem) { /* Increase setgraphbufsize */ }"
+                        "code": "floodfill(100, 100, WHITE);\nif (graphresult() == grNoScanMem) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3541,13 +3541,13 @@
                 {
                     "name": "grNoFloodMem",
                     "slug": "grnofloadmem",
-                    "description": "Error code -7: Not enough memory to perform a flood-fill operation.",
+                    "description": "grNoFloodMem means there was not enough memory to complete a flood fill operation.",
                     "syntax": "grNoFloodMem = -7",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grNoFloodMem) { /* Not enough memory to flood fill */ }"
+                        "code": "if (graphresult() == grNoFloodMem) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3566,13 +3566,13 @@
                 {
                     "name": "grFontNotFound",
                     "slug": "grfontnotfound",
-                    "description": "Error code -8: The requested .CHR font file could not be found.",
+                    "description": "grFontNotFound means the requested graphics font file could not be found.",
                     "syntax": "grFontNotFound = -8",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\nif (graphresult() == grFontNotFound) { /* TRIP.CHR not found */ }"
+                        "code": "settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\nif (graphresult() == grFontNotFound) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3593,13 +3593,13 @@
                 {
                     "name": "grNoFontMem",
                     "slug": "grnofontmem",
-                    "description": "Error code -9: Not enough memory to load the requested font.",
+                    "description": "grNoFontMem means there was not enough memory to load the requested graphics font.",
                     "syntax": "grNoFontMem = -9",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grNoFontMem) { /* Not enough memory for font */ }"
+                        "code": "if (graphresult() == grNoFontMem) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3618,13 +3618,13 @@
                 {
                     "name": "grInvalidMode",
                     "slug": "grinvalidmode",
-                    "description": "Error code -10: An invalid graphics mode was specified for the current driver.",
+                    "description": "grInvalidMode means the selected graphics mode is not valid for the active driver.",
                     "syntax": "grInvalidMode = -10",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "setgraphmode(99); /* Invalid mode */\nif (graphresult() == grInvalidMode) { /* Bad mode number */ }"
+                        "code": "setgraphmode(99);\nif (graphresult() == grInvalidMode) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3644,13 +3644,13 @@
                 {
                     "name": "grError",
                     "slug": "grerror",
-                    "description": "Error code -11: Generic/unspecified graphics error.",
+                    "description": "grError is a general graphics.h error code used when no more specific error applies.",
                     "syntax": "grError = -11",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grError) { /* Generic graphics error */ }"
+                        "code": "if (graphresult() == grError) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3668,13 +3668,13 @@
                 {
                     "name": "grIOerror",
                     "slug": "grioerror",
-                    "description": "Error code -12: I/O error while reading a driver or font file from disk.",
+                    "description": "grIOerror means an input or output error occurred while loading graphics resources.",
                     "syntax": "grIOerror = -12",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grIOerror) { /* Disk I/O error */ }"
+                        "code": "if (graphresult() == grIOerror) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3693,13 +3693,13 @@
                 {
                     "name": "grInvalidFont",
                     "slug": "grinvalidfont",
-                    "description": "Error code -13: The .CHR font file found is not a valid BGI font.",
+                    "description": "grInvalidFont means the selected font data is not valid or cannot be used.",
                     "syntax": "grInvalidFont = -13",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grInvalidFont) { /* Corrupt or wrong CHR file */ }"
+                        "code": "if (graphresult() == grInvalidFont) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3719,13 +3719,13 @@
                 {
                     "name": "grInvalidFontNum",
                     "slug": "grinvalidfontnum",
-                    "description": "Error code -14: An invalid font number was passed to settextstyle().",
+                    "description": "grInvalidFontNum means the requested font number is not available.",
                     "syntax": "grInvalidFontNum = -14",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "settextstyle(99, HORIZ_DIR, 2); /* Invalid font number */\nif (graphresult() == grInvalidFontNum) { /* Bad font # */ }"
+                        "code": "settextstyle(99, HORIZ_DIR, 2);\nif (graphresult() == grInvalidFontNum) {  }"
                     },
                     "requirements": [],
                     "notes": [
@@ -3745,13 +3745,13 @@
                 {
                     "name": "grInvalidVersion",
                     "slug": "grinvalidversion",
-                    "description": "Error code -18: The BGI driver or font file is an incompatible version.",
+                    "description": "grInvalidVersion means the graphics driver or font version is not compatible.",
                     "syntax": "grInvalidVersion = -18",
                     "returns": "N/A — constant",
                     "parameters": [],
                     "example": {
                         "language": "c",
-                        "code": "if (graphresult() == grInvalidVersion) { /* Wrong BGI/CHR version */ }"
+                        "code": "if (graphresult() == grInvalidVersion) {  }"
                     },
                     "requirements": [],
                     "notes": [

@@ -13,13 +13,63 @@
       font-style: normal;
       font-display: swap;
     }
+
+    .compiler-site-footer {
+      border-top: 1px solid rgba(120, 142, 166, 0.22);
+      padding: 14px 18px 18px;
+      background: rgba(9, 15, 24, 0.82);
+      color: #d5deea;
+    }
+
+    .compiler-site-footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .compiler-site-footer-copy {
+      font-size: 0.9rem;
+      color: #c0cad7;
+    }
+
+    .compiler-site-footer-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .compiler-site-footer-links a {
+      color: #f1f5fb;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .compiler-site-footer-links a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 700px) {
+      .compiler-site-footer {
+        padding: 14px;
+      }
+
+      .compiler-site-footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
     content="Free graphics.h online compiler for Turbo C++ with DOS emulation. Instantly run and test graphics.h code in your browser." />
-  <link rel="canonical" href="https://graphics-h-compiler.vercel.app/compiler.html" />
-  <link rel="alternate" hreflang="en" href="https://graphics-h-compiler.vercel.app/compiler.html" />
-  <link rel="alternate" hreflang="x-default" href="https://graphics-h-compiler.vercel.app/compiler.html" />
+  <link rel="canonical" href="https://graphics-h-compiler.vercel.app/compiler" />
+  <link rel="alternate" hreflang="en" href="https://graphics-h-compiler.vercel.app/compiler" />
+  <link rel="alternate" hreflang="x-default" href="https://graphics-h-compiler.vercel.app/compiler" />
 
   <!-- Favicon -->
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
@@ -36,14 +86,14 @@
   <meta property="og:description"
     content="Run graphics.h code online with Turbo C++ and DOS emulation. No installation, free and browser-based." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://graphics-h-compiler.vercel.app/compiler.html" />
+  <meta property="og:url" content="https://graphics-h-compiler.vercel.app/compiler" />
 
   <!-- Twitter Card Meta Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Graphics.h Online Compiler | Turbo C++ DOS Emulation" />
   <meta name="twitter:description"
     content="Free Turbo C++ graphics.h online compiler with DOS emulation. Instantly run graphics.h code in your browser." />
-  <meta name="twitter:url" content="https://graphics-h-compiler.vercel.app/compiler.html" />
+  <meta name="twitter:url" content="https://graphics-h-compiler.vercel.app/compiler" />
 
   <!-- Structured Data: SoftwareApplication Schema -->
   <script type="application/ld+json">
@@ -51,7 +101,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Graphics.h Online Compiler",
-        "url": "https://graphics-h-compiler.vercel.app/compiler.html",
+        "url": "https://graphics-h-compiler.vercel.app/compiler",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web",
         "offers": {
@@ -742,7 +792,7 @@
             </div>
 
             <!-- Internal detail link for SEO -->
-            <a class="docs-fn-detail-link" href="https://graphics-h-compiler.vercel.app/docs/{{ fn.slug }}">
+            <a class="docs-fn-detail-link" href="{{ fn.detail_url }}" target="_blank" rel="noopener">
               View full {{ fn.name }}() documentation
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </a>
@@ -755,6 +805,19 @@
       </div><!-- .docs-ref-layout -->
     </div><!-- .docs-reference-inner -->
   </section>
+
+  <footer class="compiler-site-footer">
+    <div class="compiler-site-footer-inner">
+      <div class="compiler-site-footer-copy">Graphics.h Online Compiler and Documentation</div>
+      <nav class="compiler-site-footer-links" aria-label="Compiler footer">
+        <a href="/docs">Docs</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+      </nav>
+    </div>
+  </footer>
 
   <!-- Docs reference controller + C syntax highlighter (inline, <2KB) -->
   <script>
