@@ -1,282 +1,235 @@
 <div align="center">
 
-# Graphics.h Compiler
+<br>
 
-**A modern web-based compiler for running graphics.h programs in the browser and VS Code, with no installation or configuration needed.**
+# ✨ Graphics.h Compiler
 
-[![Online Compiler](https://img.shields.io/badge/🌐_Try_Online-0066FF?style=for-the-badge)](https://graphics-h-compiler.vercel.app/)
-[![VS Code Extension](https://img.shields.io/badge/📦_VS_Code_Extension-22C55E?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
-[![GitHub](https://img.shields.io/badge/⭐_GitHub-181717?style=for-the-badge&logo=github)](https://github.com/AlbatrossC/graphics-h-compiler)
+### Write and run `graphics.h` programs — instantly, anywhere.
+
+**No installation. No DOSBox. No Turbo C setup.**
+**Just open your browser or VS Code and start coding.**
+
+<br>
+
+<a href="https://graphics-h-compiler.vercel.app/compiler">
+<img src="https://img.shields.io/badge/🚀_Open_Online_Compiler-22C55E?style=for-the-badge&labelColor=1a1a2e" alt="Open Online Compiler">
+</a>
+&nbsp;&nbsp;
+<a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler">
+<img src="https://img.shields.io/badge/Install_VS_Code_Extension-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white" alt="Install VS Code Extension">
+</a>
+&nbsp;&nbsp;
+<a href="https://github.com/AlbatrossC/graphics-h-compiler">
+<img src="https://img.shields.io/badge/⭐_Star_on_GitHub-FFD700?style=for-the-badge&logo=github&logoColor=black&labelColor=1a1a2e" alt="Star on GitHub">
+</a>
+
+<br><br>
 
 </div>
 
 ---
 
-## 📸 Screenshots
+<br>
 
-### Browser Interface
-![Browser Interface](online-demo.png)
+## 🌐 Online Compiler
 
-### VS Code Extension
-![VS Code Extension](vscode-demo.png)
+Compile and run **Turbo C++ 3.0 graphics programs** directly in your browser. A real `TCC.EXE` runs inside a DOSBox emulator powered by WebAssembly — all client-side, no server compilation.
 
----
+<br>
 
-## 🎯 Overview
+<p align="center">
+<img src="images/online-demo-1.png" alt="Online compiler — writing and running graphics.h code in the browser" width="90%">
+</p>
 
-Graphics.h Compiler is a modern Turbo C wrapper that enables you to compile and run `graphics.h` programs directly in your browser or VS Code. It eliminates the complexity of traditional setup methods and provides a ready-to-use graphics programming environment for learning and experimentation.
+<h4 align="center">💻 Write Code → Click Run → See Graphics Output</h4>
+<p align="center"><i>Full CodeMirror 6 editor with C++ syntax highlighting, autocomplete, and instant Turbo C++ compilation.</i></p>
 
-**Key Benefits:**
-- ✅ No Turbo C installation required
-- ✅ No DOSBox configuration needed
-- ✅ Cross-platform support (Windows, Linux)
-- ✅ Works offline after initial load
-- ✅ SPPU Computer Graphics syllabus compatible
+<br>
 
----
+<p align="center">
+<img src="images/online-demo-2.png" alt="Online compiler — cloud file storage with Google Sign-In" width="90%">
+</p>
 
-## 🧩 Three Main Components
+<h4 align="center">☁️ Save Your Files in the Cloud</h4>
+<p align="center"><i>Sign in with Google to save your projects. Create folders, manage multiple files, and access your code from any device.</i></p>
 
-This repository contains **three products** that work together:
-
-### 1. 🌐 Online Compiler (Web App)
-
-The main product — a browser-based Turbo C++ 3.0 compiler with a CodeMirror 6 editor, DOS emulation via JS-DOS, multi-theme support, and cloud file storage. Built on Flask (Python) and deployed on Vercel.
-
-📖 Technical deep-dive: [online-compiler.md](online-compiler.md)
-
-### 2. ⚙️ Cloudflare Workers (Backend Services)
-
-Two Cloudflare Workers power the backend:
-
-| Worker | Purpose |
-|--------|---------|
-| **`graphics-oc-files`** | User authentication (Google Sign-In), session management (JWT), and file CRUD — backed by Cloudflare D1 (SQLite) |
-| **`r2-public-assets`** | Public asset serving from R2 — demo `.cpp` files, `tc.zip` compiler archive, and promotional videos |
-
-📖 Full reference: [worker.md](../workers/worker.md)
-
-### 3. 📦 VS Code Extension
-
-A dedicated VS Code extension that lets users compile and run `graphics.h` programs directly inside their editor, with the same JS-DOS + Turbo C++ engine.
-
-📖 Extension docs: [vscode-compiler.md](vscode-compiler.md)
-
----
-
-## ✨ Features
-
-**Browser-Based Compilation**  
-Run graphics programs directly in your web browser with zero installation.
-
-**VS Code Integration**  
-Develop with full IDE support through our dedicated extension.
-
-**Zero Configuration**  
-No complex setup or legacy dependencies required - just start coding.
-
-**Client-Side Execution**  
-All compilation happens locally in your browser for privacy and speed.
-
-**Offline Support**  
-Continue working without internet connectivity after the initial load.
-
-**Modern Workflow**  
-Use contemporary development tools with legacy graphics.h code seamlessly.
-
----
-
-## 💡 Why This Project Exists
-
-The `graphics.h` library remains a core component of the **SPPU Computer Graphics syllabus (2024 revised)** and is widely taught in introductory programming courses. However, its reliance on legacy tooling creates significant barriers for students.
+<br>
 
 <div align="center">
 
-| ❌ Problem | ✅ Solution |
-|:-----------|:------------|
-| Complex Turbo C installation | Browser-based, instant access |
-| DOSBox configuration issues | Zero configuration required |
-| OS compatibility problems | Cross-platform support |
-| Time wasted on setup | Focus on learning concepts |
+| | Feature | |
+|:---:|:---|:---|
+| 🖥️ | **Real Turbo C++ 3.0 compiler** — `TCC.EXE` running in DOSBox WebAssembly | Works exactly like the original |
+| 🎨 | **Full graphics.h support** — `initgraph`, `circle`, `line`, `rectangle`, `setcolor` and all 99 functions | Includes BGI drivers |
+| ✏️ | **Smart autocomplete** — function signatures, parameter descriptions, and hover tooltips | VS Code–like experience |
+| ☁️ | **Cloud save** — sign in with Google to store files and access from any device | Unlimited projects |
+| 📴 | **Works offline** — runtime cached in browser after first use | No internet needed to compile |
+| 🎮 | **Demo programs** — bouncing ball, circle patterns, shooter game, and more | One-click to load |
 
 </div>
 
-This project removes these obstacles, allowing students and educators to focus on graphics programming fundamentals rather than technical configuration.
+<br>
+
+<div align="center">
+
+👉 **[https://graphics-h-compiler.vercel.app/compiler](https://graphics-h-compiler.vercel.app/compiler)**
+
+</div>
+
+<br>
 
 ---
+
+<br>
+
+## <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" width="28" align="top"> &nbsp;VS Code Extension
+
+Compile and run `graphics.h` programs **without leaving your editor**. Two modes — **Turbo C++** (DOSBox emulation inside a webview) and **WinBGI** (native Windows `.exe` via MinGW).
+
+<br>
+
+<p align="center">
+<img src="images/vscode_turboc_demo.png" alt="VS Code — Turbo C++ mode with DOSBox graphics output" width="90%">
+</p>
+
+<h4 align="center">🖥️ Turbo C++ 3.0 Mode — DOSBox Emulation</h4>
+<p align="center"><i>The same Turbo C++ 3.0 compiler from the online version, now inside a VS Code webview panel. Full EGAVGA.BGI graphics driver support with authentic DOS output.</i></p>
+
+<br>
+
+<p align="center">
+<img src="images/vscode_windows_demo.png" alt="VS Code — WinBGI native Windows output" width="90%">
+</p>
+
+<h4 align="center">⚡ Windows Native Mode — Real .exe Output</h4>
+<p align="center"><i>MinGW-w64 (GCC 11.5.0) produces a standalone Win32 executable with a native graphics window. The toolchain is auto-downloaded on first use — zero manual setup.</i></p>
+
+<br>
+
+<div align="center">
+
+| | Feature | |
+|:---:|:---|:---|
+| 🔀 | **Two compilation modes** — Turbo C++ (DOSBox) for syllabus work, WinBGI (native) for modern development | Choose per project |
+| ⚙️ | **Auto-installs toolchain** — MinGW-w64 downloaded and configured on first use (Windows) | No manual setup |
+| ⌨️ | **Keyboard shortcut** — `Ctrl+Alt+N` to compile and run instantly | One keypress |
+| 🔴 | **GCC error diagnostics** — red squiggles in the editor, entries in the Problems panel | Click to jump to error |
+| 🌍 | **Cross-platform** — Windows, Linux (via Wine), and macOS (Turbo C mode) | Works everywhere |
+| ▶️ | **Status bar button** — one click to Run or Stop your program | Always visible |
+
+</div>
+
+<br>
+
+**Install the extension:**
+
+<div align="center">
+
+| Method | How |
+|:---|:---|
+| **From VS Code** | Open Extensions (`Ctrl+Shift+X`) → Search **"graphics.h compiler"** → Click **Install** |
+| **From terminal** | `code --install-extension AlbatrossC.graphics-h-compiler` |
+| **From Marketplace** | **[marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)** |
+
+</div>
+
+<br>
+
+---
+
+<br>
+
+## 🎯 Why This Project Exists
+
+`graphics.h` is **an old, legacy library from the 1980s** — originally part of Borland's Turbo C++ for DOS. Despite its age, it remains a **mandatory part of the syllabus at many universities** across India and beyond (SPPU, Mumbai University, GTU, and others). These syllabi require students to learn `graphics.h` and will continue to do so **until at least 2030**.
+
+The problem? Installing Turbo C++ on a modern PC is a nightmare — downloading shady installers from random websites, fighting with DOSBox configuration, dealing with Windows-only limitations, and wasting hours on setup instead of actually learning.
+
+**My aim is simple: make `graphics.h` accessible.** If students are required to learn it, then running it should be as easy as opening a browser tab. That's why I built this — so that anyone, on any device, can write and compile `graphics.h` programs in seconds.
+
+<br>
+
+<div align="center">
+
+| | ❌ The Old Way | ✅ With This Project |
+|:---:|:---|:---|
+| 💾 | Download Turbo C++ from a sketchy site | Open your browser — done |
+| 🔧 | Configure DOSBox paths manually | Zero configuration needed |
+| 🪟 | Windows-only, no macOS or Linux | Cross-platform — browser + VS Code |
+| ⏳ | Hours wasted on setup before writing a single line | Start coding in under 5 seconds |
+| 📝 | Outdated editors with no features | Modern editor with autocomplete and tooltips |
+
+</div>
+
+<br>
+
+---
+
+<br>
 
 ## 🚀 Getting Started
 
-### Option 1: Online Compiler (Recommended)
+### Option 1: Online Compiler
 
-The fastest way to get started. Simply visit the online compiler and begin coding immediately:
+The fastest way. No installation required — just visit the website:
 
-👉 **[https://graphics-h-compiler.vercel.app/](https://graphics-h-compiler.vercel.app/)**
+<div align="center">
 
----
+**Method A — Use it directly:**
 
-### Option 2: Run Locally (For Developers)
+👉 **[https://graphics-h-compiler.vercel.app/compiler](https://graphics-h-compiler.vercel.app/compiler)**
 
-The web app is powered by **Flask** (Python). Follow these steps to run the full application on your machine:
+</div>
 
-#### Prerequisites
+<br>
 
-- **Python 3.8+** — [Download](https://www.python.org/downloads/)
-- **Node.js ≥ 16.x** and **npm ≥ 8.x** — [Download](https://nodejs.org/) (only needed if you want to rebuild the CodeMirror editor bundle)
-- **Git** — [Download](https://git-scm.com/)
-
-#### Steps
+**Method B — Run it locally (for developers):**
 
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone https://github.com/AlbatrossC/graphics-h-compiler.git
 cd graphics-h-compiler
 
-# 2. Install Python dependencies
+# Install dependencies
 pip install -r requirements.txt
+npm install
 
-# 3. Create a .env file (see Environment Variables below)
-#    At minimum, you can start with an empty .env file for basic usage
-copy NUL .env          # Windows
-# touch .env           # macOS/Linux
+# Build the assets
+python build.py
 
-# 4. Start the Flask development server
+# Start the server
 python app.py
 ```
 
-The server starts on **`http://localhost:5000`**. Open your browser and navigate to:
+Open **http://localhost:5000/compiler** in your browser.
 
-| Page | URL |
-|------|-----|
-| Landing page | `http://localhost:5000/` |
-| Compiler | `http://localhost:5000/compiler` or `http://localhost:5000/compiler.html` |
-| Documentation | `http://localhost:5000/docs` |
-| Embed widget | `http://localhost:5000/embed` |
+<br>
 
-> **Note:** `python app.py` starts Flask on `0.0.0.0:5000` (accessible from all network interfaces). For local-only access, you can modify the `app.run()` call in `app.py`.
+### Option 2: VS Code Extension
 
-#### Environment Variables
+Install the extension and compile directly inside your editor.
 
-Create a `.env` file in the project root. The app will run without these (with reduced functionality), but full features require them:
+**Method A — From VS Code:**
+1. Open VS Code → Press `Ctrl+Shift+X`
+2. Search **"graphics.h compiler"**
+3. Click **Install** on the extension by **AlbatrossC**
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SUPABASE_URL` | For auth | Your Supabase project URL |
-| `SUPABASE_ANON_KEY` | For auth | Supabase public (anon) API key |
-| `STORAGE_WORKER_URL` | For cloud save | URL to the Cloudflare Worker that handles file storage |
-| `DISCORD_WEBHOOK_URL` | For contact form | Discord webhook URL for receiving contact form messages |
-| `MAINTENANCE_MODE` | Optional | Set to `true` to enable maintenance mode (redirects all pages to maintenance page) |
-| `MAINTENANCE_DATE` | Optional | Text shown on maintenance page as the "Back online" date/time |
-
-Without these variables:
-- **No `.env` at all** — The compiler and editor work fully. Google Sign-In, cloud file save, and the contact form will be disabled.
-- **Only `SUPABASE_URL` + `SUPABASE_ANON_KEY`** — Google Sign-In works, but cloud file storage requires `STORAGE_WORKER_URL` as well.
-
----
-
-### Option 3: VS Code Extension
-
-Install the extension directly from the Visual Studio Code Marketplace:
-
-👉 **[Install Extension](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)**
-
-#### Installation Methods:
-
-**Via VS Code:**
-1. Open VS Code
-2. Press `Ctrl+Shift+X` to open Extensions panel
-3. Search for **"graphics.h compiler"**
-4. Click **Install** on the extension by **AlbatrossC**
-
-**Via Command Line:**
+**Method B — From the terminal:**
 ```bash
 code --install-extension AlbatrossC.graphics-h-compiler
 ```
 
-📖 For detailed configuration and usage, refer to [vscode-compiler.md](vscode-compiler.md)
+**Method C — From the Marketplace:**
+
+👉 **[marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)**
+
+<br>
 
 ---
 
-## 📁 Project Structure
+<br>
 
-```
-graphics.h-online-compiler/
-├── app.py                        ← Flask entry point (routes, APIs, proxy)
-├── requirements.txt              ← Python dependencies (flask, python-dotenv, requests)
-├── .env                          ← Environment variables (not committed)
-├── vercel.json                   ← Vercel deployment config
-├── package.json                  ← Node.js dependencies (CodeMirror, esbuild)
-├── esbuild.mjs                   ← Bundles CodeMirror into a single JS file
-│
-├── templates/                    ← Jinja2 HTML templates served by Flask
-│   ├── index.html                ← Landing page
-│   ├── compiler.html             ← Main compiler page
-│   ├── embed.html                ← Embeddable compiler widget
-│   ├── embed-docs.html           ← Embeddable docs widget
-│   ├── docs.html                 ← Documentation hub page
-│   ├── base.html                 ← Base template for doc pages
-│   ├── maintenance.html          ← Maintenance mode page
-│   └── docs/                     ← Individual doc page templates
-│
-├── static/                       ← Static assets served at /static/
-│   ├── js/
-│   │   ├── compiler/             ← Source JS modules
-│   │   │   ├── core.js           ← Logger, constants, metrics
-│   │   │   ├── editor.js         ← CodeMirror 6 setup & extensions
-│   │   │   ├── runtime.js        ← iframe bridge, run/stop orchestration
-│   │   │   ├── storage.js        ← Auth, cloud storage, IndexedDB cache
-│   │   │   ├── theme-engine.js   ← Theme definitions & switching
-│   │   │   ├── settings.js       ← User settings panel
-│   │   │   └── cm-entry.js       ← esbuild entry point for CodeMirror
-│   │   └── codemirror.bundle.v1.js  ← Bundled CodeMirror (generated)
-│   ├── dos-runner.html           ← Sandboxed iframe for JS-DOS / DOSBox
-│   ├── css/                      ← Stylesheets
-│   ├── favicon.ico
-│   └── ...
-│
-├── compiler-assets/              ← Assets used by the compiler
-│   ├── libs/                     ← JS-DOS runtime files (js-dos.js, wdosbox.js, etc.)
-│   ├── Demo_files/               ← Sample .cpp demo programs
-│   ├── graphics/                 ← graphics.h, winbgim.h, libbgi.a
-│   ├── Installers/               ← Linux install script
-│   └── zip-files/                ← tc.zip (Turbo C environment)
-│
-├── TURBOC3/                      ← Turbo C++ 3.0 environment (BIN/, INCLUDE/, LIB/)
-│
-├── VScodeExtension/              ← VS Code extension source (TypeScript)
-│
-├── workers/                      ← Cloudflare Workers
-│   ├── graphics-oc-users-files/  ← File storage worker (R2 + JWT auth)
-│   ├── graphics-compiler-users-worker/  ← User management worker
-│   └── r2-public-assets/         ← Public asset serving
-│
-├── docs/                         ← Developer documentation (this folder)
-│   ├── readme.md                 ← This file
-│   ├── online-compiler.md        ← Online compiler technical docs
-│   ├── vscode-compiler.md        ← VS Code extension technical docs
-│   └── editor.md                 ← CodeMirror 6 editor architecture
-│
-└── data/                         ← Data files
-```
-
----
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| **[readme.md](readme.md)** | This file — project overview, setup, and contributor guide |
-| **[online-compiler.md](online-compiler.md)** | Technical deep-dive into the browser-based compiler architecture |
-| **[worker.md](../workers/worker.md)** | Cloudflare Workers reference — `graphics-oc-files` (auth + file storage) and `r2-public-assets` (public R2 assets) |
-| **[vscode-compiler.md](vscode-compiler.md)** | VS Code extension internals, toolchain, and build process |
-| **[editor.md](editor.md)** | CodeMirror 6 editor setup, bundling, and theme system |
-| **[user-files.md](user-files.md)** | User file storage integration — worker API, IndexedDB cache, autosave flow |
-
----
-
-## 💻 Usage Example
-
-The compiler provides an intuitive interface for writing and running graphics.h programs. Simply write your code and click compile to see results instantly.
+## 💻 Quick Example
 
 ```c
 #include <graphics.h>
@@ -285,135 +238,113 @@ The compiler provides an intuitive interface for writing and running graphics.h 
 int main() {
     int gd = DETECT, gm;
     initgraph(&gd, &gm, "");
-    
-    // Draw a circle
-    circle(250, 200, 50);
-    
-    // Draw a rectangle
-    rectangle(150, 100, 350, 300);
-    
-    // Draw a line
-    line(100, 50, 400, 350);
-    
+
+    // Draw shapes
+    setcolor(YELLOW);
+    circle(320, 240, 100);
+
+    setcolor(LIGHTCYAN);
+    rectangle(200, 120, 440, 360);
+
+    setcolor(LIGHTGREEN);
+    line(100, 50, 540, 430);
+
+    outtextxy(250, 420, "Graphics.h!");
+
     getch();
     closegraph();
     return 0;
 }
 ```
 
----
+<p align="center">Paste this into the <a href="https://graphics-h-compiler.vercel.app/compiler"><b>online compiler</b></a> and click <b>Run</b> — you'll see the output instantly.</p>
 
-## 🔧 Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Backend** | Flask (Python) on Vercel Serverless |
-| **Templating** | Jinja2 |
-| **Code Editor** | CodeMirror 6 (bundled via esbuild) |
-| **DOS Emulator** | JS-DOS 6.22 + WebAssembly DOSBox |
-| **Compiler** | Turbo C++ 3.0 (`TCC.EXE`) inside emulated DOS |
-| **File Hosting** | Vercel Blob Storage (tc.zip) |
-| **Cloud Files** | Cloudflare Workers + R2 |
-| **Auth** | Supabase (Google OAuth) |
-| **Caching** | IndexedDB (tc.zip) · LocalStorage (code, demos) |
-| **Deployment** | Vercel (web app) · Cloudflare (workers) |
+<br>
 
 ---
 
-## 🛠️ Developer Guide
-
-### Rebuilding the CodeMirror Bundle
-
-The editor uses a pre-built CodeMirror bundle (`static/js/codemirror.bundle.v1.js`). If you modify any CodeMirror-related code (extensions, keybindings, etc.), rebuild it:
-
-```bash
-# Install Node.js dependencies (first time only)
-npm install
-
-# Run the esbuild bundler
-node esbuild.mjs
-```
-
-This reads `static/js/compiler/cm-entry.js` and outputs the minified bundle to `static/js/codemirror.bundle.v1.js`.
-
-### Flask Routes Overview
-
-All routes are defined in `app.py`. Key routes:
-
-| Route | Method | Handler |
-|-------|--------|---------|
-| `/` , `/index.html` | GET | Landing page |
-| `/compiler` , `/compiler.html` | GET | Compiler page |
-| `/docs` | GET | Documentation hub |
-| `/docs/<slug>` | GET | Individual doc page |
-| `/embed` , `/embed.html` | GET | Embeddable compiler |
-| `/api/auth/config` | GET | Returns Supabase credentials to frontend |
-| `/files/<path>` | GET/POST/DELETE | Proxies requests to Cloudflare storage worker |
-| `/api/contact` | POST | Forwards contact form submissions to Discord |
-| `/libs/<path>` | GET | Serves JS-DOS library files from `compiler-assets/libs/` |
-
-### Cloudflare Workers
-
-The project uses three Cloudflare Workers (in `workers/`):
-
-| Worker | Purpose |
-|--------|---------|
-| `graphics-oc-users-files` | File save/load/delete via R2 — JWT tokens are verified locally using HMAC-SHA256 |
-| `graphics-compiler-users-worker` | User account management |
-| `r2-public-assets` | Serves public assets from R2 (e.g., tc.zip) |
-
-To develop workers locally:
-
-```bash
-cd workers/graphics-oc-users-files
-npm install
-npx wrangler dev
-```
-
-Set secrets with `npx wrangler secret put <KEY>`.
-
-### Deployment
-
-**Web app (Vercel):**
-- Push to `main` → Vercel auto-deploys via `vercel.json`
-- Flask is deployed as a serverless function via `@vercel/python`
-- Static files are served directly via `@vercel/static`
-
-**Workers (Cloudflare):**
-```bash
-cd workers/graphics-oc-users-files
-npx wrangler deploy
-```
-
----
+<br>
 
 ## 👥 Who Is This For?
 
-**Students**  
-SPPU Computer Graphics students who need to fulfill syllabus requirements without hassle.
+<div align="center">
 
-**Beginners**  
-Anyone learning graphics.h who wants to avoid complex configuration and focus on coding.
+| | Audience | Description |
+|:---:|:---|:---|
+| 🎓 | **Students** | SPPU Computer Graphics, introductory C/C++ courses, anyone learning `graphics.h` |
+| 👨‍🏫 | **Educators** | Share a link to the compiler — students start coding immediately, no setup help needed |
+| 💻 | **Hobbyists** | Nostalgia-friendly Turbo C++ environment for retro DOS graphics programming |
 
-**Educators**  
-Instructors who want to provide students with modern, accessible development tools.
+</div>
+
+<br>
 
 ---
 
-## 🤝 Support
+<br>
 
-Need help or want to contribute?
+## 🤝 Support & Community
 
-- 🐛 **[Report a Bug](https://github.com/AlbatrossC/graphics-h-compiler/issues)**
-- 💬 **[Ask a Question](https://github.com/AlbatrossC/graphics-h-compiler/discussions)**
-- ⭐ **[Star this Repository](https://github.com/AlbatrossC/graphics-h-compiler)**
+<div align="center">
+
+<a href="https://github.com/AlbatrossC/graphics-h-compiler/issues">
+<img src="https://img.shields.io/badge/🐛_Report_a_Bug-FF6B6B?style=for-the-badge&labelColor=1a1a2e" alt="Report a Bug">
+</a>
+&nbsp;&nbsp;
+<a href="https://github.com/AlbatrossC/graphics-h-compiler/discussions">
+<img src="https://img.shields.io/badge/💬_Discussions-A78BFA?style=for-the-badge&labelColor=1a1a2e" alt="Discussions">
+</a>
+&nbsp;&nbsp;
+<a href="https://github.com/AlbatrossC/graphics-h-compiler">
+<img src="https://img.shields.io/badge/⭐_Star_this_Repo-FFD700?style=for-the-badge&logo=github&logoColor=black&labelColor=1a1a2e" alt="Star this Repo">
+</a>
+
+</div>
+
+<br>
+
+---
+
+<br>
+
+## 🛠️ For Developers
+
+This project is **open source** and welcomes contributions. To understand the codebase, set up locally, or contribute — check out the developer documentation:
+
+<div align="center">
+
+| | Documentation | What It Covers |
+|:---:|:---|:---|
+| 🌐 | **[Online Compiler Docs →](online-compiler/readme.md)** | Architecture, CodeMirror 6 editor, compilation workflow (JS-DOS + WASM + DOSBox), cloud storage (Cloudflare Workers + D1), build pipeline, Vercel deployment, and local dev setup |
+| <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" width="16"> | **[VS Code Extension Docs →](vscode-extension/vscode-compiler.md)** | Extension architecture, Turbo C & WinBGI modes, MinGW-w64 toolchain, commands & shortcuts, build & publish process, and contributor setup |
+
+</div>
+
+<br>
+
+**Quick start for local development:**
+```bash
+git clone https://github.com/AlbatrossC/graphics-h-compiler.git
+cd graphics-h-compiler
+pip install -r requirements.txt
+npm install
+python build.py
+python app.py
+# → http://localhost:5000
+```
+
+<br>
 
 ---
 
 <div align="center">
 
-### Built for students and educators
+<br>
 
-**Graphics.h Compiler** - Making graphics.h accessible for everyone
+**Graphics.h Compiler** — Making `graphics.h` accessible for everyone.
+
+*An open-source project by [AlbatrossC](https://github.com/AlbatrossC)*
+
+<br>
 
 </div>
