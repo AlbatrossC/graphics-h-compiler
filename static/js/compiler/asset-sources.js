@@ -65,8 +65,23 @@ function getCompilerAssetCandidateUrls(category, resourceId, options = {}) {
     if (!asset) return [];
 
     const preferLocal = options.preferLocal === true || !navigator.onLine;
-    const remoteUrls = Array.isArray(asset.urls) ? asset.urls : [];
+    let remoteUrls = Array.isArray(asset.urls) ? [...asset.urls] : [];
     const localUrl = asset.localPath || null;
+
+    if (window.PUBLIC_ASSETS_URL) {
+        remoteUrls = remoteUrls.map(url => {
+            if (url.includes('r2-public-assets.albatrossc.workers.dev')) {
+                return url.replace('https://r2-public-assets.albatrossc.workers.dev', window.PUBLIC_ASSETS_URL);
+            }
+            return url;
+        });
+    } else {
+        // If no PUBLIC_ASSETS_URL is provided, fallback strictly to local paths
+        // unless it's an external library like JS-DOS which must be fetched from js-dos.com
+        if (category !== 'libs') {
+            remoteUrls = [];
+        }
+    }
 
     return preferLocal
         ? [localUrl, ...remoteUrls].filter(Boolean)
@@ -176,9 +191,12 @@ function getCompilerDemoFiles() {
     const demoEntries = Object.entries(COMPILER_ASSET_SOURCES.demos || {});
     const demos = {};
     for (const [key, asset] of demoEntries) {
-        demos[key] = (!navigator.onLine || !asset.urls?.length)
-            ? asset.localPath
-            : asset.urls[0];
+        if (!navigator.onLine || !window.PUBLIC_ASSETS_URL) {
+            demos[key] = asset.localPath;
+        } else {
+            const original = asset.urls.find(u => u.includes('r2-public-assets.albatrossc.workers.dev'));
+            demos[key] = original ? original.replace('https://r2-public-assets.albatrossc.workers.dev', window.PUBLIC_ASSETS_URL) : asset.urls[0];
+        }
     }
     return demos;
 }

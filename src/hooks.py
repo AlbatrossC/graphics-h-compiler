@@ -14,6 +14,12 @@ def get_maintenance_date():
 
 
 def register_hooks(app):
+    @app.context_processor
+    def inject_globals():
+        return {
+            'PUBLIC_ASSETS_URL': os.getenv('PUBLIC_ASSETS_URL', '').rstrip('/')
+        }
+
     @app.before_request
     def check_maintenance():
         if is_maintenance_mode() \

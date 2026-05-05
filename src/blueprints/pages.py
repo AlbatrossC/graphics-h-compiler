@@ -188,7 +188,9 @@ def about():
 
 @pages_bp.route('/contact')
 def contact_page():
-    return render_template('contact.html')
+    import os
+    contact_enabled = bool(os.getenv('DISCORD_WEBHOOK_URL'))
+    return render_template('contact.html', contact_enabled=contact_enabled)
 
 
 @pages_bp.route('/privacy-policy')

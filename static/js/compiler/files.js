@@ -964,6 +964,16 @@ async function initAuth() {
                 Logger.warn(`[Auth] ${error.message}`);
                 setAuthStatus('Google sign-in is unavailable');
             });
+        } else {
+            const authSection = document.getElementById('auth-section');
+            if (authSection) {
+                authSection.innerHTML = `
+                    <div style="background: var(--bg-modifier-hover); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; text-align: center; margin-top: 10px;">
+                        <div style="color: var(--text-muted); font-size: 13px; line-height: 1.4;">Auth client is not configured. Files will be saved locally in your browser.</div>
+                    </div>
+                `;
+            }
+            setAuthStatus('');
         }
         const loggedIn = await checkSession();
         if (loggedIn) {

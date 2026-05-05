@@ -328,9 +328,22 @@
             text-decoration: underline;
         }
 
-        /* Right side — form */
+        /* Form styling */
         .contact-form-wrapper {
             position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            order: -1; /* Make it appear first on left/top */
+        }
+
+        body.light .contact-form-wrapper {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
         }
 
         .contact-form-label {
@@ -573,15 +586,6 @@
             </p>
 
             <div class="contact-channels">
-                <a href="mailto:pes.soham135@gmail.com" class="contact-channel">
-                    <div class="channel-icon">
-                        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    </div>
-                    <div class="channel-info">
-                        <h3>Email Me</h3>
-                        <p>pes.soham135@gmail.com</p>
-                    </div>
-                </a>
                 <a href="https://github.com/AlbatrossC/graphics-h-compiler/issues" target="_blank"
                     rel="noopener noreferrer" class="contact-channel">
                     <div class="channel-icon">
@@ -602,20 +606,6 @@
                         <p>Open source — fork it, improve it, submit a PR.</p>
                     </div>
                 </a>
-                <a href="/docs" class="contact-channel">
-                    <div class="channel-icon">
-                        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                    </div>
-                    <div class="channel-info">
-                        <h3>Documentation</h3>
-                        <p>Check the docs — your question might already be answered.</p>
-                    </div>
-                </a>
-            </div>
-
-            <div class="contact-email-display">
-                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                <a href="mailto:pes.soham135@gmail.com">pes.soham135@gmail.com</a>
             </div>
 
             <p class="contact-note">
@@ -627,6 +617,7 @@
         <div class="contact-form-wrapper">
             <span class="contact-form-label">Send a message</span>
 
+            {% if contact_enabled %}
             <form id="contact-form" autocomplete="off">
                 <div class="form-group">
                     <label for="contact-name">Name</label>
@@ -654,6 +645,12 @@
 
                 <div class="form-status" id="form-status"></div>
             </form>
+            {% else %}
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); padding: 1.5rem; border-radius: 8px; text-align: center; margin-top: 1rem;">
+                <p style="color: inherit; opacity: 0.6; font-size: 0.9rem; line-height: 1.6;">The contact form is currently not configured on this instance.</p>
+                <p style="color: inherit; opacity: 0.6; font-size: 0.9rem; line-height: 1.6; margin-top: 0.5rem;">Please use the GitHub links above to report issues or contribute.</p>
+            </div>
+            {% endif %}
         </div>
     </main>
 
@@ -709,7 +706,8 @@
         const statusEl = document.getElementById('form-status');
         const submitBtn = document.getElementById('submit-btn');
 
-        form.addEventListener('submit', async (e) => {
+        if (form) {
+            form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const name = document.getElementById('contact-name').value.trim();
@@ -757,6 +755,7 @@
                 `;
             }
         });
+        }
 
         function showStatus(msg, type) {
             statusEl.textContent = msg;

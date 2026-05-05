@@ -110,7 +110,9 @@
             },
             tcZip: {
                 urls: [
-                    'https://r2-public-assets.albatrossc.workers.dev/system/tc-v1.zip',
+                    {% if PUBLIC_ASSETS_URL %}
+                    '{{ PUBLIC_ASSETS_URL }}/system/tc-v1.zip',
+                    {% endif %}
                     'https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip'
                 ],
                 localPath: '/compiler-assets/zip-files/tc-v1.zip'

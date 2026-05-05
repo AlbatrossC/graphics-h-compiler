@@ -76,7 +76,6 @@
   <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon" />
 
   <!-- Preload Hints for Faster Loading -->
-  <link rel="preconnect" href="https://r2-public-assets.albatrossc.workers.dev" crossorigin />
 
   <meta name="google-adsense-account" content="ca-pub-6918638598461716">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -131,6 +130,7 @@
 
   <script src="/static/analytics.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>window.PUBLIC_ASSETS_URL = "{{ PUBLIC_ASSETS_URL }}";</script>
 </head>
 
 <body>
