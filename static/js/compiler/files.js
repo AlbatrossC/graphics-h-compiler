@@ -898,11 +898,12 @@ async function deleteFile(folder, filename) {
         if (!response.ok) throw new Error(payload?.error || 'Failed to delete file');
         CLOUD_STATE.files.delete(key);
         await clearLocalDraft(folder, filename);
+        renderFileExplorer();
         if (CLOUD_STATE.activeFileKey === key) {
             const nextFile = getFirstVisibleCloudFile();
             if (nextFile) await openFile(nextFile.folder_key, nextFile.filename, { skipSave: true });
             else if (editor) { editor.setValue(DEFAULT_SOURCE); DIRTY_FLAG.isDirty = false; updateSaveIndicator(); }
-        } else renderFileExplorer();
+        }
     } finally {
         hideProgress();
     }
