@@ -519,7 +519,7 @@
 .file-item .file-name {
     white-space: normal;
     overflow-wrap: anywhere;
-    word-break: break-word;
+    word-break: break-all;
     font-weight: 500;
     font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
     font-size: 0.82rem;
@@ -541,19 +541,29 @@
 
 /* File Actions - Always at Far Right */
 .file-actions {
-    display: flex;
-    opacity: 0;
-    pointer-events: none;
+    display: none;
+    position: absolute;
+    right: 6px;
     align-items: center;
     gap: 4px;
-    margin-left: auto;
     padding-left: 8px;
-    transition: opacity 0.15s ease;
+    background: var(--vscode-sidebar); /* solid background to cover text */
+    border-radius: 4px;
 }
 
 .file-item:hover .file-actions {
-    opacity: 1;
-    pointer-events: auto;
+    display: flex;
+}
+
+.file-item:hover .file-actions::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    background: linear-gradient(to right, transparent, var(--vscode-sidebar));
+    pointer-events: none;
 }
 
 .file-action-btn {
