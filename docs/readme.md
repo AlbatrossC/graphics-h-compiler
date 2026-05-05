@@ -37,21 +37,34 @@ Compile and run **Turbo C++ 3.0 graphics programs** directly in your browser. A 
 
 <br>
 
-<p align="center">
-<img src="images/online-demo-1.png" alt="Online compiler — writing and running graphics.h code in the browser" width="90%">
-</p>
-
-<h4 align="center">💻 Write Code → Click Run → See Graphics Output</h4>
-<p align="center"><i>Full CodeMirror 6 editor with C++ syntax highlighting, autocomplete, and instant Turbo C++ compilation.</i></p>
+<table align="center" width="95%">
+<tr>
+<td width="50%" align="center">
+<img src="./images/online-demo-1.png" alt="Online compiler — writing and running graphics.h code in the browser" width="100%">
+<br><br>
+<b>💻 Write Code → Click Run → See Graphics Output</b>
+<br>
+<sub>Full CodeMirror 6 editor with C++ syntax highlighting, autocomplete, and instant Turbo C++ compilation.</sub>
+</td>
+<td width="50%" align="center">
+<img src="./images/online-demo-2.png" alt="Online compiler — cloud file storage with Google Sign-In" width="100%">
+<br><br>
+<b>☁️ Save Your Files in the Cloud</b>
+<br>
+<sub>Sign in with Google to save your projects. Create folders, manage multiple files, and access your code from any device.</sub>
+</td>
+</tr>
+</table>
 
 <br>
 
-<p align="center">
-<img src="images/online-demo-2.png" alt="Online compiler — cloud file storage with Google Sign-In" width="90%">
-</p>
+<div align="center">
 
-<h4 align="center">☁️ Save Your Files in the Cloud</h4>
-<p align="center"><i>Sign in with Google to save your projects. Create folders, manage multiple files, and access your code from any device.</i></p>
+> 📦 **Standalone Single-File Compiler** — Check out [`compiler-assets/unified/graphic.h-compiler-unified.html`](../compiler-assets/unified/graphic.h-compiler-unified.html).
+> A **single ~8 MB HTML file** that runs the entire Turbo C++ compiler in your browser. **No servers. No backend. No installation.** Just double-click and start compiling.
+> See the [technical breakdown →](../compiler-assets/unified/graphic.h-compiler-unified.md)
+
+</div>
 
 <br>
 
@@ -88,21 +101,24 @@ Compile and run `graphics.h` programs **without leaving your editor**. Two modes
 
 <br>
 
-<p align="center">
-<img src="images/vscode_turboc_demo.png" alt="VS Code — Turbo C++ mode with DOSBox graphics output" width="90%">
-</p>
-
-<h4 align="center">🖥️ Turbo C++ 3.0 Mode — DOSBox Emulation</h4>
-<p align="center"><i>The same Turbo C++ 3.0 compiler from the online version, now inside a VS Code webview panel. Full EGAVGA.BGI graphics driver support with authentic DOS output.</i></p>
-
+<table align="center" width="95%">
+<tr>
+<td width="50%" align="center">
+<img src="./images/vscode_turboc_demo.png" alt="VS Code — Turbo C++ mode with DOSBox graphics output" width="100%">
+<br><br>
+<b>🖥️ Turbo C++ 3.0 Mode — DOSBox Emulation</b>
 <br>
-
-<p align="center">
-<img src="images/vscode_windows_demo.png" alt="VS Code — WinBGI native Windows output" width="90%">
-</p>
-
-<h4 align="center">⚡ Windows Native Mode — Real .exe Output</h4>
-<p align="center"><i>MinGW-w64 (GCC 11.5.0) produces a standalone Win32 executable with a native graphics window. The toolchain is auto-downloaded on first use — zero manual setup.</i></p>
+<sub>The same Turbo C++ 3.0 compiler from the online version, now inside a VS Code webview panel. Full EGAVGA.BGI graphics driver support with authentic DOS output.</sub>
+</td>
+<td width="50%" align="center">
+<img src="./images/vscode_windows_demo.png" alt="VS Code — WinBGI native Windows output" width="100%">
+<br><br>
+<b>⚡ Windows Native Mode — Real .exe Output</b>
+<br>
+<sub>MinGW-w64 (GCC 11.5.0) produces a standalone Win32 executable with a native graphics window. The toolchain is auto-downloaded on first use — zero manual setup.</sub>
+</td>
+</tr>
+</table>
 
 <br>
 
