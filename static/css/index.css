@@ -386,34 +386,38 @@
             align-items: center;
             gap: 0.8rem;
             padding: 0.8rem 1.4rem;
-            border: 1px solid rgba(255, 68, 68, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             margin-bottom: 2.5rem;
             font-size: 0.85rem;
-            background: linear-gradient(145deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.02));
+            color: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(255, 68, 68, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.16);
             transition: var(--transition);
         }
 
         .deprecation-alert:hover {
-            border-color: rgba(255, 68, 68, 0.5);
-            box-shadow: 0 6px 25px rgba(255, 68, 68, 0.12);
+            border-color: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.22);
         }
 
         body.light .deprecation-alert {
-            background: linear-gradient(145deg, rgba(255, 68, 68, 0.15), rgba(255, 68, 68, 0.05));
+            color: rgba(10, 10, 10, 0.88);
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
         }
 
         .deprecation-alert i {
-            color: #ff4444;
+            color: currentColor;
             width: 18px;
             height: 18px;
+            opacity: 0.75;
         }
 
         .deprecation-alert a {
-            color: #ff4444;
+            color: inherit;
             text-decoration: underline;
             font-weight: 600;
             text-underline-offset: 2px;
@@ -421,7 +425,7 @@
         }
         
         .deprecation-alert a:hover {
-            color: #ff6666;
+            opacity: 1;
         }
 
         .headline {
@@ -725,14 +729,24 @@
             padding-bottom: 58.19%;
         }
 
-        .video-wrapper video {
+        .video-wrapper video,
+        .video-wrapper .demo-embed {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
             background: #000;
+            border: 0;
+            display: block;
+        }
+
+        .video-wrapper video {
+            object-fit: cover;
+        }
+
+        .video-wrapper .demo-embed {
+            z-index: 1;
         }
 
         /* Video glow effect */

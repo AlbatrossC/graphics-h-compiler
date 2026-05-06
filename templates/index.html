@@ -59,7 +59,7 @@
             rel="stylesheet">
     </noscript>
 
-    <link rel="stylesheet" href="/static/css/index.css?v=3.4">
+    <link rel="stylesheet" href="/static/css/index.css?v=3.6">
 
     <!-- Lucide Icons (deferred) -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
@@ -172,7 +172,7 @@
             <div class="section-inner">
                 <div class="deprecation-alert animate-in delay-1">
                     <i data-lucide="alert-circle"></i>
-                    <span><strong>Project Archived:</strong> This project is no longer actively maintained. If you encounter issues, please <a href="/contact">contact the developer</a>.</span>
+                    <span><strong>Works on every browser.</strong></span>
                 </div>
 
                 <h1 class="headline animate-in delay-2">
@@ -218,10 +218,15 @@
                     <div class="video-col reveal">
                         <div class="video-container">
                             <div class="video-wrapper oc-ratio">
-                                <video id="online-video" autoplay loop muted playsinline preload="none" class="lazy-video">
-                                    <source data-src="{% if PUBLIC_ASSETS_URL %}{{ PUBLIC_ASSETS_URL }}/videos/oc-demo.mp4{% else %}/api/video/oc-demo.mp4{% endif %}"
-                                        type="video/mp4">
-                                </video>
+                                <iframe
+                                    src="https://www.youtube.com/embed/t3i6AK7IxIs"
+                                    title="graphics.h Online Compiler Demo"
+                                    class="demo-embed"
+                                    loading="lazy"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
                             </div>
                         </div>
                         <div class="video-glow green"></div>
@@ -299,11 +304,15 @@
                     <div class="video-col reveal reveal-delay-1">
                         <div class="video-container">
                             <div class="video-wrapper vscode-ratio">
-                                <video id="vscode-video" autoplay loop muted playsinline preload="none" class="lazy-video">
-                                    <source
-                                        data-src="{% if PUBLIC_ASSETS_URL %}{{ PUBLIC_ASSETS_URL }}/videos/vscode-demo-v2.mp4{% else %}/api/video/vscode-demo-v2.mp4{% endif %}"
-                                        type="video/mp4">
-                                </video>
+                                <iframe
+                                    src="https://www.youtube.com/embed/8CBJ-FWF9SU"
+                                    title="graphics.h VS Code Extension Demo"
+                                    class="demo-embed"
+                                    loading="lazy"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
                             </div>
                         </div>
                         <div class="video-glow blue"></div>
@@ -523,50 +532,8 @@
             document.querySelectorAll('.theme-icon-dark').forEach(icon => icon.style.display = 'none');
         }
 
-        function loadVideo(video) {
-            if (!video || video.dataset.loaded === 'true') return;
-            const source = video.querySelector('source[data-src]');
-            if (!source) return;
-
-            source.src = source.dataset.src;
-            video.load();
-            video.dataset.loaded = 'true';
-        }
-
-        function loadAndPlayVideo(video) {
-            loadVideo(video);
-            video.play().catch(() => { });
-        }
-
-        const lazyVideoObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    loadAndPlayVideo(entry.target);
-                    lazyVideoObserver.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.15,
-            rootMargin: '200px 0px'
-        });
-
-        document.querySelectorAll('.lazy-video').forEach(video => {
-            lazyVideoObserver.observe(video);
-        });
-
         window.addEventListener('load', () => {
             initIcons();
-        });
-
-        // Handle visibility change - resume playing visible videos
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
-                document.querySelectorAll('.lazy-video').forEach(video => {
-                    if (video.dataset.loaded === 'true') {
-                        video.play().catch(() => { });
-                    }
-                });
-            }
         });
 
         // Scroll-triggered reveal animations
