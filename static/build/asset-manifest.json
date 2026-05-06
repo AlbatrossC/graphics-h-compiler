@@ -1,15 +1,15 @@
 {
   "compiler": {
-    "css": "/static/build/compiler.4181079c5f8b.css",
-    "js": "/static/build/compiler.b87053b93a38.js",
+    "css": "/static/build/compiler.e4dcec7b0e81.css",
+    "js": "/static/build/compiler.158964f7cc41.js",
     "css_sources": [
       "static/css/compiler/base.css",
       "static/css/compiler/panels.css",
       "static/css/compiler/sidebar.css",
       "static/css/compiler/preferences.css",
+      "static/css/compiler/docs-reference.css",
       "static/css/compiler/responsive.css",
-      "static/css/compiler/toasts.css",
-      "static/css/compiler/docs-reference.css"
+      "static/css/compiler/toasts.css"
     ],
     "js_sources": [
       "static/js/compiler/asset-sources.js",

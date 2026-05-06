@@ -37,6 +37,7 @@
     max-width: 1380px;
     margin: 0 auto;
     padding: 0 2rem;
+    min-width: 0;
 }
 
 /* ── Section Header ───────────────────────────────────────── */
@@ -70,6 +71,11 @@
     grid-template-columns: 270px 1fr;
     gap: 1.5rem;
     align-items: start;
+    min-width: 0;
+}
+
+.docs-ref-layout > * {
+    min-width: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -80,6 +86,7 @@
     top: calc(var(--header-height) + 1rem);
     max-height: calc(100vh - var(--header-height) - 3rem);
     overflow-y: auto;
+    overflow-x: hidden;
     background: var(--vscode-editor);
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -238,6 +245,7 @@
    ══════════════════════════════════════════════════════════════ */
 .docs-ref-content {
     min-height: 500px;
+    min-width: 0;
 }
 
 /* Hide ALL cards by default — only .active is shown */
@@ -249,6 +257,8 @@
     padding: 1.75rem 2.25rem 1.75rem;
     animation: docsFadeIn 0.18s ease;
     box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    min-width: 0;
+    max-width: 100%;
 }
 
 .docs-fn-card.active {
@@ -282,6 +292,7 @@
     color: var(--primary);
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     font-weight: 600;
+    overflow-wrap: anywhere;
 }
 
 /* Card header */
@@ -300,6 +311,7 @@
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     color: var(--primary);
     letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
 }
 
 .docs-fn-returns {
@@ -312,6 +324,7 @@
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     white-space: nowrap;
     align-self: center;
+    max-width: 100%;
 }
 
 /* Description */
@@ -494,6 +507,7 @@
 .docs-fn-meta-group {
     flex: 1;
     min-width: 180px;
+    max-width: 100%;
 }
 
 .docs-fn-tags {
@@ -514,6 +528,8 @@
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     text-decoration: none;
     transition: all var(--transition-fast);
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 a.docs-fn-tag:hover,
@@ -539,6 +555,8 @@ a.docs-fn-tag-link:hover {
     border: 1px solid rgba(var(--color-rgb-primary), 0.15);
     border-radius: 6px;
     transition: all var(--transition-fast);
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .docs-fn-detail-link:hover {
@@ -567,11 +585,19 @@ a.docs-fn-tag-link:hover {
 
     .docs-ref-layout {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .docs-ref-sidebar {
         position: static;
-        max-height: 280px;
+        max-height: min(42vh, 320px);
+        width: 100%;
+    }
+
+    .docs-ref-sidebar,
+    .docs-ref-content,
+    .docs-fn-card {
+        min-width: 0;
     }
 
     .docs-fn-card {
@@ -580,6 +606,7 @@ a.docs-fn-tag-link:hover {
 
     .docs-fn-card-header {
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .docs-fn-meta {
@@ -595,6 +622,7 @@ a.docs-fn-tag-link:hover {
 @media (max-width: 500px) {
     .docs-reference {
         padding: 2rem 0 2.5rem;
+        overflow-x: clip;
     }
 
     .docs-reference-inner {
@@ -609,14 +637,75 @@ a.docs-fn-tag-link:hover {
         font-size: 1.05rem;
     }
 
+    .docs-fn-card {
+        padding: 1rem 0.9rem;
+    }
+
+    .docs-fn-breadcrumb {
+        flex-wrap: wrap;
+        row-gap: 0.25rem;
+    }
+
+    .docs-fn-returns {
+        white-space: normal;
+        width: 100%;
+    }
+
+    .docs-ref-fn-link {
+        padding-left: 0.85rem;
+        padding-right: 0.75rem;
+        font-size: 0.75rem;
+        overflow-wrap: anywhere;
+    }
+
+    .docs-fn-desc,
+    .docs-fn-param-desc,
+    .docs-fn-notes li {
+        font-size: 0.8rem;
+        line-height: 1.6;
+    }
+
+    .docs-fn-syntax,
     .docs-fn-example-code {
         font-size: 0.72rem;
         padding: 0.7rem;
     }
 
+    .docs-fn-syntax code {
+        font-size: 0.74rem;
+    }
+
+    .docs-fn-params {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .docs-fn-params th,
     .docs-fn-params td {
-        padding: 0.35rem 0.45rem;
-        font-size: 0.78rem;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.74rem;
+    }
+
+    .docs-fn-param-name,
+    .docs-fn-param-type {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .docs-fn-meta-group {
+        min-width: 0;
+    }
+
+    .docs-fn-tags {
+        gap: 0.3rem;
+    }
+
+    .docs-fn-breadcrumb-current,
+    .docs-fn-returns,
+    .docs-fn-tag,
+    .docs-fn-detail-link {
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 }

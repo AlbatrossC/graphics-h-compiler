@@ -657,18 +657,6 @@ async function initializeEditor() {
         editorWrapper.classList.add('active');
     }, 100);
 
-    // Auto-fullscreen editor on mobile when clicked/focused
-    const editorDom = cmView.contentDOM;
-    if (editorDom) {
-        const checkMobileFullscreen = () => {
-            if (window.innerWidth <= 768 && typeof toggleEditorFullscreen === 'function' && typeof isEditorFullscreen !== 'undefined' && !isEditorFullscreen) {
-                toggleEditorFullscreen(true);
-            }
-        };
-        editorDom.addEventListener('focus', checkMobileFullscreen);
-        editorDom.addEventListener('click', checkMobileFullscreen);
-    }
-
     document.dispatchEvent(new CustomEvent('editor-ready', {
         detail: { cmView }
     }));

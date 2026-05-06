@@ -6,6 +6,10 @@ var isTerminalFullscreen = false;
 
     const mobileTabEditor = document.getElementById('mobile-tab-editor');
     const mobileTabOutput = document.getElementById('mobile-tab-output');
+    const localEditorWrapper = document.getElementById('editor-wrapper');
+    const localTerminalWrapper = document.getElementById('terminal-wrapper');
+    const localKeyboardBlocker = document.getElementById('keyboard-blocker');
+    const sidebarContainer = document.querySelector('.sidebar-container');
 
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -38,6 +42,62 @@ var isTerminalFullscreen = false;
     function syncMobileSidebarState() {
         const isOpen = isMobileView() && sidebar && sidebar.classList.contains('open');
         document.body.classList.toggle('sidebar-open-mobile', isOpen);
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.toggle('active', isOpen);
+        }
+    }
+
+    function getCurrentMobileTab() {
+        return document.body.classList.contains('mobile-tab-output') ? 'output' : 'editor';
+    }
+
+    function setPanelDisplay(element, value) {
+        if (!element) return;
+        if (value) {
+            element.style.setProperty('display', value, 'important');
+        } else {
+            element.style.removeProperty('display');
+        }
+    }
+
+    function applyMobileTabLayout(tab) {
+        if (!localEditorWrapper || !localTerminalWrapper) return;
+
+        if (!isMobileView()) {
+            document.body.classList.remove('mobile-tab-output');
+            setPanelDisplay(localEditorWrapper, '');
+            setPanelDisplay(localTerminalWrapper, '');
+            if (sidebarContainer) {
+                setPanelDisplay(sidebarContainer, '');
+            }
+            return;
+        }
+
+        const sidebarOpen = Boolean(sidebar && sidebar.classList.contains('open'));
+
+        if (sidebarOpen) {
+            setPanelDisplay(localEditorWrapper, 'none');
+            setPanelDisplay(localTerminalWrapper, 'none');
+            if (sidebarContainer) {
+                setPanelDisplay(sidebarContainer, 'flex');
+            }
+            return;
+        }
+
+        if (sidebarContainer) {
+            setPanelDisplay(sidebarContainer, 'none');
+        }
+
+        if (tab === 'output') {
+            document.body.classList.add('mobile-tab-output');
+            setPanelDisplay(localEditorWrapper, 'none');
+            setPanelDisplay(localTerminalWrapper, 'flex');
+            return;
+        }
+
+        document.body.classList.remove('mobile-tab-output');
+        setPanelDisplay(localEditorWrapper, 'flex');
+        setPanelDisplay(localTerminalWrapper, 'none');
     }
 
     function releaseTerminalFocus() {
@@ -52,10 +112,10 @@ var isTerminalFullscreen = false;
             document.activeElement.blur();
         }
         terminalFocused = false;
-        terminalWrapper.classList.remove('terminal-active');
-        editorWrapper.classList.add('active');
+        localTerminalWrapper?.classList.remove('terminal-active');
+        localEditorWrapper?.classList.add('active');
         if (iframe) {
-            keyboardBlocker.classList.add('active');
+            localKeyboardBlocker?.classList.add('active');
         }
     }
 
@@ -64,18 +124,15 @@ var isTerminalFullscreen = false;
 
         if (isMobileView() && sidebar && sidebar.classList.contains('open')) {
             sidebar.classList.remove('open');
-            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
             syncMobileSidebarState();
         }
 
-        document.body.classList.remove('mobile-tab-output');
         mobileTabEditor.classList.remove('active');
         mobileTabOutput.classList.remove('active');
         mobileTabEditor.setAttribute('aria-selected', 'false');
         mobileTabOutput.setAttribute('aria-selected', 'false');
 
         if (tab === 'output') {
-            document.body.classList.add('mobile-tab-output');
             mobileTabOutput.classList.add('active');
             mobileTabOutput.setAttribute('aria-selected', 'true');
         } else {
@@ -83,6 +140,8 @@ var isTerminalFullscreen = false;
             mobileTabEditor.setAttribute('aria-selected', 'true');
             releaseTerminalFocus();
         }
+
+        applyMobileTabLayout(tab);
 
         requestAnimationFrame(() => {
             if (editor && editor.requestMeasure) editor.requestMeasure();
@@ -99,8 +158,8 @@ var isTerminalFullscreen = false;
 
         const svgIcon = document.querySelector('#fullscreen-editor-btn svg');
 
-        editorWrapper.classList.toggle('fullscreen', isEditorFullscreen);
-        terminalWrapper.classList.toggle('hidden', isEditorFullscreen);
+        localEditorWrapper?.classList.toggle('fullscreen', isEditorFullscreen);
+        localTerminalWrapper?.classList.toggle('hidden', isEditorFullscreen);
 
         if (svgIcon) {
             svgIcon.innerHTML = isEditorFullscreen
@@ -121,8 +180,8 @@ var isTerminalFullscreen = false;
         const svgIcon = document.querySelector('#fullscreen-terminal-btn svg');
         const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 
-        terminalWrapper.classList.toggle('fullscreen', isTerminalFullscreen);
-        editorWrapper.classList.toggle('hidden', isTerminalFullscreen);
+        localTerminalWrapper?.classList.toggle('fullscreen', isTerminalFullscreen);
+        localEditorWrapper?.classList.toggle('hidden', isTerminalFullscreen);
 
         if (svgIcon) {
             svgIcon.innerHTML = isTerminalFullscreen
@@ -159,9 +218,9 @@ var isTerminalFullscreen = false;
         if (iframe.contentWindow) {
             iframe.contentWindow.postMessage({ type: 'FOCUS' }, '*');
         }
-        terminalWrapper.classList.add('terminal-active');
-        editorWrapper.classList.remove('active');
-        keyboardBlocker.classList.remove('active');
+        localTerminalWrapper?.classList.add('terminal-active');
+        localEditorWrapper?.classList.remove('active');
+        localKeyboardBlocker?.classList.remove('active');
     }
 
     function focusEditor() {
@@ -172,10 +231,10 @@ var isTerminalFullscreen = false;
         if (editor) {
             editor.focus();
         }
-        terminalWrapper.classList.remove('terminal-active');
-        editorWrapper.classList.add('active');
+        localTerminalWrapper?.classList.remove('terminal-active');
+        localEditorWrapper?.classList.add('active');
         if (document.getElementById('dos-iframe')) {
-            keyboardBlocker.classList.add('active');
+            localKeyboardBlocker?.classList.add('active');
         }
     }
 
@@ -266,8 +325,10 @@ var isTerminalFullscreen = false;
             if (isEditorFullscreen) {
                 toggleEditorFullscreen(false);
             }
+            applyMobileTabLayout('editor');
         } else {
             syncMobileSidebarState();
+            applyMobileTabLayout(document.body.classList.contains('mobile-tab-output') ? 'output' : 'editor');
         }
 
         if (editor && editor.requestMeasure) {
@@ -288,18 +349,18 @@ var isTerminalFullscreen = false;
 
     document.getElementById('fullscreen-terminal-btn')?.addEventListener('click', toggleTerminalFullscreen);
 
-    keyboardBlocker.addEventListener('click', focusTerminal);
+    localKeyboardBlocker?.addEventListener('click', focusTerminal);
 
-    terminalWrapper.addEventListener('click', (event) => {
+    localTerminalWrapper?.addEventListener('click', (event) => {
         const iframe = document.getElementById('dos-iframe');
-        if (event.target === terminalWrapper || event.target === iframe) {
+        if (event.target === localTerminalWrapper || event.target === iframe) {
             if (!terminalFocused) {
                 focusTerminal();
             }
         }
     });
 
-    editorWrapper.addEventListener('click', focusEditor);
+    localEditorWrapper?.addEventListener('click', focusEditor);
 
     document.addEventListener('click', (event) => {
         if (!terminalFocused) return;
@@ -328,8 +389,8 @@ var isTerminalFullscreen = false;
         sidebarToggle.addEventListener('click', () => {
             if (isMobileView()) {
                 sidebar.classList.toggle('open');
-                if (sidebarOverlay) sidebarOverlay.classList.toggle('active');
                 syncMobileSidebarState();
+                applyMobileTabLayout(getCurrentMobileTab());
                 return;
             }
             toggleDesktopSidebar();
@@ -339,8 +400,8 @@ var isTerminalFullscreen = false;
     if (sidebarOverlay) {
         sidebarOverlay.addEventListener('click', () => {
             sidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('active');
             syncMobileSidebarState();
+            applyMobileTabLayout(getCurrentMobileTab());
         });
     }
 
@@ -411,5 +472,6 @@ var isTerminalFullscreen = false;
     window.focusEditor = focusEditor;
     window.updateLoginUI = updateLoginUI;
 
+    applyMobileTabLayout('editor');
     updateLoginUI(false);
 })();
