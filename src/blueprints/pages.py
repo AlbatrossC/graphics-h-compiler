@@ -152,10 +152,13 @@ def index():
 
 @pages_bp.route('/compiler')
 def compiler():
+    import os
+    feedback_enabled = bool(os.getenv('DISCORD_WEBHOOK_URL'))
     return render_template(
         'compiler.html',
         compiler_assets=get_compiler_assets(),
         docs_categories=_DOCS_CATEGORIES,
+        feedback_enabled=feedback_enabled,
     )
 
 
