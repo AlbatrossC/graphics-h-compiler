@@ -985,8 +985,6 @@
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>
   {% endfor %}
-  <script>window.FEEDBACK_ENABLED = {{ 'true' if feedback_enabled else 'false' }};</script>
-  <script src="/static/js/pop-up.js" defer></script>
 </body>
 
 </html>
