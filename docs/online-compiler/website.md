@@ -464,7 +464,7 @@ Loaded from `/_vercel/insights/script.js`. Provides page view and performance me
 ### Google AdSense
 
 ```html
-<meta name="google-adsense-account" content="ca-pub-6918638598461716">
+<meta name="google-adsense-account" content="ca-pub-3909487557887107">
 ```
 
 AdSense publisher ID is declared in the `<head>`.
