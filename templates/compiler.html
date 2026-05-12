@@ -982,6 +982,14 @@
   })();
   </script>
 
+  <!-- Floating Run Button (desktop only) -->
+  <button id="floating-run-btn" title="Compile and Run" aria-label="Compile and Run">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  </button>
+  <div id="floating-run-btn-tooltip" role="tooltip">A floating run button. Drag it anywhere and run easily.</div>
+
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>
   {% endfor %}

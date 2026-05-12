@@ -56,15 +56,43 @@ const FileDB = {
     async open() {
         if (this._db) return this._db;
         return new Promise((resolve, reject) => {
-            const req = indexedDB.open(FILE_DB_NAME, FILE_DB_VERSION);
+            // Timeout guard: iOS Safari (private mode) and some Android browsers
+            // silently hang on indexedDB.open() — neither onsuccess nor onerror fires.
+            // After 3 seconds we reject so callers fall back gracefully (return null)
+            // instead of freezing the loading screen forever.
+            const timeoutId = setTimeout(() => {
+                reject(new Error('IndexedDB open timed out — storage may be unavailable'));
+            }, 3000);
+
+            let req;
+            try {
+                req = indexedDB.open(FILE_DB_NAME, FILE_DB_VERSION);
+            } catch (e) {
+                clearTimeout(timeoutId);
+                reject(e);
+                return;
+            }
+
             req.onupgradeneeded = (e) => {
+                // Don't clear the timeout here — onsuccess fires right after
                 const db = e.target.result;
                 if (!db.objectStoreNames.contains(FILE_DB_STORE)) {
                     db.createObjectStore(FILE_DB_STORE, { keyPath: 'id' });
                 }
             };
-            req.onsuccess = (e) => { this._db = e.target.result; resolve(this._db); };
-            req.onerror = (e) => reject(e.target.error);
+            req.onsuccess = (e) => {
+                clearTimeout(timeoutId);
+                this._db = e.target.result;
+                resolve(this._db);
+            };
+            req.onerror = (e) => {
+                clearTimeout(timeoutId);
+                reject(e.target.error);
+            };
+            req.onblocked = () => {
+                clearTimeout(timeoutId);
+                reject(new Error('IndexedDB open blocked by another connection'));
+            };
         });
     },
 

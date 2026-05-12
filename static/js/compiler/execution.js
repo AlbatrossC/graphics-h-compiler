@@ -124,6 +124,7 @@ window.addEventListener('message', (event) => {
             setTimeout(focusTerminal, 500);
             Logger.success('Program started successfully');
             document.dispatchEvent(new CustomEvent('compiler-run-success'));
+            document.dispatchEvent(new CustomEvent('compiler-run-end'));
         }
     } else if (data.type === 'PROGRESS') {
         updateLoadingProgress(data.percent);
@@ -159,6 +160,7 @@ window.addEventListener('message', (event) => {
         document.dispatchEvent(new CustomEvent('compiler-compilation-error', {
             detail: { content: data.content || '' }
         }));
+        document.dispatchEvent(new CustomEvent('compiler-run-end'));
     } else if (data.type === 'COMPILE_SUCCESS') {
         document.dispatchEvent(new CustomEvent('compiler-compile-success'));
     } else if (data.type === 'ERROR') {
@@ -169,6 +171,7 @@ window.addEventListener('message', (event) => {
         runBtn.disabled = false;
         runBtn.classList.remove('loading');
         updateLoadingProgress(0);
+        document.dispatchEvent(new CustomEvent('compiler-run-end'));
         if (currentTcZipObjectUrl) {
             URL.revokeObjectURL(currentTcZipObjectUrl);
             currentTcZipObjectUrl = null;

@@ -177,7 +177,8 @@ var isTerminalFullscreen = false;
     function toggleTerminalFullscreen() {
         isTerminalFullscreen = !isTerminalFullscreen;
 
-        const svgIcon = document.querySelector('#fullscreen-terminal-btn svg');
+        const fsBtn = document.getElementById('fullscreen-terminal-btn');
+        const svgIcon = fsBtn ? fsBtn.querySelector('svg') : null;
         const terminalZoomControls = document.getElementById('terminal-zoom-controls');
 
         localTerminalWrapper?.classList.toggle('fullscreen', isTerminalFullscreen);
@@ -202,9 +203,16 @@ var isTerminalFullscreen = false;
             }
         }
 
+        // Blur the fullscreen button immediately so keyboard input is not captured by it
+        if (fsBtn) fsBtn.blur();
+
         setTimeout(() => {
             if (document.getElementById('dos-iframe')) {
                 window.dispatchEvent(new Event('resize'));
+            }
+            // Auto-focus the terminal after toggling so the user can type immediately
+            if (isTerminalFullscreen && typeof focusTerminal === 'function') {
+                focusTerminal();
             }
         }, 100);
     }
@@ -474,4 +482,166 @@ var isTerminalFullscreen = false;
 
     applyMobileTabLayout('editor');
     updateLoginUI(false);
+
+    // ============================================================
+    // FLOATING RUN BUTTON (desktop only)
+    // Draggable, shows run icon; becomes a stop icon while running.
+    // Shows a one-time tooltip for 5 seconds on first page load.
+    // ============================================================
+    (function initFloatingRunBtn() {
+        const floatBtn = document.getElementById('floating-run-btn');
+        const floatTooltip = document.getElementById('floating-run-btn-tooltip');
+        if (!floatBtn) return;
+
+        // Default position (bottom-right area)
+        const STORAGE_KEY = 'floating-run-btn-pos';
+        const TOOLTIP_SHOWN_KEY = 'floating-run-btn-tooltip-shown';
+
+        const RUN_ICON = '<path d="M8 5v14l11-7z" />';
+        const STOP_ICON = '<path d="M6 6h12v12H6z" />';
+
+        function getSvg() { return floatBtn.querySelector('svg'); }
+
+        function positionBtn(x, y) {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const bw = floatBtn.offsetWidth || 54;
+            const bh = floatBtn.offsetHeight || 54;
+            x = Math.max(8, Math.min(w - bw - 8, x));
+            y = Math.max(8, Math.min(h - bh - 8, y));
+            floatBtn.style.left = x + 'px';
+            floatBtn.style.top = y + 'px';
+            floatBtn.style.right = 'auto';
+            floatBtn.style.bottom = 'auto';
+            return { x, y };
+        }
+
+        function savePos(x, y) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ x, y })); } catch (e) {}
+        }
+
+        function loadPos() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+                if (saved && typeof saved.x === 'number') return saved;
+            } catch (e) {}
+            return null;
+        }
+
+        // Set initial position — default to bottom-right of the editor panel
+        const saved = loadPos();
+        if (saved) {
+            positionBtn(saved.x, saved.y);
+        } else {
+            // Position over the editor: bottom-right corner of the editor wrapper
+            const editorEl = document.getElementById('editor-wrapper');
+            if (editorEl) {
+                const r = editorEl.getBoundingClientRect();
+                // Place near bottom-right of the editor panel
+                positionBtn(r.right - 70, r.bottom - 80);
+            } else {
+                // Fallback: centre of viewport
+                positionBtn(
+                    Math.round(window.innerWidth / 2 - 25),
+                    Math.round(window.innerHeight / 2 - 25)
+                );
+            }
+        }
+
+        // --- Drag logic ---
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let dragMoved = false;
+
+        floatBtn.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            isDragging = true;
+            dragMoved = false;
+            const rect = floatBtn.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+            floatBtn.style.transition = 'none';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            dragMoved = true;
+            positionBtn(e.clientX - dragOffsetX, e.clientY - dragOffsetY);
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            floatBtn.style.transition = '';
+            const rect = floatBtn.getBoundingClientRect();
+            savePos(rect.left, rect.top);
+            if (!dragMoved) {
+                // Treat as a click: run or stop
+                handleFloatBtnClick();
+            }
+        });
+
+        // Keyboard accessibility
+        floatBtn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleFloatBtnClick();
+            }
+        });
+
+        function handleFloatBtnClick() {
+            if (typeof runProgram === 'function') {
+                runProgram();
+            }
+        }
+
+        // Update icon based on running state
+        // Hook into execution.js events if available via custom events, otherwise poll
+        function setRunning(isRunning) {
+            const svg = getSvg();
+            if (!svg) return;
+            floatBtn.classList.toggle('is-running', isRunning);
+            svg.innerHTML = isRunning ? STOP_ICON : RUN_ICON;
+            floatBtn.title = isRunning ? 'Stop' : 'Compile and Run';
+            floatBtn.setAttribute('aria-label', isRunning ? 'Stop' : 'Compile and Run');
+        }
+
+        document.addEventListener('compiler-run-start', () => setRunning(true));
+        document.addEventListener('compiler-run-end', () => setRunning(false));
+
+        // --- One-time info tooltip (5 seconds, shows only once ever) ---
+        if (!localStorage.getItem(TOOLTIP_SHOWN_KEY) && floatTooltip) {
+            setTimeout(() => {
+                const rect = floatBtn.getBoundingClientRect();
+                const tW = 210; // matches max-width in CSS
+
+                // Centre the tooltip above the button
+                let tLeft = rect.left + rect.width / 2 - tW / 2;
+                // Clamp within viewport
+                tLeft = Math.max(8, Math.min(window.innerWidth - tW - 8, tLeft));
+
+                // Position above the button (tooltip height ~60px estimated)
+                const tTop = rect.top - 68;
+
+                floatTooltip.style.left = tLeft + 'px';
+                floatTooltip.style.top = Math.max(8, tTop) + 'px';
+                floatTooltip.style.width = tW + 'px';
+                floatTooltip.classList.add('visible');
+
+                // Hide after 5 seconds and mark as shown
+                setTimeout(() => {
+                    floatTooltip.classList.remove('visible');
+                    try { localStorage.setItem(TOOLTIP_SHOWN_KEY, '1'); } catch (e) {}
+                }, 5000);
+            }, 1200);
+        }
+
+        // Reposition on window resize
+        window.addEventListener('resize', () => {
+            const rect = floatBtn.getBoundingClientRect();
+            positionBtn(rect.left, rect.top);
+        });
+    })();
 })();

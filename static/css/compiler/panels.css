@@ -1202,3 +1202,107 @@
     justify-content: flex-end;
 }
 
+/* ============================================================
+   FLOATING RUN BUTTON (desktop only — hidden on mobile via responsive.css)
+   ============================================================ */
+#floating-run-btn {
+    position: fixed;
+    z-index: 900;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary, #00ff88);
+    border: none;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+    transition: background 0.12s, transform 0.12s;
+    user-select: none;
+    touch-action: none;
+}
+
+#floating-run-btn:hover {
+    background: #00e87a;
+    transform: scale(1.06);
+}
+
+#floating-run-btn:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+#floating-run-btn svg {
+    width: 24px;
+    height: 24px;
+    color: #0a0a0a;
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+/* Running state — flat red */
+#floating-run-btn.is-running {
+    background: #e03b3b;
+}
+
+#floating-run-btn.is-running:hover {
+    background: #c93232;
+}
+
+/* Hover label — white pill above the button */
+#floating-run-btn::after {
+    content: 'Floating Run button';
+    position: absolute;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: #1a1a1a;
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-family: inherit;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.16);
+    border: 1px solid #e8e8e8;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    letter-spacing: 0.01em;
+}
+
+#floating-run-btn:hover::after {
+    opacity: 1;
+}
+
+/* One-time info tooltip — white box, clean dark text */
+#floating-run-btn-tooltip {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    color: #1a1a1a;
+    font-size: 0.77rem;
+    font-weight: 500;
+    font-family: inherit;
+    line-height: 1.5;
+    padding: 9px 12px;
+    border-radius: 7px;
+    white-space: normal;
+    z-index: 901;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    max-width: 210px;
+    letter-spacing: 0.01em;
+}
+
+#floating-run-btn-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
