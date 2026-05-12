@@ -2,12 +2,12 @@ import json
 import re
 from copy import deepcopy
 
-from flask import Blueprint, redirect, render_template, send_file
+from flask import Blueprint, Response, redirect, render_template, send_file
 
 from ..compiler_assets import BASE_DIR
 from ..compiler_assets import get_compiler_assets
 from ..hooks import get_maintenance_date
-from ..docs_data import DOCS_SLUG_TO_TEMPLATE
+from ..docs_data import DOCS_SLUG_TO_TEMPLATE, DOCS_ORDERED_SLUGS, TUTORIALS_ORDERED, TUTORIALS_DATA
 
 
 pages_bp = Blueprint('pages', __name__)
@@ -209,3 +209,50 @@ def terms():
 @pages_bp.route('/60fdeab2245d4db481d42962ab440eb2.txt')
 def serve_txt():
     return send_file(BASE_DIR / '60fdeab2245d4db481d42962ab440eb2.txt')
+
+
+@pages_bp.route('/sitemap.xml')
+def sitemap():
+    BASE_URL = 'https://graphics-h-compiler.vercel.app'
+
+    # Canonical slugs only (exclude aliases like 'what-is-graphics')
+    from ..docs_data import DOCS_CANONICAL_SLUGS
+    canonical_doc_slugs = [s for s in DOCS_ORDERED_SLUGS if s not in DOCS_CANONICAL_SLUGS]
+
+    tutorial_slugs = [s for s in TUTORIALS_ORDERED if s in TUTORIALS_DATA]
+
+    def url(path, priority, changefreq='weekly'):
+        return (
+            f'  <url>\n'
+            f'    <loc>{BASE_URL}{path}</loc>\n'
+            f'    <changefreq>{changefreq}</changefreq>\n'
+            f'    <priority>{priority}</priority>\n'
+            f'  </url>'
+        )
+
+    entries = [
+        # Compiler gets top priority — it's the main product
+        url('/compiler', '1.0', 'daily'),
+        url('/', '0.95', 'weekly'),
+        url('/docs', '0.85', 'weekly'),
+        url('/tutorials', '0.85', 'weekly'),
+        url('/about', '0.5', 'monthly'),
+        url('/contact', '0.5', 'monthly'),
+        url('/privacy-policy', '0.4', 'yearly'),
+        url('/terms', '0.4', 'yearly'),
+    ]
+
+    for slug in canonical_doc_slugs:
+        entries.append(url(f'/{slug}', '0.8', 'monthly'))
+
+    for slug in tutorial_slugs:
+        entries.append(url(f'/tutorials/{slug}', '0.75', 'monthly'))
+
+    xml_body = '\n'.join(entries)
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'{xml_body}\n'
+        '</urlset>'
+    )
+    return Response(xml, mimetype='application/xml')

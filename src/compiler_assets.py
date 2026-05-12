@@ -2,7 +2,7 @@ import json
 import re
 from pathlib import Path
 
-from .docs_data import DOCS_CANONICAL_SLUGS, DOCS_SLUG_TO_DESCRIPTION, DOCS_SLUG_TO_TEMPLATE, DOCS_SLUG_TO_TITLE
+from .docs_data import DOCS_CANONICAL_SLUGS, DOCS_ORDERED_SLUGS, DOCS_SLUG_TO_DESCRIPTION, DOCS_SLUG_TO_TEMPLATE, DOCS_SLUG_TO_TITLE
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent

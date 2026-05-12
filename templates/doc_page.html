@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  {% set page_name = page_title if page_title else 'Documentation' %}
+  {% set docs_site_name = 'graphics.h Online Compiler — Documentation' %}
+  {% set page_desc = meta_description if meta_description else 'Graphics.h online compiler documentation with function references, runnable examples, and student-friendly guides.' %}
+  {% set canonical_url = 'https://graphics-h-compiler.vercel.app/' ~ current_slug %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page_name }} | graphics.h Online Compiler Docs</title>
+  <meta name="description" content="{{ page_desc }}">
+  <meta name="keywords" content="graphics.h, {{ page_name }}, turbo c graphics, borland graphics interface, BGI, c graphics tutorial, graphics.h functions, online compiler">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="author" content="Graphics.h Online Compiler">
+  <meta name="theme-color" content="#f3f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11151d" media="(prefers-color-scheme: dark)">
+  <meta name="google-adsense-account" content="ca-pub-6918638598461716">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:title" content="{{ page_name }} | graphics.h Online Compiler Docs">
+  <meta property="og:description" content="{{ page_desc }}">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="graphics.h Online Compiler">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_name }} | graphics.h Online Compiler Docs">
+  <meta name="twitter:description" content="{{ page_desc }}">
+  <meta name="twitter:url" content="{{ canonical_url }}">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": {{ page_name|tojson }},
+      "description": {{ page_desc|tojson }},
+      "url": {{ canonical_url|tojson }},
+      "inLanguage": "en",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "graphics.h Online Compiler",
+        "url": "https://graphics-h-compiler.vercel.app"
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphics-h-compiler.vercel.app/"},
+          {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphics-h-compiler.vercel.app/docs"},
+          {"@type": "ListItem", "position": 3, "name": {{ page_name|tojson }}, "item": {{ canonical_url|tojson }}}
+        ]
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Graphics.h Online Compiler",
+        "url": "https://graphics-h-compiler.vercel.app"
+      }
+    }
+  </script>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('docs-theme');
+        var theme = saved === 'dark' || saved === 'light' ? saved
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/docs.css?v=4.0">
+  <style>
+    /* Sidebar nav links for pure-SSR (no data-link SPA) */
+    .sidebar a.active { color: var(--brand); font-weight: 700; background: color-mix(in srgb, var(--brand) 10%, transparent); border-radius: 6px; }
+  </style>
+</head>
+<body data-doc-slug="{{ current_slug if current_slug else '' }}">
+  <header class="docs-header">
+    <div class="header-left">
+      <button id="sidebar-toggle" class="header-icon-btn" type="button" aria-label="Toggle sidebar" aria-expanded="true">☰</button>
+      <a class="header-link home-link" href="/">Home</a>
+      <a class="header-link docs-link" href="/docs">Docs</a>
+      <a class="header-link" href="/tutorials">Tutorials</a>
+    </div>
+    <div class="header-title">Graphics.h Documentation</div>
+    <div class="header-right">
+      <button id="theme-toggle" class="header-icon-btn" type="button" aria-label="Toggle dark theme" aria-pressed="false">☾</button>
+      <a class="header-link header-link-primary" href="/compiler">Compiler</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="docs-sidebar">
+      <h2>GRAPHICS.H DOCS</h2>
+
+      <section>
+        <h3>Getting Started</h3>
+        <a href="/what-is-graphicsh" {% if current_slug == 'what-is-graphicsh' %}class="active"{% endif %}>What is graphics.h</a>
+        <a href="/where-to-run" {% if current_slug == 'where-to-run' %}class="active"{% endif %}>Where to Run</a>
+        <a href="/hello-graphics" {% if current_slug == 'hello-graphics' %}class="active"{% endif %}>Hello Graphics Program</a>
+      </section>
+
+      <section>
+        <h3>Initialization</h3>
+        <a href="/graphics-initialization" {% if current_slug == 'graphics-initialization' %}class="active"{% endif %}>Graphics Initialization</a>
+        <a href="/drivers-and-modes" {% if current_slug == 'drivers-and-modes' %}class="active"{% endif %}>Drivers &amp; Modes</a>
+      </section>
+
+      <section>
+        <h3>Drawing Shapes</h3>
+        <a href="/line-and-movement" {% if current_slug == 'line-and-movement' %}class="active"{% endif %}>Line &amp; Cursor Movement</a>
+        <a href="/circle" {% if current_slug == 'circle' %}class="active"{% endif %}>circle()</a>
+        <a href="/rectangle" {% if current_slug == 'rectangle' %}class="active"{% endif %}>rectangle()</a>
+        <a href="/bar" {% if current_slug == 'bar' %}class="active"{% endif %}>bar()</a>
+        <a href="/bar3d" {% if current_slug == 'bar3d' %}class="active"{% endif %}>bar3d()</a>
+        <a href="/arc" {% if current_slug == 'arc' %}class="active"{% endif %}>arc()</a>
+        <a href="/ellipse" {% if current_slug == 'ellipse' %}class="active"{% endif %}>ellipse()</a>
+        <a href="/pieslice" {% if current_slug == 'pieslice' %}class="active"{% endif %}>pieslice()</a>
+        <a href="/sector" {% if current_slug == 'sector' %}class="active"{% endif %}>sector()</a>
+      </section>
+
+      <section>
+        <h3>Polygons &amp; Fill</h3>
+        <a href="/polygons-and-fill" {% if current_slug == 'polygons-and-fill' %}class="active"{% endif %}>Polygons &amp; Fill</a>
+      </section>
+
+      <section>
+        <h3>Colors &amp; Styles</h3>
+        <a href="/colors-and-palette" {% if current_slug == 'colors-and-palette' %}class="active"{% endif %}>Colors &amp; Palette</a>
+        <a href="/fill-and-patterns" {% if current_slug == 'fill-and-patterns' %}class="active"{% endif %}>Fill &amp; Patterns</a>
+      </section>
+
+      <section>
+        <h3>Screen &amp; Viewport</h3>
+        <a href="/viewport-and-screen" {% if current_slug == 'viewport-and-screen' %}class="active"{% endif %}>Viewport &amp; Screen</a>
+      </section>
+
+      <section>
+        <h3>Text &amp; Fonts</h3>
+        <a href="/text-and-fonts" {% if current_slug == 'text-and-fonts' %}class="active"{% endif %}>Text &amp; Fonts</a>
+      </section>
+
+      <section>
+        <h3>Images &amp; Pixels</h3>
+        <a href="/image-handling" {% if current_slug == 'image-handling' %}class="active"{% endif %}>Image &amp; Pixel Operations</a>
+      </section>
+
+      <section>
+        <h3>Advanced</h3>
+        <a href="/advanced-functions" {% if current_slug == 'advanced-functions' %}class="active"{% endif %}>Advanced Functions</a>
+        <a href="/error-codes" {% if current_slug == 'error-codes' %}class="active"{% endif %}>Error Codes</a>
+      </section>
+
+      <section>
+        <h3>Tutorials</h3>
+        <a href="/tutorials">All Tutorials</a>
+        <a href="/tutorials/draw-house-graphics-h">Draw a House</a>
+        <a href="/tutorials/graphics-h-animation">Animation Basics</a>
+        <a href="/tutorials/graphics-h-patterns">Patterns &amp; Designs</a>
+      </section>
+    </aside>
+
+    <main id="content">
+      <nav class="doc-breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true"> / </span>
+        <a href="/docs">Docs</a>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page">{{ page_title }}</span>
+      </nav>
+
+      {% if content_html %}
+        {{ content_html | safe }}
+      {% else %}
+        <p>Page content unavailable.</p>
+      {% endif %}
+
+      <nav class="doc-page-nav" aria-label="Documentation pages">
+        {% if prev_slug and prev_title %}
+        <a class="doc-nav-btn doc-nav-prev" href="/{{ prev_slug }}">
+          <span class="doc-nav-label">← Previous</span>
+          <span class="doc-nav-title">{{ prev_title }}</span>
+        </a>
+        {% else %}<span></span>{% endif %}
+        {% if next_slug and next_title %}
+        <a class="doc-nav-btn doc-nav-next" href="/{{ next_slug }}">
+          <span class="doc-nav-label">Next →</span>
+          <span class="doc-nav-title">{{ next_title }}</span>
+        </a>
+        {% endif %}
+      </nav>
+    </main>
+  </div>
+
+  <div id="sidebar-backdrop" class="sidebar-backdrop" hidden></div>
+
+  <footer class="docs-site-footer">
+    <div class="docs-site-footer-inner">
+      <div class="docs-site-footer-copy">
+        <strong>graphics.h Online Compiler</strong> — Free online IDE for Turbo C graphics programs
+      </div>
+      <nav class="docs-site-footer-links" aria-label="Footer navigation">
+        <a href="/">Home</a>
+        <a href="/compiler">Compiler</a>
+        <a href="/docs">Docs</a>
+        <a href="/tutorials">Tutorials</a>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/terms">Terms</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var body = document.body;
+      var sidebarToggle = document.getElementById('sidebar-toggle');
+      var themeToggle = document.getElementById('theme-toggle');
+      var sidebarBackdrop = document.getElementById('sidebar-backdrop');
+      var mobileQuery = window.matchMedia('(max-width: 900px)');
+
+      function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        if (themeToggle) {
+          themeToggle.textContent = theme === 'dark' ? '☀' : '☾';
+          themeToggle.setAttribute('aria-pressed', String(theme === 'dark'));
+        }
+      }
+
+      function initTheme() {
+        var saved, theme;
+        try { saved = localStorage.getItem('docs-theme'); } catch (e) {}
+        if (saved === 'dark' || saved === 'light') { theme = saved; }
+        else { theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+        applyTheme(theme);
+      }
+
+      function updateSidebarUi(open) {
+        var isMobile = mobileQuery.matches;
+        if (isMobile) {
+          body.classList.toggle('sidebar-open', open);
+          body.classList.remove('sidebar-collapsed');
+          if (sidebarBackdrop) sidebarBackdrop.hidden = !open;
+          if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', String(open));
+          return;
+        }
+        body.classList.remove('sidebar-open');
+        if (sidebarBackdrop) sidebarBackdrop.hidden = true;
+        body.classList.toggle('sidebar-collapsed', !open);
+        if (sidebarToggle) sidebarToggle.setAttribute('aria-expanded', String(open));
+      }
+
+      initTheme();
+      updateSidebarUi(!mobileQuery.matches);
+
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+          var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+          try { localStorage.setItem('docs-theme', next); } catch (e) {}
+          applyTheme(next);
+        });
+      }
+
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function () {
+          var isMobile = mobileQuery.matches;
+          if (isMobile) {
+            updateSidebarUi(!body.classList.contains('sidebar-open'));
+          } else {
+            updateSidebarUi(body.classList.contains('sidebar-collapsed'));
+          }
+        });
+      }
+
+      if (sidebarBackdrop) {
+        sidebarBackdrop.addEventListener('click', function () { updateSidebarUi(false); });
+      }
+
+      mobileQuery.addEventListener('change', function () { updateSidebarUi(!mobileQuery.matches); });
+    })();
+  </script>
+</body>
+</html>

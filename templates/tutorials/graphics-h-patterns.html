@@ -1,0 +1,358 @@
+<article class="wg-page" itemscope itemtype="https://schema.org/TechArticle">
+  <style>
+    .wg-page { color:#1b2a3a; line-height:1.72; max-width:1020px; font-size:1.01rem; }
+    .wg-page h1,.wg-page h2,.wg-page h3 { line-height:1.3; color:#102132; }
+    .wg-page h1 { margin:0 0 10px; font-size:clamp(1.8rem,2.7vw,2.35rem); }
+    .wg-page h2 { margin:28px 0 10px; font-size:clamp(1.12rem,1.7vw,1.45rem); }
+    .wg-page h3 { margin:18px 0 8px; font-size:1.06rem; }
+    .wg-page p { margin:0 0 14px; color:#3a4e64; }
+    .wg-kicker { margin:0 0 16px; color:#416255; font-size:.92rem; letter-spacing:.04em; text-transform:uppercase; font-weight:700; }
+    .wg-lead { border:1px solid #c9dfd3; background:#f4fbf7; border-radius:14px; padding:16px 18px; margin-bottom:22px; box-shadow:0 8px 20px rgba(17,42,69,.06); }
+    .wg-toc { border:1px solid #d1e2da; border-radius:14px; background:#fff; padding:14px 16px; margin:16px 0 20px; box-shadow:0 8px 20px rgba(17,42,69,.05); }
+    .wg-toc h2 { margin-top:0; margin-bottom:10px; font-size:1.02rem; }
+    .wg-toc ul { margin:0; padding-left:20px; }
+    .wg-toc li { margin:6px 0; }
+    .wg-page section { border:1px solid #d3e1d9; border-radius:14px; background:#fff; padding:16px 18px; margin-top:18px; box-shadow:0 8px 20px rgba(17,42,69,.05); }
+    .wg-page ul,.wg-page ol { margin:0 0 12px; padding-left:22px; color:#374d64; }
+    .wg-page li { margin:7px 0; }
+    .wg-page a { color:#176d4c; text-decoration:none; }
+    .wg-page a:hover { text-decoration:underline; }
+    .wg-note { border-left:4px solid #ef9f27; background:#fff9ef; padding:12px 14px; border-radius:10px; margin:16px 0; color:#5a4725; }
+    .wg-tip { border-left:4px solid #14a874; background:#f0fdf7; padding:12px 14px; border-radius:10px; margin:16px 0; color:#1a5239; }
+    .code-block-wrap { margin:14px 0; }
+    .code-label { font-size:.8rem; font-weight:700; color:#7a9999; letter-spacing:.05em; text-transform:uppercase; margin-bottom:4px; }
+    .code-area { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:start; }
+    .code-pre { margin:0; border:1px solid #d0e0d8; border-radius:12px; background:#0f1722; padding:14px 16px; overflow-x:auto; font-family:Consolas,"Courier New",monospace; font-size:.88rem; color:#d8f0e4; white-space:pre; }
+    .code-copy { border:1px solid #1e7e59; background:#176b4c; color:#f2fff8; border-radius:10px; padding:10px 12px; font-weight:700; cursor:pointer; white-space:nowrap; font-size:.86rem; }
+    .code-copy:hover { background:#1f825c; }
+    .inline-code { background:#eef5f0; border:1px solid #cde0d6; border-radius:6px; padding:2px 7px; font-family:Consolas,"Courier New",monospace; font-size:.9em; color:#1a5239; }
+    .run-wrap { margin-top:12px; border:1px solid #d0e0d8; border-radius:10px; background:#f8fcfa; padding:12px; }
+    .run-btn { border:1px solid #1e7e59; background:#176b4c; color:#f2fff8; border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; font-size:.88rem; }
+    .run-btn:hover { background:#1f825c; }
+    .embed-area { margin-top:10px; min-height:210px; border-radius:8px; overflow:hidden; display:flex; justify-content:center; align-items:flex-start; background:transparent; }
+    .embed-note { color:#9fb4aa; font-family:Consolas,"Courier New",monospace; font-size:.82rem; padding:8px; }
+    .cta-box { margin-top:28px; padding:16px 18px; border-radius:14px; background:#eef9f3; border:1px solid #cde2d5; }
+    .cta-box strong { display:block; margin-bottom:6px; }
+    .pattern-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:16px 0; }
+    .pattern-card { border:1px solid #d3e1d9; border-radius:12px; background:#f8fcfa; padding:14px; }
+    .pattern-card h3 { margin:0 0 6px; font-size:.96rem; }
+    .pattern-card p { margin:0; font-size:.86rem; color:#4e6277; }
+    @media (max-width:760px) { .code-area { grid-template-columns:1fr; } .code-copy { width:100%; } .pattern-grid { grid-template-columns:1fr; } }
+    html[data-theme="dark"] .wg-page { color:#e7ecf5; }
+    html[data-theme="dark"] .wg-page h1,html[data-theme="dark"] .wg-page h2,html[data-theme="dark"] .wg-page h3 { color:#f7fbff; }
+    html[data-theme="dark"] .wg-page p,html[data-theme="dark"] .wg-page li { color:#b8c3d4; }
+    html[data-theme="dark"] .wg-lead,html[data-theme="dark"] .wg-toc,html[data-theme="dark"] .wg-page section,html[data-theme="dark"] .cta-box,html[data-theme="dark"] .run-wrap { background:#202938; border-color:#3a475d; }
+    html[data-theme="dark"] .wg-note { background:#3b3024; color:#ffd9a0; border-left-color:#ffb86b; }
+    html[data-theme="dark"] .wg-tip { background:#1a3028; color:#a0e8c0; border-left-color:#62d0ff; }
+    html[data-theme="dark"] .inline-code { background:#1d2d38; border-color:#3a475d; color:#62d0ff; }
+    html[data-theme="dark"] .wg-kicker { color:#8eb3a2; }
+    html[data-theme="dark"] .wg-page a { color:#8ec5ff; }
+    html[data-theme="dark"] .pattern-card { background:#202938; border-color:#3a475d; }
+    html[data-theme="dark"] .pattern-card p { color:#b2bfd3; }
+  </style>
+
+  <p class="wg-kicker">Beginner Project · Tutorial</p>
+  <h1 itemprop="headline">Drawing Patterns and Designs with graphics.h</h1>
+
+  <div class="wg-lead" itemprop="description">
+    Learn to create geometric patterns and repeating designs in graphics.h using loops and drawing functions.
+    This tutorial covers a <strong>checkerboard</strong>, a <strong>spiral</strong>, and a <strong>star pattern</strong> —
+    all with complete Turbo C source code you can run in the browser.
+  </div>
+
+  <nav class="wg-toc" aria-label="On this page">
+    <h2>On This Page</h2>
+    <ul>
+      <li><a href="#pattern-techniques">Pattern Drawing Techniques</a></li>
+      <li><a href="#checkerboard">Pattern 1 — Checkerboard</a></li>
+      <li><a href="#concentric-circles">Pattern 2 — Concentric Circles</a></li>
+      <li><a href="#star-burst">Pattern 3 — Star Burst (Radial Lines)</a></li>
+      <li><a href="#color-gradient">Pattern 4 — Color Gradient Bars</a></li>
+      <li><a href="#challenge">Challenge: Combine the Patterns</a></li>
+    </ul>
+  </nav>
+
+  <section id="pattern-techniques">
+    <h2>Pattern Drawing Techniques</h2>
+    <p>
+      Patterns in graphics.h are created by combining loops with drawing functions. The key insight is that most
+      geometric patterns are based on mathematical relationships — offsets, angles, radii — that you express as
+      loop variables. Here are the core patterns and what drives them:
+    </p>
+    <div class="pattern-grid">
+      <div class="pattern-card"><h3>Grid Patterns</h3><p>Use nested for loops with fixed step sizes. Increment X and Y by the cell size each iteration.</p></div>
+      <div class="pattern-card"><h3>Radial Patterns</h3><p>Loop over angles (0–360°). Use sin() and cos() from &lt;math.h&gt; to compute endpoints.</p></div>
+      <div class="pattern-card"><h3>Concentric Shapes</h3><p>Loop with an increasing radius. Draw the same shape (circle, rectangle) at each radius step.</p></div>
+    </div>
+  </section>
+
+  <section id="checkerboard">
+    <h2>Pattern 1 — Checkerboard</h2>
+    <p>
+      A checkerboard is drawn using a nested loop. For each cell, alternate between filling with WHITE and DARKGRAY
+      based on whether the sum of the row and column index is even or odd. We use <a href="/bar"><code class="inline-code">bar()</code></a>
+      for filled rectangles.
+    </p>
+    <div class="code-block-wrap">
+      <div class="code-label">Checkerboard Pattern</div>
+      <div class="code-area">
+        <pre id="code-checker" class="code-pre">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    int cellSize = 40;
+    int cols = getmaxx() / cellSize;
+    int rows = getmaxy() / cellSize;
+
+    int r, c;
+    for (r = 0; r &lt; rows; r++) {
+        for (c = 0; c &lt; cols; c++) {
+            /* Alternate colors based on row + column parity */
+            if ((r + c) % 2 == 0)
+                setfillstyle(SOLID_FILL, WHITE);
+            else
+                setfillstyle(SOLID_FILL, DARKGRAY);
+
+            bar(c * cellSize, r * cellSize,
+                (c + 1) * cellSize, (r + 1) * cellSize);
+        }
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</pre>
+        <button class="code-copy" type="button" data-target="code-checker">Copy</button>
+      </div>
+    </div>
+    <div class="run-wrap">
+      <button id="checker-run-btn" class="run-btn" type="button">▶ Run Checkerboard</button>
+      <div id="checker-embed" class="embed-area"><p class="embed-note">Click Run to see the pattern in the browser.</p></div>
+    </div>
+    <div class="wg-tip">
+      <strong>💡 Customize it:</strong> Change <code class="inline-code">cellSize</code> to 20 for a fine grid, or try
+      <code class="inline-code">CYAN</code> and <code class="inline-code">BLUE</code> for a colored checkerboard.
+    </div>
+  </section>
+
+  <section id="concentric-circles">
+    <h2>Pattern 2 — Concentric Circles</h2>
+    <p>
+      Draw a series of circles from the center of the screen, each one larger than the last.
+      Alternate colors between each ring to create a target/bullseye effect.
+    </p>
+    <div class="code-block-wrap">
+      <div class="code-label">Concentric Circles Pattern</div>
+      <div class="code-area">
+        <pre id="code-circles" class="code-pre">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    int cx = getmaxx() / 2;
+    int cy = getmaxy() / 2;
+    int maxRadius = (cx &lt; cy) ? cx : cy; /* use smaller dimension */
+
+    int colors[] = {RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA, WHITE};
+    int numColors = 7;
+    int step = maxRadius / numColors;
+
+    int i;
+    for (i = numColors - 1; i &gt;= 0; i--) {
+        setfillstyle(SOLID_FILL, colors[i]);
+        fillellipse(cx, cy, (i + 1) * step, (i + 1) * step);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</pre>
+        <button class="code-copy" type="button" data-target="code-circles">Copy</button>
+      </div>
+    </div>
+    <div class="run-wrap">
+      <button id="circles-run-btn" class="run-btn" type="button">▶ Run Concentric Circles</button>
+      <div id="circles-embed" class="embed-area"><p class="embed-note">Click Run to see the pattern.</p></div>
+    </div>
+  </section>
+
+  <section id="star-burst">
+    <h2>Pattern 3 — Star Burst (Radial Lines)</h2>
+    <p>
+      A star burst is drawn by looping from 0 to 360 degrees and drawing a line from the center to each angle's point
+      on the circumference. We use <code class="inline-code">sin()</code> and <code class="inline-code">cos()</code> from
+      <code class="inline-code">&lt;math.h&gt;</code> to compute the endpoint.
+    </p>
+    <div class="wg-note">
+      <strong>Radians:</strong> graphics.h angles in <a href="/arc">arc()</a> and <a href="/ellipse">ellipse()</a> use degrees.
+      But <code class="inline-code">sin()</code> and <code class="inline-code">cos()</code> from &lt;math.h&gt; use radians.
+      Convert: <code class="inline-code">radians = degrees * 3.14159 / 180</code>.
+    </div>
+    <div class="code-block-wrap">
+      <div class="code-label">Star Burst Pattern</div>
+      <div class="code-area">
+        <pre id="code-starburst" class="code-pre">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;math.h&gt;
+
+#define PI 3.14159265
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    int cx = getmaxx() / 2;
+    int cy = getmaxy() / 2;
+    int radius = 200;
+    int angle;
+
+    int colors[] = {RED,YELLOW,GREEN,CYAN,BLUE,MAGENTA,WHITE,LIGHTRED,LIGHTGREEN,LIGHTCYAN};
+
+    for (angle = 0; angle &lt; 360; angle += 5) {
+        double rad = angle * PI / 180.0;
+        int ex = cx + (int)(radius * cos(rad));
+        int ey = cy + (int)(radius * sin(rad));
+
+        setcolor(colors[(angle / 5) % 10]);
+        line(cx, cy, ex, ey);
+    }
+
+    /* Draw center dot */
+    setfillstyle(SOLID_FILL, WHITE);
+    fillellipse(cx, cy, 6, 6);
+
+    getch();
+    closegraph();
+    return 0;
+}</pre>
+        <button class="code-copy" type="button" data-target="code-starburst">Copy</button>
+      </div>
+    </div>
+    <div class="run-wrap">
+      <button id="star-run-btn" class="run-btn" type="button">▶ Run Star Burst</button>
+      <div id="star-embed" class="embed-area"><p class="embed-note">Click Run to see the pattern.</p></div>
+    </div>
+  </section>
+
+  <section id="color-gradient">
+    <h2>Pattern 4 — Color Gradient Bars</h2>
+    <p>
+      Draw vertical color bars that cycle through all 16 graphics.h color constants.
+      Each bar is one-sixteenth of the screen width. This demonstrates how to use all colors in a single program.
+    </p>
+    <div class="code-block-wrap">
+      <div class="code-label">Color Gradient Bars</div>
+      <div class="code-area">
+        <pre id="code-gradient" class="code-pre">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    int maxX = getmaxx();
+    int maxY = getmaxy();
+    int barWidth = maxX / 16;
+    int i;
+
+    for (i = 0; i &lt; 16; i++) {
+        setfillstyle(SOLID_FILL, i); /* colors 0–15 */
+        bar(i * barWidth, 0, (i + 1) * barWidth, maxY);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</pre>
+        <button class="code-copy" type="button" data-target="code-gradient">Copy</button>
+      </div>
+    </div>
+    <div class="run-wrap">
+      <button id="gradient-run-btn" class="run-btn" type="button">▶ Run Color Bars</button>
+      <div id="gradient-embed" class="embed-area"><p class="embed-note">Click Run to see all 16 graphics.h colors.</p></div>
+    </div>
+    <p>
+      This is the fastest way to see all available colors. Note that color 0 = BLACK and color 15 = WHITE.
+      See the full reference in <a href="/colors-and-palette">Colors &amp; Palette</a>.
+    </p>
+  </section>
+
+  <section id="challenge">
+    <h2>Challenge: Combine the Patterns</h2>
+    <p>
+      Now that you have learned four individual patterns, try combining them into one program:
+    </p>
+    <ol>
+      <li>Draw the checkerboard as the background.</li>
+      <li>Draw the concentric circles in the center.</li>
+      <li>Draw the star burst on top of the circles.</li>
+    </ol>
+    <p>
+      This is a great lab assignment challenge. Use <a href="/viewport-and-screen"><code class="inline-code">setviewport()</code></a>
+      to restrict drawing to different screen regions, or layer shapes directly.
+    </p>
+    <div class="wg-tip">
+      <strong>💡 Hint:</strong> Draw the checkerboard first, then the circles, then the lines. Each subsequent draw goes on top
+      of the previous one.
+    </div>
+  </section>
+
+  <div class="cta-box" aria-label="Next steps">
+    <strong>What to Try Next</strong>
+    Go back to the <a href="/tutorials/draw-house-graphics-h">Draw a House tutorial</a>, or explore
+    <a href="/fill-and-patterns">Fill Styles and Patterns</a> to learn how to apply hatching and dot patterns to shapes.
+  </div>
+
+  <script>
+    (function () {
+      document.querySelectorAll('.code-copy').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var pre = document.getElementById(btn.dataset.target);
+          if (!pre) return;
+          navigator.clipboard.writeText(pre.textContent.trim()).then(function () {
+            btn.textContent = 'Copied!';
+            setTimeout(function () { btn.textContent = 'Copy'; }, 1400);
+          }).catch(function () { btn.textContent = 'Failed'; setTimeout(function () { btn.textContent = 'Copy'; }, 1400); });
+        });
+      });
+
+      function ensureSdk() {
+        if (window.GraphicsHEmbed) return Promise.resolve();
+        return new Promise(function (resolve, reject) {
+          var s = document.createElement('script');
+          s.src = '/sdk.js'; s.async = true; s.dataset.sdk = 'graphicsh';
+          s.onload = resolve; s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+
+      function makeRunner(btnId, embedId, codeId) {
+        var btn = document.getElementById(btnId);
+        var area = document.getElementById(embedId);
+        var code = document.getElementById(codeId);
+        var inst = null;
+        if (!btn || !area || !code) return;
+        btn.addEventListener('click', async function () {
+          btn.disabled = true; btn.textContent = 'Starting…';
+          try {
+            await ensureSdk();
+            if (!inst) { area.innerHTML = ''; inst = new window.GraphicsHEmbed('#' + embedId, { baseWidth:640, baseHeight:480, scale:0.62, boilerplate:false }); }
+            inst.runProgram(code.textContent.trim());
+            btn.textContent = '▶ Run Again';
+          } catch (e) { btn.textContent = 'Run failed'; }
+          finally { btn.disabled = false; }
+        });
+      }
+
+      makeRunner('checker-run-btn', 'checker-embed', 'code-checker');
+      makeRunner('circles-run-btn', 'circles-embed', 'code-circles');
+      makeRunner('star-run-btn', 'star-embed', 'code-starburst');
+      makeRunner('gradient-run-btn', 'gradient-embed', 'code-gradient');
+    })();
+  </script>
+</article>
