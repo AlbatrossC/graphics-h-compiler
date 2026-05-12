@@ -17,7 +17,8 @@
                 bracketMatching: true,
                 activeLine: true,
                 autocomplete: true,
-                hoverTooltips: true
+                hoverTooltips: true,
+                floatingRunBtn: true
             }
         };
 
@@ -82,6 +83,7 @@
     const activeLineToggle = document.getElementById('settings-active-line');
     const autocompleteToggle = document.getElementById('settings-autocomplete');
     const hoverTooltipsToggle = document.getElementById('settings-hover-tooltips');
+    const floatingRunBtnToggle = document.getElementById('settings-floating-run-btn');
     const resetBtn = document.getElementById('settings-reset-btn');
     const headerFontDisplay = document.getElementById('font-size-display');
 
@@ -289,6 +291,34 @@
         if (save) persistSettings();
     }
 
+    function applyFloatingRunBtn(enabled, save = true) {
+        // Only show on desktop (>768px), never on mobile
+        const isDesktop = window.innerWidth > 768;
+        const floatBtn = document.getElementById('floating-run-btn');
+        const floatTooltip = document.getElementById('floating-run-btn-tooltip');
+        if (floatBtn) {
+            if (enabled && isDesktop) {
+                floatBtn.style.removeProperty('display');
+            } else {
+                floatBtn.style.setProperty('display', 'none', 'important');
+            }
+        }
+        // Always hide tooltip when button is disabled
+        if (floatTooltip && !enabled) {
+            floatTooltip.style.setProperty('display', 'none', 'important');
+        } else if (floatTooltip && enabled) {
+            floatTooltip.style.removeProperty('display');
+        }
+        currentSettings = {
+            ...currentSettings,
+            editor: {
+                ...currentSettings.editor,
+                floatingRunBtn: !!enabled
+            }
+        };
+        if (save) persistSettings();
+    }
+
     function syncUIFromSettings() {
         if (fontRange) fontRange.value = String(currentSettings.editor.fontSize);
         if (fontSizeValue) fontSizeValue.textContent = String(currentSettings.editor.fontSize);
@@ -298,6 +328,7 @@
         if (activeLineToggle) activeLineToggle.checked = currentSettings.editor.activeLine;
         if (autocompleteToggle) autocompleteToggle.checked = currentSettings.editor.autocomplete !== false;
         if (hoverTooltipsToggle) hoverTooltipsToggle.checked = currentSettings.editor.hoverTooltips !== false;
+        if (floatingRunBtnToggle) floatingRunBtnToggle.checked = currentSettings.editor.floatingRunBtn !== false;
         if (headerFontDisplay) headerFontDisplay.textContent = String(currentSettings.editor.fontSize);
     }
 
@@ -314,6 +345,7 @@
         applyActiveLine(currentSettings.editor.activeLine, false);
         applyAutocomplete(currentSettings.editor.autocomplete !== false, false);
         applyHoverTooltips(currentSettings.editor.hoverTooltips !== false, false);
+        applyFloatingRunBtn(currentSettings.editor.floatingRunBtn !== false, false);
 
         currentSettings = saveSettingsState(currentSettings);
         emitSettingsChanged();
@@ -417,6 +449,12 @@
         });
     }
 
+    if (floatingRunBtnToggle) {
+        floatingRunBtnToggle.addEventListener('change', (event) => {
+            applyFloatingRunBtn(event.target.checked, true);
+        });
+    }
+
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
             currentSettings = cloneSettings(SETTINGS_DEFAULTS);
@@ -427,6 +465,7 @@
             applyActiveLine(currentSettings.editor.activeLine, false);
             applyAutocomplete(currentSettings.editor.autocomplete !== false, false);
             applyHoverTooltips(currentSettings.editor.hoverTooltips !== false, false);
+            applyFloatingRunBtn(currentSettings.editor.floatingRunBtn !== false, false);
             syncUIFromSettings();
             persistSettings();
             Logger.info('Settings reset to defaults');
@@ -472,6 +511,8 @@
 
     syncUIFromSettings();
     setSidebarView('explorer', { forceMobileOpen: false });
+    // Apply floating run button preference immediately (doesn't need editor to be ready)
+    applyFloatingRunBtn(currentSettings.editor.floatingRunBtn !== false, false);
     if (typeof cmView !== 'undefined' && cmView && cmModules) {
         applySavedSettings();
     }

@@ -259,8 +259,9 @@
         overflow: hidden;
     }
 
-    /* Floating run button — desktop only, hide on mobile */
-    #floating-run-btn {
+    /* Floating run button + tooltip — desktop only, hide on mobile */
+    #floating-run-btn,
+    #floating-run-btn-tooltip {
         display: none !important;
     }
 

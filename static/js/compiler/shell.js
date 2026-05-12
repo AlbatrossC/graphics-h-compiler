@@ -486,16 +486,19 @@ var isTerminalFullscreen = false;
     // ============================================================
     // FLOATING RUN BUTTON (desktop only)
     // Draggable, shows run icon; becomes a stop icon while running.
-    // Shows a one-time tooltip for 5 seconds on first page load.
+    // Shows a one-time attached tooltip for 5 s on first page load.
     // ============================================================
     (function initFloatingRunBtn() {
         const floatBtn = document.getElementById('floating-run-btn');
         const floatTooltip = document.getElementById('floating-run-btn-tooltip');
         if (!floatBtn) return;
 
-        // Default position (bottom-right area)
+        // Desktop-only — bail out entirely on mobile
+        if (isMobileView()) return;
+
         const STORAGE_KEY = 'floating-run-btn-pos';
         const TOOLTIP_SHOWN_KEY = 'floating-run-btn-tooltip-shown';
+        const DRAG_THRESHOLD = 6; // px — below this movement is treated as a click
 
         const RUN_ICON = '<path d="M8 5v14l11-7z" />';
         const STOP_ICON = '<path d="M6 6h12v12H6z" />';
@@ -514,6 +517,23 @@ var isTerminalFullscreen = false;
             floatBtn.style.right = 'auto';
             floatBtn.style.bottom = 'auto';
             return { x, y };
+        }
+
+        // Position the tooltip attached to (above) the button
+        function positionTooltip() {
+            if (!floatTooltip) return;
+            const bRect = floatBtn.getBoundingClientRect();
+            const tW = floatTooltip.offsetWidth || 224;
+            const tH = floatTooltip.offsetHeight || 72;
+            const GAP = 12;
+            // Prefer above; fall back to below if not enough room
+            let tTop = bRect.top - tH - GAP;
+            if (tTop < 8) tTop = bRect.bottom + GAP;
+            // Centre-align with button, clamp to viewport
+            let tLeft = bRect.left + bRect.width / 2 - tW / 2;
+            tLeft = Math.max(8, Math.min(window.innerWidth - tW - 8, tLeft));
+            floatTooltip.style.left = tLeft + 'px';
+            floatTooltip.style.top = Math.max(8, tTop) + 'px';
         }
 
         function savePos(x, y) {
@@ -548,11 +568,13 @@ var isTerminalFullscreen = false;
             }
         }
 
-        // --- Drag logic ---
+        // ── Drag logic ──────────────────────────────────────────
         let isDragging = false;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
-        let dragMoved = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragMoved = false; // true only when DRAG_THRESHOLD is exceeded
 
         floatBtn.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
@@ -561,14 +583,23 @@ var isTerminalFullscreen = false;
             const rect = floatBtn.getBoundingClientRect();
             dragOffsetX = e.clientX - rect.left;
             dragOffsetY = e.clientY - rect.top;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
             floatBtn.style.transition = 'none';
             e.preventDefault();
         });
 
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            if (!dragMoved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
             dragMoved = true;
             positionBtn(e.clientX - dragOffsetX, e.clientY - dragOffsetY);
+            // Keep tooltip attached while dragging
+            if (floatTooltip && floatTooltip.classList.contains('visible')) {
+                positionTooltip();
+            }
         });
 
         document.addEventListener('mouseup', (e) => {
@@ -611,37 +642,25 @@ var isTerminalFullscreen = false;
         document.addEventListener('compiler-run-start', () => setRunning(true));
         document.addEventListener('compiler-run-end', () => setRunning(false));
 
-        // --- One-time info tooltip (5 seconds, shows only once ever) ---
+        // ── One-time attached tooltip (5 s, first visit only) ────
         if (!localStorage.getItem(TOOLTIP_SHOWN_KEY) && floatTooltip) {
             setTimeout(() => {
-                const rect = floatBtn.getBoundingClientRect();
-                const tW = 210; // matches max-width in CSS
-
-                // Centre the tooltip above the button
-                let tLeft = rect.left + rect.width / 2 - tW / 2;
-                // Clamp within viewport
-                tLeft = Math.max(8, Math.min(window.innerWidth - tW - 8, tLeft));
-
-                // Position above the button (tooltip height ~60px estimated)
-                const tTop = rect.top - 68;
-
-                floatTooltip.style.left = tLeft + 'px';
-                floatTooltip.style.top = Math.max(8, tTop) + 'px';
-                floatTooltip.style.width = tW + 'px';
+                positionTooltip();
                 floatTooltip.classList.add('visible');
-
-                // Hide after 5 seconds and mark as shown
                 setTimeout(() => {
                     floatTooltip.classList.remove('visible');
                     try { localStorage.setItem(TOOLTIP_SHOWN_KEY, '1'); } catch (e) {}
                 }, 5000);
-            }, 1200);
+            }, 1000);
         }
 
-        // Reposition on window resize
+        // Reposition button (and tooltip) on window resize
         window.addEventListener('resize', () => {
             const rect = floatBtn.getBoundingClientRect();
             positionBtn(rect.left, rect.top);
+            if (floatTooltip && floatTooltip.classList.contains('visible')) {
+                positionTooltip();
+            }
         });
     })();
 })();

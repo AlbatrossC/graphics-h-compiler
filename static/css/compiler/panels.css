@@ -1208,8 +1208,8 @@
 #floating-run-btn {
     position: fixed;
     z-index: 900;
-    width: 50px;
-    height: 50px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: var(--primary, #00ff88);
     border: none;
@@ -1218,14 +1218,14 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
-    transition: background 0.12s, transform 0.12s;
+    transition: background 0.15s, transform 0.15s;
     user-select: none;
     touch-action: none;
 }
 
 #floating-run-btn:hover {
     background: #00e87a;
-    transform: scale(1.06);
+    transform: scale(1.07);
 }
 
 #floating-run-btn:active {
@@ -1244,65 +1244,94 @@
 /* Running state — flat red */
 #floating-run-btn.is-running {
     background: #e03b3b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 #floating-run-btn.is-running:hover {
     background: #c93232;
 }
 
-/* Hover label — white pill above the button */
+/* Hover label — dark pill, shows "Run" on hover */
 #floating-run-btn::after {
-    content: 'Floating Run button';
+    content: 'Compile & Run';
     position: absolute;
-    bottom: calc(100% + 7px);
+    bottom: calc(100% + 8px);
     left: 50%;
-    transform: translateX(-50%);
-    background: #ffffff;
-    color: #1a1a1a;
-    font-size: 0.7rem;
+    transform: translateX(-50%) translateY(3px);
+    background: #1a1f2e;
+    color: #e8f0fe;
+    font-size: 0.68rem;
     font-weight: 600;
     font-family: inherit;
     white-space: nowrap;
-    padding: 4px 8px;
-    border-radius: 5px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.16);
-    border: 1px solid #e8e8e8;
+    padding: 4px 9px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.15s;
-    letter-spacing: 0.01em;
+    transition: opacity 0.15s, transform 0.15s;
+    letter-spacing: 0.02em;
 }
 
 #floating-run-btn:hover::after {
     opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
-/* One-time info tooltip — white box, clean dark text */
+/* ── One-time info tooltip — dark, attached to button with arrow ── */
 #floating-run-btn-tooltip {
     position: fixed;
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    color: #1a1a1a;
-    font-size: 0.77rem;
+    background: #1a1f2e;
+    border: 1px solid rgba(0, 255, 136, 0.25);
+    color: #d8e6f3;
+    font-size: 0.78rem;
     font-weight: 500;
     font-family: inherit;
-    line-height: 1.5;
-    padding: 9px 12px;
-    border-radius: 7px;
+    line-height: 1.55;
+    padding: 10px 13px;
+    border-radius: 9px;
     white-space: normal;
     z-index: 901;
     pointer-events: none;
     opacity: 0;
-    transform: translateY(5px);
-    transition: opacity 0.2s, transform 0.2s;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
-    max-width: 210px;
+    transform: translateY(-4px) scale(0.97);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 1px 4px rgba(0, 0, 0, 0.2);
+    max-width: 224px;
     letter-spacing: 0.01em;
+}
+
+/* Arrow pointing downward toward the button */
+#floating-run-btn-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 255, 136, 0.25);
+    filter: drop-shadow(0 1px 0 #1a1f2e);
+}
+
+#floating-run-btn-tooltip::before {
+    content: '';
+    position: absolute;
+    top: calc(100% - 1px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1a1f2e;
+    z-index: 1;
+}
+
+#floating-run-btn-tooltip strong {
+    color: #00ff88;
+    font-weight: 700;
 }
 
 #floating-run-btn-tooltip.visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
-
 

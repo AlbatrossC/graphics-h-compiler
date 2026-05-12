@@ -452,6 +452,13 @@
                   <span class="settings-switch-slider"></span>
                 </div>
               </label>
+              <label class="settings-toggle">
+                <span class="settings-toggle-label">Floating Run Button</span>
+                <div class="settings-switch">
+                  <input type="checkbox" id="settings-floating-run-btn" checked />
+                  <span class="settings-switch-slider"></span>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -988,7 +995,7 @@
       <path d="M8 5v14l11-7z" />
     </svg>
   </button>
-  <div id="floating-run-btn-tooltip" role="tooltip">A floating run button. Drag it anywhere and run easily.</div>
+  <div id="floating-run-btn-tooltip" role="tooltip">🖱️ Drag me anywhere! Click to <strong>run</strong> your code. To hide, check <strong>Settings → Floating Run Button</strong>.</div>
 
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>
