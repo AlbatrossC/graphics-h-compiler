@@ -51,7 +51,7 @@
   document.head.appendChild(vaScript);
 })();
 
-// PostHog Analytics (Numbers & Events only, Session Recordings disabled)
+// PostHog Analytics
 (function () {
   // Executing on all environments including localhost and vercel
 
@@ -60,7 +60,7 @@
   posthog.init('phc_IbbFwOf6SQ0Qa9EKKyGgkFliw6fgkEp6D2m9jCiM87T', {
     api_host: 'https://app.posthog.com',
     autocapture: true, // Captures all button clicks natively
-    disable_session_recording: true, // We use Clarity for recordings
+    disable_session_recording: false, // Session recordings enabled
   });
 
   // Custom Event Listeners
