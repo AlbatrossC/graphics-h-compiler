@@ -61,6 +61,13 @@
     api_host: 'https://app.posthog.com',
     autocapture: true, // Captures all button clicks natively
     disable_session_recording: false, // Session recordings enabled
+    session_recording: {
+      recordCanvas: true, // Enable experimental canvas recording
+      captureCanvas: {
+        canvasFps: 4, // 4 FPS to prevent browser freezing
+        canvasQuality: "0.4"
+      }
+    }
   });
 
   // Custom Event Listeners
