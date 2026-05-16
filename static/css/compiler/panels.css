@@ -332,6 +332,143 @@
     background: var(--text-muted);
 }
 
+/* Clean Autocomplete / Tooltip Customization */
+.cm-tooltip {
+    background: var(--vscode-editor) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    color: var(--text-primary) !important;
+    overflow: hidden;
+}
+
+.cm-tooltip-autocomplete {
+    padding: 0 !important;
+}
+
+.cm-tooltip-autocomplete > ul {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.85rem !important;
+    max-height: 250px !important;
+}
+
+.cm-tooltip-autocomplete > ul > li {
+    padding: 6px 12px !important;
+    border-radius: 0 !important;
+    border-bottom: none !important;
+    transition: none !important;
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.4 !important;
+    border-left: 2px solid transparent !important;
+    margin: 0 !important;
+    outline: none !important;
+}
+
+.cm-tooltip-autocomplete > ul > li[aria-selected="true"] {
+    background: var(--vscode-line-bg) !important;
+    color: var(--primary) !important;
+    border-left: 2px solid var(--primary) !important;
+    border-radius: 0 !important;
+}
+
+/* Match texts */
+.cm-completionMatchedText {
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    color: var(--primary) !important;
+}
+
+/* Detail text */
+.cm-completionDetail {
+    margin-left: auto;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    font-style: normal !important;
+}
+
+/* Completion Info Side Panel */
+.cm-tooltip.cm-completionInfo {
+    padding: 12px !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    background: var(--vscode-editor) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    margin-left: 4px;
+}
+
+/* Custom Function Info Tooltip (.cm-func-tooltip) */
+.cm-func-tooltip {
+    padding: 10px 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.tooltip-signature {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tooltip-warning {
+    color: var(--warning);
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tooltip-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.tooltip-params {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tooltip-param {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.tooltip-param-active {
+    color: var(--text-primary);
+    background: var(--vscode-line-bg);
+    padding: 2px 6px;
+    border-radius: 0;
+}
+
+.tooltip-param-name {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.tooltip-param-arrow {
+    opacity: 0.4;
+}
+
+.tooltip-param-desc {
+    flex: 1;
+}
+
 /* Editor Footer */
 .editor-footer {
     display: flex;
