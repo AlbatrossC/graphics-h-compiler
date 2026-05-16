@@ -514,7 +514,7 @@ Health checks use `HEAD` requests with 3-second timeout and 5-minute cache.
 | `static/css/compiler/` | 7 CSS files (base, panels, sidebar, preferences, responsive, toasts, docs-reference) |
 | `static/js/compiler/` | 10 JS files (app, editor, autocomplete, files, files-ui, shell, execution, preferences, asset-sources, CM bundle) |
 | `static/build/` | Hashed production bundles + asset manifest |
-| `static/assets/` | JSON data files (`functions.1.json`, `docs.1.json`) |
+| `static/assets/` | JSON data files (`functions.2.json`, `docs.1.json`) |
 | `static/fonts/` | Font files |
 | `static/videos/` | Background videos |
 | `compiler-assets/libs/` | JS-DOS, WDOSBOX, Ace (legacy), Lucide icons |

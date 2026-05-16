@@ -258,13 +258,13 @@ The autocomplete logic lives entirely in `static/js/compiler/autocomplete.js`.
 
 ### Data Source
 
-Function metadata is loaded from `/static/assets/functions.1.json` — a JSON file containing:
+Function metadata is loaded from `/static/assets/functions.2.json` — a JSON file containing:
 - `functions[]` — each with `name`, `info` (signature, description, params), `cursor` (where to place cursor after insert), and `accepts` (which constant groups each parameter accepts).
 - `constants{}` — grouped constant values (e.g., colour constants, line styles).
 
 ```js
 async function loadData() {
-    const response = await fetch('/static/assets/functions.1.json');
+    const response = await fetch('/static/assets/functions.2.json');
     const data = await response.json();
     for (const func of data.functions) {
         functionsMap[func.name] = func;

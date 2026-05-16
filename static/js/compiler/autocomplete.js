@@ -3,13 +3,19 @@
 
 let functionsMap = {};
 let constantsMap = {};
+let headerFiles = [];
 let dataLoaded = false;
+let startAutocomplete = null;
+let pendingIncludeHeaderSuggestions = false;
+
+const INCLUDE_DIRECTIVE = '#include';
+const DEFAULT_INCLUDE_HEADERS = ['graphics.h', 'conio.h', 'dos.h'];
 
 // --- STEP 2: DATA LOADING ---
 async function loadData() {
     if (dataLoaded) return;
     try {
-        const response = await fetch('/static/assets/functions.1.json');
+        const response = await fetch('/static/assets/functions.2.json');
         if (!response.ok) throw new Error('Failed to load functions data');
         const data = await response.json();
 
@@ -23,6 +29,12 @@ async function loadData() {
             }
         }
 
+        if (Array.isArray(data.headers)) {
+            headerFiles = data.headers
+                .map((header) => String(header || '').trim().toLowerCase())
+                .filter(Boolean);
+        }
+
         dataLoaded = true;
     } catch (error) {
         console.error('Autocomplete: failed to load data', error);
@@ -32,10 +44,80 @@ async function loadData() {
 // Load once on page load
 loadData();
 
+function getIncludedHeaders(state) {
+    const includedHeaders = new Set();
+    const includePattern = /^\s*#include\s*<([^>\r\n]+)>/gm;
+    const source = state.doc.toString();
+    let match;
+
+    while ((match = includePattern.exec(source)) !== null) {
+        includedHeaders.add(match[1].trim().toLowerCase());
+    }
+
+    return includedHeaders;
+}
+
+function buildHeaderOptions(headers, preserveOrder = false) {
+    const totalHeaders = headers.length;
+    return headers.map((header, index) => ({
+        label: header,
+        type: 'text',
+        boost: preserveOrder ? (totalHeaders - index) * 100 : undefined,
+        apply: (view, completion, from, to) => {
+            view.dispatch({
+                changes: { from, to, insert: completion.label },
+                selection: { anchor: from + completion.label.length + 1 }
+            });
+            pendingIncludeHeaderSuggestions = false;
+        }
+    }));
+}
+
+function getHeaderSuggestions(state, prefix, useStarterList) {
+    const normalizedPrefix = (prefix || '').toLowerCase();
+
+    if (useStarterList) {
+        const includedHeaders = getIncludedHeaders(state);
+        return DEFAULT_INCLUDE_HEADERS
+            .filter((header) => headerFiles.includes(header))
+            .filter((header) => !includedHeaders.has(header));
+    }
+
+    return headerFiles.filter((header) => header.startsWith(normalizedPrefix));
+}
+
 // --- STEP 3: CONTEXT DETECTION ---
 function detectContext(state, pos) {
     const line = state.doc.lineAt(pos);
     const textUpToCursor = line.text.slice(0, pos - line.from);
+    const preprocessorMatch = textUpToCursor.match(/#\w*$/);
+
+    const includeKeywordMatch = textUpToCursor.match(/#in\w*$/);
+    if (includeKeywordMatch) {
+        return {
+            type: 'include-keyword',
+            prefix: includeKeywordMatch[0],
+            from: pos - includeKeywordMatch[0].length
+        };
+    }
+
+    const includeHeaderMatch = textUpToCursor.match(/^\s*#include\s+<([^>\r\n]*)$/);
+    if (includeHeaderMatch) {
+        const prefix = includeHeaderMatch[1] || '';
+        return {
+            type: 'headers',
+            prefix,
+            from: pos - prefix.length
+        };
+    }
+
+    if (preprocessorMatch) {
+        return {
+            type: 'preprocessor',
+            prefix: preprocessorMatch[0],
+            from: pos - preprocessorMatch[0].length
+        };
+    }
 
     let counter = 0;
     let openParenIndex = -1;
@@ -102,6 +184,57 @@ function getCompletions(context) {
     const pos = context.pos;
 
     const detected = detectContext(state, pos);
+
+    if (detected.type !== 'headers') {
+        pendingIncludeHeaderSuggestions = false;
+    }
+
+    if (detected.type === 'include-keyword') {
+        return {
+            from: detected.from,
+            options: [{
+                label: INCLUDE_DIRECTIVE,
+                detail: '<header.h>',
+                type: 'keyword',
+                apply: (view, completion, from, to) => {
+                    pendingIncludeHeaderSuggestions = true;
+                    view.dispatch({
+                        changes: { from, to, insert: '#include <>' },
+                        selection: { anchor: from + '#include <'.length }
+                    });
+
+                    if (typeof startAutocomplete === 'function') {
+                        setTimeout(() => startAutocomplete(view), 0);
+                    }
+                }
+            }],
+            validFor: /^#\w*$/
+        };
+    }
+
+    if (detected.type === 'headers') {
+        const useStarterList = !detected.prefix && pendingIncludeHeaderSuggestions;
+        if (!detected.prefix && !useStarterList) {
+            return null;
+        }
+
+        const headerSuggestions = getHeaderSuggestions(state, detected.prefix, useStarterList);
+        pendingIncludeHeaderSuggestions = false;
+
+        if (!headerSuggestions.length) {
+            return null;
+        }
+
+        return {
+            from: detected.from,
+            options: buildHeaderOptions(headerSuggestions, useStarterList),
+            validFor: /^[\w/]*$/
+        };
+    }
+
+    if (detected.type === 'preprocessor') {
+        return null;
+    }
 
     const word = context.matchBefore(/\w*/);
     if (!word) return null;
@@ -242,7 +375,9 @@ let hideSelectionTooltip;
 window.setupAutocomplete = function (editorView) {
     const { hoverTooltip, showTooltip } = cmModules.view;
     const { StateField, StateEffect } = cmModules.state;
-    const { autocompletion } = cmModules.autocomplete;
+    const { autocompletion, startCompletion } = cmModules.autocomplete;
+
+    startAutocomplete = startCompletion;
 
     showSelectionTooltip = StateEffect.define();
     hideSelectionTooltip = StateEffect.define();
