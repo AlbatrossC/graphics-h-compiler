@@ -323,6 +323,37 @@ function createSelectedMatchHighlightExtension() {
     });
 }
 
+function createEmptyEditorTipExtension() {
+    const { EditorView, placeholder } = cmModules.view;
+
+    const tip = document.createElement('div');
+    tip.className = 'cm-empty-tip';
+    tip.setAttribute('aria-hidden', 'true');
+    tip.innerHTML = 'Tip: Type <span class="cm-empty-tip-highlight">boilerplate</span> to insert the graphics.h template';
+
+    return [
+        placeholder(tip),
+        EditorView.theme({
+            '.cm-empty-tip': {
+                color: 'var(--text-muted)',
+                opacity: '0.78',
+                fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                fontSize: '14px',
+                lineHeight: '1.6',
+                pointerEvents: 'none',
+                userSelect: 'none',
+                whiteSpace: 'normal',
+                padding: '0',
+                maxWidth: '520px'
+            },
+            '.cm-empty-tip-highlight': {
+                color: 'var(--primary)',
+                fontWeight: '700'
+            }
+        })
+    ];
+}
+
 function createBracketClosingExtension() {
     const { EditorView, keymap } = cmModules.view;
     const pairs = new Map([
@@ -485,6 +516,7 @@ async function initializeEditor() {
             '&': { height: '100%' },
             '.cm-scroller': { overflow: 'auto' }
         }),
+        createEmptyEditorTipExtension(),
         EditorState.tabSize.of(4),
         cmModules.language.indentUnit.of("    "),
         wordWrapCompartment.of(initialEditorSettings.wordWrap ? EditorView.lineWrapping : []),

@@ -10,6 +10,18 @@ let pendingIncludeHeaderSuggestions = false;
 
 const INCLUDE_DIRECTIVE = '#include';
 const DEFAULT_INCLUDE_HEADERS = ['graphics.h', 'conio.h', 'dos.h'];
+const BOILERPLATE_LABEL = 'boilerplate';
+const BOILERPLATE_TEMPLATE = `#include <graphics.h>
+#include <conio.h>
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&gd, &gm, "");
+
+    getch();
+    closegraph();
+    return 0;
+}`;
 
 // --- STEP 2: DATA LOADING ---
 async function loadData() {
@@ -84,6 +96,33 @@ function getHeaderSuggestions(state, prefix, useStarterList) {
     }
 
     return headerFiles.filter((header) => header.startsWith(normalizedPrefix));
+}
+
+function isBoilerplatePrefix(prefix) {
+    if (!prefix) return false;
+    const normalizedPrefix = prefix.toLowerCase();
+    return normalizedPrefix.length >= 1 && BOILERPLATE_LABEL.startsWith(normalizedPrefix);
+}
+
+function getBoilerplateTrigger(state, word) {
+    if (!word || !word.text) {
+        return null;
+    }
+
+    const trimmedDoc = state.doc.toString().trim();
+    if (!trimmedDoc || trimmedDoc.toLowerCase() !== word.text.toLowerCase()) {
+        return null;
+    }
+
+    if (!isBoilerplatePrefix(word.text)) {
+        return null;
+    }
+
+    return {
+        from: word.from,
+        to: word.to,
+        text: word.text
+    };
 }
 
 // --- STEP 3: CONTEXT DETECTION ---
@@ -178,10 +217,31 @@ function detectContext(state, pos) {
 
 // --- STEP 4 & 5: COMPLETIONS ---
 function getCompletions(context) {
-    if (!dataLoaded) return null;
-
     const state = context.state;
     const pos = context.pos;
+    const currentWord = context.matchBefore(/\w*/);
+    const boilerplateTrigger = getBoilerplateTrigger(state, currentWord);
+
+    if (boilerplateTrigger && pos >= boilerplateTrigger.from && pos <= boilerplateTrigger.to) {
+        return {
+            from: boilerplateTrigger.from,
+            options: [{
+                label: BOILERPLATE_LABEL,
+                detail: 'graphics.h template',
+                type: 'keyword',
+                boost: 1000,
+                apply: (view) => {
+                    view.dispatch({
+                        changes: { from: 0, to: view.state.doc.length, insert: BOILERPLATE_TEMPLATE },
+                        selection: { anchor: BOILERPLATE_TEMPLATE.length }
+                    });
+                }
+            }],
+            validFor: /^\w*$/i
+        };
+    }
+
+    if (!dataLoaded) return null;
 
     const detected = detectContext(state, pos);
 
@@ -236,7 +296,7 @@ function getCompletions(context) {
         return null;
     }
 
-    const word = context.matchBefore(/\w*/);
+    const word = currentWord;
     if (!word) return null;
     if (word.from === word.to && !context.explicit) {
         if (detected.type === 'functions') {
@@ -426,50 +486,62 @@ window.setupAutocomplete = function (editorView) {
         },
         // Autocomplete dropdown — must override base with higher specificity
         ".cm-tooltip.cm-tooltip-autocomplete": {
-            backgroundColor: "#252526",
-            border: "1px solid #454545",
-            borderRadius: "6px",
-            padding: "4px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            backgroundColor: "#1d1f23",
+            border: "1px solid rgba(120, 142, 166, 0.16)",
+            borderRadius: "16px",
+            padding: "7px",
+            boxShadow: "0 18px 30px rgba(0,0,0,0.30)",
             fontFamily: "'JetBrains Mono', monospace",
-            fontSize: "13.5px",
+            fontSize: "13px",
+            minWidth: "210px",
+            maxWidth: "260px"
         },
-        ".cm-tooltip-autocomplete ul": { margin: "0", padding: "0" },
+        ".cm-tooltip.cm-tooltip-autocomplete > ul": {
+            margin: "0",
+            padding: "0",
+            minWidth: "196px",
+            maxWidth: "246px"
+        },
         ".cm-tooltip-autocomplete ul::-webkit-scrollbar": {
-            width: "10px"
+            width: "8px"
         },
         ".cm-tooltip-autocomplete ul::-webkit-scrollbar-track": {
             background: "transparent"
         },
         ".cm-tooltip-autocomplete ul::-webkit-scrollbar-thumb": {
-            backgroundColor: "#424242",
-            borderRadius: "6px",
-            border: "2px solid #252526"
+            backgroundColor: "#3f4854",
+            borderRadius: "999px",
+            border: "2px solid #1d1f23"
         },
         ".cm-tooltip-autocomplete ul::-webkit-scrollbar-thumb:hover": {
-            backgroundColor: "#4f4f4f"
+            backgroundColor: "#556171"
         },
-        ".cm-tooltip-autocomplete ul li": {
-            padding: "4px 8px",
-            color: "#cccccc",
-            borderRadius: "4px",
+        ".cm-tooltip.cm-tooltip-autocomplete > ul > li": {
+            padding: "8px 11px",
+            color: "#d8e0ea",
+            borderRadius: "12px",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            lineHeight: "1.4"
+            gap: "6px",
+            lineHeight: "1.3",
+            minHeight: "32px",
+            margin: "2px 0"
         },
-        ".cm-tooltip-autocomplete ul li[aria-selected]": {
-            backgroundColor: "#04395e",
+        ".cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]": {
+            backgroundColor: "rgba(var(--color-rgb-primary, 0, 255, 136), 0.11)",
+            outline: "1px solid rgba(var(--color-rgb-primary, 0, 255, 136), 0.18)",
             color: "#ffffff",
         },
         ".cm-completionIcon": {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: "16px",
-            height: "16px",
-            marginRight: "6px",
-            opacity: "0.9"
+            width: "14px",
+            height: "14px",
+            marginRight: "0",
+            opacity: "0.78",
+            flexShrink: "0"
         },
         ".cm-completionIcon-function::after": {
             content: "'ƒ'",
@@ -487,15 +559,19 @@ window.setupAutocomplete = function (editorView) {
             letterSpacing: "-1px"
         },
         ".cm-completionMatchedText": {
-            color: "#569cd6",
+            color: "#86f7b2",
             textDecoration: "none",
             fontWeight: "bold",
         },
-        ".cm-completionDetail": {
-            color: "#858585",
-            fontStyle: "normal",
-            marginLeft: "2px",
+        ".cm-completionLabel": {
             fontSize: "13px",
+            lineHeight: "1.25"
+        },
+        ".cm-completionDetail": {
+            color: "#8b97a6",
+            fontStyle: "normal",
+            marginLeft: "4px",
+            fontSize: "11px",
             fontFamily: "'JetBrains Mono', monospace"
         },
         // Function tooltip card
