@@ -7,6 +7,10 @@ let headerFiles = [];
 let dataLoaded = false;
 let startAutocomplete = null;
 let pendingIncludeHeaderSuggestions = false;
+let cachedFunctionOptions = null;
+let applySnippet = null;
+let autocompleteCacheField = null;
+const constantCache = new Map();
 
 const INCLUDE_DIRECTIVE = '#include';
 const DEFAULT_INCLUDE_HEADERS = ['graphics.h', 'conio.h', 'dos.h'];
@@ -23,6 +27,186 @@ int main() {
     return 0;
 }`;
 
+const SNIPPETS = {
+    for: {
+        label: 'for',
+        detail: 'counting loop',
+        type: 'keyword',
+        boost: 5,
+        apply: createSnippetApply('for (int ${i} = 0; ${i} < ${n}; ${i}++) {\n\t${}\n}')
+    },
+    while: {
+        label: 'while',
+        detail: 'while loop',
+        type: 'keyword',
+        boost: 5,
+        apply: createSnippetApply('while (${condition}) {\n\t${}\n}')
+    },
+    if: {
+        label: 'if',
+        detail: 'conditional block',
+        type: 'keyword',
+        boost: 5,
+        apply: createSnippetApply('if (${condition}) {\n\t${}\n}')
+    },
+    main: {
+        label: 'main',
+        detail: 'main function',
+        type: 'keyword',
+        boost: 5,
+        apply: createSnippetApply('int main() {\n\t${}\n\treturn 0;\n}')
+    },
+    anim: {
+        label: 'anim',
+        detail: 'animation loop',
+        type: 'keyword',
+        boost: 5,
+        apply: createSnippetApply('while (!kbhit()) {\n\tcleardevice();\n\t${}\n\tdelay(16);\n}')
+    }
+};
+
+// Builds a snippet apply handler with a plain-text fallback.
+function createSnippetApply(template) {
+    return (view, completion, from, to) => {
+        if (typeof applySnippet === 'function') {
+            applySnippet(template)(view, completion, from, to);
+            return;
+        }
+
+        const plainText = template.replace(/\$\{([^}]*)\}/g, '$1');
+        view.dispatch({
+            changes: { from, to, insert: plainText },
+            selection: { anchor: from + plainText.length }
+        });
+    };
+}
+
+// Resets caches whenever autocomplete data is reloaded or cleared.
+function resetAutocompleteCaches() {
+    cachedFunctionOptions = null;
+    constantCache.clear();
+}
+
+// Extracts variables from a single line so changed lines can be updated incrementally.
+function extractVariablesFromLine(lineText) {
+    const variables = [];
+    const variablePattern = /\b(int|float|double|char\s*\*?)\s+(\w+)/g;
+    let match;
+
+    while ((match = variablePattern.exec(lineText)) !== null) {
+        variables.push(match[2]);
+    }
+
+    return variables;
+}
+
+// Stores the line text with its extracted variables for cache reuse.
+function createLineVariableEntry(lineText) {
+    return {
+        text: lineText,
+        variables: extractVariablesFromLine(lineText)
+    };
+}
+
+// Builds a de-duplicated variable list from cached line entries without rescanning source text.
+function buildVariableListFromLineEntries(lineEntries) {
+    const variables = [];
+    const seen = new Set();
+
+    for (const entry of lineEntries) {
+        for (const variableName of entry.variables) {
+            if (!seen.has(variableName)) {
+                seen.add(variableName);
+                variables.push(variableName);
+            }
+        }
+    }
+
+    return variables;
+}
+
+// Builds the initial autocomplete cache for a document and stores derived data together.
+function buildAutocompleteDocCache(doc) {
+    const source = doc.toString();
+    const lineEntries = [];
+
+    for (let lineNumber = 1; lineNumber <= doc.lines; lineNumber++) {
+        lineEntries.push(createLineVariableEntry(doc.line(lineNumber).text));
+    }
+
+    return {
+        source,
+        lineEntries,
+        variables: buildVariableListFromLineEntries(lineEntries),
+        includedHeaders: getIncludedHeaders(source)
+    };
+}
+
+// Returns the line range affected by a change so only those lines need variable re-extraction.
+function getChangedLineRange(doc, from, to) {
+    const safeFrom = Math.min(from, doc.length);
+    const safeEnd = Math.min(to > from ? to - 1 : from, doc.length);
+
+    return {
+        from: doc.lineAt(safeFrom).number,
+        to: doc.lineAt(safeEnd).number
+    };
+}
+
+// Updates cached source/variables when content changes, including paste and undo/redo.
+function updateAutocompleteDocCache(previousCache, transaction) {
+    const source = transaction.state.doc.toString();
+    const lineEntries = previousCache.lineEntries.slice();
+    const replacements = [];
+
+    transaction.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+        const oldRange = getChangedLineRange(transaction.startState.doc, fromA, toA);
+        const newRange = getChangedLineRange(transaction.state.doc, fromB, toB);
+        const newEntries = [];
+
+        for (let lineNumber = newRange.from; lineNumber <= newRange.to; lineNumber++) {
+            newEntries.push(createLineVariableEntry(transaction.state.doc.line(lineNumber).text));
+        }
+
+        replacements.push({
+            oldFromLine: oldRange.from,
+            oldToLine: oldRange.to,
+            newEntries
+        });
+    });
+
+    let lineOffset = 0;
+    for (const replacement of replacements) {
+        const startIndex = replacement.oldFromLine - 1 + lineOffset;
+        const deleteCount = replacement.oldToLine - replacement.oldFromLine + 1;
+        lineEntries.splice(startIndex, deleteCount, ...replacement.newEntries);
+        lineOffset += replacement.newEntries.length - deleteCount;
+    }
+
+    if (lineEntries.length !== transaction.state.doc.lines) {
+        return buildAutocompleteDocCache(transaction.state.doc);
+    }
+
+    return {
+        source,
+        lineEntries,
+        variables: buildVariableListFromLineEntries(lineEntries),
+        includedHeaders: getIncludedHeaders(source)
+    };
+}
+
+// Reads cached autocomplete data from editor state and falls back to a one-off build if needed.
+function getAutocompleteDocCache(state) {
+    if (autocompleteCacheField) {
+        const cached = state.field(autocompleteCacheField, false);
+        if (cached) {
+            return cached;
+        }
+    }
+
+    return buildAutocompleteDocCache(state.doc);
+}
+
 // --- STEP 2: DATA LOADING ---
 async function loadData() {
     if (dataLoaded) return;
@@ -30,6 +214,11 @@ async function loadData() {
         const response = await fetch('/static/assets/functions.2.json');
         if (!response.ok) throw new Error('Failed to load functions data');
         const data = await response.json();
+
+        functionsMap = {};
+        constantsMap = {};
+        headerFiles = [];
+        resetAutocompleteCaches();
 
         for (const func of data.functions) {
             functionsMap[func.name] = func;
@@ -49,6 +238,8 @@ async function loadData() {
 
         dataLoaded = true;
     } catch (error) {
+        dataLoaded = false;
+        resetAutocompleteCaches();
         console.error('Autocomplete: failed to load data', error);
     }
 }
@@ -56,10 +247,20 @@ async function loadData() {
 // Load once on page load
 loadData();
 
-function getIncludedHeaders(state) {
+// Gets the set of included headers from a source string or editor state.
+function getIncludedHeaders(sourceOrState) {
+    if (sourceOrState && typeof sourceOrState !== 'string') {
+        const cached = getAutocompleteDocCache(sourceOrState);
+        if (cached?.includedHeaders) {
+            return cached.includedHeaders;
+        }
+    }
+
     const includedHeaders = new Set();
-    const includePattern = /^\s*#include\s*<([^>\r\n]+)>/gm;
-    const source = state.doc.toString();
+    const includePattern = /^\s*#include\s*[<"]([^>"\r\n]+)[>"]/gm;
+    const source = typeof sourceOrState === 'string'
+        ? sourceOrState
+        : sourceOrState?.doc?.toString?.() ?? '';
     let match;
 
     while ((match = includePattern.exec(source)) !== null) {
@@ -69,27 +270,31 @@ function getIncludedHeaders(state) {
     return includedHeaders;
 }
 
-function buildHeaderOptions(headers, preserveOrder = false) {
+function buildHeaderOptions(headers, preserveOrder = false, closeDelimiter = '>') {
     const totalHeaders = headers.length;
     return headers.map((header, index) => ({
         label: header,
         type: 'text',
         boost: preserveOrder ? (totalHeaders - index) * 100 : undefined,
         apply: (view, completion, from, to) => {
+            const hasClosingDelimiter = view.state.sliceDoc(to, to + 1) === closeDelimiter;
+            const insertText = completion.label + (hasClosingDelimiter ? '' : closeDelimiter);
             view.dispatch({
-                changes: { from, to, insert: completion.label },
-                selection: { anchor: from + completion.label.length + 1 }
+                changes: { from, to, insert: insertText },
+                selection: {
+                    anchor: from + completion.label.length + (hasClosingDelimiter ? 1 : closeDelimiter.length)
+                }
             });
             pendingIncludeHeaderSuggestions = false;
         }
     }));
 }
 
-function getHeaderSuggestions(state, prefix, useStarterList) {
+function getHeaderSuggestions(source, prefix, useStarterList) {
     const normalizedPrefix = (prefix || '').toLowerCase();
 
     if (useStarterList) {
-        const includedHeaders = getIncludedHeaders(state);
+        const includedHeaders = getIncludedHeaders(source);
         return DEFAULT_INCLUDE_HEADERS
             .filter((header) => headerFiles.includes(header))
             .filter((header) => !includedHeaders.has(header));
@@ -104,13 +309,26 @@ function isBoilerplatePrefix(prefix) {
     return normalizedPrefix.length >= 1 && BOILERPLATE_LABEL.startsWith(normalizedPrefix);
 }
 
-function getBoilerplateTrigger(state, word) {
+// Treats blank lines and single-line comments as empty for boilerplate detection.
+function isEffectivelyEmpty(source, typedWord) {
+    const normalized = source
+        .split('\n')
+        .filter((line) => {
+            const trimmed = line.trim();
+            return trimmed && !trimmed.startsWith('//');
+        })
+        .join('')
+        .trim();
+
+    return normalized.toLowerCase() === (typedWord || '').toLowerCase();
+}
+
+function getBoilerplateTrigger(source, word) {
     if (!word || !word.text) {
         return null;
     }
 
-    const trimmedDoc = state.doc.toString().trim();
-    if (!trimmedDoc || trimmedDoc.toLowerCase() !== word.text.toLowerCase()) {
+    if (!source.trim() || !isEffectivelyEmpty(source, word.text)) {
         return null;
     }
 
@@ -125,12 +343,27 @@ function getBoilerplateTrigger(state, word) {
     };
 }
 
-// --- STEP 3: CONTEXT DETECTION ---
-function detectContext(state, pos) {
-    const line = state.doc.lineAt(pos);
-    const textUpToCursor = line.text.slice(0, pos - line.from);
-    const preprocessorMatch = textUpToCursor.match(/#\w*$/);
+// Detects whether the cursor is currently inside a quoted string.
+function isInsideString(textUpToCursor) {
+    const quoteCount = (textUpToCursor.match(/"/g) || []).length;
+    return quoteCount % 2 === 1;
+}
 
+// Detects whether the current line is a single-line comment.
+function isLineComment(textUpToCursor) {
+    return textUpToCursor.trimStart().startsWith('//');
+}
+
+// Detects whether the cursor is currently inside a block comment.
+function isInsideBlockComment(source, pos) {
+    const sourceUpToCursor = source.slice(0, pos);
+    const openCount = (sourceUpToCursor.match(/\/\*/g) || []).length;
+    const closeCount = (sourceUpToCursor.match(/\*\//g) || []).length;
+    return openCount > closeCount;
+}
+
+// Detects include directive contexts and tracks the active delimiter.
+function detectIncludeContext(textUpToCursor, pos) {
     const includeKeywordMatch = textUpToCursor.match(/#in\w*$/);
     if (includeKeywordMatch) {
         return {
@@ -140,28 +373,27 @@ function detectContext(state, pos) {
         };
     }
 
-    const includeHeaderMatch = textUpToCursor.match(/^\s*#include\s+<([^>\r\n]*)$/);
+    const includeHeaderMatch = textUpToCursor.match(/^\s*#include\s*[<"]([^>"'\r\n]*)$/);
     if (includeHeaderMatch) {
         const prefix = includeHeaderMatch[1] || '';
+        const openDelimiter = textUpToCursor[textUpToCursor.length - prefix.length - 1] || '<';
         return {
             type: 'headers',
             prefix,
-            from: pos - prefix.length
+            from: pos - prefix.length,
+            openDelimiter,
+            closeDelimiter: openDelimiter === '"' ? '"' : '>'
         };
     }
 
-    if (preprocessorMatch) {
-        return {
-            type: 'preprocessor',
-            prefix: preprocessorMatch[0],
-            from: pos - preprocessorMatch[0].length
-        };
-    }
+    return null;
+}
 
+// Detects whether completion is happening in function-name or parameter context.
+function detectParenContext(textUpToCursor) {
     let counter = 0;
     let openParenIndex = -1;
 
-    // Scan left from cursor
     for (let i = textUpToCursor.length - 1; i >= 0; i--) {
         const char = textUpToCursor[i];
         if (char === ')') {
@@ -175,21 +407,16 @@ function detectContext(state, pos) {
         }
     }
 
-    // Context: Outside parens
     if (openParenIndex === -1) {
-        // Find typed prefix
         const match = textUpToCursor.match(/[\w]+$/);
         const prefix = match ? match[0] : '';
-        return { type: 'functions', prefix: prefix };
+        return { type: 'functions', prefix };
     }
 
-    // Context: Inside parens
-    // Extract function name (word before the '(')
     const textBeforeParen = textUpToCursor.slice(0, openParenIndex);
     const funcMatch = textBeforeParen.match(/[\w]+$/);
     const funcName = funcMatch ? funcMatch[0] : '';
 
-    // Count commas between '(' and cursor at the same nesting level
     let commaCount = 0;
     let innerCounter = 0;
     const innerText = textUpToCursor.slice(openParenIndex + 1);
@@ -205,22 +432,115 @@ function detectContext(state, pos) {
         }
     }
 
-    const paramIndex = commaCount.toString();
-
-    // Find typed prefix for the constant
-    // Match word characters right before cursor
     const prefixMatch = innerText.match(/[\w]+$/);
     const prefix = prefixMatch ? prefixMatch[0] : '';
 
-    return { type: 'constants', funcName, paramIndex, prefix };
+    return {
+        type: 'constants',
+        funcName,
+        paramIndex: commaCount.toString(),
+        prefix
+    };
+}
+
+// Extracts variable names from the cached document snapshot to avoid repeated full rescans.
+function extractVariables(source) {
+    if (typeof source === 'string') {
+        const lineEntries = source.split('\n').map((lineText) => createLineVariableEntry(lineText));
+        return buildVariableListFromLineEntries(lineEntries);
+    }
+
+    return getAutocompleteDocCache(source).variables;
+}
+
+// Performs simple ordered-character fuzzy matching for autocomplete filtering.
+function fuzzyMatch(str, pattern) {
+    let patternIndex = 0;
+    for (let i = 0; i < str.length && patternIndex < pattern.length; i++) {
+        if (str[i] === pattern[patternIndex]) {
+            patternIndex++;
+        }
+    }
+    return patternIndex === pattern.length;
+}
+
+// Builds and caches the base set of function completion options.
+function buildFunctionOptions() {
+    if (cachedFunctionOptions) {
+        return cachedFunctionOptions;
+    }
+
+    cachedFunctionOptions = Object.entries(functionsMap).map(([name, func]) => ({
+        label: name,
+        detail: '()',
+        type: 'function',
+        boost: func.boost ?? 0,
+        info: () => {
+            const d = buildTooltipHTML(func.info);
+            return { dom: d };
+        },
+        apply: (view, completion, from, to) => {
+            const isInside = func.cursor === 'inside';
+            const insertText = name + '()';
+            const activeParamIndex = isInside ? 0 : null;
+
+            view.dispatch({
+                changes: { from, to, insert: insertText },
+                selection: { anchor: from + name.length + (isInside ? 1 : 2) }
+            });
+
+            view.dispatch({
+                effects: showSelectionTooltip.of({ name, activeParamIndex })
+            });
+        }
+    }));
+
+    return cachedFunctionOptions;
+}
+
+// --- STEP 3: CONTEXT DETECTION ---
+function detectContext(state, pos, source) {
+    const line = state.doc.lineAt(pos);
+    const textUpToCursor = line.text.slice(0, pos - line.from);
+
+    if (isLineComment(textUpToCursor)) {
+        return { type: 'comment' };
+    }
+
+    if (isInsideBlockComment(source, pos)) {
+        return { type: 'comment' };
+    }
+
+    if (isInsideString(textUpToCursor)) {
+        return { type: 'string' };
+    }
+
+    const includeContext = detectIncludeContext(textUpToCursor, pos);
+    if (includeContext) {
+        return includeContext;
+    }
+
+    const preprocessorMatch = textUpToCursor.match(/#\w*$/);
+
+    if (preprocessorMatch) {
+        return {
+            type: 'preprocessor',
+            prefix: preprocessorMatch[0],
+            from: pos - preprocessorMatch[0].length
+        };
+    }
+
+    return detectParenContext(textUpToCursor, pos);
 }
 
 // --- STEP 4 & 5: COMPLETIONS ---
 function getCompletions(context) {
     const state = context.state;
     const pos = context.pos;
+    const docCache = getAutocompleteDocCache(state);
+    const source = docCache.source;
     const currentWord = context.matchBefore(/\w*/);
-    const boilerplateTrigger = getBoilerplateTrigger(state, currentWord);
+    const boilerplateTrigger = getBoilerplateTrigger(source, currentWord);
 
     if (boilerplateTrigger && pos >= boilerplateTrigger.from && pos <= boilerplateTrigger.to) {
         return {
@@ -243,10 +563,14 @@ function getCompletions(context) {
 
     if (!dataLoaded) return null;
 
-    const detected = detectContext(state, pos);
+    const detected = detectContext(state, pos, source);
 
     if (detected.type !== 'headers') {
         pendingIncludeHeaderSuggestions = false;
+    }
+
+    if (detected.type === 'string' || detected.type === 'comment') {
+        return null;
     }
 
     if (detected.type === 'include-keyword') {
@@ -278,7 +602,7 @@ function getCompletions(context) {
             return null;
         }
 
-        const headerSuggestions = getHeaderSuggestions(state, detected.prefix, useStarterList);
+        const headerSuggestions = getHeaderSuggestions(source, detected.prefix, useStarterList);
         pendingIncludeHeaderSuggestions = false;
 
         if (!headerSuggestions.length) {
@@ -287,7 +611,7 @@ function getCompletions(context) {
 
         return {
             from: detected.from,
-            options: buildHeaderOptions(headerSuggestions, useStarterList),
+            options: buildHeaderOptions(headerSuggestions, useStarterList, detected.closeDelimiter),
             validFor: /^[\w/]*$/
         };
     }
@@ -310,53 +634,31 @@ function getCompletions(context) {
     }
 
     if (detected.type === 'functions') {
-        const options = [];
-        for (const [name, func] of Object.entries(functionsMap)) {
-            options.push({
+        const prefix = (detected.prefix || '').toLowerCase();
+        const functionOptions = buildFunctionOptions().filter((option) => (
+            !prefix || fuzzyMatch(option.label.toLowerCase(), prefix)
+        ));
+        const variableOptions = docCache.variables
+            .filter((name) => !prefix || fuzzyMatch(name.toLowerCase(), prefix))
+            .map((name) => ({
                 label: name,
-                detail: "()",
-                type: 'function',
-                apply: (view, completion, from, to) => {
-                    const isInside = func.cursor === 'inside';
-                    const insertText = name + '()';
-                    view.dispatch({
-                        changes: { from, to, insert: insertText },
-                        selection: { anchor: from + name.length + (isInside ? 1 : 2) }
-                    });
+                type: 'variable',
+                boost: -2
+            }));
+        const snippetOptions = Object.values(SNIPPETS)
+            .filter((snippet) => !prefix || fuzzyMatch(snippet.label.toLowerCase(), prefix));
 
-                    // Show tooltip after selection
-                    view.dispatch({
-                        effects: showSelectionTooltip.of(name)
-                    });
-                }
-            });
-        }
+        const options = [...snippetOptions, ...functionOptions, ...variableOptions];
+
         return {
             from: word.from,
-            options: options,
+            options,
             validFor: /^\w*$/
         };
     } else if (detected.type === 'constants') {
         const func = functionsMap[detected.funcName];
         if (!func) {
-            // Fallback: Unknown function, show functions
-            const options = [];
-            for (const name of Object.keys(functionsMap)) {
-                options.push({
-                    label: name,
-                    detail: "()",
-                    type: 'function',
-                    apply: (view, completion, from, to) => {
-                        const insertText = name + '()';
-                        const isInside = functionsMap[name].cursor === 'inside';
-                        view.dispatch({
-                            changes: { from, to, insert: insertText },
-                            selection: { anchor: from + name.length + (isInside ? 1 : 2) }
-                        });
-                    }
-                });
-            }
-            return { from: word.from, options: options, validFor: /^\w*$/ };
+            return null;
         }
 
         if (!func.accepts || !func.accepts[detected.paramIndex]) {
@@ -364,13 +666,25 @@ function getCompletions(context) {
             return null;
         }
 
+        const cacheKey = detected.funcName + ':' + detected.paramIndex;
+        if (constantCache.has(cacheKey)) {
+            return {
+                from: word.from,
+                options: constantCache.get(cacheKey),
+                validFor: /^\w*$/
+            };
+        }
+
         // Allowed groups for this parameter
         const groups = func.accepts[detected.paramIndex];
         const options = [];
+        const seen = new Set();
 
         for (const group of groups) {
             const constants = constantsMap[group] || [];
             for (const constant of constants) {
+                if (seen.has(constant)) continue;
+                seen.add(constant);
                 options.push({
                     label: constant,
                     type: 'constant',
@@ -384,9 +698,11 @@ function getCompletions(context) {
             }
         }
 
+        constantCache.set(cacheKey, options);
+
         return {
             from: word.from,
-            options: options,
+            options,
             validFor: /^\w*$/
         };
     }
@@ -395,12 +711,19 @@ function getCompletions(context) {
 }
 
 // --- STEP 6: TOOLTIP DESIGN ---
-function buildTooltipHTML(info) {
+function buildTooltipHTML(info, activeParamIndex, state) {
     const dom = document.createElement('div');
     dom.className = 'cm-func-tooltip';
 
     let html = `<div class="tooltip-signature">${info.signature}</div>`;
     html += `<div class="tooltip-scroll-area">`;
+
+    if (state && info.header) {
+        const includedHeaders = getIncludedHeaders(state);
+        if (!includedHeaders.has(info.header.toLowerCase())) {
+            html += `<div class="tooltip-warning">⚠ Requires #include &lt;${info.header}&gt;</div>`;
+        }
+    }
     
     if (info.description) {
         html += `<div class="tooltip-description">${info.description}</div>`;
@@ -408,17 +731,18 @@ function buildTooltipHTML(info) {
 
     if (info.params && info.params.length > 0) {
         html += `<div class="tooltip-params">`;
-        for (const param of info.params) {
+        info.params.forEach((param, index) => {
             // Split param text by first '→' to extract the name
             const parts = param.split('→');
+            const activeClass = index === activeParamIndex ? ' tooltip-param-active' : '';
             if (parts.length > 1) {
                 const name = parts[0].trim();
                 const desc = parts.slice(1).join('→').trim();
-                html += `<div class="tooltip-param"><span class="tooltip-param-name">${name}</span> <span class="tooltip-param-arrow">→</span> <span class="tooltip-param-desc">${desc}</span></div>`;
+                html += `<div class="tooltip-param${activeClass}"><span class="tooltip-param-name">${name}</span> <span class="tooltip-param-arrow">→</span> <span class="tooltip-param-desc">${desc}</span></div>`;
             } else {
-                html += `<div class="tooltip-param">${param}</div>`;
+                html += `<div class="tooltip-param${activeClass}">${param}</div>`;
             }
-        }
+        });
         html += `</div>`;
     }
     
@@ -435,23 +759,43 @@ let hideSelectionTooltip;
 window.setupAutocomplete = function (editorView) {
     const { hoverTooltip, showTooltip } = cmModules.view;
     const { StateField, StateEffect } = cmModules.state;
-    const { autocompletion, startCompletion } = cmModules.autocomplete;
+    const { autocompletion, startCompletion, snippet } = cmModules.autocomplete;
 
     startAutocomplete = startCompletion;
+    applySnippet = snippet;
 
     showSelectionTooltip = StateEffect.define();
     hideSelectionTooltip = StateEffect.define();
+    autocompleteCacheField = StateField.define({
+        create(state) {
+            // Cache source/variables once up front so autocomplete reads cheap derived data later.
+            return buildAutocompleteDocCache(state.doc);
+        },
+        update(value, tr) {
+            if (!tr.docChanged) {
+                return value;
+            }
+
+            // Recompute only the changed lines on content edits, paste, undo, and redo.
+            return updateAutocompleteDocCache(value, tr);
+        }
+    });
 
     const hoverTooltipSource = hoverTooltip((view, pos, side) => {
         if (!dataLoaded) return null;
+        const source = getAutocompleteDocCache(view.state).source;
+        const detected = detectContext(view.state, pos, source);
         const word = view.state.wordAt(pos);
         if (!word) return null;
         const name = view.state.sliceDoc(word.from, word.to);
         const func = functionsMap[name];
         if (!func || !func.info) return null;
+        const activeParamIndex = detected.type === 'constants' && detected.funcName === name
+            ? parseInt(detected.paramIndex, 10)
+            : undefined;
         return {
             pos: word.from, end: word.to, above: false,
-            create() { return { dom: buildTooltipHTML(func.info) }; }
+            create() { return { dom: buildTooltipHTML(func.info, activeParamIndex, view.state) }; }
         };
     }, { hoverTime: 80 });
 
@@ -462,11 +806,15 @@ window.setupAutocomplete = function (editorView) {
             for (const e of tr.effects) { if (e.is(hideSelectionTooltip)) return null; }
             for (const e of tr.effects) {
                 if (e.is(showSelectionTooltip)) {
-                    const func = functionsMap[e.value];
+                    const func = functionsMap[e.value.name];
                     if (func && func.info) {
                         return {
                             pos: tr.state.selection.main.head, above: false,
-                            create() { return { dom: buildTooltipHTML(func.info) }; }
+                            create() {
+                                return {
+                                    dom: buildTooltipHTML(func.info, e.value.activeParamIndex, tr.state)
+                                };
+                            }
                         };
                     }
                 }
@@ -558,6 +906,12 @@ window.setupAutocomplete = function (editorView) {
             fontSize: "11px",
             letterSpacing: "-1px"
         },
+        ".cm-completionIcon-variable::after": {
+            content: "'v'",
+            color: "#9cdcfe",
+            fontFamily: "monospace",
+            fontSize: "12px"
+        },
         ".cm-completionMatchedText": {
             color: "#86f7b2",
             textDecoration: "none",
@@ -601,6 +955,12 @@ window.setupAutocomplete = function (editorView) {
             overflowY: "auto",
             flex: 1
         },
+        ".tooltip-warning": {
+            color: "#ffcc00",
+            fontSize: "11px",
+            padding: "8px 12px",
+            borderBottom: "1px solid #454545"
+        },
         ".tooltip-scroll-area::-webkit-scrollbar": {
             width: "6px"
         },
@@ -641,6 +1001,10 @@ window.setupAutocomplete = function (editorView) {
             fontWeight: "normal",
             whiteSpace: "nowrap",
         },
+        ".tooltip-param-active .tooltip-param-name": {
+            color: "#ffcc00",
+            fontWeight: "bold"
+        },
         ".tooltip-param-arrow": {
             color: "#858585",
             fontSize: "12px",
@@ -669,6 +1033,7 @@ window.setupAutocomplete = function (editorView) {
 
     editorView.dispatch({
         effects: cmModules.state.StateEffect.appendConfig.of([
+            autocompleteCacheField,
             autocompleteCompartment.of(initAc ? acExtension : []),
             tooltipCompartment.of(initTt ? ttExtension : []),
             tooltipTheme

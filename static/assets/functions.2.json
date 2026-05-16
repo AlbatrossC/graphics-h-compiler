@@ -16,7 +16,9 @@
                     "endAngle   \u2192 ending angle in degrees",
                     "radius     \u2192 radius of the arc in pixels"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "bar",
@@ -32,7 +34,9 @@
                     "right  \u2192 x coordinate of the bottom-right corner",
                     "bottom \u2192 y coordinate of the bottom-right corner"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "bar3d",
@@ -50,7 +54,9 @@
                     "depth   \u2192 depth of the 3D effect in pixels",
                     "topflag \u2192 1 to draw the top face, 0 to skip"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "circle",
@@ -65,7 +71,9 @@
                     "y      \u2192 y coordinate of the center",
                     "radius \u2192 radius of the circle in pixels"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "drawpoly",
@@ -79,7 +87,9 @@
                     "numpoints  \u2192 number of points (vertices) in the polygon",
                     "polypoints \u2192 array of x, y coordinate pairs \u2014 e.g. {x1,y1, x2,y2, ...}"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "ellipse",
@@ -97,7 +107,9 @@
                     "xRadius    \u2192 horizontal radius",
                     "yRadius    \u2192 vertical radius"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "fillellipse",
@@ -113,7 +125,9 @@
                     "xRadius \u2192 horizontal radius",
                     "yRadius \u2192 vertical radius"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "fillpoly",
@@ -127,7 +141,9 @@
                     "numpoints  \u2192 number of points (vertices) in the polygon",
                     "polypoints \u2192 array of x, y coordinate pairs \u2014 e.g. {x1,y1, x2,y2, ...}"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "floodfill",
@@ -142,7 +158,9 @@
                     "y      \u2192 y coordinate of a point inside the area to fill",
                     "border \u2192 color value of the boundary line to stop at"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "line",
@@ -158,7 +176,9 @@
                     "x2 \u2192 x coordinate of the end point",
                     "y2 \u2192 y coordinate of the end point"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "linerel",
@@ -172,7 +192,9 @@
                     "dx \u2192 horizontal distance to move (can be negative)",
                     "dy \u2192 vertical distance to move (can be negative)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "lineto",
@@ -186,7 +208,9 @@
                     "x \u2192 x coordinate of the destination",
                     "y \u2192 y coordinate of the destination"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "moverel",
@@ -200,7 +224,9 @@
                     "dx \u2192 horizontal distance to move (can be negative)",
                     "dy \u2192 vertical distance to move (can be negative)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "moveto",
@@ -214,7 +240,9 @@
                     "x \u2192 x coordinate to move to",
                     "y \u2192 y coordinate to move to"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "pieslice",
@@ -231,7 +259,9 @@
                     "endAngle   \u2192 ending angle in degrees",
                     "radius     \u2192 radius of the pie slice"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "putpixel",
@@ -250,7 +280,9 @@
                     "y     \u2192 y coordinate of the pixel",
                     "color \u2192 color constant for the pixel (e.g. RED, WHITE)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "rectangle",
@@ -266,7 +298,9 @@
                     "right  \u2192 x coordinate of the bottom-right corner",
                     "bottom \u2192 y coordinate of the bottom-right corner"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "sector",
@@ -284,7 +318,9 @@
                     "xRadius    \u2192 horizontal radius",
                     "yRadius    \u2192 vertical radius"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getimage",
@@ -301,7 +337,9 @@
                     "bottom \u2192 y coordinate of the bottom-right corner",
                     "bitmap \u2192 pointer to a memory buffer to store the image"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "imagesize",
@@ -317,7 +355,9 @@
                     "right  \u2192 x coordinate of the bottom-right corner",
                     "bottom \u2192 y coordinate of the bottom-right corner"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "putimage",
@@ -337,7 +377,9 @@
                     "bitmap \u2192 pointer to the image buffer captured by getimage",
                     "op     \u2192 drawing operation constant (e.g. COPY_PUT, XOR_PUT)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "outtext",
@@ -350,7 +392,9 @@
                 "params": [
                     "text \u2192 the string to display (e.g. \"Hello World\")"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "outtextxy",
@@ -365,7 +409,9 @@
                     "y    \u2192 y coordinate where the text starts",
                     "text \u2192 the string to display (e.g. \"Hello World\")"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "settextjustify",
@@ -386,7 +432,9 @@
                     "horiz \u2192 horizontal alignment (LEFT_TEXT, CENTER_TEXT, RIGHT_TEXT)",
                     "vert  \u2192 vertical alignment (BOTTOM_TEXT, CENTER_TEXT, TOP_TEXT)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "settextstyle",
@@ -409,7 +457,9 @@
                     "direction \u2192 HORIZ_DIR for left-to-right, VERT_DIR for bottom-to-top",
                     "charsize  \u2192 size multiplier \u2014 use a number like 1, 2, 3 (0 = user-defined)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setusercharsize",
@@ -425,7 +475,9 @@
                     "multy \u2192 height numerator",
                     "divy  \u2192 height denominator"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "textheight",
@@ -438,7 +490,9 @@
                 "params": [
                     "text \u2192 the string to measure"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "textwidth",
@@ -451,7 +505,9 @@
                 "params": [
                     "text \u2192 the string to measure"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setbkcolor",
@@ -468,7 +524,9 @@
                 "params": [
                     "color \u2192 a color constant (e.g. BLACK, WHITE, BLUE)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setcolor",
@@ -485,7 +543,9 @@
                 "params": [
                     "color \u2192 a color constant (e.g. RED, GREEN, WHITE)"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "setfillpattern",
@@ -503,7 +563,9 @@
                     "upattern \u2192 pointer to an 8-byte array defining the custom fill pattern",
                     "color    \u2192 a color constant for the fill (e.g. RED, BLUE)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setfillstyle",
@@ -524,7 +586,9 @@
                     "pattern \u2192 fill pattern constant (e.g. SOLID_FILL, HATCH_FILL, XHATCH_FILL)",
                     "color   \u2192 a color constant for the fill (e.g. RED, BLUE)"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "setpalette",
@@ -538,7 +602,9 @@
                     "colornum \u2192 palette index to change (0\u201315)",
                     "color    \u2192 new color value to assign to that index"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setallpalette",
@@ -551,7 +617,9 @@
                 "params": [
                     "palette \u2192 pointer to a palettetype structure with the new color values"
                 ]
-            }
+            },
+            "boost": -5,
+            "header": "graphics.h"
         },
         {
             "name": "setrgbpalette",
@@ -567,7 +635,9 @@
                     "green    \u2192 green component (0\u2013255)",
                     "blue     \u2192 blue component (0\u2013255)"
                 ]
-            }
+            },
+            "boost": -5,
+            "header": "graphics.h"
         },
         {
             "name": "setlinestyle",
@@ -589,7 +659,9 @@
                     "upattern   \u2192 custom 16-bit pattern \u2014 only used when linestyle is USERBIT_LINE, otherwise pass 0",
                     "thickness  \u2192 NORM_WIDTH for normal, THICK_WIDTH for thick lines"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setwritemode",
@@ -602,7 +674,9 @@
                 "params": [
                     "mode \u2192 0 for COPY_PUT (normal drawing), 1 for XOR_PUT (inverts existing pixels)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getarccoords",
@@ -615,7 +689,9 @@
                 "params": [
                     "arccoords \u2192 pointer to an arccoordstype struct to store the result"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getaspectratio",
@@ -629,7 +705,9 @@
                     "xasp \u2192 pointer to an int \u2014 receives the horizontal aspect value",
                     "yasp \u2192 pointer to an int \u2014 receives the vertical aspect value"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getbkcolor",
@@ -640,7 +718,9 @@
                 "signature": "getbkcolor()",
                 "description": "Returns the current background color as an integer.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getcolor",
@@ -651,7 +731,9 @@
                 "signature": "getcolor()",
                 "description": "Returns the current foreground drawing color as an integer.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getdefaultpalette",
@@ -662,7 +744,9 @@
                 "signature": "getdefaultpalette()",
                 "description": "Returns a pointer to the default palette for the current graphics driver.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getdrivername",
@@ -673,7 +757,9 @@
                 "signature": "getdrivername()",
                 "description": "Returns the name of the current graphics driver as a string (e.g. \"EGA/VGA\").",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getfillpattern",
@@ -686,7 +772,9 @@
                 "params": [
                     "pattern \u2192 pointer to an 8-byte char array to receive the fill pattern"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getfillsettings",
@@ -699,7 +787,9 @@
                 "params": [
                     "fillinfo \u2192 pointer to a fillsettingstype struct to store the result"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getgraphmode",
@@ -710,7 +800,9 @@
                 "signature": "getgraphmode()",
                 "description": "Returns the current graphics mode as an integer.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getlinesettings",
@@ -723,7 +815,9 @@
                 "params": [
                     "lineinfo \u2192 pointer to a linesettingstype struct to store the result"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getmaxcolor",
@@ -734,7 +828,9 @@
                 "signature": "getmaxcolor()",
                 "description": "Returns the highest valid color number in the current graphics mode (usually 15).",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getmaxmode",
@@ -745,7 +841,9 @@
                 "signature": "getmaxmode()",
                 "description": "Returns the highest graphics mode number available for the current driver.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getmaxx",
@@ -756,7 +854,9 @@
                 "signature": "getmaxx()",
                 "description": "Returns the maximum x coordinate (screen width minus 1) for the current graphics mode.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getmaxy",
@@ -767,7 +867,9 @@
                 "signature": "getmaxy()",
                 "description": "Returns the maximum y coordinate (screen height minus 1) for the current graphics mode.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getmodename",
@@ -780,7 +882,9 @@
                 "params": [
                     "modenumber \u2192 the mode number to look up"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getmoderange",
@@ -795,7 +899,9 @@
                     "lomode      \u2192 pointer to an int \u2014 receives the lowest mode number",
                     "himode      \u2192 pointer to an int \u2014 receives the highest mode number"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getpalette",
@@ -808,7 +914,9 @@
                 "params": [
                     "palette \u2192 pointer to a palettetype struct to store the result"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getpalettesize",
@@ -819,7 +927,9 @@
                 "signature": "getpalettesize()",
                 "description": "Returns the number of entries in the current color palette.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getpixel",
@@ -833,7 +943,9 @@
                     "x \u2192 x coordinate of the pixel",
                     "y \u2192 y coordinate of the pixel"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "gettextsettings",
@@ -846,7 +958,9 @@
                 "params": [
                     "texttypeinfo \u2192 pointer to a textsettingstype struct to store the result"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getviewsettings",
@@ -859,7 +973,9 @@
                 "params": [
                     "viewport \u2192 pointer to a viewporttype struct to store the result"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "getx",
@@ -870,7 +986,9 @@
                 "signature": "getx()",
                 "description": "Returns the x coordinate of the current cursor position.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "gety",
@@ -881,7 +999,9 @@
                 "signature": "gety()",
                 "description": "Returns the y coordinate of the current cursor position.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "cleardevice",
@@ -892,7 +1012,9 @@
                 "signature": "cleardevice()",
                 "description": "Clears the entire graphics screen and moves the cursor back to (0, 0).",
                 "params": []
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "clearviewport",
@@ -903,7 +1025,9 @@
                 "signature": "clearviewport()",
                 "description": "Clears only the current viewport area and moves the cursor to (0, 0) within it.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "closegraph",
@@ -914,7 +1038,9 @@
                 "signature": "closegraph()",
                 "description": "Shuts down the graphics system and restores the screen to its original text mode.",
                 "params": []
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "detectgraph",
@@ -928,7 +1054,9 @@
                     "graphdriver \u2192 pointer to an int \u2014 receives the detected driver number",
                     "graphmode   \u2192 pointer to an int \u2014 receives the recommended mode number"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "graphdefaults",
@@ -939,7 +1067,9 @@
                 "signature": "graphdefaults()",
                 "description": "Resets all graphics settings to their defaults \u2014 color, fill style, line style, viewport, and text style.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "grapherrormsg",
@@ -952,7 +1082,9 @@
                 "params": [
                     "errorcode \u2192 an error code \u2014 usually the result of calling graphresult()"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "graphresult",
@@ -963,7 +1095,9 @@
                 "signature": "graphresult()",
                 "description": "Returns the error code for the last graphics operation. Returns 0 (grOk) if everything is fine.",
                 "params": []
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "initgraph",
@@ -978,7 +1112,9 @@
                     "graphmode    \u2192 pointer to an int \u2014 receives the selected mode (or set to 0 with DETECT)",
                     "pathtodriver \u2192 path to the folder containing .BGI driver files \u2014 use \"\" for the current folder"
                 ]
-            }
+            },
+            "boost": 10,
+            "header": "graphics.h"
         },
         {
             "name": "installuserfont",
@@ -991,7 +1127,9 @@
                 "params": [
                     "name \u2192 path to the .CHR font file (e.g. \"myfont.chr\")"
                 ]
-            }
+            },
+            "boost": -5,
+            "header": "graphics.h"
         },
         {
             "name": "installuserdriver",
@@ -1005,7 +1143,9 @@
                     "name   \u2192 name of the driver to install",
                     "detect \u2192 pointer to a detection function, or NULL to skip auto-detection"
                 ]
-            }
+            },
+            "boost": -5,
+            "header": "graphics.h"
         },
         {
             "name": "restorecrtmode",
@@ -1016,7 +1156,9 @@
                 "signature": "restorecrtmode()",
                 "description": "Temporarily restores the screen to text mode without closing the graphics system. Call setgraphmode to return.",
                 "params": []
-            }
+            },
+            "boost": -5,
+            "header": "graphics.h"
         },
         {
             "name": "setactivepage",
@@ -1029,7 +1171,9 @@
                 "params": [
                     "page \u2192 page number to draw to (0-based)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setaspectratio",
@@ -1043,7 +1187,9 @@
                     "xasp \u2192 horizontal aspect value",
                     "yasp \u2192 vertical aspect value"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setgraphbufsize",
@@ -1056,7 +1202,9 @@
                 "params": [
                     "bufsize \u2192 buffer size in bytes (default is 4096)"
                 ]
-            }
+            },
+            "boost": -5,
+            "header": "graphics.h"
         },
         {
             "name": "setgraphmode",
@@ -1069,7 +1217,9 @@
                 "params": [
                     "mode \u2192 a valid graphics mode number for the current driver"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setviewport",
@@ -1086,7 +1236,9 @@
                     "bottom \u2192 y coordinate of the bottom-right corner",
                     "clip   \u2192 1 to clip drawing at the viewport edges, 0 to allow drawing outside"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         },
         {
             "name": "setvisualpage",
@@ -1099,7 +1251,9 @@
                 "params": [
                     "page \u2192 page number to display (0-based)"
                 ]
-            }
+            },
+            "boost": 0,
+            "header": "graphics.h"
         }
     ],
     "headers": [
