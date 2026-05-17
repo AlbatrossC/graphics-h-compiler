@@ -589,4 +589,185 @@ expandOutputBtn.addEventListener('click', () => {
     Logger.info(`Output panel ${isOutputExpanded ? 'expanded' : 'collapsed'}`);
 });
 
+// ==================== PANEL SPLITTERS ====================
+(function initSplitters() {
+    const sidebar = document.getElementById('sidebar');
+    const editorWrapper = document.getElementById('editor-wrapper');
+    const terminalWrapper = document.getElementById('terminal-wrapper');
+    const splitterSidebar = document.getElementById('splitter-sidebar');
+    const splitterTerminal = document.getElementById('splitter-terminal');
+
+    let isDragging = false;
+    let currentSplitter = null;
+    let startX = 0;
+    let startWidthSidebar = 0;
+    let startEditorFlex = 0;
+    let startTerminalFlex = 0;
+
+    // Hide/show the sidebar splitter based on sidebar collapsed state
+    function updateSidebarSplitterVisibility() {
+        if (!splitterSidebar || !sidebar) return;
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        splitterSidebar.style.display = isCollapsed ? 'none' : '';
+    }
+
+    if (sidebar) {
+        const observer = new MutationObserver(updateSidebarSplitterVisibility);
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+        updateSidebarSplitterVisibility();
+    }
+
+    // Hide splitters when a panel goes fullscreen
+    function updateSplittersForFullscreen() {
+        const anyFullscreen = document.querySelector('#editor-wrapper.fullscreen, #terminal-wrapper.fullscreen');
+        const hide = Boolean(anyFullscreen);
+        if (splitterSidebar) splitterSidebar.style.visibility = hide ? 'hidden' : '';
+        if (splitterTerminal) splitterTerminal.style.visibility = hide ? 'hidden' : '';
+    }
+
+    [editorWrapper, terminalWrapper].forEach(panel => {
+        if (!panel) return;
+        const obs = new MutationObserver(updateSplittersForFullscreen);
+        obs.observe(panel, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    // -- Shared drag helpers --
+    function startDrag(clientX, splitterType) {
+        isDragging = true;
+        currentSplitter = splitterType;
+        startX = clientX;
+
+        if (splitterType === 'sidebar') {
+            startWidthSidebar = sidebar ? sidebar.offsetWidth : 0;
+            if (splitterSidebar) splitterSidebar.classList.add('dragging');
+        } else if (splitterType === 'terminal') {
+            startEditorFlex = editorWrapper ? editorWrapper.getBoundingClientRect().width : 1;
+            startTerminalFlex = terminalWrapper ? terminalWrapper.getBoundingClientRect().width : 1;
+            if (splitterTerminal) splitterTerminal.classList.add('dragging');
+        }
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        const iframe = document.getElementById('dos-iframe');
+        if (iframe) iframe.style.pointerEvents = 'none';
+    }
+
+    function moveDrag(clientX) {
+        if (!isDragging) return;
+        const dx = clientX - startX;
+
+        if (currentSplitter === 'sidebar') {
+            const newWidth = startWidthSidebar + dx;
+            if (newWidth < 80) {
+                if (sidebar && !sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.add('collapsed');
+                    sidebar.style.width = '';
+                    sidebar.style.minWidth = '';
+                    endDrag();
+                }
+                return;
+            }
+            const boundedWidth = Math.max(120, Math.min(600, newWidth));
+            if (sidebar) {
+                sidebar.style.width = boundedWidth + 'px';
+                sidebar.style.minWidth = boundedWidth + 'px';
+            }
+        } else if (currentSplitter === 'terminal') {
+            const newEditorW = startEditorFlex + dx;
+            const newTerminalW = startTerminalFlex - dx;
+            if (newEditorW < 80 || newTerminalW < 80) return;
+            const total = newEditorW + newTerminalW;
+            if (editorWrapper) editorWrapper.style.flex = (newEditorW / total * 4).toFixed(3) + ' 1 0';
+            if (terminalWrapper) terminalWrapper.style.flex = (newTerminalW / total * 4).toFixed(3) + ' 1 0';
+        }
+    }
+
+    function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        currentSplitter = null;
+
+        if (splitterSidebar) splitterSidebar.classList.remove('dragging');
+        if (splitterTerminal) splitterTerminal.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+
+        const iframe = document.getElementById('dos-iframe');
+        if (iframe) iframe.style.pointerEvents = '';
+
+        window.dispatchEvent(new Event('resize'));
+        if (typeof editor !== 'undefined' && editor && editor.requestMeasure) {
+            setTimeout(() => editor.requestMeasure(), 50);
+        }
+    }
+
+    // -- Mouse handlers --
+    function onMouseDown(e, splitterType) {
+        if (e.button !== 0) return;
+        startDrag(e.clientX, splitterType);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+    }
+
+    function onMouseMove(e) { moveDrag(e.clientX); }
+    function onMouseUp() { endDrag(); }
+
+    // -- Touch handlers --
+    function onTouchStart(e, splitterType) {
+        if (e.touches.length !== 1) return;
+        startDrag(e.touches[0].clientX, splitterType);
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('touchend', onTouchEnd);
+        e.preventDefault();
+    }
+
+    function onTouchMove(e) {
+        if (e.touches.length !== 1) return;
+        moveDrag(e.touches[0].clientX);
+        e.preventDefault();
+    }
+
+    function onTouchEnd() { endDrag(); }
+
+    // -- Double-click to reset to default ratio --
+    function resetSidebarWidth() {
+        if (!sidebar) return;
+        sidebar.style.width = '';
+        sidebar.style.minWidth = '';
+        if (sidebar.classList.contains('collapsed')) {
+            sidebar.classList.remove('collapsed');
+        }
+        window.dispatchEvent(new Event('resize'));
+        if (typeof editor !== 'undefined' && editor && editor.requestMeasure) {
+            setTimeout(() => editor.requestMeasure(), 50);
+        }
+    }
+
+    function resetPanelRatio() {
+        if (editorWrapper) editorWrapper.style.flex = '';
+        if (terminalWrapper) terminalWrapper.style.flex = '';
+        window.dispatchEvent(new Event('resize'));
+        if (typeof editor !== 'undefined' && editor && editor.requestMeasure) {
+            setTimeout(() => editor.requestMeasure(), 50);
+        }
+    }
+
+    // -- Bind events --
+    if (splitterSidebar) {
+        splitterSidebar.addEventListener('mousedown', (e) => onMouseDown(e, 'sidebar'));
+        splitterSidebar.addEventListener('touchstart', (e) => onTouchStart(e, 'sidebar'), { passive: false });
+        splitterSidebar.addEventListener('dblclick', resetSidebarWidth);
+    }
+    if (splitterTerminal) {
+        splitterTerminal.addEventListener('mousedown', (e) => onMouseDown(e, 'terminal'));
+        splitterTerminal.addEventListener('touchstart', (e) => onTouchStart(e, 'terminal'), { passive: false });
+        splitterTerminal.addEventListener('dblclick', resetPanelRatio);
+    }
+})();
 

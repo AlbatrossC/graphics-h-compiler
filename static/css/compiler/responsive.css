@@ -265,6 +265,11 @@
         display: none !important;
     }
 
+    /* Hide splitters on mobile — layout is vertical/tabbed */
+    .vertical-splitter {
+        display: none !important;
+    }
+
     /* Hide activity bar on mobile */
     .activity-bar {
         display: none;

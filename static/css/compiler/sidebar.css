@@ -101,8 +101,8 @@
 }
 
 #sidebar {
-    width: 220px;
-    min-width: 220px;
+    width: 180px;
+    min-width: 180px;
     background: var(--vscode-sidebar);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -1502,3 +1502,18 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     height: 15px;
 }
 
+/* Enhanced Sidebar Collapse Button */
+#sidebar-collapse-btn {
+    background: rgba(var(--color-rgb-primary), 0.1) !important;
+    color: var(--primary) !important;
+    border: 1px solid rgba(var(--color-rgb-primary), 0.2) !important;
+    border-radius: 6px;
+    transition: all var(--transition-fast);
+}
+
+#sidebar-collapse-btn:hover {
+    background: rgba(var(--color-rgb-primary), 0.2) !important;
+    color: var(--primary-hover) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 8px rgba(var(--color-rgb-primary), 0.2) !important;
+}

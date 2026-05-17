@@ -1472,3 +1472,64 @@
     transform: translateY(0) scale(1);
 }
 
+/* Vertical Splitter */
+.vertical-splitter {
+    width: 6px;
+    margin: 0 -2px;
+    position: relative;
+    background-color: transparent;
+    cursor: col-resize;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.vertical-splitter:hover,
+.vertical-splitter.dragging {
+    background-color: rgba(var(--color-rgb-white), 0.05);
+}
+
+.splitter-handle {
+    width: 4px;
+    height: 24px;
+    border-radius: 2px;
+    background-color: var(--border-color);
+    transition: background-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    padding: 3px 0;
+}
+
+.splitter-handle::before,
+.splitter-handle::after,
+.splitter-handle-dot {
+    content: "";
+    width: 2px;
+    height: 2px;
+    background-color: var(--text-muted);
+    border-radius: 50%;
+}
+
+.vertical-splitter:hover .splitter-handle,
+.vertical-splitter.dragging .splitter-handle {
+    background-color: var(--primary);
+}
+
+.vertical-splitter:hover .splitter-handle::before,
+.vertical-splitter:hover .splitter-handle::after,
+.vertical-splitter:hover .splitter-handle-dot,
+.vertical-splitter.dragging .splitter-handle::before,
+.vertical-splitter.dragging .splitter-handle::after,
+.vertical-splitter.dragging .splitter-handle-dot {
+    background-color: var(--vscode-bg);
+}
+
+/* Hide sidebar splitter when sidebar is collapsed */
+.sidebar-container:has(#sidebar.collapsed) + #splitter-sidebar {
+    display: none !important;
+}

@@ -249,11 +249,15 @@ var isTerminalFullscreen = false;
     function toggleDesktopSidebar() {
         if (!sidebar) return;
         sidebar.classList.toggle('collapsed');
+        // Clear any inline width set by splitter dragging so CSS takes over
+        sidebar.style.width = '';
+        sidebar.style.minWidth = '';
 
         setTimeout(() => {
             if (editor && editor.requestMeasure) {
                 editor.requestMeasure();
             }
+            window.dispatchEvent(new Event('resize'));
         }, 350);
     }
 
