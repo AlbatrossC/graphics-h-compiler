@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.1] - 2026
+
+### Changed
+- Version bumped to **2.0.1**
+- Updated the extension `README.md` to better explain the two run modes, setup flow, platform support, shortcuts, and the online compiler link
+
+---
+
 ## [2.0.0] - 2026
 
 ### Refactored & Optimized (Turbo C Architecture)
