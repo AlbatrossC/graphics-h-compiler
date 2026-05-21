@@ -2,8 +2,8 @@
 #workspace {
     display: flex;
     height: calc(100vh - var(--header-height));
-    gap: var(--layout-gap);
-    padding: var(--layout-gap);
+    gap: 0;
+    padding: 0;
     overflow: hidden;
     background: var(--vscode-bg);
 }
@@ -16,7 +16,7 @@
     flex-direction: column;
     background: var(--vscode-editor);
     border: 1px solid var(--border-color);
-    border-radius: var(--panel-radius);
+    border-radius: 0;
     box-shadow: none;
     transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     position: relative;
@@ -33,17 +33,14 @@
     flex-grow: 2;
 }
 
-#editor-wrapper:hover,
-#terminal-wrapper:hover {
-    border-color: var(--border-color-hover);
-}
-
 #editor-wrapper.active {
     border-color: var(--primary) !important;
+    box-shadow: 0 0 12px rgba(var(--color-rgb-primary), 0.15) !important;
 }
 
 #terminal-wrapper.terminal-active {
     border-color: var(--success) !important;
+    box-shadow: 0 0 12px rgba(var(--color-rgb-primary), 0.15) !important;
 }
 
 /* Fullscreen */
@@ -1475,7 +1472,7 @@
 /* Vertical Splitter */
 .vertical-splitter {
     width: 6px;
-    margin: 0 -2px;
+    margin: 0 -3px;
     position: relative;
     background-color: transparent;
     cursor: col-resize;
@@ -1483,50 +1480,30 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--transition-fast);
     flex-shrink: 0;
 }
 
-.vertical-splitter:hover,
-.vertical-splitter.dragging {
-    background-color: rgba(var(--color-rgb-white), 0.05);
+.vertical-splitter::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background-color: transparent;
+    transition: background-color var(--transition-fast), width var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.vertical-splitter:hover::before,
+.vertical-splitter.dragging::before {
+    background-color: var(--primary);
+    box-shadow: 0 0 8px rgba(var(--color-rgb-primary), 0.4);
 }
 
 .splitter-handle {
-    width: 4px;
-    height: 24px;
-    border-radius: 2px;
-    background-color: var(--border-color);
-    transition: background-color 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
-    padding: 3px 0;
-}
-
-.splitter-handle::before,
-.splitter-handle::after,
-.splitter-handle-dot {
-    content: "";
-    width: 2px;
-    height: 2px;
-    background-color: var(--text-muted);
-    border-radius: 50%;
-}
-
-.vertical-splitter:hover .splitter-handle,
-.vertical-splitter.dragging .splitter-handle {
-    background-color: var(--primary);
-}
-
-.vertical-splitter:hover .splitter-handle::before,
-.vertical-splitter:hover .splitter-handle::after,
-.vertical-splitter:hover .splitter-handle-dot,
-.vertical-splitter.dragging .splitter-handle::before,
-.vertical-splitter.dragging .splitter-handle::after,
-.vertical-splitter.dragging .splitter-handle-dot {
-    background-color: var(--vscode-bg);
+    display: none !important;
 }
 
 /* Hide sidebar splitter when sidebar is collapsed */
