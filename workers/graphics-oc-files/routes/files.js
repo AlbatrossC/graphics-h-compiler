@@ -26,6 +26,8 @@ export const handleFilesRoutes = {
           f.file_name,
           f.file_content,
           f.folder_id,
+          f.file_size,
+          f.content_hash,
           fo.folder_name
         FROM files f
         LEFT JOIN folders fo ON f.folder_id = fo.id AND fo.user_id = ?

@@ -20,7 +20,7 @@ function normalizeAppSettings(rawSettings){const base=cloneDefaultSettings();con
 function loadAppSettings(){try{const serialized=localStorage.getItem(SETTINGS_STORAGE_KEY);if(!serialized){return normalizeAppSettings({});}
 return normalizeAppSettings(JSON.parse(serialized));}catch(error){return normalizeAppSettings({});}}
 function saveAppSettings(settings){const normalized=normalizeAppSettings(settings);localStorage.setItem(SETTINGS_STORAGE_KEY,JSON.stringify(normalized));localStorage.removeItem(LEGACY_FONT_STORAGE_KEY);return normalized;}
-const Logger={prefix:'[Graphics.h Compiler]',colors:{info:'#7c8df0',success:'#6ac47b',error:'#cc4444',warn:'#ffb454',debug:'#888888'},timestamp(){return new Date().toISOString();},format(level,msg){return`${this.prefix} ${this.timestamp()} [${level}] ${msg}`;},info(msg){const formatted=this.format('INFO',msg);console.log(`%c${formatted}`,`color: ${this.colors.info}; font-weight: bold;`);},success(msg){const formatted=this.format('OK',msg);console.log(`%c${formatted}`,`color: ${this.colors.success}; font-weight: bold;`);},error(msg,err){const formatted=this.format('ERROR',msg);console.error(`%c${formatted}`,`color: ${this.colors.error}; font-weight: bold;`,err||'');},warn(msg){const formatted=this.format('WARN',msg);console.warn(`%c${formatted}`,`color: ${this.colors.warn}; font-weight: bold;`);},debug(msg){const formatted=this.format('DEBUG',msg);console.log(`%c${formatted}`,`color: ${this.colors.debug};`);}};const metrics={editor:{changeCount:0,lastChangeAt:null},runtime:{runCount:0,zipExtractionStarted:0,zipExtractionCompleted:0}};let dosInstance=null;let terminalFocused=false;let editor=null;let lastLoadedDemo='';let scriptsLoaded={codemirror:false};const CLOUD_STATE={files:new Map(),folders:new Set(['root']),folderNameToId:new Map(),openTabs:[],activeFileKey:'root/main.cpp',autosaveTimer:null,isSaving:false,lastSavedHash:null,lastSavedAt:null};const isMobile=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||window.innerWidth<=768;const AUTOSAVE_DELAY_MS=20000;const TYPING_DEBOUNCE_MS=0;let DEMO_FILES={};let DEMO_FILE_CONTENTS={};let demoBundlePromise=null;let compilerAssetsInitPromise=null;async function initializeResourcesFromManifest(){if(compilerAssetsInitPromise){return compilerAssetsInitPromise;}
+const Logger={prefix:'[Graphics.h Compiler]',colors:{info:'#7c8df0',success:'#6ac47b',error:'#cc4444',warn:'#ffb454',debug:'#888888'},timestamp(){return new Date().toISOString();},format(level,msg){return`${this.prefix} ${this.timestamp()} [${level}] ${msg}`;},info(msg){const formatted=this.format('INFO',msg);console.log(`%c${formatted}`,`color: ${this.colors.info}; font-weight: bold;`);},success(msg){const formatted=this.format('OK',msg);console.log(`%c${formatted}`,`color: ${this.colors.success}; font-weight: bold;`);},error(msg,err){const formatted=this.format('ERROR',msg);console.error(`%c${formatted}`,`color: ${this.colors.error}; font-weight: bold;`,err||'');},warn(msg){const formatted=this.format('WARN',msg);console.warn(`%c${formatted}`,`color: ${this.colors.warn}; font-weight: bold;`);},debug(msg){const formatted=this.format('DEBUG',msg);console.log(`%c${formatted}`,`color: ${this.colors.debug};`);}};const metrics={editor:{changeCount:0,lastChangeAt:null},runtime:{runCount:0,zipExtractionStarted:0,zipExtractionCompleted:0}};let dosInstance=null;let terminalFocused=false;let editor=null;let lastLoadedDemo='';let scriptsLoaded={codemirror:false};const CLOUD_STATE={files:new Map(),folders:new Set(['root']),folderNameToId:new Map(),hashToFileKey:new Map(),openTabs:[],activeFileKey:'root/main.cpp',autosaveTimer:null,isSaving:false,lastSavedHash:null,lastSavedAt:null};const isMobile=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)||window.innerWidth<=768;const AUTOSAVE_DELAY_MS=20000;const TYPING_DEBOUNCE_MS=0;let DEMO_FILES={};let DEMO_FILE_CONTENTS={};let demoBundlePromise=null;let compilerAssetsInitPromise=null;async function initializeResourcesFromManifest(){if(compilerAssetsInitPromise){return compilerAssetsInitPromise;}
 compilerAssetsInitPromise=(async()=>{try{DEMO_FILES=getCompilerDemoFiles();Logger.success('Compiler asset sources initialized');}catch(error){Logger.error('Failed to initialize compiler assets',error);DEMO_FILES={'graphics-demo':'/compiler-assets/Demo_files/graphics_demo.cpp','circle-pattern':'/compiler-assets/Demo_files/circle_pattern.cpp','bouncing-ball':'/compiler-assets/Demo_files/bouncing_ball.cpp','shooter-game':'/compiler-assets/Demo_files/shooter_game.cpp'};}})();return compilerAssetsInitPromise;}
 async function loadDemoBundle(){if(demoBundlePromise)return demoBundlePromise;demoBundlePromise=(async()=>{const response=await fetchCompilerAsset('assets','demo-files-v1',{fetchOptions:{cache:'default'}});if(!response.ok){throw new Error(`Failed to load demo bundle (HTTP ${response.status})`);}
 const payload=await response.json();const files=Array.isArray(payload?.files)?payload.files:[];DEMO_FILE_CONTENTS={};for(const file of files){if(!file?.demo_key||typeof file.code_content!=='string')continue;DEMO_FILE_CONTENTS[file.demo_key]=file.code_content;if(file.file_name){DEMO_FILES[file.demo_key]=file.file_name;}}
@@ -98,7 +98,7 @@ function renderFileExplorer(){const fileList=document.getElementById('main-folde
 CLOUD_STATE.files.forEach((file)=>{if(!isVisibleCloudFile(file))return;const key=file.folder_key||ROOT_FOLDER_KEY;if(!filesByFolder.has(key))filesByFolder.set(key,[]);filesByFolder.get(key).push(file);});filesByFolder.forEach((files)=>files.sort((a,b)=>a.filename.localeCompare(b.filename)));const orderedFolders=Array.from(CLOUD_STATE.folderIdToName.keys()).sort((a,b)=>getFolderName(a).localeCompare(getFolderName(b)));fileList.innerHTML='';const fragment=document.createDocumentFragment();orderedFolders.forEach((key)=>{fragment.appendChild(createFolderGroup(key,getFolderName(key),filesByFolder.get(key)||[]));});if(!fragment.childNodes.length){const empty=document.createElement('div');empty.className='file-list-empty';empty.textContent='No files yet. Create a file to get started.';fragment.appendChild(empty);}
 fileList.appendChild(fragment);const visibleCount=getVisibleCloudFiles().length;if(filesCount){filesCount.textContent=`${visibleCount} file${visibleCount === 1 ? '' : 's'}`;}}
 function highlightActiveFile(){const[folder,filename]=(CLOUD_STATE.activeFileKey||DEFAULT_FILE_KEY).split('/');document.querySelectorAll('.file-item').forEach((item)=>{item.classList.toggle('active',item.dataset.folder===folder&&item.dataset.file===filename);});document.querySelectorAll('.folder-group-header').forEach((header)=>{header.classList.toggle('selected',header.parentElement?.dataset.folder===(CLOUD_STATE.selectedFolderKey||ROOT_FOLDER_KEY));});const tab=document.getElementById('current-file-tab');const name=document.getElementById('current-file-name');if(tab)tab.dataset.file=filename;if(name)name.textContent=filename;}
-window.showProgress=showProgress;window.hideProgress=hideProgress;window.setExplorerLoading=setExplorerLoading;window.updateSaveIndicator=updateSaveIndicator;window.renderFileExplorer=renderFileExplorer;window.highlightActiveFile=highlightActiveFile;})();;let isUserLoggedIn=false;let currentUser=null;let authConfig=null;let isSaving=false;let googleIdentityReady=false;let googleIdentityInitPromise=null;const SAVE_STATE={lastSavedHash:null,pendingHash:null,lastSaveTime:0};const DIRTY_FLAG={isDirty:false};const LEGACY_LOCAL_DRAFTS_KEY='compiler_cloud_drafts_v1';const FOLDER_UI_STATE_KEY='compiler_folder_ui_state_v1';const ROOT_FOLDER_KEY='root';const DEFAULT_FILE_NAME='main.cpp';const DEFAULT_FILE_KEY=`${ROOT_FOLDER_KEY}/${DEFAULT_FILE_NAME}`;const DEFAULT_SOURCE=`#include <graphics.h>\n#include <conio.h>\n\nint main()\n{\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n\n    // Your code here\n\n    getch();\n    closegraph();\n    return 0;\n}\n`;const DEMO_HASHES=new Set(['8392b1554b6b9643fdedfeb898f177333b7b04f8565de621b57abb383d51b964','a7bf3145a7ef0b22a466143545d4622d9fc16fc94a923f3b140658b70135f3fc','617e8525ac300822d4410e0b53d40fa201afde96548fa73b0597d77395c46dab','20c59b432fd12667ff76b11202cb1ef97c6cd24690b0dc1d42ff35c6cdd519a4',]);function folderKey(folderId){return folderId||ROOT_FOLDER_KEY;}
+window.showProgress=showProgress;window.hideProgress=hideProgress;window.setExplorerLoading=setExplorerLoading;window.updateSaveIndicator=updateSaveIndicator;window.renderFileExplorer=renderFileExplorer;window.highlightActiveFile=highlightActiveFile;})();;let isUserLoggedIn=false;let currentUser=null;let authConfig=null;let isSaving=false;let googleIdentityReady=false;let googleIdentityInitPromise=null;const SAVE_STATE={lastSavedHash:null,pendingHash:null,lastSaveTime:0};const DIRTY_FLAG={isDirty:false};const LEGACY_LOCAL_DRAFTS_KEY='compiler_cloud_drafts_v1';const FOLDER_UI_STATE_KEY='compiler_folder_ui_state_v1';const ROOT_FOLDER_KEY='root';const DEFAULT_FILE_NAME='main.cpp';const DEFAULT_FILE_KEY=`${ROOT_FOLDER_KEY}/${DEFAULT_FILE_NAME}`;const DEFAULT_SOURCE=`#include <graphics.h>\n#include <conio.h>\n\nint main()\n{\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, "");\n\n    // Your code here\n\n    getch();\n    closegraph();\n    return 0;\n}\n`;const DEMO_HASHES=new Set(['8392b1554b6b9643fdedfeb898f177333b7b04f8565de621b57abb383d51b964','a7bf3145a7ef0b22a466143545d4622d9fc16fc94a923f3b140658b70135f3fc','617e8525ac300822d4410e0b53d40fa201afde96548fa73b0597d77395c46dab','20c59b432fd12667ff76b11202cb1ef97c6cd24690b0dc1d42ff35c6cdd519a4','989948aff97363700ec404db511d7564a01a3caa94b48ad827d9d5f818ebe6ad',]);function folderKey(folderId){return folderId||ROOT_FOLDER_KEY;}
 function folderId(value){return!value||value===ROOT_FOLDER_KEY?null:value;}
 function fileKey(folder,filename){return`${folderKey(folder)}/${filename}`;}
 function activeFileInfo(){const[folder,filename]=(CLOUD_STATE.activeFileKey||DEFAULT_FILE_KEY).split('/');return{folder,folderId:folderId(folder),filename,key:CLOUD_STATE.activeFileKey||DEFAULT_FILE_KEY};}
@@ -160,9 +160,150 @@ function nextUntitledFilename(snapshot,targetFolderId){const files=Array.isArray
 return`untitled-${maxN + 1}.cpp`;}
 function getSnapshotFileById(snapshot,fileId){if(!fileId)return null;const files=Array.isArray(snapshot?.files)?snapshot.files:[];for(const file of files){if(file?.id===fileId)return file;}
 return null;}
-async function saveGuestCodeAsUntitled(snapshot,content){const mainFolderId=await ensureMainFolderIdForSnapshot(snapshot);const fileName=nextUntitledFilename(snapshot,mainFolderId);const{response,payload}=await fetchJson('/api/file/save',{method:'POST',body:JSON.stringify({folder_id:mainFolderId,file_name:fileName,content})});if(!response.ok)throw new Error(payload?.error||'Failed to save guest code');const folderName=(snapshot.folders.find((folder)=>folder?.id===mainFolderId)?.folder_name)||'main';snapshot.last_opened_file_id=payload?.file_id||snapshot.last_opened_file_id||null;snapshot.files.push({id:payload?.file_id||null,file_name:fileName,file_content:content,folder_id:mainFolderId,folder_name:folderName,file_size:payload?.file_size??computeBytes(content),content_hash:payload?.content_hash||null});return{fileName,folderId:mainFolderId};}
-async function handleGoogleCredentialResponse(credentialResponse){const idToken=credentialResponse?.credential;if(!idToken)throw new Error('Google did not return an ID token');const{response,payload}=await fetchJson('/api/auth/google',{method:'POST',body:JSON.stringify({id_token:idToken}),});if(!response.ok)throw new Error(payload?.error||'Sign in failed');const user=normalizeSessionUser(payload)||{email:payload?.email||'',name:payload?.display_name||'User',image:'',};safeUpdateLoginUI(true,userForUi(user));setAuthStatus(`Signed in as ${user.email}`);setExplorerLoading(true,'Syncing...');showProgress();try{const editorContent=editor?editor.getValue():'';const codeModified=await guestCodeModified();let snapshot=await fetchCloudSnapshot();const isExistingUser=Array.isArray(snapshot.files)&&snapshot.files.length>0;let openTarget=null;if(codeModified){const saved=await saveGuestCodeAsUntitled(snapshot,editorContent);openTarget={folder:folderKey(saved.folderId),filename:saved.fileName};}else if(isExistingUser){const active=getSnapshotFileById(snapshot,snapshot.last_opened_file_id)||(Array.isArray(snapshot.files)?snapshot.files.find((file)=>(file?.file_name||file?.filename)==='main.cpp'):null)||(Array.isArray(snapshot.files)?snapshot.files[0]:null);if(active){openTarget={folder:folderKey(active.folder_id||null),filename:active.file_name||active.filename};}}
-updateCloudStateFromPayload(snapshot);renderFileExplorer();await FileDB.clear().catch(()=>{});Promise.all(Array.from(CLOUD_STATE.files.entries()).map(([key,file])=>FileDB.put({id:key,name:file.filename,content:file.content||'',lastSavedHash:file.content_hash||null,lastModified:Date.now(),dirty:false,folderId:file.folder_id,folderKey:file.folder_key}).catch(()=>{}))).catch(()=>{});if(openTarget)await openFile(openTarget.folder,openTarget.filename,{skipSave:true});}finally{setExplorerLoading(false);hideProgress();}}
+async function saveGuestCodeWithName(snapshot,content,fileName){const mainFolderId=await ensureMainFolderIdForSnapshot(snapshot);const{response,payload}=await fetchJson('/api/file/save',{method:'POST',body:JSON.stringify({folder_id:mainFolderId,file_name:fileName,content})});if(!response.ok)throw new Error(payload?.error||'Failed to save guest code');const folderName=(snapshot.folders.find((folder)=>folder?.id===mainFolderId)?.folder_name)||'main';snapshot.last_opened_file_id=payload?.file_id||snapshot.last_opened_file_id||null;snapshot.files.push({id:payload?.file_id||null,file_name:fileName,file_content:content,folder_id:mainFolderId,folder_name:folderName,file_size:payload?.file_size??computeBytes(content),content_hash:payload?.content_hash||null});return{fileName,folderId:mainFolderId};}
+function resolveDefaultOpenTarget(snapshot){const files=Array.isArray(snapshot?.files)?snapshot.files:[];const active=getSnapshotFileById(snapshot,snapshot.last_opened_file_id)||files.find((f)=>(f?.file_name||f?.filename)==='main.cpp')||files[0]||null;if(!active)return null;return{folder:folderKey(active.folder_id||null),filename:active.file_name||active.filename};}
+function showToast(message,durationMs=3500){let toast=document.getElementById('goc-signin-toast');if(!toast){toast=document.createElement('div');toast.id='goc-signin-toast';toast.className='fix-toast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.appendChild(toast);}
+toast.innerHTML=`
+        <svg class="fix-toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span class="fix-toast-text">${message}</span>`;if(toast._hideTimer)clearTimeout(toast._hideTimer);toast.classList.remove('fix-toast-exit');requestAnimationFrame(()=>{requestAnimationFrame(()=>toast.classList.add('fix-toast-enter'));});toast._hideTimer=setTimeout(()=>{toast.classList.remove('fix-toast-enter');toast.classList.add('fix-toast-exit');},durationMs);}
+function validateGuestFilename(raw){let name=String(raw||'').trim();name=name.replace(/[^a-zA-Z0-9._-]/g,'');if(!name)return null;if(!name.includes('.'))name+='.cpp';if(name==='.cpp')return null;return name;}
+function showSaveGuestDraftModal(snapshot){return new Promise((resolve)=>{const existingFiles=Array.isArray(snapshot?.files)?snapshot.files:[];let maxN=0;for(const f of existingFiles){const nm=f?.file_name||f?.filename||'';const m=/^untitled-(\d+)\.cpp$/i.exec(nm);if(m){const v=Number(m[1]);if(v>maxN)maxN=v;}}
+const suggestedName=`untitled-${maxN + 1}.cpp`;const overlay=document.createElement('div');overlay.id='goc-draft-modal-overlay';overlay.style.cssText=['position:fixed','inset:0','z-index:99999','display:flex','align-items:center','justify-content:center','background:rgba(0,0,0,0.65)','backdrop-filter:blur(4px)','animation:gocFadeIn 0.18s ease'].join(';');overlay.innerHTML=`
+<style>
+@keyframes gocFadeIn  { from { opacity:0 } to { opacity:1 } }
+@keyframes gocSlideUp { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+#goc-draft-modal {
+    background: var(--vscode-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    max-width: 420px;
+    width: calc(100vw - 40px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    animation: gocSlideUp 0.22s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#goc-draft-modal h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+#goc-draft-modal h2 svg { flex-shrink:0; color:var(--primary); }
+#goc-draft-modal p {
+    font-size: 0.8375rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin: 0;
+}
+#goc-draft-modal label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 7px;
+}
+#goc-draft-filename {
+    width: 100%;
+    background: var(--vscode-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    font-family: 'JetBrains Mono', monospace;
+}
+#goc-draft-filename:focus { border-color: var(--primary); }
+#goc-draft-filename.invalid { border-color: var(--danger); }
+#goc-filename-error {
+    font-size: 0.775rem;
+    color: var(--danger);
+    min-height: 16px;
+    display: block;
+    margin-top: 4px;
+}
+#goc-draft-modal .goc-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+#goc-discard-btn {
+    padding: 8px 16px;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+#goc-discard-btn:hover { background: rgba(255,68,68,0.1); border-color: var(--danger); color: var(--danger); }
+#goc-save-btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    border: none;
+    background: var(--primary);
+    color: var(--primary-text);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+#goc-save-btn:hover:not(:disabled) { background: var(--primary-hover); }
+#goc-save-btn:active:not(:disabled) { transform: scale(0.97); }
+#goc-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+</style>
+<div id="goc-draft-modal" role="dialog" aria-modal="true" aria-labelledby="goc-modal-title">
+    <h2 id="goc-modal-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4z"/>
+            <polyline points="17 3 17 8 7 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        Save your guest code?
+    </h2>
+    <p>You have code that isn't saved to your cloud account yet. Give it a name to keep it, or discard it and start fresh.</p>
+    <div>
+        <label for="goc-draft-filename">File name</label>
+        <input
+            type="text"
+            id="goc-draft-filename"
+            autocomplete="off"
+            spellcheck="false"
+            value="${suggestedName}"
+            placeholder="my-project.cpp"
+        />
+        <span id="goc-filename-error" aria-live="polite"></span>
+    </div>
+    <div class="goc-modal-actions">
+        <button id="goc-discard-btn" type="button">Discard</button>
+        <button id="goc-save-btn" type="button">Save to Cloud</button>
+    </div>
+</div>`;document.body.appendChild(overlay);const input=overlay.querySelector('#goc-draft-filename');const errorEl=overlay.querySelector('#goc-filename-error');const saveBtn=overlay.querySelector('#goc-save-btn');const discardBtn=overlay.querySelector('#goc-discard-btn');requestAnimationFrame(()=>{input.focus();input.select();});function setError(msg){errorEl.textContent=msg||'';input.classList.toggle('invalid',Boolean(msg));saveBtn.disabled=Boolean(msg);}
+function validateInput(){const clean=validateGuestFilename(input.value);if(!clean){setError('Invalid filename. Use letters, numbers, hyphens and underscores.');return null;}
+setError('');return clean;}
+input.addEventListener('input',validateInput);function cleanup(){overlay.remove();}
+function onSave(){const clean=validateInput();if(!clean)return;cleanup();resolve({action:'save',filename:clean});}
+function onDiscard(){cleanup();resolve({action:'discard'});}
+saveBtn.addEventListener('click',onSave);discardBtn.addEventListener('click',onDiscard);function onKey(e){if(e.key==='Escape'){onDiscard();document.removeEventListener('keydown',onKey);}
+if(e.key==='Enter'){onSave();document.removeEventListener('keydown',onKey);}}
+document.addEventListener('keydown',onKey);overlay.addEventListener('click',(e)=>{if(e.target===overlay)onDiscard();});});}
+async function handleGoogleCredentialResponse(credentialResponse){const idToken=credentialResponse?.credential;if(!idToken)throw new Error('Google did not return an ID token');const{response,payload}=await fetchJson('/api/auth/google',{method:'POST',body:JSON.stringify({id_token:idToken}),});if(!response.ok)throw new Error(payload?.error||'Sign in failed');const user=normalizeSessionUser(payload)||{email:payload?.email||'',name:payload?.display_name||'User',image:'',};safeUpdateLoginUI(true,userForUi(user));setAuthStatus(`Signed in as ${user.email}`);setExplorerLoading(true,'Syncing...');showProgress();try{const editorContent=editor?editor.getValue():'';const editorHash=await computeSha256(editorContent);let snapshot=await fetchCloudSnapshot();updateCloudStateFromPayload(snapshot);renderFileExplorer();let openTarget=null;if(DEMO_HASHES.has(editorHash)){Logger.info('[SignIn] Editor contains demo/template code — skipping save');openTarget=resolveDefaultOpenTarget(snapshot);}else if(CLOUD_STATE.hashToFileKey.has(editorHash)){const matchKey=CLOUD_STATE.hashToFileKey.get(editorHash);const matchFile=CLOUD_STATE.files.get(matchKey);if(matchFile){Logger.info(`[SignIn] Guest code matches cloud file "${matchFile.filename}" — opening directly`);openTarget={folder:matchFile.folder_key,filename:matchFile.filename};setTimeout(()=>showToast(`Opened existing file: ${matchFile.filename}`),600);}else{openTarget=resolveDefaultOpenTarget(snapshot);}}else{setExplorerLoading(false);hideProgress();let modalResult;try{modalResult=await showSaveGuestDraftModal(snapshot);}catch{modalResult={action:'discard'};}
+setExplorerLoading(true,'Syncing...');showProgress();if(modalResult.action==='save'){Logger.info(`[SignIn] User chose to save guest code as "${modalResult.filename}"`);const saved=await saveGuestCodeWithName(snapshot,editorContent,modalResult.filename);openTarget={folder:folderKey(saved.folderId),filename:saved.fileName};updateCloudStateFromPayload(snapshot);renderFileExplorer();}else{Logger.info('[SignIn] User discarded guest code — restoring default template');if(editor){editor.setValue(DEFAULT_SOURCE);editor.clearSelection();}
+openTarget=resolveDefaultOpenTarget(snapshot);}}
+await FileDB.clear().catch(()=>{});Promise.all(Array.from(CLOUD_STATE.files.entries()).map(([key,file])=>FileDB.put({id:key,name:file.filename,content:file.content||'',lastSavedHash:file.content_hash||null,lastModified:Date.now(),dirty:false,folderId:file.folder_id,folderKey:file.folder_key}).catch(()=>{}))).catch(()=>{});if(openTarget)await openFile(openTarget.folder,openTarget.filename,{skipSave:true});}finally{setExplorerLoading(false);hideProgress();}}
 function waitForGoogleIdentityScript(){if(window.google?.accounts?.id)return Promise.resolve();return new Promise((resolve,reject)=>{let attempts=0;const interval=setInterval(()=>{if(window.google?.accounts?.id){clearInterval(interval);resolve();return;}
 attempts+=1;if(attempts>=100){clearInterval(interval);reject(new Error('Google Identity Services failed to load'));}},100);});}
 async function initGoogleIdentity(clientId){if(!clientId)return;if(googleIdentityInitPromise)return googleIdentityInitPromise;googleIdentityInitPromise=(async()=>{await waitForGoogleIdentityScript();window.google.accounts.id.initialize({client_id:clientId,callback:(response)=>{handleGoogleCredentialResponse(response).catch((error)=>{Logger.error(`[Auth] ${error.message}`);setAuthStatus('Sign in failed. Try again.');alert(`Sign in failed: ${error.message}`);});},auto_select:false,cancel_on_tap_outside:true,});const renderTarget=document.getElementById('google-btn-render');if(renderTarget){window.google.accounts.id.renderButton(renderTarget,{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:196});}
@@ -173,7 +314,7 @@ async function signOut(){const currentCode=editor?editor.getValue():null;if(isUs
 safeUpdateLoginUI(false);setAuthStatus('Unlimited projects · Access anywhere');if(currentCode!==null){SAVE_STATE.lastSavedHash=await computeSha256(currentCode);DIRTY_FLAG.isDirty=false;updateSaveIndicator();}
 (async()=>{try{await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});}catch{}
 await clearAllLocalDrafts().catch(()=>{});if(currentCode!==null){await setLocalDraft('root','main.cpp',currentCode).catch(()=>{});}})();}
-function updateCloudStateFromPayload(payload){setDefaultFolderState();CLOUD_STATE.lastOpenedFileId=payload?.last_opened_file_id||payload?.data?.last_opened_file_id||null;CLOUD_STATE.files.clear();const folders=Array.isArray(payload?.folders)?payload.folders:(Array.isArray(payload?.data?.folders)?payload.data.folders:[]);const files=Array.isArray(payload?.files)?payload.files:(Array.isArray(payload?.data?.files)?payload.data.files:[]);folders.forEach((folder)=>{if(!folder?.id||!folder?.folder_name)return;CLOUD_STATE.folders.add(folder.id);CLOUD_STATE.folderIdToName.set(folder.id,folder.folder_name);CLOUD_STATE.folderNameToId.set(folder.folder_name,folder.id);});files.forEach((file)=>{const name=file.file_name||file.filename;if(!name)return;const id=file.folder_id||file.folderId||null;const key=folderKey(id);const content=file.file_content??file.content??'';CLOUD_STATE.files.set(fileKey(key,name),{id:file.id||file.file_id||fileKey(key,name),filename:name,folder_id:id,folder_key:key,folder_name:file.folder_name||file.folderName||getFolderName(id),content,file_size:file.file_size??computeBytes(content),content_hash:file.content_hash||null});});if(!CLOUD_STATE.folderIdToName.has(CLOUD_STATE.selectedFolderKey)){const firstFolder=Array.from(CLOUD_STATE.folderIdToName.keys())[0]||ROOT_FOLDER_KEY;CLOUD_STATE.selectedFolderKey=firstFolder;}}
+function updateCloudStateFromPayload(payload){setDefaultFolderState();CLOUD_STATE.lastOpenedFileId=payload?.last_opened_file_id||payload?.data?.last_opened_file_id||null;CLOUD_STATE.files.clear();const folders=Array.isArray(payload?.folders)?payload.folders:(Array.isArray(payload?.data?.folders)?payload.data.folders:[]);const files=Array.isArray(payload?.files)?payload.files:(Array.isArray(payload?.data?.files)?payload.data.files:[]);folders.forEach((folder)=>{if(!folder?.id||!folder?.folder_name)return;CLOUD_STATE.folders.add(folder.id);CLOUD_STATE.folderIdToName.set(folder.id,folder.folder_name);CLOUD_STATE.folderNameToId.set(folder.folder_name,folder.id);});CLOUD_STATE.hashToFileKey=CLOUD_STATE.hashToFileKey||new Map();CLOUD_STATE.hashToFileKey.clear();files.forEach((file)=>{const name=file.file_name||file.filename;if(!name)return;const id=file.folder_id||file.folderId||null;const key=folderKey(id);const content=file.file_content??file.content??'';const hash=file.content_hash||null;const fk=fileKey(key,name);CLOUD_STATE.files.set(fk,{id:file.id||file.file_id||fk,filename:name,folder_id:id,folder_key:key,folder_name:file.folder_name||file.folderName||getFolderName(id),content,file_size:file.file_size??computeBytes(content),content_hash:hash});if(hash)CLOUD_STATE.hashToFileKey.set(hash,fk);});if(!CLOUD_STATE.folderIdToName.has(CLOUD_STATE.selectedFolderKey)){const firstFolder=Array.from(CLOUD_STATE.folderIdToName.keys())[0]||ROOT_FOLDER_KEY;CLOUD_STATE.selectedFolderKey=firstFolder;}}
 async function refreshCloudFiles(force=false){if(!isUserLoggedIn)return;const lastRefresh=CLOUD_STATE.lastRefresh||0;if(!force&&Date.now()-lastRefresh<2000){renderFileExplorer();return;}
 CLOUD_STATE.lastRefresh=Date.now();showProgress();setExplorerLoading(true,'Loading files...');try{const{response,payload}=await fetchJson('/api/files',{method:'GET'});if(response.status===401){safeUpdateLoginUI(false);setAuthStatus('Session expired. Please sign in again.');return;}
 if(!response.ok)throw new Error(payload?.error||'Failed to load files');updateCloudStateFromPayload(payload);renderFileExplorer();}catch(error){Logger.warn(`[Files] ${error.message}`);alert(`Unable to load cloud files: ${error.message}`);}finally{setExplorerLoading(false);hideProgress();}}

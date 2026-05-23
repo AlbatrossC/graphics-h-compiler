@@ -19,6 +19,7 @@ const DEMO_HASHES = new Set([
     'a7bf3145a7ef0b22a466143545d4622d9fc16fc94a923f3b140658b70135f3fc', // circle_pattern.cpp
     '617e8525ac300822d4410e0b53d40fa201afde96548fa73b0597d77395c46dab', // graphics_demo.cpp
     '20c59b432fd12667ff76b11202cb1ef97c6cd24690b0dc1d42ff35c6cdd519a4', // shooter_game.cpp
+    '989948aff97363700ec404db511d7564a01a3caa94b48ad827d9d5f818ebe6ad', // DEFAULT_SOURCE unmodified template
 ]);
 
 function folderKey(folderId) { return folderId || ROOT_FOLDER_KEY; }
@@ -453,9 +454,10 @@ function getSnapshotFileById(snapshot, fileId) {
     }
     return null;
 }
-async function saveGuestCodeAsUntitled(snapshot, content) {
+// Saves guest code to cloud with an explicit filename (chosen by the user via modal).
+// Also updates snapshot in-place so subsequent callers see the new file immediately.
+async function saveGuestCodeWithName(snapshot, content, fileName) {
     const mainFolderId = await ensureMainFolderIdForSnapshot(snapshot);
-    const fileName = nextUntitledFilename(snapshot, mainFolderId);
     const { response, payload } = await fetchJson('/api/file/save', {
         method: 'POST',
         body: JSON.stringify({ folder_id: mainFolderId, file_name: fileName, content })
@@ -473,6 +475,271 @@ async function saveGuestCodeAsUntitled(snapshot, content) {
         content_hash: payload?.content_hash || null
     });
     return { fileName, folderId: mainFolderId };
+}
+
+// ==================== SIGN-IN HELPER FUNCTIONS ====================
+
+// Resolves which cloud file to open by default (last opened → main.cpp → first file).
+function resolveDefaultOpenTarget(snapshot) {
+    const files = Array.isArray(snapshot?.files) ? snapshot.files : [];
+    const active =
+        getSnapshotFileById(snapshot, snapshot.last_opened_file_id) ||
+        files.find((f) => (f?.file_name || f?.filename) === 'main.cpp') ||
+        files[0] || null;
+    if (!active) return null;
+    return {
+        folder: folderKey(active.folder_id || null),
+        filename: active.file_name || active.filename
+    };
+}
+
+// Shows a brief toast notification (e.g. "Opened existing file: main.cpp").
+function showToast(message, durationMs = 3500) {
+    // Reuse existing .fix-toast element if present, or create one.
+    let toast = document.getElementById('goc-signin-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'goc-signin-toast';
+        toast.className = 'fix-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `
+        <svg class="fix-toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span class="fix-toast-text">${message}</span>`;
+
+    // Clear any existing hide timer
+    if (toast._hideTimer) clearTimeout(toast._hideTimer);
+
+    // Trigger enter animation
+    toast.classList.remove('fix-toast-exit');
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => toast.classList.add('fix-toast-enter'));
+    });
+
+    toast._hideTimer = setTimeout(() => {
+        toast.classList.remove('fix-toast-enter');
+        toast.classList.add('fix-toast-exit');
+    }, durationMs);
+}
+
+// Validates a filename entered by the user. Returns sanitised name or null.
+function validateGuestFilename(raw) {
+    let name = String(raw || '').trim();
+    // Strip path separators and special chars, allow dots/hyphens/underscores
+    name = name.replace(/[^a-zA-Z0-9._-]/g, '');
+    if (!name) return null;
+    if (!name.includes('.')) name += '.cpp';
+    if (name === '.cpp') return null;
+    return name;
+}
+
+// Shows a modal asking the user to name and save (or discard) their guest code.
+// Returns a Promise<{ action: 'save', filename: string } | { action: 'discard' }>.
+function showSaveGuestDraftModal(snapshot) {
+    return new Promise((resolve) => {
+        // --- Pre-compute suggested filename ---
+        // We don't have mainFolderId yet here (that requires an API call), so we use root-level count.
+        const existingFiles = Array.isArray(snapshot?.files) ? snapshot.files : [];
+        let maxN = 0;
+        for (const f of existingFiles) {
+            const nm = f?.file_name || f?.filename || '';
+            const m = /^untitled-(\d+)\.cpp$/i.exec(nm);
+            if (m) { const v = Number(m[1]); if (v > maxN) maxN = v; }
+        }
+        const suggestedName = `untitled-${maxN + 1}.cpp`;
+
+        // --- Build overlay ---
+        const overlay = document.createElement('div');
+        overlay.id = 'goc-draft-modal-overlay';
+        overlay.style.cssText = [
+            'position:fixed', 'inset:0', 'z-index:99999',
+            'display:flex', 'align-items:center', 'justify-content:center',
+            'background:rgba(0,0,0,0.65)', 'backdrop-filter:blur(4px)',
+            'animation:gocFadeIn 0.18s ease'
+        ].join(';');
+
+        overlay.innerHTML = `
+<style>
+@keyframes gocFadeIn  { from { opacity:0 } to { opacity:1 } }
+@keyframes gocSlideUp { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+#goc-draft-modal {
+    background: var(--vscode-sidebar);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    max-width: 420px;
+    width: calc(100vw - 40px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    animation: gocSlideUp 0.22s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+#goc-draft-modal h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+#goc-draft-modal h2 svg { flex-shrink:0; color:var(--primary); }
+#goc-draft-modal p {
+    font-size: 0.8375rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    margin: 0;
+}
+#goc-draft-modal label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 7px;
+}
+#goc-draft-filename {
+    width: 100%;
+    background: var(--vscode-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    font-family: 'JetBrains Mono', monospace;
+}
+#goc-draft-filename:focus { border-color: var(--primary); }
+#goc-draft-filename.invalid { border-color: var(--danger); }
+#goc-filename-error {
+    font-size: 0.775rem;
+    color: var(--danger);
+    min-height: 16px;
+    display: block;
+    margin-top: 4px;
+}
+#goc-draft-modal .goc-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+#goc-discard-btn {
+    padding: 8px 16px;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+#goc-discard-btn:hover { background: rgba(255,68,68,0.1); border-color: var(--danger); color: var(--danger); }
+#goc-save-btn {
+    padding: 8px 20px;
+    border-radius: 7px;
+    border: none;
+    background: var(--primary);
+    color: var(--primary-text);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+#goc-save-btn:hover:not(:disabled) { background: var(--primary-hover); }
+#goc-save-btn:active:not(:disabled) { transform: scale(0.97); }
+#goc-save-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+</style>
+<div id="goc-draft-modal" role="dialog" aria-modal="true" aria-labelledby="goc-modal-title">
+    <h2 id="goc-modal-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4z"/>
+            <polyline points="17 3 17 8 7 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+        Save your guest code?
+    </h2>
+    <p>You have code that isn't saved to your cloud account yet. Give it a name to keep it, or discard it and start fresh.</p>
+    <div>
+        <label for="goc-draft-filename">File name</label>
+        <input
+            type="text"
+            id="goc-draft-filename"
+            autocomplete="off"
+            spellcheck="false"
+            value="${suggestedName}"
+            placeholder="my-project.cpp"
+        />
+        <span id="goc-filename-error" aria-live="polite"></span>
+    </div>
+    <div class="goc-modal-actions">
+        <button id="goc-discard-btn" type="button">Discard</button>
+        <button id="goc-save-btn" type="button">Save to Cloud</button>
+    </div>
+</div>`;
+
+        document.body.appendChild(overlay);
+
+        // --- Wire up interactions ---
+        const input   = overlay.querySelector('#goc-draft-filename');
+        const errorEl = overlay.querySelector('#goc-filename-error');
+        const saveBtn = overlay.querySelector('#goc-save-btn');
+        const discardBtn = overlay.querySelector('#goc-discard-btn');
+
+        // Auto-select all text for immediate editing
+        requestAnimationFrame(() => { input.focus(); input.select(); });
+
+        function setError(msg) {
+            errorEl.textContent = msg || '';
+            input.classList.toggle('invalid', Boolean(msg));
+            saveBtn.disabled = Boolean(msg);
+        }
+
+        function validateInput() {
+            const clean = validateGuestFilename(input.value);
+            if (!clean) { setError('Invalid filename. Use letters, numbers, hyphens and underscores.'); return null; }
+            setError('');
+            return clean;
+        }
+
+        input.addEventListener('input', validateInput);
+
+        function cleanup() { overlay.remove(); }
+
+        function onSave() {
+            const clean = validateInput();
+            if (!clean) return;
+            cleanup();
+            resolve({ action: 'save', filename: clean });
+        }
+
+        function onDiscard() {
+            cleanup();
+            resolve({ action: 'discard' });
+        }
+
+        saveBtn.addEventListener('click', onSave);
+        discardBtn.addEventListener('click', onDiscard);
+
+        // Close on Escape key
+        function onKey(e) {
+            if (e.key === 'Escape') { onDiscard(); document.removeEventListener('keydown', onKey); }
+            if (e.key === 'Enter')  { onSave();    document.removeEventListener('keydown', onKey); }
+        }
+        document.addEventListener('keydown', onKey);
+
+        // Click outside the modal card to discard
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) onDiscard();
+        });
+    });
 }
 
 async function handleGoogleCredentialResponse(credentialResponse) {
@@ -500,30 +767,75 @@ async function handleGoogleCredentialResponse(credentialResponse) {
 
     try {
         const editorContent = editor ? editor.getValue() : '';
-        const codeModified = await guestCodeModified();
-        let snapshot = await fetchCloudSnapshot();
-        const isExistingUser = Array.isArray(snapshot.files) && snapshot.files.length > 0;
 
-        let openTarget = null;
-        if (codeModified) {
-            const saved = await saveGuestCodeAsUntitled(snapshot, editorContent);
-            openTarget = { folder: folderKey(saved.folderId), filename: saved.fileName };
-        } else if (isExistingUser) {
-            const active =
-                getSnapshotFileById(snapshot, snapshot.last_opened_file_id) ||
-                (Array.isArray(snapshot.files) ? snapshot.files.find((file) => (file?.file_name || file?.filename) === 'main.cpp') : null) ||
-                (Array.isArray(snapshot.files) ? snapshot.files[0] : null);
-            if (active) {
-                openTarget = {
-                    folder: folderKey(active.folder_id || null),
-                    filename: active.file_name || active.filename
-                };
-            }
-        }
+        // ── Step 1: Compute a single SHA-256 of the editor content (~0.5ms) ──
+        const editorHash = await computeSha256(editorContent);
+
+        // ── Step 2: Fetch cloud files — server already provides content_hash for every file ──
+        let snapshot = await fetchCloudSnapshot();
+
+        // ── Step 3: Build CLOUD_STATE (which also fills hashToFileKey reverse-lookup map) ──
         updateCloudStateFromPayload(snapshot);
         renderFileExplorer();
 
-        // Rebuild IndexedDB cache in parallel (non-blocking)
+        let openTarget = null;
+
+        if (DEMO_HASHES.has(editorHash)) {
+            // ── Case 1: Editor contains an unmodified demo/template — nothing to save ──
+            // Open the last used cloud file as normal.
+            Logger.info('[SignIn] Editor contains demo/template code — skipping save');
+            openTarget = resolveDefaultOpenTarget(snapshot);
+
+        } else if (CLOUD_STATE.hashToFileKey.has(editorHash)) {
+            // ── Case 2: Identical code already exists in cloud — open it directly ──
+            // O(1) Map lookup — no extra API call, no duplicate file.
+            const matchKey  = CLOUD_STATE.hashToFileKey.get(editorHash);
+            const matchFile = CLOUD_STATE.files.get(matchKey);
+            if (matchFile) {
+                Logger.info(`[SignIn] Guest code matches cloud file "${matchFile.filename}" — opening directly`);
+                openTarget = { folder: matchFile.folder_key, filename: matchFile.filename };
+                // Show a subtle, non-intrusive toast so user knows what happened
+                setTimeout(() => showToast(`Opened existing file: ${matchFile.filename}`), 600);
+            } else {
+                openTarget = resolveDefaultOpenTarget(snapshot);
+            }
+
+        } else {
+            // ── Case 3: Genuinely new code — ask the user what to do ──
+            // Hide the spinner while the modal is open so it doesn't feel stuck.
+            setExplorerLoading(false);
+            hideProgress();
+
+            let modalResult;
+            try {
+                modalResult = await showSaveGuestDraftModal(snapshot);
+            } catch {
+                modalResult = { action: 'discard' };
+            }
+
+            // Restart spinner for whatever comes next
+            setExplorerLoading(true, 'Syncing...');
+            showProgress();
+
+            if (modalResult.action === 'save') {
+                Logger.info(`[SignIn] User chose to save guest code as "${modalResult.filename}"`);
+                const saved = await saveGuestCodeWithName(snapshot, editorContent, modalResult.filename);
+                openTarget = { folder: folderKey(saved.folderId), filename: saved.fileName };
+                // Re-sync cloud state with the newly saved file included
+                updateCloudStateFromPayload(snapshot);
+                renderFileExplorer();
+            } else {
+                // Discarded — reset editor to the default template and open last cloud file
+                Logger.info('[SignIn] User discarded guest code — restoring default template');
+                if (editor) {
+                    editor.setValue(DEFAULT_SOURCE);
+                    editor.clearSelection();
+                }
+                openTarget = resolveDefaultOpenTarget(snapshot);
+            }
+        }
+
+        // ── Rebuild IndexedDB cache in parallel (non-blocking, unchanged) ──
         await FileDB.clear().catch(() => { });
         Promise.all(
             Array.from(CLOUD_STATE.files.entries()).map(([key, file]) =>
@@ -662,22 +974,30 @@ function updateCloudStateFromPayload(payload) {
         CLOUD_STATE.folderIdToName.set(folder.id, folder.folder_name);
         CLOUD_STATE.folderNameToId.set(folder.folder_name, folder.id);
     });
+    // Reset the hash→fileKey reverse-lookup map before rebuilding
+    CLOUD_STATE.hashToFileKey = CLOUD_STATE.hashToFileKey || new Map();
+    CLOUD_STATE.hashToFileKey.clear();
+
     files.forEach((file) => {
         const name = file.file_name || file.filename;
         if (!name) return;
         const id = file.folder_id || file.folderId || null;
         const key = folderKey(id);
         const content = file.file_content ?? file.content ?? '';
-        CLOUD_STATE.files.set(fileKey(key, name), {
-            id: file.id || file.file_id || fileKey(key, name),
+        const hash = file.content_hash || null;
+        const fk = fileKey(key, name);
+        CLOUD_STATE.files.set(fk, {
+            id: file.id || file.file_id || fk,
             filename: name,
             folder_id: id,
             folder_key: key,
             folder_name: file.folder_name || file.folderName || getFolderName(id),
             content,
             file_size: file.file_size ?? computeBytes(content),
-            content_hash: file.content_hash || null
+            content_hash: hash
         });
+        // Reverse-lookup: hash → fileKey (used at sign-in to detect duplicate guest code)
+        if (hash) CLOUD_STATE.hashToFileKey.set(hash, fk);
     });
     if (!CLOUD_STATE.folderIdToName.has(CLOUD_STATE.selectedFolderKey)) {
         const firstFolder = Array.from(CLOUD_STATE.folderIdToName.keys())[0] || ROOT_FOLDER_KEY;

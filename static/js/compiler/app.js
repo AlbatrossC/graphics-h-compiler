@@ -140,6 +140,7 @@ const CLOUD_STATE = {
     files: new Map(),
     folders: new Set(['root']),
     folderNameToId: new Map(),
+    hashToFileKey: new Map(), // content_hash → fileKey — pre-built for O(1) duplicate detection on sign-in
     openTabs: [],
     activeFileKey: 'root/main.cpp',
     autosaveTimer: null,

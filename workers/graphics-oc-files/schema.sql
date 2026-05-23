@@ -62,7 +62,11 @@ ON folders(user_id, folder_name);
 
 -- =====================================================
 -- FILES TABLE
--- Stores code files
+-- Stores code files.
+-- NOTE: content_hash (SHA-256 hex) MUST be returned by
+--       every GET /api/files response so the frontend can
+--       detect duplicate guest code at sign-in without a
+--       separate API call. Populated on every save.
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS files (
@@ -86,6 +90,12 @@ CREATE INDEX IF NOT EXISTS idx_files_folder_id
 ON files(folder_id);
 
 
+-- Fast lookup by hash (used for duplicate detection at sign-in)
+CREATE INDEX IF NOT EXISTS idx_files_content_hash
+ON files(content_hash)
+WHERE content_hash IS NOT NULL;
+
+
 -- Prevent duplicate file names inside the same non-root folder
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_file_in_folder
 ON files(user_id, folder_id, file_name)
@@ -95,3 +105,4 @@ WHERE folder_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_root_file
 ON files(user_id, file_name)
 WHERE folder_id IS NULL;
+
