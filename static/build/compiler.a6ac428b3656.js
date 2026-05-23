@@ -169,8 +169,8 @@ toast.innerHTML=`
         </svg>
         <span class="fix-toast-text">${message}</span>`;if(toast._hideTimer)clearTimeout(toast._hideTimer);toast.classList.remove('fix-toast-exit');requestAnimationFrame(()=>{requestAnimationFrame(()=>toast.classList.add('fix-toast-enter'));});toast._hideTimer=setTimeout(()=>{toast.classList.remove('fix-toast-enter');toast.classList.add('fix-toast-exit');},durationMs);}
 function validateGuestFilename(raw){let name=String(raw||'').trim();name=name.replace(/[^a-zA-Z0-9._-]/g,'');if(!name)return null;if(!name.includes('.'))name+='.cpp';if(name==='.cpp')return null;return name;}
-function showSaveGuestDraftModal(snapshot){return new Promise((resolve)=>{const existingFiles=Array.isArray(snapshot?.files)?snapshot.files:[];let maxN=0;for(const f of existingFiles){const nm=f?.file_name||f?.filename||'';const m=/^untitled-(\d+)\.cpp$/i.exec(nm);if(m){const v=Number(m[1]);if(v>maxN)maxN=v;}}
-const suggestedName=`untitled-${maxN + 1}.cpp`;const overlay=document.createElement('div');overlay.id='goc-draft-modal-overlay';overlay.style.cssText=['position:fixed','inset:0','z-index:99999','display:flex','align-items:center','justify-content:center','background:rgba(0,0,0,0.65)','backdrop-filter:blur(4px)','animation:gocFadeIn 0.18s ease'].join(';');overlay.innerHTML=`
+function showSaveGuestDraftModal(snapshot){return new Promise((resolve)=>{const existingFiles=Array.isArray(snapshot?.files)?snapshot.files:[];let maxN=0;for(const f of existingFiles){const nm=f?.file_name||f?.filename||'';const m=/^untitled-(\d+)(\.c|\.cpp)?$/i.exec(nm);if(m){const v=Number(m[1]);if(v>maxN)maxN=v;}}
+const suggestedBaseName=`untitled-${maxN + 1}`;const overlay=document.createElement('div');overlay.id='goc-draft-modal-overlay';overlay.style.cssText=['position:fixed','inset:0','z-index:99999','display:flex','align-items:center','justify-content:center','background:rgba(0,0,0,0.65)','backdrop-filter:blur(4px)','animation:gocFadeIn 0.18s ease'].join(';');overlay.innerHTML=`
 <style>
 @keyframes gocFadeIn  { from { opacity:0 } to { opacity:1 } }
 @keyframes gocSlideUp { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
@@ -211,7 +211,8 @@ const suggestedName=`untitled-${maxN + 1}.cpp`;const overlay=document.createElem
     margin-bottom: 7px;
 }
 #goc-draft-filename {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     background: var(--vscode-bg);
     border: 1px solid var(--border-color);
     border-radius: 7px;
@@ -240,15 +241,15 @@ const suggestedName=`untitled-${maxN + 1}.cpp`;const overlay=document.createElem
 #goc-discard-btn {
     padding: 8px 16px;
     border-radius: 7px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--danger);
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--danger);
     font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
 }
-#goc-discard-btn:hover { background: rgba(255,68,68,0.1); border-color: var(--danger); color: var(--danger); }
+#goc-discard-btn:hover { background: rgba(255,68,68,0.15); color: var(--danger); }
 #goc-save-btn {
     padding: 8px 20px;
     border-radius: 7px;
@@ -272,29 +273,49 @@ const suggestedName=`untitled-${maxN + 1}.cpp`;const overlay=document.createElem
             <line x1="12" y1="18" x2="12" y2="12"/>
             <line x1="9" y1="15" x2="15" y2="15"/>
         </svg>
-        Save your guest code?
+        Save this file before continuing?
     </h2>
-    <p>You have code that isn't saved to your cloud account yet. Give it a name to keep it, or discard it and start fresh.</p>
+    <p>Your current code is unsaved. Enter a file name to store it in your cloud workspace, or discard it and create a new file.</p>
     <div>
         <label for="goc-draft-filename">File name</label>
-        <input
-            type="text"
-            id="goc-draft-filename"
-            autocomplete="off"
-            spellcheck="false"
-            value="${suggestedName}"
-            placeholder="my-project.cpp"
-        />
+        <div class="goc-input-container" style="display:flex; align-items:center; gap:8px;">
+            <input
+                type="text"
+                id="goc-draft-filename"
+                autocomplete="off"
+                spellcheck="false"
+                value="${suggestedBaseName}"
+                placeholder="my-project"
+            />
+            <select id="goc-draft-extension" style="
+                background: var(--vscode-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 7px;
+                color: var(--text-primary);
+                font-size: 0.875rem;
+                padding: 9px 12px;
+                outline: none;
+                cursor: pointer;
+                font-family: 'JetBrains Mono', monospace;
+                height: 38px;
+            ">
+                <option value=".c" selected>.c</option>
+                <option value=".cpp">.cpp</option>
+            </select>
+        </div>
         <span id="goc-filename-error" aria-live="polite"></span>
     </div>
     <div class="goc-modal-actions">
         <button id="goc-discard-btn" type="button">Discard</button>
         <button id="goc-save-btn" type="button">Save to Cloud</button>
     </div>
-</div>`;document.body.appendChild(overlay);const input=overlay.querySelector('#goc-draft-filename');const errorEl=overlay.querySelector('#goc-filename-error');const saveBtn=overlay.querySelector('#goc-save-btn');const discardBtn=overlay.querySelector('#goc-discard-btn');requestAnimationFrame(()=>{input.focus();input.select();});function setError(msg){errorEl.textContent=msg||'';input.classList.toggle('invalid',Boolean(msg));saveBtn.disabled=Boolean(msg);}
-function validateInput(){const clean=validateGuestFilename(input.value);if(!clean){setError('Invalid filename. Use letters, numbers, hyphens and underscores.');return null;}
-setError('');return clean;}
-input.addEventListener('input',validateInput);function cleanup(){overlay.remove();}
+</div>`;document.body.appendChild(overlay);const input=overlay.querySelector('#goc-draft-filename');const extSelect=overlay.querySelector('#goc-draft-extension');const errorEl=overlay.querySelector('#goc-filename-error');const saveBtn=overlay.querySelector('#goc-save-btn');const discardBtn=overlay.querySelector('#goc-discard-btn');requestAnimationFrame(()=>{input.focus();input.select();});function setError(msg){errorEl.textContent=msg||'';input.classList.toggle('invalid',Boolean(msg));saveBtn.disabled=Boolean(msg);}
+function getCleanedName(){let name=input.value.trim();if(name.toLowerCase().endsWith('.cpp')){name=name.slice(0,-4).trim();extSelect.value='.cpp';}else if(name.toLowerCase().endsWith('.c')){name=name.slice(0,-2).trim();extSelect.value='.c';}
+name=name.replace(/[^a-zA-Z0-9._-]/g,'');return name;}
+function validateInput(){const name=getCleanedName();if(!name||name==='.'||name==='..'||name.startsWith('.')){setError('Invalid filename. Use letters, numbers, hyphens and underscores.');return null;}
+setError('');return name+extSelect.value;}
+input.addEventListener('input',()=>{let name=input.value;if(name.toLowerCase().endsWith('.cpp')){input.value=name.slice(0,-4);extSelect.value='.cpp';}else if(name.toLowerCase().endsWith('.c')){input.value=name.slice(0,-2);extSelect.value='.c';}
+validateInput();});extSelect.addEventListener('change',validateInput);function cleanup(){overlay.remove();}
 function onSave(){const clean=validateInput();if(!clean)return;cleanup();resolve({action:'save',filename:clean});}
 function onDiscard(){cleanup();resolve({action:'discard'});}
 saveBtn.addEventListener('click',onSave);discardBtn.addEventListener('click',onDiscard);function onKey(e){if(e.key==='Escape'){onDiscard();document.removeEventListener('keydown',onKey);}

@@ -76,8 +76,8 @@
         order: 5;
         flex: 1 1 0;
         width: 100%;
-        height: 38px;
-        font-size: 0.9rem;
+        height: 34px;
+        font-size: 0.82rem;
         border-radius: 6px;
         letter-spacing: 0.01em;
         justify-content: center;
@@ -123,13 +123,16 @@
     #files-header-btn {
         display: inline-flex !important;
         height: 38px;
-        padding: 0 12px !important;
+        padding: 0 16px !important;
         gap: 6px;
         justify-content: center;
         align-items: center;
         border-radius: 6px;
-        font-weight: 500;
-        font-size: 0.85rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid var(--border-color) !important;
+        background: transparent !important;
+        color: var(--text-secondary) !important;
     }
 
     #files-header-btn .btn-text {
@@ -144,9 +147,9 @@
         justify-content: center;
         align-items: center;
         border-radius: 6px;
-        border: none !important;
-        background: var(--primary) !important;
-        color: var(--primary-text) !important;
+        border: 1px solid var(--border-color) !important;
+        background: transparent !important;
+        color: var(--text-secondary) !important;
     }
 
     #run-btn .btn-text-mobile {
@@ -183,9 +186,9 @@
 
     #files-header-btn:hover,
     #back-btn:hover {
-        background: var(--primary-hover) !important;
-        color: var(--primary-text) !important;
-        border-color: transparent !important;
+        background: var(--vscode-line-bg) !important;
+        color: var(--text-primary) !important;
+        border-color: var(--border-color-hover) !important;
     }
 
 

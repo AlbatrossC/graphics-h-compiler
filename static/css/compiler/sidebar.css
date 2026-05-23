@@ -642,16 +642,16 @@
 .cloud-promo-tag {
     display: inline-flex;
     align-items: center;
-    padding: 3px 10px;
-    font-size: 0.625rem;
+    padding: 5px 14px;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: var(--primary);
     background: rgba(var(--color-rgb-primary), 0.08);
     border: 1px solid rgba(var(--color-rgb-primary), 0.2);
     border-radius: 99px;
-    margin-bottom: 2px;
+    margin-bottom: 8px;
     transition: all var(--transition-fast);
 }
 

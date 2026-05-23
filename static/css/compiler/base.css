@@ -519,16 +519,16 @@ header {
     height: 18px;
 }
 
-/* Files button — solid green like Compile & Run, no glow */
+/* Files button — green on desktop, slightly larger */
 .header-btn-files {
     background: var(--primary);
     color: var(--primary-text);
     border: none;
     border-radius: 6px;
-    padding: 0 12px;
+    padding: 0 16px;
     gap: 6px;
     font-weight: 600;
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     height: 36px;
     display: inline-flex;
     align-items: center;
@@ -548,6 +548,7 @@ header {
 
 .header-btn-files.sidebar-active {
     background: var(--primary-hover);
+    color: var(--primary-text);
 }
 
 .header-btn-files svg {
@@ -582,17 +583,17 @@ header {
     color: var(--text-primary);
 }
 
-/* Compile & Run — the hero button, solid green, largest */
+/* Compile & Run — solid green, slightly reduced size */
 .btn-run-primary {
     background: var(--primary);
     color: var(--primary-text);
     border: none;
     font-weight: 700;
-    height: 36px;
-    padding: 0 16px;
-    gap: 7px;
+    height: 34px;
+    padding: 0 14px;
+    gap: 6px;
     border-radius: 6px;
-    font-size: 0.8125rem;
+    font-size: 0.78rem;
     letter-spacing: 0.01em;
     display: inline-flex;
     align-items: center;

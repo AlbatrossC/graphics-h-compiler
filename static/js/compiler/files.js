@@ -550,10 +550,10 @@ function showSaveGuestDraftModal(snapshot) {
         let maxN = 0;
         for (const f of existingFiles) {
             const nm = f?.file_name || f?.filename || '';
-            const m = /^untitled-(\d+)\.cpp$/i.exec(nm);
+            const m = /^untitled-(\d+)(\.c|\.cpp)?$/i.exec(nm);
             if (m) { const v = Number(m[1]); if (v > maxN) maxN = v; }
         }
-        const suggestedName = `untitled-${maxN + 1}.cpp`;
+        const suggestedBaseName = `untitled-${maxN + 1}`;
 
         // --- Build overlay ---
         const overlay = document.createElement('div');
@@ -606,7 +606,8 @@ function showSaveGuestDraftModal(snapshot) {
     margin-bottom: 7px;
 }
 #goc-draft-filename {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     background: var(--vscode-bg);
     border: 1px solid var(--border-color);
     border-radius: 7px;
@@ -635,15 +636,15 @@ function showSaveGuestDraftModal(snapshot) {
 #goc-discard-btn {
     padding: 8px 16px;
     border-radius: 7px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--danger);
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--danger);
     font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
 }
-#goc-discard-btn:hover { background: rgba(255,68,68,0.1); border-color: var(--danger); color: var(--danger); }
+#goc-discard-btn:hover { background: rgba(255,68,68,0.15); color: var(--danger); }
 #goc-save-btn {
     padding: 8px 20px;
     border-radius: 7px;
@@ -667,19 +668,36 @@ function showSaveGuestDraftModal(snapshot) {
             <line x1="12" y1="18" x2="12" y2="12"/>
             <line x1="9" y1="15" x2="15" y2="15"/>
         </svg>
-        Save your guest code?
+        Save this file before continuing?
     </h2>
-    <p>You have code that isn't saved to your cloud account yet. Give it a name to keep it, or discard it and start fresh.</p>
+    <p>Your current code is unsaved. Enter a file name to store it in your cloud workspace, or discard it and create a new file.</p>
     <div>
         <label for="goc-draft-filename">File name</label>
-        <input
-            type="text"
-            id="goc-draft-filename"
-            autocomplete="off"
-            spellcheck="false"
-            value="${suggestedName}"
-            placeholder="my-project.cpp"
-        />
+        <div class="goc-input-container" style="display:flex; align-items:center; gap:8px;">
+            <input
+                type="text"
+                id="goc-draft-filename"
+                autocomplete="off"
+                spellcheck="false"
+                value="${suggestedBaseName}"
+                placeholder="my-project"
+            />
+            <select id="goc-draft-extension" style="
+                background: var(--vscode-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 7px;
+                color: var(--text-primary);
+                font-size: 0.875rem;
+                padding: 9px 12px;
+                outline: none;
+                cursor: pointer;
+                font-family: 'JetBrains Mono', monospace;
+                height: 38px;
+            ">
+                <option value=".c" selected>.c</option>
+                <option value=".cpp">.cpp</option>
+            </select>
+        </div>
         <span id="goc-filename-error" aria-live="polite"></span>
     </div>
     <div class="goc-modal-actions">
@@ -691,7 +709,8 @@ function showSaveGuestDraftModal(snapshot) {
         document.body.appendChild(overlay);
 
         // --- Wire up interactions ---
-        const input   = overlay.querySelector('#goc-draft-filename');
+        const input = overlay.querySelector('#goc-draft-filename');
+        const extSelect = overlay.querySelector('#goc-draft-extension');
         const errorEl = overlay.querySelector('#goc-filename-error');
         const saveBtn = overlay.querySelector('#goc-save-btn');
         const discardBtn = overlay.querySelector('#goc-discard-btn');
@@ -705,14 +724,42 @@ function showSaveGuestDraftModal(snapshot) {
             saveBtn.disabled = Boolean(msg);
         }
 
-        function validateInput() {
-            const clean = validateGuestFilename(input.value);
-            if (!clean) { setError('Invalid filename. Use letters, numbers, hyphens and underscores.'); return null; }
-            setError('');
-            return clean;
+        function getCleanedName() {
+            let name = input.value.trim();
+            if (name.toLowerCase().endsWith('.cpp')) {
+                name = name.slice(0, -4).trim();
+                extSelect.value = '.cpp';
+            } else if (name.toLowerCase().endsWith('.c')) {
+                name = name.slice(0, -2).trim();
+                extSelect.value = '.c';
+            }
+            name = name.replace(/[^a-zA-Z0-9._-]/g, '');
+            return name;
         }
 
-        input.addEventListener('input', validateInput);
+        function validateInput() {
+            const name = getCleanedName();
+            if (!name || name === '.' || name === '..' || name.startsWith('.')) {
+                setError('Invalid filename. Use letters, numbers, hyphens and underscores.');
+                return null;
+            }
+            setError('');
+            return name + extSelect.value;
+        }
+
+        input.addEventListener('input', () => {
+            let name = input.value;
+            if (name.toLowerCase().endsWith('.cpp')) {
+                input.value = name.slice(0, -4);
+                extSelect.value = '.cpp';
+            } else if (name.toLowerCase().endsWith('.c')) {
+                input.value = name.slice(0, -2);
+                extSelect.value = '.c';
+            }
+            validateInput();
+        });
+
+        extSelect.addEventListener('change', validateInput);
 
         function cleanup() { overlay.remove(); }
 
