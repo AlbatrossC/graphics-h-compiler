@@ -142,24 +142,20 @@
 
     <div class="header-content">
       <div class="header-left">
-        <button id="sidebar-toggle" class="icon-btn sidebar-toggle" title="Toggle Explorer">
-          <svg class="icon-menu" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-          </svg>
-          <svg class="icon-files" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <span class="btn-text btn-text-mobile btn-text-hidden">Files</span>
-        </button>
-        <button id="back-btn" class="btn btn-home" title="Home" onclick="window.location.href = '/'">
+        <button id="back-btn" class="header-btn-home-green" title="Home" onclick="window.location.href = '/'">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
-          <span class="btn-text btn-text-desktop">Home</span>
-          <span class="btn-text btn-text-mobile btn-text-hidden">Home</span>
         </button>
 
-        <div class="clean-dropdown" title="Select Demo">
+        <button id="files-header-btn" class="btn header-btn-files" title="Toggle Files Explorer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="btn-text">Files</span>
+        </button>
+
+        <div class="clean-dropdown header-dropdown-muted" title="Select Demo">
           <select id="demo-select">
             <option value="graphics-demo" selected>Graphics Demo</option>
             <option value="circle-pattern">Circle Pattern</option>
@@ -170,6 +166,8 @@
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
         </div>
+
+        <span class="header-divider"></span>
       </div>
 
       <div class="header-center">
@@ -180,6 +178,8 @@
       </div>
 
       <div class="header-right">
+        <span class="header-divider"></span>
+
         <div class="save-indicator" id="save-indicator">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -188,14 +188,14 @@
           <span id="save-text">Not Saved</span>
         </div>
 
-        <button id="save-btn" class="icon-btn btn-secondary" title="Save Code" onclick="saveCode()">
+        <button id="save-btn" class="icon-btn header-btn-ghost" title="Save Code" onclick="saveCode()">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
           </svg>
         </button>
 
-        <button id="theme-toggle-btn" class="icon-btn" title="Toggle Light/Dark Theme">
+        <button id="theme-toggle-btn" class="icon-btn header-btn-ghost" title="Toggle Light/Dark Theme">
           <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
@@ -211,19 +211,19 @@
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
         </button>
-        
-        <button id="settings-header-btn" class="icon-btn" title="Settings">
+
+        <button id="settings-header-btn" class="icon-btn header-btn-ghost" title="Settings">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" />
           </svg>
         </button>
 
-        <button id="run-btn" class="btn btn-primary" onclick="runProgram()">
+        <button id="run-btn" class="btn btn-run-primary" onclick="runProgram()">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z" />
           </svg>
-          <span class="btn-text btn-text-desktop">Compile and Run</span>
+          <span class="btn-text btn-text-desktop">Compile &amp; Run</span>
           <span class="btn-text btn-text-mobile btn-text-hidden">Run</span>
         </button>
       </div>
@@ -254,23 +254,7 @@
 
   <div id="workspace">
     <div class="sidebar-container">
-      <div class="activity-bar">
-        <div class="activity-bar-top">
-          <button id="explorer-activity-btn" class="activity-bar-btn active" title="Files Explorer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </button>
-        </div>
-        <div class="activity-bar-bottom">
-          <button id="settings-activity-btn" class="activity-bar-btn" title="Settings">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+
 
       <div id="sidebar">
         <div class="sidebar-header">

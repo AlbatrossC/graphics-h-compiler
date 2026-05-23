@@ -13,7 +13,7 @@ var isTerminalFullscreen = false;
 
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarToggle = document.getElementById('files-header-btn');
     const refreshBtn = document.getElementById('refresh-btn');
     const sidebarCollapseBtn = document.getElementById('sidebar-collapse-btn');
     const explorerActivityBtn = document.getElementById('explorer-activity-btn');
@@ -252,6 +252,11 @@ var isTerminalFullscreen = false;
         // Clear any inline width set by splitter dragging so CSS takes over
         sidebar.style.width = '';
         sidebar.style.minWidth = '';
+
+        // Toggle active state on Files button
+        if (sidebarToggle) {
+            sidebarToggle.classList.toggle('sidebar-active', !sidebar.classList.contains('collapsed'));
+        }
 
         setTimeout(() => {
             if (editor && editor.requestMeasure) {

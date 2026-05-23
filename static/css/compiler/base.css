@@ -26,7 +26,7 @@
     /* Green Color Palette - Matching Landing Page */
     --color-rgb-primary: 0, 255, 136;
     --primary: #00ff88;
-    --primary-hover: #00cc6a;
+    --primary-hover: #1eff9d;
     --primary-text: #0a0a0a;
     --success: #00ff88;
     --success-hover: #00cc6a;
@@ -305,14 +305,15 @@ header {
 }
 
 .btn-home {
-    background: var(--primary);
-    color: var(--primary-text);
+    background: transparent;
+    color: var(--text-secondary);
     border: none;
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .btn-home:hover {
-    background: var(--primary-hover);
+    background: var(--vscode-line-bg);
+    color: var(--text-primary);
 }
 
 .btn-gemini {
@@ -464,6 +465,154 @@ header {
     width: 13px;
     height: 13px;
     opacity: 0.7;
+}
+
+/* ── New Header Button Styles ── */
+
+/* Ghost button — transparent, subtle hover, used for Home/Save/Theme/Settings */
+.header-btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    transition: all var(--transition-fast);
+}
+
+.header-btn-ghost:hover {
+    background: rgba(var(--color-rgb-white), 0.06);
+    color: var(--text-primary);
+    border-color: transparent;
+}
+
+/* Home button — solid green icon button */
+.header-btn-home-green {
+    background: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform 0.1s ease;
+}
+
+.header-btn-home-green:hover {
+    background: var(--primary-hover);
+    color: var(--primary-text);
+}
+
+.header-btn-home-green:active {
+    transform: scale(0.97);
+}
+
+.header-btn-home-green svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Files button — solid green like Compile & Run, no glow */
+.header-btn-files {
+    background: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    border-radius: 6px;
+    padding: 0 12px;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform 0.1s ease;
+}
+
+.header-btn-files:hover {
+    background: var(--primary-hover);
+    color: var(--primary-text);
+}
+
+.header-btn-files:active {
+    transform: scale(0.97);
+}
+
+.header-btn-files.sidebar-active {
+    background: var(--primary-hover);
+}
+
+.header-btn-files svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* Header divider — vertical separator */
+.header-divider {
+    display: block;
+    width: 1px;
+    height: 22px;
+    background: var(--border-color);
+    margin: 0 4px;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+/* Muted dropdown in header */
+.header-dropdown-muted select {
+    color: var(--text-secondary);
+    border-color: transparent;
+    background: transparent;
+    font-size: 0.8125rem;
+}
+
+.header-dropdown-muted select:hover,
+.header-dropdown-muted select:focus {
+    background: var(--vscode-line-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Compile & Run — the hero button, solid green, largest */
+.btn-run-primary {
+    background: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    font-weight: 700;
+    height: 36px;
+    padding: 0 16px;
+    gap: 7px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast), transform 0.1s ease;
+}
+
+.btn-run-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+    color: var(--primary-text);
+}
+
+.btn-run-primary:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.btn-run-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-run-primary svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* Light Theme Borders removed for elegance */
