@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="52">
+  <rect width="200" height="52" rx="10" fill="#4ade80"/>
+  <text x="26" y="34" font-family="Courier New,monospace" font-weight="900" font-size="20" fill="#0a0a0a">&gt;_</text>
+  <text x="118" y="31" font-family="Segoe UI,Arial,sans-serif" font-weight="700" font-size="13" fill="#0a0a0a" text-anchor="middle" letter-spacing="0.8">ONLINE COMPILER</text>
+</svg>
