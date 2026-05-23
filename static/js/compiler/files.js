@@ -295,6 +295,7 @@ function userForUi(user) {
     return {
         email: user.email || '',
         display_name: user.name || user.email || 'Account',
+        avatar_url: user.image || '',
         user_metadata: {
             full_name: user.name || user.email || 'Account',
             email: user.email || '',
@@ -353,18 +354,20 @@ async function fetchJson(url, options = {}) {
 function normalizeSessionUser(payload) {
     const directEmail = payload?.email || payload?.user_email || payload?.mail || '';
     const directName = payload?.display_name || payload?.displayName || payload?.name || '';
+    const directAvatar = payload?.avatar_url || payload?.picture || '';
     if (payload?.authenticated) {
         const email = String(directEmail || '').trim();
         const name = String(directName || email || '').trim();
+        const image = String(directAvatar || '').trim();
         if (email || name) {
-            return { email, name: name || email, image: '' };
+            return { email, name: name || email, image };
         }
     }
     const user = payload?.user || payload?.session?.user || payload?.data?.user;
     if (!user) return null;
     const email = String(user.email || user.user_email || user.mail || '').trim();
     const name = String(user.name || user.display_name || user.displayName || email || '').trim();
-    const image = user.image || user.avatar_url || '';
+    const image = user.image || user.avatar_url || user.picture || '';
     if (!email && !name) return null;
     return { email, name: name || email, image };
 }

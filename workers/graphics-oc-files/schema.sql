@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
   user_id TEXT NOT NULL UNIQUE,
   display_name TEXT,
   email TEXT,
+  avatar_url TEXT,
   first_sign_in INTEGER,
   last_sign_in INTEGER,
   total_files INTEGER DEFAULT 0,

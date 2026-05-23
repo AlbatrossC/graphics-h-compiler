@@ -297,13 +297,13 @@ var isTerminalFullscreen = false;
                 user.email ||
                 'Account';
             const email = user.email || user.user_metadata?.email || '';
-            const avatarUrl = user.user_metadata?.avatar_url;
+            const avatarUrl = user.avatar_url || user.user_metadata?.avatar_url || '';
 
             if (userName) userName.textContent = displayName;
             if (userEmail) userEmail.textContent = email;
             if (userAvatar) {
                 userAvatar.innerHTML = avatarUrl
-                    ? `<img src="${avatarUrl}" alt="${displayName}">`
+                    ? `<img src="${avatarUrl}" alt="${displayName}" referrerpolicy="no-referrer" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;">`
                     : displayName.charAt(0).toUpperCase();
             }
 

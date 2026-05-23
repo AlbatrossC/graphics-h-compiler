@@ -205,6 +205,7 @@ async function verifyGoogleIdToken(idToken, env) {
   const value = {
     email: String(data.email).trim().toLowerCase(),
     name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : null,
+    picture: typeof data.picture === 'string' && data.picture.trim() ? data.picture.trim() : null,
   };
 
   const expiresAt = Math.min(Date.now() + GOOGLE_TOKEN_CACHE_TTL_MS, expSec * 1000);
@@ -265,7 +266,7 @@ async function upsertUserFromIdentity(env, identity) {
 
   let user = await db
     .prepare(
-      `SELECT user_id, display_name, email, write_blocked, total_files, total_storage
+      `SELECT user_id, display_name, email, avatar_url, write_blocked, total_files, total_storage
        FROM users
        WHERE lower(email) = lower(?)
        LIMIT 1`
@@ -279,29 +280,31 @@ async function upsertUserFromIdentity(env, identity) {
 
     await db
       .prepare(
-        `INSERT INTO users (user_id, display_name, email, first_sign_in, last_sign_in, total_files, total_storage, write_blocked)
-         VALUES (?, ?, ?, ?, ?, 0, 0, 0)`
+        `INSERT INTO users (user_id, display_name, email, avatar_url, first_sign_in, last_sign_in, total_files, total_storage, write_blocked)
+         VALUES (?, ?, ?, ?, ?, ?, 0, 0, 0)`
       )
-      .bind(userId, displayName, identity.email, now, now)
+      .bind(userId, displayName, identity.email, identity.picture ?? null, now, now)
       .run();
 
     user = {
       user_id: userId,
       display_name: displayName,
       email: identity.email,
+      avatar_url: identity.picture ?? null,
       write_blocked: 0,
       total_files: 0,
       total_storage: 0,
     };
   } else {
     await db
-      .prepare(`UPDATE users SET last_sign_in = ?, display_name = COALESCE(?, display_name) WHERE user_id = ?`)
-      .bind(now, identity.name, user.user_id)
+      .prepare(`UPDATE users SET last_sign_in = ?, display_name = COALESCE(?, display_name), avatar_url = COALESCE(?, avatar_url) WHERE user_id = ?`)
+      .bind(now, identity.name, identity.picture ?? null, user.user_id)
       .run();
 
     user = {
       ...user,
       display_name: identity.name || user.display_name,
+      avatar_url: identity.picture ?? user.avatar_url ?? null,
     };
   }
 
@@ -309,6 +312,7 @@ async function upsertUserFromIdentity(env, identity) {
     user_id: user.user_id,
     display_name: user.display_name || identity.name || identity.email,
     email: user.email,
+    avatar_url: user.avatar_url || identity.picture || null,
     write_blocked: Number(user.write_blocked || 0),
     total_files: Number(user.total_files || 0),
     total_storage: Number(user.total_storage || 0),
@@ -334,6 +338,7 @@ async function issueSessionLoginResponse(env, user, corsHeaders) {
       authenticated: true,
       email: user.email,
       display_name: user.display_name,
+      avatar_url: user.avatar_url || null,
     },
     200,
     corsHeaders
@@ -369,7 +374,7 @@ export async function authenticateRequest(request, env) {
 
   const user = await env.graphicsh_oc_db
     .prepare(
-      `SELECT user_id, display_name, email, write_blocked, total_files, total_storage
+      `SELECT user_id, display_name, email, avatar_url, write_blocked, total_files, total_storage
        FROM users
        WHERE user_id = ?
        LIMIT 1`
@@ -389,6 +394,7 @@ export async function authenticateRequest(request, env) {
     user_id: user.user_id,
     display_name: user.display_name || user.email,
     email: user.email,
+    avatar_url: user.avatar_url || null,
     write_blocked: Number(user.write_blocked || 0),
     total_files: Number(user.total_files || 0),
     total_storage: Number(user.total_storage || 0),
@@ -422,6 +428,7 @@ export async function handleSession(request, env, corsHeaders) {
         authenticated: true,
         email: auth.user.email,
         display_name: auth.user.display_name,
+        avatar_url: auth.user.avatar_url || null,
       },
       200,
       corsHeaders
