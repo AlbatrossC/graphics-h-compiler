@@ -258,18 +258,19 @@
 .settings-reset-btn {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 8px;
-    width: 100%;
-    padding: 8px 16px;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
+    width: calc(100% - 32px);
+    margin: 16px;
+    padding: 10px 16px;
+    background: rgba(255, 68, 68, 0.05);
+    border: 1px solid rgba(255, 68, 68, 0.15);
+    border-radius: 6px;
+    color: var(--danger);
     font-size: 0.8125rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
-    margin-top: 8px;
 }
 
 .settings-reset-btn svg {
@@ -278,8 +279,8 @@
 }
 
 .settings-reset-btn:hover {
-    color: var(--text-primary);
-    background: rgba(var(--color-rgb-white), 0.03);
-    border-radius: 4px;
+    background: rgba(255, 68, 68, 0.12);
+    border-color: rgba(255, 68, 68, 0.35);
+    color: var(--danger);
 }
 

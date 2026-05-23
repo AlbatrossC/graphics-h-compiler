@@ -29,7 +29,17 @@ function activeFileInfo() {
     return { folder, folderId: folderId(folder), filename, key: CLOUD_STATE.activeFileKey || DEFAULT_FILE_KEY };
 }
 function authStatusEl() { return document.getElementById('auth-status-text'); }
-function setAuthStatus(text) { const el = authStatusEl(); if (el) el.textContent = text; }
+function setAuthStatus(text) {
+    const el = authStatusEl();
+    if (!el) return;
+    if (text === 'Unlimited projects · Access anywhere' || text === 'Unlimited projects · Cloud synced' || text === '') {
+        el.textContent = '';
+        el.style.display = 'none';
+    } else {
+        el.textContent = text;
+        el.style.display = 'block';
+    }
+}
 function setDefaultFolderState() {
     CLOUD_STATE.folders = new Set([ROOT_FOLDER_KEY]);
     CLOUD_STATE.folderNameToId = new Map();

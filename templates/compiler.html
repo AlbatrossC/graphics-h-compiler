@@ -312,15 +312,17 @@
         </div>
 
         <div id="cloud-promo-view" class="cloud-promo cloud-promo-compact">
-          <div class="cloud-promo-icons">
-            <svg class="cloud-promo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          <div class="cloud-promo-badge">
+            <svg class="cloud-promo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9.34 21H6C4.93913 21 3.92172 20.5785 3.17157 19.8284C2.42142 19.0782 2 18.0609 2 17V7C2 5.93913 2.42142 4.92165 3.17157 4.17151C3.92172 3.42136 4.93913 3 6 3H8C8.69805 3.00421 9.38284 3.19101 9.98633 3.54187C10.5898 3.89273 11.091 4.39545 11.44 5C11.797 5.60635 12.3055 6.10947 12.9156 6.46008C13.5256 6.8107 14.2164 6.99678 14.92 7H18C19.0609 7 20.0783 7.42136 20.8284 8.17151C21.5786 8.92165 22 9.93913 22 11V12.5499" stroke="var(--text-secondary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 21C20.663 21.0437 21.3163 20.8223 21.8161 20.3844C22.3159 19.9465 22.6212 19.3279 22.665 18.6649C22.7088 18.0019 22.4873 17.3486 22.0494 16.8489C21.6115 16.3491 20.993 16.0437 20.33 16C20.0949 15.3317 19.6309 14.768 19.0201 14.409C18.4092 14.0501 17.6911 13.9189 16.9928 14.0387C16.2945 14.1585 15.6612 14.5215 15.2049 15.0635C14.7487 15.6055 14.4989 16.2915 14.5 17C13.9696 17 13.4609 17.2107 13.0858 17.5858C12.7107 17.9609 12.5 18.4696 12.5 19C12.5 19.5304 12.7107 20.0391 13.0858 20.4142C13.4609 20.7892 13.9696 21 14.5 21H20Z" stroke="var(--primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <div class="cloud-promo-copy">
-            <h3 class="cloud-promo-title">Save your files Online.</h3>
-            <p class="cloud-promo-text cloud-promo-subtitle">
-              Access them anywhere, on any device.
+            <div class="cloud-promo-tag">cloud storage</div>
+            <h3 class="cloud-promo-title">Save your files<br><span class="cloud-title-accent">online</span></h3>
+            <p class="cloud-promo-subtitle">
+              Keep your C++ projects safe and accessible from any device, anytime.
             </p>
           </div>
           <div id="auth-section" class="auth-section">
@@ -343,8 +345,22 @@
               <span>Sign in with Google</span>
             </button>
           </div>
-          <p id="auth-status-text" class="auth-hint">
-            Unlimited projects · Access anywhere
+          <ul class="cloud-promo-features">
+            <li>
+              <svg class="cloud-promo-feature-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span>Unlimited projects</span>
+            </li>
+            <li>
+              <svg class="cloud-promo-feature-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span>Access anywhere</span>
+            </li>
+          </ul>
+          <p id="auth-status-text" class="auth-hint" style="display: none;">
+            Unlimited projects · Cloud synced
           </p>
         </div>
 

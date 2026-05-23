@@ -587,85 +587,136 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px;
-    text-align: center;
-    gap: 16px;
-    height: 100%;
     justify-content: center;
+    padding: 36px 20px;
+    text-align: center;
+    gap: 24px;
+    height: 100%;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
 }
 
 .cloud-promo-compact {
     flex-grow: 1;
-    padding: 24px 12px;
 }
 
-.cloud-promo-icons {
+.cloud-promo-badge {
+    background: transparent;
+    border: 1px solid rgba(var(--color-rgb-primary), 0.22);
+    width: 92px;
+    height: 92px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
-    gap: 14px;
-    color: var(--primary);
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+}
+
+.cloud-promo:hover .cloud-promo-badge {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+    background: transparent;
 }
 
 .cloud-promo-icon {
     display: block;
     width: 56px;
     height: 56px;
-    color: var(--primary);
-    stroke-width: 1.5;
-    margin-bottom: 8px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.cloud-promo-icon-cloud {
-    width: 26px;
-    height: 26px;
-    margin-bottom: 0;
-}
-
-.cloud-promo-icon-device {
-    width: 22px;
-    height: 22px;
-    margin-bottom: 0;
-    opacity: 0.8;
-}
-
-.cloud-promo-icon-download {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 0;
-    opacity: 0.9;
+.cloud-promo:hover .cloud-promo-icon {
+    transform: scale(1.04);
 }
 
 .cloud-promo-copy {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    gap: 10px;
+}
+
+.cloud-promo-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--primary);
+    background: rgba(var(--color-rgb-primary), 0.08);
+    border: 1px solid rgba(var(--color-rgb-primary), 0.2);
+    border-radius: 99px;
+    margin-bottom: 2px;
+    transition: all var(--transition-fast);
+}
+
+.cloud-promo:hover .cloud-promo-tag {
+    background: rgba(var(--color-rgb-primary), 0.12);
+    border-color: rgba(var(--color-rgb-primary), 0.3);
 }
 
 .cloud-promo-title {
     margin: 0;
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 1.15rem;
+    font-weight: 800;
     color: var(--text-primary);
+    line-height: 1.3;
+    letter-spacing: -0.01em;
 }
 
-.cloud-promo-text {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    max-width: 220px;
+.cloud-title-accent {
+    color: var(--primary);
+    font-weight: 800;
 }
 
 .cloud-promo-subtitle {
     margin: 0;
     font-size: 0.8rem;
-    line-height: 1.4;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    padding: 0 4px;
+}
+
+/* Features Points */
+.cloud-promo-features {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-self: center;
+    width: fit-content;
+}
+
+.cloud-promo-features li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-align: left;
+}
+
+.cloud-promo-feature-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--primary);
+    flex-shrink: 0;
 }
 
 .auth-hint {
     display: block;
-    font-size: 13px;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    margin-top: 8px;
+    margin-top: -4px;
+    font-weight: 500;
 }
 
 .ai-panel {
@@ -1448,6 +1499,11 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 
 /* Enhanced Sidebar Collapse Button */
 #sidebar-collapse-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: rgba(var(--color-rgb-primary), 0.1) !important;
     color: var(--primary) !important;
     border: 1px solid rgba(var(--color-rgb-primary), 0.2) !important;
@@ -1455,9 +1511,14 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     transition: all var(--transition-fast);
 }
 
+#sidebar-collapse-btn svg {
+    width: 16px;
+    height: 16px;
+    transform: translateX(-0.5px);
+}
+
 #sidebar-collapse-btn:hover {
     background: rgba(var(--color-rgb-primary), 0.2) !important;
     color: var(--primary-hover) !important;
     border-color: var(--primary) !important;
-    box-shadow: 0 0 8px rgba(var(--color-rgb-primary), 0.2) !important;
 }

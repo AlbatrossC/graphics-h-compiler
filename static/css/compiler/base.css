@@ -412,12 +412,18 @@ header {
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 6px 28px 6px 12px;
-    font-size: 0.85rem;
+    padding: 0 28px 0 12px;
+    height: 36px;
+    font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
     outline: none;
     transition: all var(--transition-fast);
+}
+
+.clean-dropdown select option {
+    background: var(--vscode-sidebar);
+    color: var(--text-primary);
 }
 
 .clean-dropdown select:hover,
@@ -545,8 +551,8 @@ header {
 }
 
 .header-btn-files svg {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
 }
 
