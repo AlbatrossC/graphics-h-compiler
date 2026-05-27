@@ -1001,6 +1001,320 @@
   </button>
   <div id="floating-run-btn-tooltip" role="tooltip">🖱️ Drag me anywhere! Click to <strong>run</strong> your code. To hide, check <strong>Settings → Floating Run Button</strong>.</div>
 
+  <!-- Migration Notice Popup -->
+  <div id="migration-popup-overlay" class="migration-popup-overlay">
+    <div class="migration-popup">
+      <button id="migration-popup-close" class="migration-popup-close" title="Close" aria-label="Close notice">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+
+      <div class="migration-popup-body">
+        <h2 class="migration-popup-title">⚠️ Website Migration Notice</h2>
+
+        <div class="migration-popup-message">
+          <p>The website is currently hosted on <span class="migration-hl">Vercel</span>, and we're hitting its bandwidth limits — which means the site may become <span class="migration-hl-warn">unavailable at times</span>.</p>
+          <p>As a student, I can't afford Vercel's paid hosting plan, so I'll be moving the website to <span class="migration-hl">Cloudflare</span> to keep it free and accessible for everyone.</p>
+          <p>During the migration, the <span class="migration-hl-warn">site will be down for around 1–2 hours</span>. Once it's done, the new site will be available right away.</p>
+          <p>🧪 Want to try the new version early? <a href="https://cloudflare.graphics-h-compiler.pages.dev/compiler" target="_blank" rel="noopener" class="migration-popup-link">Test the beta here →</a></p>
+          <p>⏰ <span class="migration-hl">When should I NOT take the website down?</span></p>
+          <p>📝 Mention the reason too</p>
+          <p class="migration-popup-heart">Your feedback will help me choose a better time ❤️</p>
+        </div>
+
+        <div class="migration-popup-form">
+          <textarea id="migration-feedback-input" class="migration-popup-input" placeholder="e.g. Not between 8-10 PM IST — I have an assignment due..." rows="2"></textarea>
+          <div class="migration-popup-form-row">
+            <button id="migration-feedback-send" class="migration-popup-send">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              Send Feedback
+            </button>
+            <span id="migration-feedback-status" class="migration-popup-status"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .migration-popup-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+    .migration-popup-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .migration-popup {
+      position: relative;
+      width: 94%;
+      max-width: 620px;
+      background: var(--vscode-sidebar, #151515);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+      border-radius: 14px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .migration-popup-overlay.active .migration-popup {
+      transform: translateY(0) scale(1);
+    }
+
+    .migration-popup-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-muted, #707070);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+      z-index: 1;
+    }
+    .migration-popup-close:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary, #fafafa);
+    }
+
+    .migration-popup-body {
+      padding: 24px 28px 22px;
+    }
+
+    .migration-popup-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-primary, #fafafa);
+      margin-bottom: 14px;
+      padding-right: 20px;
+    }
+
+    .migration-popup-message {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-secondary, #a0a0a0);
+      font-weight: 400;
+    }
+    .migration-popup-message p {
+      margin-bottom: 6px;
+    }
+    .migration-popup-message p:last-child {
+      margin-bottom: 0;
+    }
+    .migration-hl {
+      color: var(--text-primary, #fafafa);
+    }
+    .migration-hl-warn {
+      color: var(--warning, #ffaa00);
+    }
+    .migration-popup-heart {
+      color: var(--primary, #00ff88);
+    }
+
+    .migration-popup-link {
+      color: var(--primary, #00ff88);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .migration-popup-link:hover {
+      text-decoration: underline;
+    }
+
+    .migration-popup-form {
+      margin-top: 12px;
+    }
+    .migration-popup-input {
+      width: 100%;
+      background: var(--vscode-bg, #0a0a0a);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      color: var(--text-primary, #fafafa);
+      font-weight: 400;
+      resize: none;
+      transition: border-color 0.15s ease;
+      outline: none;
+    }
+    .migration-popup-input::placeholder {
+      color: var(--text-muted, #707070);
+    }
+    .migration-popup-input:focus {
+      border-color: rgba(var(--color-rgb-primary, 0,255,136), 0.4);
+    }
+
+    .migration-popup-form-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .migration-popup-send {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 18px;
+      height: 36px;
+      background: var(--primary, #00ff88);
+      color: var(--primary-text, #0a0a0a);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .migration-popup-send:hover:not(:disabled) {
+      background: var(--primary-hover, #1eff9d);
+    }
+    .migration-popup-send:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+    .migration-popup-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .migration-popup-status {
+      font-size: 0.8rem;
+      color: var(--text-muted, #707070);
+    }
+    .migration-popup-status.success {
+      color: var(--primary, #00ff88);
+    }
+    .migration-popup-status.error {
+      color: var(--danger, #ff4444);
+    }
+
+    [data-theme="light"] .migration-popup {
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+    }
+    [data-theme="light"] .migration-popup-overlay {
+      background: rgba(0, 0, 0, 0.28);
+    }
+
+    @media (max-width: 520px) {
+      .migration-popup-body {
+        padding: 20px 18px 18px;
+      }
+      .migration-popup-title {
+        font-size: 0.95rem;
+      }
+      .migration-popup-message {
+        font-size: 0.85rem;
+      }
+      .migration-popup-form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+    }
+  </style>
+
+  <script>
+    (function () {
+      var overlay = document.getElementById('migration-popup-overlay');
+      var closeBtn = document.getElementById('migration-popup-close');
+      var input = document.getElementById('migration-feedback-input');
+      var sendBtn = document.getElementById('migration-feedback-send');
+      var status = document.getElementById('migration-feedback-status');
+      if (!overlay) return;
+
+      var userCity = 'Unknown';
+
+      // Fetch city from IP (no permission needed)
+      try {
+        fetch('https://ipapi.co/json/')
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && data.city) {
+              userCity = data.city + (data.region ? ', ' + data.region : '') + (data.country_name ? ' (' + data.country_name + ')' : '');
+            }
+          })
+          .catch(function () { /* silently fail, city stays Unknown */ });
+      } catch (e) { }
+
+      // Show popup if not dismissed this session
+      if (!sessionStorage.getItem('migration_popup_dismissed')) {
+        setTimeout(function () {
+          overlay.classList.add('active');
+        }, 1200);
+      }
+
+      function closePopup() {
+        overlay.classList.remove('active');
+        sessionStorage.setItem('migration_popup_dismissed', '1');
+      }
+
+      closeBtn.addEventListener('click', closePopup);
+
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closePopup();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) closePopup();
+      });
+
+      sendBtn.addEventListener('click', function () {
+        var msg = input.value.trim();
+        if (!msg) {
+          status.textContent = 'Please type your feedback first.';
+          status.className = 'migration-popup-status error';
+          return;
+        }
+
+        sendBtn.disabled = true;
+        status.textContent = 'Sending...';
+        status.className = 'migration-popup-status';
+
+        fetch('/api/migration-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, city: userCity })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.success) {
+              status.textContent = 'Thank you! Your feedback has been sent ❤️';
+              status.className = 'migration-popup-status success';
+              input.value = '';
+              setTimeout(closePopup, 2000);
+            } else {
+              status.textContent = data.error || 'Something went wrong.';
+              status.className = 'migration-popup-status error';
+              sendBtn.disabled = false;
+            }
+          })
+          .catch(function () {
+            status.textContent = 'Network error. Please try again.';
+            status.className = 'migration-popup-status error';
+            sendBtn.disabled = false;
+          });
+      });
+    })();
+  </script>
+
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>
   {% endfor %}

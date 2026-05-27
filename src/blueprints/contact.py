@@ -88,6 +88,43 @@ def maintenance_message():
         return jsonify({'error': 'Failed to send message'}), 500
 
 
+@contact_bp.route('/api/migration-feedback', methods=['POST', 'OPTIONS'])
+def migration_feedback():
+    if request.method == 'OPTIONS':
+        return cors_ok_response()
+
+    if not os.getenv('DISCORD_WEBHOOK_URL'):
+        return jsonify({'error': 'Server configuration error'}), 500
+
+    try:
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        city = data.get('city', '').strip() or 'Unknown'
+
+        if not message:
+            return jsonify({'error': 'Message is required'}), 400
+
+        payload = {
+            'content': '🚚 **Migration Feedback from Compiler Page**',
+            'embeds': [{
+                'color': 0xffaa00,
+                'fields': [
+                    {'name': '📍 City', 'value': city, 'inline': True},
+                    {'name': '📝 Message', 'value': truncate_discord_field(message), 'inline': False},
+                ],
+                'footer': {
+                    'text': 'Cloudflare Migration — Downtime Scheduling Feedback'
+                }
+            }],
+        }
+
+        send_discord_webhook(payload)
+        return jsonify({'success': True, 'message': 'Feedback sent successfully'}), 200
+    except Exception as error:
+        log_error(f'Migration feedback error: {error}')
+        return jsonify({'error': 'Failed to send feedback'}), 500
+
+
 @contact_bp.route('/api/feedback', methods=['POST', 'OPTIONS'])
 def feedback():
     if request.method == 'OPTIONS':
