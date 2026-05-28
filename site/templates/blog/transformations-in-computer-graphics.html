@@ -1,0 +1,807 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformations in Computer Graphics: Translation, Rotation, Scaling | graphics.h</title>
+    <meta name="description" content="Learn translation, rotation, and scaling transformations in computer graphics with formulas, explanations, and three separate C graphics.h programs.">
+    <meta name="keywords" content="transformations in computer graphics, translation in computer graphics, rotation transformation, scaling transformation, graphics.h transformation program">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics">
+    <meta property="og:title" content="Transformations in Computer Graphics">
+    <meta property="og:description" content="Translation, rotation, and scaling explained with separate graphics.h C programs.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-05-28">
+    <meta property="article:modified_time" content="2026-05-28">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Computer Graphics Transformations">
+    <meta property="article:tag" content="translation">
+    <meta property="article:tag" content="rotation">
+    <meta property="article:tag" content="scaling">
+    <meta property="article:tag" content="graphics.h">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Transformations in Computer Graphics">
+    <meta name="twitter:description" content="Learn translation, rotation, and scaling with graphics.h programs.">
+    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --warm: #f5b942;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article {
+            padding: 44px 0 76px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow,
+        .meta {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.7rem);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+
+        .dek {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .quick-card,
+        .toc,
+        .formula,
+        .code-block,
+        .cta,
+        .related {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+        }
+
+        .quick-card,
+        .toc,
+        .formula,
+        .cta,
+        .related {
+            padding: 18px;
+        }
+
+        .quick-card h2,
+        .quick-card p {
+            margin: 0;
+        }
+
+        .quick-card h2,
+        .toc h2 {
+            color: var(--warm);
+            font-size: 1rem;
+            letter-spacing: 0;
+        }
+
+        .quick-card p {
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .post-body {
+            min-width: 0;
+        }
+
+        .toc {
+            position: sticky;
+            top: 84px;
+        }
+
+        .toc h2 {
+            margin: 0 0 10px;
+        }
+
+        .toc a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin: 0 0 34px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 1.2rem;
+            letter-spacing: 0;
+        }
+
+        p,
+        li {
+            color: var(--muted);
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        .formula {
+            color: var(--text);
+            font-family: 'Space Mono', monospace;
+            overflow-x: auto;
+            background: #080a09;
+        }
+
+        code,
+        pre {
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        pre {
+            margin: 0;
+            padding: 18px;
+            overflow-x: auto;
+            color: #dfffea;
+            font-size: 0.92rem;
+            line-height: 1.62;
+            background: transparent;
+        }
+
+        .code-block {
+            margin: 14px 0 24px;
+            overflow: hidden;
+            background: #080a09;
+        }
+
+        .code-toolbar {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px 8px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .code-language {
+            color: var(--soft);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .copy-code-btn {
+            min-height: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.34);
+            border-radius: 6px;
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            padding: 0 10px;
+        }
+
+        .copy-code-btn:hover {
+            background: rgba(0, 255, 136, 0.14);
+        }
+
+        .code-token-keyword { color: #7dd3fc; }
+        .code-token-type { color: #fbbf24; }
+        .code-token-function { color: #86efac; }
+        .code-token-number { color: #fca5a5; }
+        .code-token-string { color: #fde68a; }
+        .code-token-preprocessor { color: #c4b5fd; }
+        .code-token-comment { color: #8ca39a; }
+
+        .cta,
+        .related {
+            border-color: rgba(0, 255, 136, 0.28);
+            background: rgba(0, 255, 136, 0.06);
+        }
+
+        .cta a,
+        .related a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Transformations</p>
+                    <h1>Transformations in Computer Graphics</h1>
+                    <p class="dek">Transformation means changing the position, size, or orientation of an object. In computer graphics, the three basic 2D transformations are translation, rotation, and scaling.</p>
+                    <p class="meta">Published May 28, 2026 - 12 min read</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>At a glance</h2>
+                    <p><strong>Translation:</strong> moves an object</p>
+                    <p><strong>Rotation:</strong> turns an object around a point</p>
+                    <p><strong>Scaling:</strong> changes object size</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="overview">
+                        <h2>What are transformations in computer graphics?</h2>
+                        <p>Transformations are operations applied to object coordinates. Instead of redrawing a completely new object from scratch, we transform the original points and draw the updated shape.</p>
+                        <p>In the programs below, a triangle is used because it has only three points, making the coordinate changes easy to see. The same formulas can be applied to rectangles, polygons, and other 2D objects.</p>
+                    </section>
+
+                    <section id="translation">
+                        <h2>Translation in Computer Graphics</h2>
+                        <p>Translation moves an object from one position to another. If a point is <code>(x, y)</code> and the translation distances are <code>tx</code> and <code>ty</code>, the new point is:</p>
+                        <div class="formula">
+                            x' = x + tx<br>
+                            y' = y + ty
+                        </div>
+                        <h3>Translation program in C using graphics.h</h3>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">C / Translation</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="translation-code">Copy</button>
+                            </div>
+<pre><code id="translation-code" class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;stdio.h&gt;
+
+int main()
+{
+    int gd = DETECT, gm;
+    int x1 = 120, y1 = 120;
+    int x2 = 220, y2 = 120;
+    int x3 = 170, y3 = 220;
+    int tx = 180, ty = 80;
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    line(x1, y1, x2, y2);
+    line(x2, y2, x3, y3);
+    line(x3, y3, x1, y1);
+    outtextxy(x1, y1 - 20, "Original Triangle");
+
+    setcolor(GREEN);
+    line(x1 + tx, y1 + ty, x2 + tx, y2 + ty);
+    line(x2 + tx, y2 + ty, x3 + tx, y3 + ty);
+    line(x3 + tx, y3 + ty, x1 + tx, y1 + ty);
+    outtextxy(x1 + tx, y1 + ty - 20, "Translated Triangle");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="rotation">
+                        <h2>Rotation Transformation</h2>
+                        <p>Rotation turns an object by an angle. For rotation about the origin, the formula is:</p>
+                        <div class="formula">
+                            x' = x cos(theta) - y sin(theta)<br>
+                            y' = x sin(theta) + y cos(theta)
+                        </div>
+                        <p>The program below rotates a triangle around its first point. It asks for the rotation angle, then draws the original triangle and the rotated triangle in different colors.</p>
+                        <h3>Rotation program in C using graphics.h</h3>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">C / Rotation</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="rotation-code">Copy</button>
+                            </div>
+<pre><code id="rotation-code" class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+
+#define PI 3.14159
+
+int main()
+{
+    int gd = DETECT, gm;
+    int x1 = 220, y1 = 180;
+    int x2 = 320, y2 = 180;
+    int x3 = 270, y3 = 280;
+    int rx2, ry2, rx3, ry3;
+    float angle, radian;
+
+    printf("Enter rotation angle: ");
+    scanf("%f", &amp;angle);
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    line(x1, y1, x2, y2);
+    line(x2, y2, x3, y3);
+    line(x3, y3, x1, y1);
+    outtextxy(x1, y1 - 20, "Original Triangle");
+
+    radian = angle * PI / 180;
+
+    rx2 = x1 + (x2 - x1) * cos(radian) - (y2 - y1) * sin(radian);
+    ry2 = y1 + (x2 - x1) * sin(radian) + (y2 - y1) * cos(radian);
+
+    rx3 = x1 + (x3 - x1) * cos(radian) - (y3 - y1) * sin(radian);
+    ry3 = y1 + (x3 - x1) * sin(radian) + (y3 - y1) * cos(radian);
+
+    setcolor(GREEN);
+    line(x1, y1, rx2, ry2);
+    line(rx2, ry2, rx3, ry3);
+    line(rx3, ry3, x1, y1);
+    outtextxy(x1, y1 + 15, "Rotated Triangle");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                        <div class="cta">
+                            <p><strong>Try it online:</strong> open the <a href="/compiler">graphics.h online compiler</a>, paste the program, then use sample angle <strong><code>45</code></strong>.</p>
+                        </div>
+                    </section>
+
+                    <section id="scaling">
+                        <h2>Scaling Transformation</h2>
+                        <p>Scaling changes the size of an object. If <code>sx</code> and <code>sy</code> are scaling factors, the new point is:</p>
+                        <div class="formula">
+                            x' = x * sx<br>
+                            y' = y * sy
+                        </div>
+                        <p>If both scale factors are greater than 1, the object becomes larger. If they are between 0 and 1, the object becomes smaller.</p>
+                        <h3>Scaling program in C using graphics.h</h3>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">C / Scaling</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="scaling-code">Copy</button>
+                            </div>
+<pre><code id="scaling-code" class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;stdio.h&gt;
+
+int main()
+{
+    int gd = DETECT, gm;
+    int x1 = 80, y1 = 80;
+    int x2 = 140, y2 = 80;
+    int x3 = 110, y3 = 140;
+    int sx = 2, sy = 2;
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    line(x1, y1, x2, y2);
+    line(x2, y2, x3, y3);
+    line(x3, y3, x1, y1);
+    outtextxy(x1, y1 - 20, "Original Triangle");
+
+    setcolor(GREEN);
+    line(x1 * sx, y1 * sy, x2 * sx, y2 * sy);
+    line(x2 * sx, y2 * sy, x3 * sx, y3 * sy);
+    line(x3 * sx, y3 * sy, x1 * sx, y1 * sy);
+    outtextxy(x1 * sx, y1 * sy - 20, "Scaled Triangle");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                    </section>
+
+                    <section id="comparison">
+                        <h2>Difference between translation, rotation, and scaling</h2>
+                        <ul>
+                            <li><strong>Translation</strong> changes only the position of an object.</li>
+                            <li><strong>Rotation</strong> changes the orientation of an object by turning it through an angle.</li>
+                            <li><strong>Scaling</strong> changes the size of an object by multiplying its coordinates.</li>
+                        </ul>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common mistakes</h2>
+                        <h3>Forgetting that screen y increases downward</h3>
+                        <p>In graphics.h, the top-left corner is <code>(0, 0)</code>. The y-coordinate increases downward, so rotation examples often use helper functions to map mathematical coordinates to screen coordinates.</p>
+
+                        <h3>Rotating around the wrong point</h3>
+                        <p>The basic rotation formula rotates around the origin. To rotate around another point, translate the object to the origin, rotate it, then translate it back.</p>
+
+                        <h3>Scaling moves the object away from the origin</h3>
+                        <p>Basic scaling multiplies coordinates from the origin. If you want to scale around the object's own center, you must use translation before and after scaling.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/blog/cohen-sutherland-line-clipping">Cohen-Sutherland Line Clipping Algorithm</a></p>
+                        <p><a href="/blog/midpoint-circle-algorithm">Midpoint Circle Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog/bresenham-line-drawing-algorithm">Bresenham Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog/dda-line-drawing-algorithm">DDA Line Drawing Algorithm in Computer Graphics</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this tutorial</h2>
+                    <a href="#overview">Overview</a>
+                    <a href="#translation">Translation</a>
+                    <a href="#rotation">Rotation</a>
+                    <a href="#scaling">Scaling</a>
+                    <a href="#comparison">Comparison</a>
+                    <a href="#mistakes">Common mistakes</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            function escapeHtml(value) {
+                return value
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            function highlightC(raw) {
+                var escaped = escapeHtml(raw);
+                var placeholders = [];
+
+                function hold(className, value) {
+                    var key = '___CODETOKEN' + String.fromCharCode(65 + placeholders.length) + '___';
+                    placeholders.push('<span class="' + className + '">' + value + '</span>');
+                    return key;
+                }
+
+                escaped = escaped.replace(/"(?:\\.|[^"\\])*"/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                escaped = escaped.replace(/\/\/.*$/gm, function (match) {
+                    return hold('code-token-comment', match);
+                });
+
+                escaped = escaped.replace(/^#(?:include|define)\s+.*$/gm, function (match) {
+                    return hold('code-token-preprocessor', match);
+                });
+
+                escaped = escaped
+                    .replace(/\b(int|float|void|return|if|else|for|while)\b/g, '<span class="code-token-keyword">$1</span>')
+                    .replace(/\b(DETECT|WHITE|GREEN|PI)\b/g, '<span class="code-token-type">$1</span>')
+                    .replace(/\b(printf|scanf|line|outtextxy|cos|sin|initgraph|getch|closegraph)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
+                    .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="code-token-number">$1</span>');
+
+                placeholders.forEach(function (value, index) {
+                    escaped = escaped.replace('___CODETOKEN' + String.fromCharCode(65 + index) + '___', value);
+                });
+
+                return escaped;
+            }
+
+            document.querySelectorAll('code.language-c').forEach(function (code) {
+                code.dataset.rawCode = code.textContent;
+                code.innerHTML = highlightC(code.dataset.rawCode);
+            });
+
+            document.querySelectorAll('[data-copy-code]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var code = document.getElementById(button.getAttribute('data-copy-code'));
+                    var text = code ? (code.dataset.rawCode || code.textContent) : '';
+                    var original = button.textContent;
+
+                    function markCopied() {
+                        button.textContent = 'Copied';
+                        window.setTimeout(function () {
+                            button.textContent = original;
+                        }, 1400);
+                    }
+
+                    function fallbackCopy() {
+                        var textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        var copied = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        if (copied) {
+                            markCopied();
+                            return;
+                        }
+                        button.textContent = 'Select code';
+                    }
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(markCopied).catch(fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                });
+            });
+        }());
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics#breadcrumb",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "{{ SITE_DOMAIN }}/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Blog",
+                        "item": "{{ SITE_DOMAIN }}/blog"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "Transformations in Computer Graphics",
+                        "item": "{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics"
+                    }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics#article",
+                "headline": "Transformations in Computer Graphics: Translation, Rotation, Scaling",
+                "description": "Learn translation, rotation, and scaling transformations with formulas and three separate C graphics.h programs.",
+                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "datePublished": "2026-05-28",
+                "dateModified": "2026-05-28",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics",
+                "articleSection": "Computer Graphics Transformations",
+                "keywords": "translation, rotation, scaling, transformations, computer graphics, graphics.h"
+            },
+            {
+                "@type": "FAQPage",
+                "@id": "{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics#faq",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "What are the basic transformations in computer graphics?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "The basic 2D transformations are translation, rotation, and scaling. Translation moves an object, rotation turns it, and scaling changes its size."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What is translation in computer graphics?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Translation moves every point of an object by adding tx to x-coordinates and ty to y-coordinates."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What is scaling transformation?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Scaling changes object size by multiplying x and y coordinates by scaling factors sx and sy."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

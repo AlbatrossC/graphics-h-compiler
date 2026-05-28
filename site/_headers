@@ -93,9 +93,33 @@
   Cache-Control: public, max-age=0, must-revalidate
 /contact.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/how-to-draw-a-house-in-graphics.h.html
+/blog
   Cache-Control: public, max-age=0, must-revalidate
-/blog/how-to-draw-a-house-in-graphics.h
+/blog.html
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/clipping-algorithm-in-computer-graphics
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/clipping-algorithm-in-computer-graphics.html
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/cohen-sutherland-line-clipping
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/cohen-sutherland-line-clipping.html
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/transformations-in-computer-graphics
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/transformations-in-computer-graphics.html
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/midpoint-circle-algorithm
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/midpoint-circle-algorithm.html
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/bresenham-line-drawing-algorithm
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/bresenham-line-drawing-algorithm.html
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/dda-line-drawing-algorithm
+  Cache-Control: public, max-age=0, must-revalidate
+/blog/dda-line-drawing-algorithm.html
   Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate

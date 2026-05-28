@@ -1,0 +1,702 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipping Algorithm in Computer Graphics | graphics.h</title>
+    <meta name="description" content="Learn clipping algorithms in computer graphics, including point clipping, line clipping, polygon clipping, clipping windows, and a complete C graphics.h example.">
+    <meta name="keywords" content="clipping algorithm in computer graphics, point clipping, line clipping, polygon clipping, graphics.h clipping program, clipping window">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics">
+    <meta property="og:title" content="Clipping Algorithm in Computer Graphics">
+    <meta property="og:description" content="Clipping windows, point clipping, line clipping, polygon clipping, and graphics.h code explained.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-05-28">
+    <meta property="article:modified_time" content="2026-05-28">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Computer Graphics Clipping">
+    <meta property="article:tag" content="clipping algorithm">
+    <meta property="article:tag" content="graphics.h">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Clipping Algorithm in Computer Graphics">
+    <meta name="twitter:description" content="Learn clipping algorithm basics with a graphics.h program.">
+    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --warm: #f5b942;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a { color: inherit; }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent { color: var(--accent); }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article { padding: 44px 0 76px; }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow,
+        .meta {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.7rem);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+
+        .dek {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .quick-card,
+        .toc,
+        .formula,
+        .code-block,
+        .cta,
+        .related {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+        }
+
+        .quick-card,
+        .toc,
+        .formula,
+        .cta,
+        .related {
+            padding: 18px;
+        }
+
+        .quick-card h2,
+        .quick-card p { margin: 0; }
+
+        .quick-card h2,
+        .toc h2 {
+            color: var(--warm);
+            font-size: 1rem;
+            letter-spacing: 0;
+        }
+
+        .quick-card p {
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .post-body { min-width: 0; }
+
+        .toc {
+            position: sticky;
+            top: 84px;
+        }
+
+        .toc h2 { margin: 0 0 10px; }
+
+        .toc a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover { color: var(--accent); }
+
+        section { margin: 0 0 34px; }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 1.2rem;
+            letter-spacing: 0;
+        }
+
+        p,
+        li { color: var(--muted); }
+
+        strong { color: var(--text); }
+
+        .formula {
+            color: var(--text);
+            font-family: 'Space Mono', monospace;
+            overflow-x: auto;
+            background: #080a09;
+        }
+
+        code,
+        pre { font-family: 'JetBrains Mono', 'Space Mono', monospace; }
+
+        pre {
+            margin: 0;
+            padding: 18px;
+            overflow-x: auto;
+            color: #dfffea;
+            font-size: 0.92rem;
+            line-height: 1.62;
+            background: transparent;
+        }
+
+        .code-block {
+            margin: 14px 0 24px;
+            overflow: hidden;
+            background: #080a09;
+        }
+
+        .code-toolbar {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px 8px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .code-language {
+            color: var(--soft);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .copy-code-btn {
+            min-height: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.34);
+            border-radius: 6px;
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            padding: 0 10px;
+        }
+
+        .copy-code-btn:hover { background: rgba(0, 255, 136, 0.14); }
+
+        .code-token-keyword { color: #7dd3fc; }
+        .code-token-type { color: #fbbf24; }
+        .code-token-function { color: #86efac; }
+        .code-token-number { color: #fca5a5; }
+        .code-token-string { color: #fde68a; }
+        .code-token-preprocessor { color: #c4b5fd; }
+        .code-token-comment { color: #8ca39a; }
+
+        .cta,
+        .related {
+            border-color: rgba(0, 255, 136, 0.28);
+            background: rgba(0, 255, 136, 0.06);
+        }
+
+        .cta a,
+        .related a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content { grid-template-columns: 1fr; }
+            .toc { position: static; }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Clipping Algorithms</p>
+                    <h1>Clipping Algorithm in Computer Graphics</h1>
+                    <p class="dek">Clipping removes the part of an object that lies outside a selected viewing area. It is used before displaying graphics so only the visible portion appears inside the screen or viewport.</p>
+                    <p class="meta">Published May 28, 2026 - 8 min read</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>At a glance</h2>
+                    <p><strong>Input:</strong> object coordinates and clipping window</p>
+                    <p><strong>Output:</strong> visible part inside the window</p>
+                    <p><strong>Common types:</strong> point, line, polygon, curve, and text clipping</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="what-is-clipping">
+                        <h2>What is clipping in computer graphics?</h2>
+                        <p>Clipping is the process of cutting away graphics that fall outside a fixed boundary called the clipping window. The clipping window is usually a rectangle that represents the visible area of the screen, viewport, or drawing region.</p>
+                        <p>For example, if a line starts outside the window and ends inside the window, only the visible part should be drawn. Clipping algorithms decide what part is visible and what part should be removed.</p>
+                    </section>
+
+                    <section id="window">
+                        <h2>Clipping window</h2>
+                        <p>A rectangular clipping window is normally represented by four values:</p>
+                        <div class="formula">
+                            xmin = left boundary<br>
+                            ymin = top boundary<br>
+                            xmax = right boundary<br>
+                            ymax = bottom boundary
+                        </div>
+                        <p>In graphics.h, the y-coordinate increases downward. So a point is above the window when <code>y &lt; ymin</code> and below the window when <code>y &gt; ymax</code>.</p>
+                    </section>
+
+                    <section id="types">
+                        <h2>Types of clipping algorithms</h2>
+                        <h3>Point clipping</h3>
+                        <p>Point clipping checks whether a point is inside or outside the clipping window. A point is visible if its x and y coordinates are within the window boundaries.</p>
+
+                        <h3>Line clipping</h3>
+                        <p>Line clipping removes the outside part of a line segment. Cohen-Sutherland and Liang-Barsky are common line clipping algorithms.</p>
+
+                        <h3>Polygon clipping</h3>
+                        <p>Polygon clipping clips a complete polygon against the clipping window. Sutherland-Hodgman is a common polygon clipping algorithm.</p>
+
+                        <h3>Text and curve clipping</h3>
+                        <p>Text clipping removes text that lies outside the viewing area. Curve clipping is used for curves and arcs that cross the boundary.</p>
+                    </section>
+
+                    <section id="point-formula">
+                        <h2>Point clipping condition</h2>
+                        <p>A point <code>(x, y)</code> is visible if it satisfies this condition:</p>
+                        <div class="formula">
+                            x &gt;= xmin and x &lt;= xmax<br>
+                            y &gt;= ymin and y &lt;= ymax
+                        </div>
+                    </section>
+
+                    <section id="program">
+                        <h2>Point clipping program in C using graphics.h</h2>
+                        <p>This program draws a clipping window, asks for a point, and displays whether the point is inside or outside the clipping window.</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">C / Point Clipping</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="clipping-code">Copy</button>
+                            </div>
+<pre><code id="clipping-code" class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;stdio.h&gt;
+
+int main()
+{
+    int gd = DETECT, gm;
+    int xmin = 150, ymin = 120;
+    int xmax = 450, ymax = 340;
+    int x, y;
+
+    printf("Enter point x y: ");
+    scanf("%d %d", &amp;x, &amp;y);
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    rectangle(xmin, ymin, xmax, ymax);
+    outtextxy(xmin, ymin - 20, "Clipping Window");
+
+    if (x &gt;= xmin &amp;&amp; x &lt;= xmax &amp;&amp; y &gt;= ymin &amp;&amp; y &lt;= ymax)
+    {
+        setcolor(GREEN);
+        putpixel(x, y, GREEN);
+        circle(x, y, 4);
+        outtextxy(170, 360, "Point is inside the clipping window");
+    }
+    else
+    {
+        setcolor(RED);
+        putpixel(x, y, RED);
+        circle(x, y, 4);
+        outtextxy(170, 360, "Point is outside the clipping window");
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                        <div class="cta">
+                            <p><strong>Try it online:</strong> open the <a href="/compiler">graphics.h online compiler</a>, paste the program, then use sample point <strong><code>250 200</code></strong>.</p>
+                        </div>
+                    </section>
+
+                    <section id="advantages">
+                        <h2>Why clipping is important</h2>
+                        <ul>
+                            <li>It prevents drawing outside the visible screen area.</li>
+                            <li>It improves performance by skipping invisible objects.</li>
+                            <li>It is required for viewports, windows, and camera-like graphics systems.</li>
+                            <li>It makes rendering cleaner and more predictable.</li>
+                        </ul>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common mistakes</h2>
+                        <h3>Confusing clipping with transformation</h3>
+                        <p>Transformation changes an object's position, size, or angle. Clipping removes the part that is outside a boundary.</p>
+
+                        <h3>Using the wrong boundary comparison</h3>
+                        <p>In graphics.h, top means smaller y and bottom means larger y. This matters when checking whether a point is above or below the clipping window.</p>
+
+                        <h3>Drawing before clipping</h3>
+                        <p>In real graphics pipelines, clipping should happen before final drawing so only visible objects are rendered.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/blog/cohen-sutherland-line-clipping">Cohen-Sutherland Line Clipping Algorithm</a></p>
+                        <p><a href="/blog/transformations-in-computer-graphics">Transformations in Computer Graphics</a></p>
+                        <p><a href="/blog/bresenham-line-drawing-algorithm">Bresenham Line Drawing Algorithm in Computer Graphics</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this tutorial</h2>
+                    <a href="#what-is-clipping">What is clipping?</a>
+                    <a href="#window">Clipping window</a>
+                    <a href="#types">Types</a>
+                    <a href="#point-formula">Point condition</a>
+                    <a href="#program">graphics.h program</a>
+                    <a href="#advantages">Importance</a>
+                    <a href="#mistakes">Common mistakes</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            function escapeHtml(value) {
+                return value
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            function highlightC(raw) {
+                var escaped = escapeHtml(raw);
+                var placeholders = [];
+
+                function hold(className, value) {
+                    var key = '___CODETOKEN' + String.fromCharCode(65 + placeholders.length) + '___';
+                    placeholders.push('<span class="' + className + '">' + value + '</span>');
+                    return key;
+                }
+
+                escaped = escaped.replace(/"(?:\\.|[^"\\])*"/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                escaped = escaped.replace(/\/\/.*$/gm, function (match) {
+                    return hold('code-token-comment', match);
+                });
+
+                escaped = escaped.replace(/^#include\s+.*$/gm, function (match) {
+                    return hold('code-token-preprocessor', match);
+                });
+
+                escaped = escaped
+                    .replace(/\b(int|float|void|return|if|else|for|while)\b/g, '<span class="code-token-keyword">$1</span>')
+                    .replace(/\b(DETECT|WHITE|GREEN|RED)\b/g, '<span class="code-token-type">$1</span>')
+                    .replace(/\b(setcolor|rectangle|outtextxy|putpixel|circle|printf|scanf|initgraph|getch|closegraph)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
+                    .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="code-token-number">$1</span>');
+
+                placeholders.forEach(function (value, index) {
+                    escaped = escaped.replace('___CODETOKEN' + String.fromCharCode(65 + index) + '___', value);
+                });
+
+                return escaped;
+            }
+
+            document.querySelectorAll('code.language-c').forEach(function (code) {
+                code.dataset.rawCode = code.textContent;
+                code.innerHTML = highlightC(code.dataset.rawCode);
+            });
+
+            document.querySelectorAll('[data-copy-code]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var code = document.getElementById(button.getAttribute('data-copy-code'));
+                    var text = code ? (code.dataset.rawCode || code.textContent) : '';
+                    var original = button.textContent;
+
+                    function markCopied() {
+                        button.textContent = 'Copied';
+                        window.setTimeout(function () {
+                            button.textContent = original;
+                        }, 1400);
+                    }
+
+                    function fallbackCopy() {
+                        var textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        var copied = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        if (copied) {
+                            markCopied();
+                            return;
+                        }
+                        button.textContent = 'Select code';
+                    }
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(markCopied).catch(fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                });
+            });
+        }());
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics#breadcrumb",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "{{ SITE_DOMAIN }}/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Blog",
+                        "item": "{{ SITE_DOMAIN }}/blog"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "Clipping Algorithm in Computer Graphics",
+                        "item": "{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics"
+                    }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics#article",
+                "headline": "Clipping Algorithm in Computer Graphics",
+                "description": "Learn clipping algorithms in computer graphics, including point clipping, line clipping, polygon clipping, clipping windows, and a complete C graphics.h example.",
+                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "datePublished": "2026-05-28",
+                "dateModified": "2026-05-28",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics",
+                "articleSection": "Computer Graphics Clipping",
+                "keywords": "clipping algorithm, point clipping, line clipping, polygon clipping, computer graphics, graphics.h"
+            },
+            {
+                "@type": "FAQPage",
+                "@id": "{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics#faq",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "What is clipping in computer graphics?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Clipping is the process of removing parts of graphics that lie outside a selected viewing area or clipping window."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What are the types of clipping?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Common types include point clipping, line clipping, polygon clipping, curve clipping, and text clipping."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What is a clipping window?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "A clipping window is the rectangular visible area used to decide which parts of an object should be displayed."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

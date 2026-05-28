@@ -1,0 +1,570 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>graphics.h Tutorials and C Graphics Programming Blog</title>
+    <meta name="description" content="Organized graphics.h tutorials for C computer graphics: line drawing algorithms, circle drawing, transformations, clipping, and runnable programs.">
+    <meta name="keywords" content="graphics.h tutorials, C graphics programming, computer graphics algorithms, line drawing algorithms, clipping algorithm, transformations">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog">
+    <meta property="og:title" content="graphics.h Tutorials and C Graphics Programming Blog">
+    <meta property="og:description" content="Practical graphics.h tutorials with complete C programs and computer graphics algorithm explanations.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="graphics.h Tutorials">
+    <meta name="twitter:description" content="Learn graphics.h with practical C examples and algorithms.">
+    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --line: rgba(255, 255, 255, 0.12);
+            --accent: #00ff88;
+            --accent-2: #0084de;
+            --warm: #f5b942;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.045), transparent 340px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.04), transparent 48%),
+                var(--bg);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .blog,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .blog {
+            padding: 56px 0 82px;
+        }
+
+        .eyebrow {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 780px;
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.4rem);
+            line-height: 1.05;
+            letter-spacing: 0;
+        }
+
+        .intro {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
+            margin: 0 0 34px;
+        }
+
+        .blog-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 20px;
+            margin: 0 0 34px;
+            align-items: stretch;
+        }
+
+        .featured-post,
+        .learning-path,
+        .topic-section {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.88);
+        }
+
+        .featured-post {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 260px;
+            padding: 24px;
+            text-decoration: none;
+        }
+
+        .featured-post:hover,
+        .post-card:hover {
+            border-color: rgba(0, 255, 136, 0.45);
+            transform: translateY(-2px);
+        }
+
+        .featured-label,
+        .section-label {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .featured-post h2 {
+            max-width: 720px;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            line-height: 1.08;
+        }
+
+        .featured-post p {
+            max-width: 680px;
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .learning-path {
+            padding: 20px;
+        }
+
+        .learning-path h2 {
+            color: var(--warm);
+            font-size: 1rem;
+        }
+
+        .learning-path ol {
+            margin: 14px 0 0;
+            padding-left: 1.25rem;
+        }
+
+        .learning-path li {
+            color: var(--muted);
+            margin: 0 0 10px;
+        }
+
+        .learning-path a {
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .learning-path a:hover {
+            color: var(--accent);
+        }
+
+        .topic-section {
+            padding: 22px;
+            margin: 0 0 22px;
+        }
+
+        .topic-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 16px;
+        }
+
+        .topic-header h2 {
+            margin-top: 4px;
+        }
+
+        .topic-header p {
+            max-width: 620px;
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .post-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .post-card {
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.025);
+            text-decoration: none;
+        }
+
+        .post-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            color: var(--muted);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+        }
+
+        .tag {
+            color: var(--warm);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.45rem;
+            line-height: 1.24;
+            letter-spacing: 0;
+        }
+
+        .post-card p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .read-more {
+            margin-top: auto;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.88rem;
+        }
+
+        .utility-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0 0 26px;
+        }
+
+        .utility-link {
+            color: var(--muted);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 0.5rem 0.7rem;
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+        }
+
+        .utility-link:hover {
+            color: var(--accent);
+            border-color: rgba(0, 255, 136, 0.38);
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 720px) {
+            .blog-top,
+            .topic-header {
+                grid-template-columns: 1fr;
+                display: block;
+            }
+
+            .learning-path {
+                margin-top: 16px;
+            }
+
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="blog">
+        <p class="eyebrow">Computer graphics tutorials</p>
+        <h1>graphics.h tutorials for C graphics programming</h1>
+        <p class="intro">Step-by-step computer graphics notes with formulas, worked explanations, copyable graphics.h programs, and examples that run in the browser.</p>
+
+        <div class="blog-top">
+            <a class="featured-post" href="/blog/clipping-algorithm-in-computer-graphics">
+                <span class="featured-label">Featured tutorial</span>
+                <h2>Clipping Algorithm in Computer Graphics</h2>
+                <p>Start here for clipping windows, point clipping, line clipping, polygon clipping, and the basic idea behind hiding graphics outside the visible area.</p>
+                <span class="read-more">Read featured tutorial</span>
+            </a>
+
+            <aside class="learning-path" aria-label="Suggested learning path">
+                <h2>Suggested learning path</h2>
+                <ol>
+                    <li><a href="#line-drawing">Line drawing algorithms</a></li>
+                    <li><a href="#circle-drawing">Circle drawing algorithms</a></li>
+                    <li><a href="#transformations">Transformations</a></li>
+                    <li><a href="#clipping">Clipping algorithms</a></li>
+                </ol>
+            </aside>
+        </div>
+
+        <nav class="utility-row" aria-label="Blog sections">
+            <a class="utility-link" href="#line-drawing">Line Drawing</a>
+            <a class="utility-link" href="#circle-drawing">Circle Drawing</a>
+            <a class="utility-link" href="#transformations">Transformations</a>
+            <a class="utility-link" href="#clipping">Clipping</a>
+        </nav>
+
+        <section class="topic-section" id="line-drawing">
+            <div class="topic-header">
+                <div>
+                    <span class="section-label">Topic 01</span>
+                    <h2>Line Drawing Algorithms</h2>
+                </div>
+                <p>Learn how straight lines are converted into screen pixels using incremental and integer-based methods.</p>
+            </div>
+            <div class="post-grid">
+                <a class="post-card" href="/blog/dda-line-drawing-algorithm">
+                    <div class="post-meta">
+                        <span>May 28, 2026</span>
+                        <span class="tag">Line Drawing Algorithms</span>
+                    </div>
+                    <h2>DDA Line Drawing Algorithm</h2>
+                    <p>Understand the Digital Differential Analyzer algorithm, its formula, steps, example calculation, and complete graphics.h implementation.</p>
+                    <span class="read-more">Read tutorial</span>
+                </a>
+
+                <a class="post-card" href="/blog/bresenham-line-drawing-algorithm">
+                    <div class="post-meta">
+                        <span>May 28, 2026</span>
+                        <span class="tag">Line Drawing Algorithms</span>
+                    </div>
+                    <h2>Bresenham Line Drawing Algorithm</h2>
+                    <p>Learn Bresenham's integer-based line algorithm, decision parameter logic, worked example, and complete graphics.h program.</p>
+                    <span class="read-more">Read tutorial</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="topic-section" id="circle-drawing">
+            <div class="topic-header">
+                <div>
+                    <span class="section-label">Topic 02</span>
+                    <h2>Circle Drawing Algorithms</h2>
+                </div>
+                <p>Study circle rasterization using decision parameters and symmetry to plot curved shapes efficiently.</p>
+            </div>
+            <div class="post-grid">
+                <a class="post-card" href="/blog/midpoint-circle-algorithm">
+                    <div class="post-meta">
+                        <span>May 28, 2026</span>
+                        <span class="tag">Circle Drawing Algorithms</span>
+                    </div>
+                    <h2>Midpoint Circle Algorithm</h2>
+                    <p>Learn the midpoint circle algorithm, decision parameter updates, eight-way symmetry, and complete graphics.h program.</p>
+                    <span class="read-more">Read tutorial</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="topic-section" id="transformations">
+            <div class="topic-header">
+                <div>
+                    <span class="section-label">Topic 03</span>
+                    <h2>Transformations</h2>
+                </div>
+                <p>Move, rotate, and resize 2D objects by applying formulas to their coordinates.</p>
+            </div>
+            <div class="post-grid">
+                <a class="post-card" href="/blog/transformations-in-computer-graphics">
+                    <div class="post-meta">
+                        <span>May 28, 2026</span>
+                        <span class="tag">Transformations</span>
+                    </div>
+                    <h2>Transformations in Computer Graphics</h2>
+                    <p>Learn translation, rotation, and scaling transformations with formulas and three separate runnable graphics.h programs.</p>
+                    <span class="read-more">Read tutorial</span>
+                </a>
+            </div>
+        </section>
+
+        <section class="topic-section" id="clipping">
+            <div class="topic-header">
+                <div>
+                    <span class="section-label">Topic 04</span>
+                    <h2>Clipping Algorithms</h2>
+                </div>
+                <p>Clip points and lines against a visible region so only the part inside the drawing window appears.</p>
+            </div>
+            <div class="post-grid">
+                <a class="post-card" href="/blog/clipping-algorithm-in-computer-graphics">
+                    <div class="post-meta">
+                        <span>May 28, 2026</span>
+                        <span class="tag">Clipping Algorithms</span>
+                    </div>
+                    <h2>Clipping Algorithm in Computer Graphics</h2>
+                    <p>Understand clipping, clipping windows, point clipping, line clipping, polygon clipping, and a simple runnable graphics.h example.</p>
+                    <span class="read-more">Read tutorial</span>
+                </a>
+
+                <a class="post-card" href="/blog/cohen-sutherland-line-clipping">
+                    <div class="post-meta">
+                        <span>May 28, 2026</span>
+                        <span class="tag">Clipping Algorithms</span>
+                    </div>
+                    <h2>Cohen-Sutherland Line Clipping</h2>
+                    <p>Learn region codes, clipping window logic, accept/reject decisions, and a complete runnable graphics.h implementation.</p>
+                    <span class="read-more">Read tutorial</span>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "@id": "{{ SITE_DOMAIN }}/blog#blog",
+        "name": "graphics.h Tutorials",
+        "url": "{{ SITE_DOMAIN }}/blog",
+        "description": "Practical graphics.h tutorials and computer graphics programming examples in C.",
+        "publisher": {
+            "@type": "Organization",
+            "name": "graphics.h Compiler",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+            }
+        },
+        "blogPost": [
+            {
+                "@type": "BlogPosting",
+                "headline": "Clipping Algorithm in Computer Graphics",
+                "url": "{{ SITE_DOMAIN }}/blog/clipping-algorithm-in-computer-graphics"
+            },
+            {
+                "@type": "BlogPosting",
+                "headline": "Cohen-Sutherland Line Clipping Algorithm",
+                "url": "{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping"
+            },
+            {
+                "@type": "BlogPosting",
+                "headline": "Transformations in Computer Graphics",
+                "url": "{{ SITE_DOMAIN }}/blog/transformations-in-computer-graphics"
+            },
+            {
+                "@type": "BlogPosting",
+                "headline": "Midpoint Circle Algorithm in Computer Graphics",
+                "url": "{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm"
+            },
+            {
+                "@type": "BlogPosting",
+                "headline": "Bresenham Line Drawing Algorithm in Computer Graphics",
+                "url": "{{ SITE_DOMAIN }}/blog/bresenham-line-drawing-algorithm"
+            },
+            {
+                "@type": "BlogPosting",
+                "headline": "DDA Line Drawing Algorithm in Computer Graphics",
+                "url": "{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,855 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDA Line Drawing Algorithm in Computer Graphics | graphics.h</title>
+    <meta name="description" content="Learn the DDA line drawing algorithm in computer graphics with formula, steps, example calculation, advantages, limitations, and complete C graphics.h program.">
+    <meta name="keywords" content="DDA line drawing algorithm, DDA algorithm in computer graphics, graphics.h DDA program, line drawing algorithm in C, computer graphics line algorithm">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm">
+    <meta property="og:title" content="DDA Line Drawing Algorithm in Computer Graphics">
+    <meta property="og:description" content="Step-by-step DDA algorithm explanation with complete C graphics.h source code.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-05-28">
+    <meta property="article:modified_time" content="2026-05-28">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Computer Graphics Algorithms">
+    <meta property="article:tag" content="DDA algorithm">
+    <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="C programming">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DDA Line Drawing Algorithm">
+    <meta name="twitter:description" content="Learn DDA line drawing with formula, example, and graphics.h code.">
+    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --surface: #111412;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --accent-2: #0084de;
+            --warm: #f5b942;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article {
+            padding: 44px 0 76px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow,
+        .meta {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.7rem);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+
+        .dek {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .quick-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+            padding: 18px;
+        }
+
+        .quick-card h2,
+        .quick-card p {
+            margin: 0;
+        }
+
+        .quick-card h2 {
+            font-size: 1rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .quick-card p {
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .post-body {
+            min-width: 0;
+        }
+
+        .toc {
+            position: sticky;
+            top: 84px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.8);
+            padding: 18px;
+        }
+
+        .toc h2 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .toc a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin: 0 0 34px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 1.2rem;
+            letter-spacing: 0;
+        }
+
+        p,
+        li {
+            color: var(--muted);
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        .formula,
+        pre {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #080a09;
+        }
+
+        .formula {
+            padding: 18px;
+            color: var(--text);
+            font-family: 'Space Mono', monospace;
+        }
+
+        code,
+        pre {
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        pre {
+            margin: 14px 0;
+            padding: 18px;
+            color: #dfffea;
+            font-size: 0.92rem;
+            line-height: 1.62;
+        }
+
+        .code-block {
+            margin: 14px 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #080a09;
+        }
+
+        .code-toolbar {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px 8px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .code-language {
+            color: var(--soft);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .copy-code-btn {
+            min-height: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.34);
+            border-radius: 6px;
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            padding: 0 10px;
+        }
+
+        .copy-code-btn:hover {
+            background: rgba(0, 255, 136, 0.14);
+        }
+
+        .code-block pre {
+            margin: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .code-token-keyword {
+            color: #7dd3fc;
+        }
+
+        .code-token-type {
+            color: #fbbf24;
+        }
+
+        .code-token-function {
+            color: #86efac;
+        }
+
+        .code-token-number {
+            color: #fca5a5;
+        }
+
+        .code-token-string {
+            color: #fde68a;
+        }
+
+        .code-token-preprocessor {
+            color: #c4b5fd;
+        }
+
+        .code-token-comment {
+            color: #8ca39a;
+        }
+
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+
+        .example-table th,
+        .example-table td {
+            border-bottom: 1px solid var(--line);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .example-table th {
+            color: var(--warm);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .example-table td {
+            color: var(--muted);
+        }
+
+        .cta,
+        .related {
+            border: 1px solid rgba(0, 255, 136, 0.28);
+            border-radius: 8px;
+            background: rgba(0, 255, 136, 0.06);
+            padding: 20px;
+        }
+
+        .cta a,
+        .related a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Line Drawing Algorithms</p>
+                    <h1>DDA Line Drawing Algorithm in Computer Graphics</h1>
+                    <p class="dek">The Digital Differential Analyzer algorithm draws a straight line by calculating small changes in x and y, then plotting the nearest pixel at each step. It is one of the first line algorithms taught in computer graphics because the idea is simple and easy to implement in C.</p>
+                    <p class="meta">Published May 28, 2026 - 8 min read</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>At a glance</h2>
+                    <p><strong>Input:</strong> two endpoints, (x1, y1) and (x2, y2)</p>
+                    <p><strong>Output:</strong> pixels that approximate the straight line</p>
+                    <p><strong>Core idea:</strong> add fixed increments to x and y until the second endpoint is reached.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="what-is-dda">
+                        <h2>What is the DDA algorithm?</h2>
+                        <p>DDA stands for <strong>Digital Differential Analyzer</strong>. In computer graphics, the DDA line drawing algorithm is used to generate the intermediate points between two given endpoints of a line. Since a screen is made of pixels, the mathematical line must be converted into integer pixel positions.</p>
+                        <p>The algorithm starts from the first endpoint, repeatedly increases x and y by a fixed amount, rounds the result to the nearest pixel, and plots that pixel using <code>putpixel()</code> in graphics.h.</p>
+                    </section>
+
+                    <section id="formula">
+                        <h2>DDA formula</h2>
+                        <p>For a line from <code>(x1, y1)</code> to <code>(x2, y2)</code>, first calculate:</p>
+                        <div class="formula">
+                            dx = x2 - x1<br>
+                            dy = y2 - y1<br>
+                            steps = max(abs(dx), abs(dy))<br>
+                            xIncrement = dx / steps<br>
+                            yIncrement = dy / steps
+                        </div>
+                        <p>The value of <code>steps</code> is chosen as the larger of <code>abs(dx)</code> and <code>abs(dy)</code> so that the algorithm moves one pixel at a time along the dominant direction of the line.</p>
+                    </section>
+
+                    <section id="steps">
+                        <h2>Steps of the DDA line drawing algorithm</h2>
+                        <ol>
+                            <li>Read the starting point <code>(x1, y1)</code> and ending point <code>(x2, y2)</code>.</li>
+                            <li>Calculate <code>dx = x2 - x1</code> and <code>dy = y2 - y1</code>.</li>
+                            <li>Set <code>steps</code> to the larger value between <code>abs(dx)</code> and <code>abs(dy)</code>.</li>
+                            <li>Calculate <code>xIncrement = dx / steps</code> and <code>yIncrement = dy / steps</code>.</li>
+                            <li>Start with <code>x = x1</code> and <code>y = y1</code>.</li>
+                            <li>Plot <code>round(x), round(y)</code>.</li>
+                            <li>Add the increments to x and y, then repeat until all steps are complete.</li>
+                        </ol>
+                    </section>
+
+                    <section id="example">
+                        <h2>Example calculation</h2>
+                        <p>Suppose we want to draw a line from <code>(2, 3)</code> to <code>(8, 6)</code>.</p>
+                        <div class="formula">
+                            dx = 8 - 2 = 6<br>
+                            dy = 6 - 3 = 3<br>
+                            steps = max(6, 3) = 6<br>
+                            xIncrement = 6 / 6 = 1<br>
+                            yIncrement = 3 / 6 = 0.5
+                        </div>
+                        <p>The algorithm starts at <code>(2, 3)</code>. On every step, x increases by 1 and y increases by 0.5. After rounding, the plotted points look like this:</p>
+                        <table class="example-table">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>x</th>
+                                    <th>y</th>
+                                    <th>Pixel plotted</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>0</td><td>2</td><td>3</td><td>(2, 3)</td></tr>
+                                <tr><td>1</td><td>3</td><td>3.5</td><td>(3, 4)</td></tr>
+                                <tr><td>2</td><td>4</td><td>4</td><td>(4, 4)</td></tr>
+                                <tr><td>3</td><td>5</td><td>4.5</td><td>(5, 5)</td></tr>
+                                <tr><td>4</td><td>6</td><td>5</td><td>(6, 5)</td></tr>
+                                <tr><td>5</td><td>7</td><td>5.5</td><td>(7, 6)</td></tr>
+                                <tr><td>6</td><td>8</td><td>6</td><td>(8, 6)</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="program">
+                        <h2>DDA algorithm program in C using graphics.h</h2>
+                        <p>This program draws a line using the DDA algorithm. It does not use the built-in <code>line()</code> function for drawing the final line; instead, it plots each point with <code>putpixel()</code>.</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">C / graphics.h</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="dda-code">Copy</button>
+                            </div>
+<pre><code id="dda-code" class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;math.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int roundValue(float value)
+{
+    return (int)(value + 0.5);
+}
+
+void drawDDALine(int x1, int y1, int x2, int y2)
+{
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+    int steps;
+    int i;
+    float xIncrement;
+    float yIncrement;
+    float x = x1;
+    float y = y1;
+
+    if (abs(dx) &gt; abs(dy))
+        steps = abs(dx);
+    else
+        steps = abs(dy);
+
+    if (steps == 0)
+    {
+        putpixel(x1, y1, WHITE);
+        return;
+    }
+
+    xIncrement = dx / (float)steps;
+    yIncrement = dy / (float)steps;
+
+    for (i = 0; i &lt;= steps; i++)
+    {
+        putpixel(roundValue(x), roundValue(y), WHITE);
+        x = x + xIncrement;
+        y = y + yIncrement;
+        delay(20);
+    }
+}
+
+int main()
+{
+    int gd = DETECT, gm;
+    int x1, y1, x2, y2;
+
+    printf("Enter x1 y1: ");
+    scanf("%d %d", &amp;x1, &amp;y1);
+
+    printf("Enter x2 y2: ");
+    scanf("%d %d", &amp;x2, &amp;y2);
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    drawDDALine(x1, y1, x2, y2);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                        <div class="cta">
+                            <p><strong>Try it online:</strong> open the <a href="/compiler">graphics.h online compiler</a>, paste the program, then use sample inputs <strong><code>100 100</code></strong> and <strong><code>400 250</code></strong>.</p>
+                        </div>
+                    </section>
+
+                    <section id="advantages">
+                        <h2>Advantages of DDA algorithm</h2>
+                        <ul>
+                            <li>It is simple and easy to understand.</li>
+                            <li>It works for all line slopes, including horizontal, vertical, and diagonal lines.</li>
+                            <li>It directly follows the mathematical idea of a straight line.</li>
+                        </ul>
+                    </section>
+
+                    <section id="limitations">
+                        <h2>Limitations of DDA algorithm</h2>
+                        <ul>
+                            <li>It uses floating-point arithmetic, which can be slower than integer-only methods.</li>
+                            <li>It requires rounding at every step.</li>
+                            <li>For performance-critical graphics, Bresenham's line algorithm is usually preferred.</li>
+                        </ul>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common mistakes</h2>
+                        <h3>Using integer division</h3>
+                        <p>If you write <code>xIncrement = dx / steps</code> using only integers, fractional values may be lost. Use <code>dx / (float)steps</code> instead.</p>
+
+                        <h3>Forgetting to round pixel positions</h3>
+                        <p>Pixel coordinates are integers. Since DDA produces floating-point x and y values, round them before passing them to <code>putpixel()</code>.</p>
+
+                        <h3>Using line() instead of putpixel()</h3>
+                        <p>The purpose of this algorithm is to generate the line manually. If you call <code>line(x1, y1, x2, y2)</code>, graphics.h draws the line for you and the DDA logic is skipped.</p>
+                    </section>
+
+                    <section id="summary">
+                        <h2>Summary</h2>
+                        <p>The DDA line drawing algorithm calculates the number of steps needed between two endpoints, computes fixed increments for x and y, and plots rounded pixel positions one by one. It is a useful first algorithm for learning how mathematical shapes are converted into pixels on a display.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/blog/cohen-sutherland-line-clipping">Cohen-Sutherland Line Clipping Algorithm</a></p>
+                        <p><a href="/blog/transformations-in-computer-graphics">Transformations in Computer Graphics</a></p>
+                        <p><a href="/blog/midpoint-circle-algorithm">Midpoint Circle Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog/bresenham-line-drawing-algorithm">Bresenham Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog">View all graphics.h tutorials</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this tutorial</h2>
+                    <a href="#what-is-dda">What is DDA?</a>
+                    <a href="#formula">Formula</a>
+                    <a href="#steps">Algorithm steps</a>
+                    <a href="#example">Example</a>
+                    <a href="#program">graphics.h program</a>
+                    <a href="#advantages">Advantages</a>
+                    <a href="#limitations">Limitations</a>
+                    <a href="#mistakes">Common mistakes</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            function escapeHtml(value) {
+                return value
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            function highlightC(raw) {
+                var escaped = escapeHtml(raw);
+                var placeholders = [];
+
+                function hold(className, value) {
+                    var key = '___CODETOKEN' + String.fromCharCode(65 + placeholders.length) + '___';
+                    placeholders.push('<span class="' + className + '">' + value + '</span>');
+                    return key;
+                }
+
+                escaped = escaped.replace(/"(?:\\.|[^"\\])*"/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                escaped = escaped.replace(/\/\/.*$/gm, function (match) {
+                    return hold('code-token-comment', match);
+                });
+
+                escaped = escaped.replace(/^#include\s+&lt;[^&]+&gt;/gm, function (match) {
+                    return hold('code-token-preprocessor', match);
+                });
+
+                escaped = escaped
+                    .replace(/\b(int|float|void|return|if|else|for)\b/g, '<span class="code-token-keyword">$1</span>')
+                    .replace(/\b(DETECT|WHITE)\b/g, '<span class="code-token-type">$1</span>')
+                    .replace(/\b(abs|putpixel|delay|printf|scanf|initgraph|getch|closegraph|drawDDALine|roundValue)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
+                    .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="code-token-number">$1</span>');
+
+                placeholders.forEach(function (value, index) {
+                    escaped = escaped.replace('___CODETOKEN' + String.fromCharCode(65 + index) + '___', value);
+                });
+
+                return escaped;
+            }
+
+            document.querySelectorAll('code.language-c').forEach(function (code) {
+                code.dataset.rawCode = code.textContent;
+                code.innerHTML = highlightC(code.dataset.rawCode);
+            });
+
+            document.querySelectorAll('[data-copy-code]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var code = document.getElementById(button.getAttribute('data-copy-code'));
+                    var text = code ? (code.dataset.rawCode || code.textContent) : '';
+                    var original = button.textContent;
+
+                    function markCopied() {
+                        button.textContent = 'Copied';
+                        window.setTimeout(function () {
+                            button.textContent = original;
+                        }, 1400);
+                    }
+
+                    function fallbackCopy() {
+                        var textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        var copied = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        if (copied) {
+                            markCopied();
+                            return;
+                        }
+                        button.textContent = 'Select code';
+                    }
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(markCopied).catch(fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                });
+            });
+        }());
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm#breadcrumb",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "{{ SITE_DOMAIN }}/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Blog",
+                        "item": "{{ SITE_DOMAIN }}/blog"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "DDA Line Drawing Algorithm",
+                        "item": "{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm"
+                    }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm#article",
+                "headline": "DDA Line Drawing Algorithm in Computer Graphics",
+                "description": "Learn the DDA line drawing algorithm with formula, steps, example calculation, and complete C graphics.h source code.",
+                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "datePublished": "2026-05-28",
+                "dateModified": "2026-05-28",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm",
+                "articleSection": "Computer Graphics Algorithms",
+                "keywords": "DDA algorithm, line drawing algorithm, computer graphics, graphics.h, C programming"
+            },
+            {
+                "@type": "FAQPage",
+                "@id": "{{ SITE_DOMAIN }}/blog/dda-line-drawing-algorithm#faq",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "What is DDA in computer graphics?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "DDA stands for Digital Differential Analyzer. It is a line drawing algorithm that calculates intermediate x and y positions between two endpoints and plots the nearest pixels."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Why does DDA use floating-point values?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "DDA uses floating-point increments because a line may move by fractional amounts in x or y at each step, especially when the slope is not 0, 1, or vertical."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Is DDA better than Bresenham's line algorithm?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "DDA is easier to understand, but Bresenham's line algorithm is usually faster because it avoids floating-point arithmetic and uses integer calculations."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

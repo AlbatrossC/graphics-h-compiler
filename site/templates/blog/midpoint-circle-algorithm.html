@@ -1,0 +1,846 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midpoint Circle Algorithm in Computer Graphics | graphics.h</title>
+    <meta name="description" content="Learn the Midpoint Circle Algorithm in computer graphics with decision parameter, eight-way symmetry, step-by-step example, and complete C graphics.h program.">
+    <meta name="keywords" content="Midpoint circle algorithm, circle drawing algorithm in computer graphics, graphics.h circle algorithm, midpoint circle program in C, eight way symmetry">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm">
+    <meta property="og:title" content="Midpoint Circle Algorithm in Computer Graphics">
+    <meta property="og:description" content="Step-by-step midpoint circle algorithm explanation with complete C graphics.h source code.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-05-28">
+    <meta property="article:modified_time" content="2026-05-28">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Computer Graphics Algorithms">
+    <meta property="article:tag" content="Midpoint circle algorithm">
+    <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="C programming">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Midpoint Circle Algorithm">
+    <meta name="twitter:description" content="Learn midpoint circle drawing with decision parameter, symmetry, and graphics.h code.">
+    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --warm: #f5b942;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article {
+            padding: 44px 0 76px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow,
+        .meta {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.7rem);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+
+        .dek {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .quick-card,
+        .toc,
+        .formula,
+        .code-block,
+        .example-table,
+        .cta,
+        .related {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+        }
+
+        .quick-card {
+            padding: 18px;
+        }
+
+        .quick-card h2,
+        .quick-card p {
+            margin: 0;
+        }
+
+        .quick-card h2 {
+            font-size: 1rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .quick-card p {
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .post-body {
+            min-width: 0;
+        }
+
+        .toc {
+            position: sticky;
+            top: 84px;
+            padding: 18px;
+        }
+
+        .toc h2 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .toc a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin: 0 0 34px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 1.2rem;
+            letter-spacing: 0;
+        }
+
+        p,
+        li {
+            color: var(--muted);
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        .formula {
+            padding: 18px;
+            color: var(--text);
+            font-family: 'Space Mono', monospace;
+            overflow-x: auto;
+            background: #080a09;
+        }
+
+        code,
+        pre {
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        pre {
+            margin: 0;
+            padding: 18px;
+            overflow-x: auto;
+            color: #dfffea;
+            font-size: 0.92rem;
+            line-height: 1.62;
+            background: transparent;
+        }
+
+        .code-block {
+            margin: 14px 0;
+            overflow: hidden;
+            background: #080a09;
+        }
+
+        .code-toolbar {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px 8px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .code-language {
+            color: var(--soft);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+        }
+
+        .copy-code-btn {
+            min-height: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.34);
+            border-radius: 6px;
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            padding: 0 10px;
+        }
+
+        .copy-code-btn:hover {
+            background: rgba(0, 255, 136, 0.14);
+        }
+
+        .code-token-keyword {
+            color: #7dd3fc;
+        }
+
+        .code-token-type {
+            color: #fbbf24;
+        }
+
+        .code-token-function {
+            color: #86efac;
+        }
+
+        .code-token-number {
+            color: #fca5a5;
+        }
+
+        .code-token-string {
+            color: #fde68a;
+        }
+
+        .code-token-preprocessor {
+            color: #c4b5fd;
+        }
+
+        .code-token-comment {
+            color: #8ca39a;
+        }
+
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+
+        .example-table th,
+        .example-table td {
+            border-bottom: 1px solid var(--line);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .example-table th {
+            color: var(--warm);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .example-table td {
+            color: var(--muted);
+        }
+
+        .cta,
+        .related {
+            border-color: rgba(0, 255, 136, 0.28);
+            background: rgba(0, 255, 136, 0.06);
+            padding: 20px;
+        }
+
+        .cta a,
+        .related a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Circle Drawing Algorithms</p>
+                    <h1>Midpoint Circle Algorithm in Computer Graphics</h1>
+                    <p class="dek">The Midpoint Circle Algorithm draws a circle by calculating one octant and reflecting each point into the other seven octants. It uses an integer decision parameter, so it is efficient and widely taught in computer graphics courses.</p>
+                    <p class="meta">Published May 28, 2026 - 9 min read</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>At a glance</h2>
+                    <p><strong>Input:</strong> center point and radius</p>
+                    <p><strong>Output:</strong> pixels that approximate a circle</p>
+                    <p><strong>Core idea:</strong> calculate one octant, then mirror points using eight-way symmetry.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="what-is-midpoint">
+                        <h2>What is the Midpoint Circle Algorithm?</h2>
+                        <p>The Midpoint Circle Algorithm is a raster graphics algorithm used to draw a circle on a pixel screen. Instead of checking every point on the screen, it calculates the best next pixel around the circle boundary.</p>
+                        <p>The algorithm starts at the top of the circle, moves through one octant, and uses symmetry to plot the remaining seven matching points. This makes circle drawing much faster than testing all possible coordinates.</p>
+                    </section>
+
+                    <section id="symmetry">
+                        <h2>Eight-way symmetry of a circle</h2>
+                        <p>A circle is symmetric in eight directions. If one point <code>(x, y)</code> lies on the circle relative to the center, then seven more points can be plotted without recalculating them.</p>
+                        <div class="formula">
+                            (xc + x, yc + y) &nbsp;&nbsp; (xc - x, yc + y)<br>
+                            (xc + x, yc - y) &nbsp;&nbsp; (xc - x, yc - y)<br>
+                            (xc + y, yc + x) &nbsp;&nbsp; (xc - y, yc + x)<br>
+                            (xc + y, yc - x) &nbsp;&nbsp; (xc - y, yc - x)
+                        </div>
+                    </section>
+
+                    <section id="decision-parameter">
+                        <h2>Decision parameter formula</h2>
+                        <p>For a circle with radius <code>r</code>, the algorithm starts with:</p>
+                        <div class="formula">
+                            x = 0<br>
+                            y = r<br>
+                            p = 1 - r
+                        </div>
+                        <p>If <code>p &lt; 0</code>, the midpoint is inside the circle, so x increases and y stays the same. If <code>p &gt;= 0</code>, the midpoint is outside or on the circle, so x increases and y decreases.</p>
+                    </section>
+
+                    <section id="steps">
+                        <h2>Steps of Midpoint Circle Algorithm</h2>
+                        <ol>
+                            <li>Read the circle center <code>(xc, yc)</code> and radius <code>r</code>.</li>
+                            <li>Initialize <code>x = 0</code>, <code>y = r</code>, and <code>p = 1 - r</code>.</li>
+                            <li>Plot the eight symmetric points.</li>
+                            <li>If <code>p &lt; 0</code>, update <code>p = p + 2x + 3</code>.</li>
+                            <li>If <code>p &gt;= 0</code>, decrease y and update <code>p = p + 2(x - y) + 5</code>.</li>
+                            <li>Increase x and repeat until <code>x &gt; y</code>.</li>
+                        </ol>
+                    </section>
+
+                    <section id="example">
+                        <h2>Example calculation</h2>
+                        <p>Suppose the radius is <code>5</code>. The initial values are:</p>
+                        <div class="formula">
+                            x = 0<br>
+                            y = 5<br>
+                            p = 1 - 5 = -4
+                        </div>
+                        <table class="example-table">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>x</th>
+                                    <th>y</th>
+                                    <th>p</th>
+                                    <th>Decision</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>0</td><td>0</td><td>5</td><td>-4</td><td>Inside, y unchanged</td></tr>
+                                <tr><td>1</td><td>1</td><td>5</td><td>-1</td><td>Inside, y unchanged</td></tr>
+                                <tr><td>2</td><td>2</td><td>5</td><td>4</td><td>Outside, decrease y</td></tr>
+                                <tr><td>3</td><td>3</td><td>4</td><td>3</td><td>Outside, decrease y</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="program">
+                        <h2>Midpoint Circle Algorithm program in C using graphics.h</h2>
+                        <p>This program draws a circle using the midpoint method. It does not call the built-in <code>circle()</code> function; instead, it plots pixels manually with <code>putpixel()</code>.</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">C / graphics.h</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="midpoint-circle-code">Copy</button>
+                            </div>
+<pre><code id="midpoint-circle-code" class="language-c">#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+#include &lt;stdio.h&gt;
+
+void plotCirclePoints(int xc, int yc, int x, int y)
+{
+    putpixel(xc + x, yc + y, WHITE);
+    putpixel(xc - x, yc + y, WHITE);
+    putpixel(xc + x, yc - y, WHITE);
+    putpixel(xc - x, yc - y, WHITE);
+    putpixel(xc + y, yc + x, WHITE);
+    putpixel(xc - y, yc + x, WHITE);
+    putpixel(xc + y, yc - x, WHITE);
+    putpixel(xc - y, yc - x, WHITE);
+}
+
+void drawMidpointCircle(int xc, int yc, int radius)
+{
+    int x = 0;
+    int y = radius;
+    int p = 1 - radius;
+
+    plotCirclePoints(xc, yc, x, y);
+
+    while (x &lt; y)
+    {
+        x++;
+
+        if (p &lt; 0)
+        {
+            p = p + (2 * x) + 3;
+        }
+        else
+        {
+            y--;
+            p = p + (2 * (x - y)) + 5;
+        }
+
+        plotCirclePoints(xc, yc, x, y);
+        delay(40);
+    }
+}
+
+int main()
+{
+    int gd = DETECT, gm;
+    int xc, yc, radius;
+
+    printf("Enter center x y: ");
+    scanf("%d %d", &amp;xc, &amp;yc);
+
+    printf("Enter radius: ");
+    scanf("%d", &amp;radius);
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    drawMidpointCircle(xc, yc, radius);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        </div>
+                        <div class="cta">
+                            <p><strong>Try it online:</strong> open the <a href="/compiler">graphics.h online compiler</a>, paste the program, then use center <strong><code>320 240</code></strong> and radius <strong><code>100</code></strong>.</p>
+                        </div>
+                    </section>
+
+                    <section id="advantages">
+                        <h2>Advantages of Midpoint Circle Algorithm</h2>
+                        <ul>
+                            <li>It uses integer arithmetic, so it is efficient.</li>
+                            <li>It plots only one octant and mirrors the remaining points.</li>
+                            <li>It avoids expensive trigonometric functions.</li>
+                            <li>It is easy to adapt for classic graphics.h programs.</li>
+                        </ul>
+                    </section>
+
+                    <section id="limitations">
+                        <h2>Limitations</h2>
+                        <ul>
+                            <li>The circle boundary can look jagged because pixels are square.</li>
+                            <li>The algorithm draws only the outline, not a filled circle.</li>
+                            <li>Anti-aliasing is not included in the classic midpoint approach.</li>
+                        </ul>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common mistakes</h2>
+                        <h3>Plotting only one point</h3>
+                        <p>If you plot only <code>(x, y)</code>, you will draw just one octant. Use eight-way symmetry to complete the circle.</p>
+
+                        <h3>Calling circle() instead of putpixel()</h3>
+                        <p>The goal is to implement the algorithm manually. Calling <code>circle(xc, yc, radius)</code> uses the built-in graphics.h function and skips the midpoint logic.</p>
+
+                        <h3>Using the wrong loop condition</h3>
+                        <p>The loop should continue while <code>x &lt; y</code> or <code>x &lt;= y</code>. Stopping too early leaves gaps near the diagonal of the circle.</p>
+                    </section>
+
+                    <section id="summary">
+                        <h2>Summary</h2>
+                        <p>The Midpoint Circle Algorithm draws a circle efficiently by using a decision parameter and eight-way symmetry. It is one of the most important beginner algorithms for understanding how curved shapes are rasterized on a pixel screen.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/blog/cohen-sutherland-line-clipping">Cohen-Sutherland Line Clipping Algorithm</a></p>
+                        <p><a href="/blog/transformations-in-computer-graphics">Transformations in Computer Graphics</a></p>
+                        <p><a href="/blog/bresenham-line-drawing-algorithm">Bresenham Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog/dda-line-drawing-algorithm">DDA Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog">View all graphics.h tutorials</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this tutorial</h2>
+                    <a href="#what-is-midpoint">What is it?</a>
+                    <a href="#symmetry">Eight-way symmetry</a>
+                    <a href="#decision-parameter">Decision parameter</a>
+                    <a href="#steps">Algorithm steps</a>
+                    <a href="#example">Example</a>
+                    <a href="#program">graphics.h program</a>
+                    <a href="#advantages">Advantages</a>
+                    <a href="#limitations">Limitations</a>
+                    <a href="#mistakes">Common mistakes</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            function escapeHtml(value) {
+                return value
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            function highlightC(raw) {
+                var escaped = escapeHtml(raw);
+                var placeholders = [];
+
+                function hold(className, value) {
+                    var key = '___CODETOKEN' + String.fromCharCode(65 + placeholders.length) + '___';
+                    placeholders.push('<span class="' + className + '">' + value + '</span>');
+                    return key;
+                }
+
+                escaped = escaped.replace(/"(?:\\.|[^"\\])*"/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                escaped = escaped.replace(/\/\/.*$/gm, function (match) {
+                    return hold('code-token-comment', match);
+                });
+
+                escaped = escaped.replace(/^#include\s+&lt;[^&]+&gt;/gm, function (match) {
+                    return hold('code-token-preprocessor', match);
+                });
+
+                escaped = escaped
+                    .replace(/\b(int|float|void|return|if|else|for|while)\b/g, '<span class="code-token-keyword">$1</span>')
+                    .replace(/\b(DETECT|WHITE)\b/g, '<span class="code-token-type">$1</span>')
+                    .replace(/\b(putpixel|delay|printf|scanf|initgraph|getch|closegraph|plotCirclePoints|drawMidpointCircle)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
+                    .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="code-token-number">$1</span>');
+
+                placeholders.forEach(function (value, index) {
+                    escaped = escaped.replace('___CODETOKEN' + String.fromCharCode(65 + index) + '___', value);
+                });
+
+                return escaped;
+            }
+
+            document.querySelectorAll('code.language-c').forEach(function (code) {
+                code.dataset.rawCode = code.textContent;
+                code.innerHTML = highlightC(code.dataset.rawCode);
+            });
+
+            document.querySelectorAll('[data-copy-code]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var code = document.getElementById(button.getAttribute('data-copy-code'));
+                    var text = code ? (code.dataset.rawCode || code.textContent) : '';
+                    var original = button.textContent;
+
+                    function markCopied() {
+                        button.textContent = 'Copied';
+                        window.setTimeout(function () {
+                            button.textContent = original;
+                        }, 1400);
+                    }
+
+                    function fallbackCopy() {
+                        var textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        var copied = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        if (copied) {
+                            markCopied();
+                            return;
+                        }
+                        button.textContent = 'Select code';
+                    }
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(markCopied).catch(fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                });
+            });
+        }());
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm#breadcrumb",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "{{ SITE_DOMAIN }}/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Blog",
+                        "item": "{{ SITE_DOMAIN }}/blog"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "Midpoint Circle Algorithm",
+                        "item": "{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm"
+                    }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm#article",
+                "headline": "Midpoint Circle Algorithm in Computer Graphics",
+                "description": "Learn the Midpoint Circle Algorithm with decision parameter, eight-way symmetry, example calculation, and complete C graphics.h source code.",
+                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "datePublished": "2026-05-28",
+                "dateModified": "2026-05-28",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm",
+                "articleSection": "Computer Graphics Algorithms",
+                "keywords": "Midpoint Circle Algorithm, circle drawing algorithm, computer graphics, graphics.h, C programming"
+            },
+            {
+                "@type": "FAQPage",
+                "@id": "{{ SITE_DOMAIN }}/blog/midpoint-circle-algorithm#faq",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "What is the Midpoint Circle Algorithm?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "The Midpoint Circle Algorithm is a computer graphics algorithm that draws a circle using a decision parameter and eight-way symmetry."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Why does the Midpoint Circle Algorithm use symmetry?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "A circle is symmetric in eight directions, so calculating one point allows seven additional matching points to be plotted."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Does the algorithm use the built-in circle function?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "No. A manual midpoint implementation uses putpixel to plot the circle boundary instead of calling the built-in graphics.h circle function."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

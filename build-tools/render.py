@@ -31,6 +31,8 @@ DOCS_JSON_PATH = STATIC_DIR / 'assets' / 'docs.1.json'
 
 SIMPLE_PAGES = {
     'index.html': 'index.html',
+    'blog/index.html': 'blog.html',
+    'blog.html': 'blog.html',
     'about.html': 'about.html',
     'privacy-policy.html': 'privacy-policy.html',
     'terms.html': 'terms.html',
@@ -40,8 +42,18 @@ SIMPLE_PAGES = {
 }
 
 BLOG_PAGES = {
-    'blog/how-to-draw-a-house-in-graphics.h/index.html': 'blog/how-to-draw-a-house-in-graphics.h.html',
-    'blog/how-to-draw-a-house-in-graphics.h.html': 'blog/how-to-draw-a-house-in-graphics.h.html',
+    'blog/clipping-algorithm-in-computer-graphics/index.html': 'blog/clipping-algorithm-in-computer-graphics.html',
+    'blog/clipping-algorithm-in-computer-graphics.html': 'blog/clipping-algorithm-in-computer-graphics.html',
+    'blog/cohen-sutherland-line-clipping/index.html': 'blog/cohen-sutherland-line-clipping.html',
+    'blog/cohen-sutherland-line-clipping.html': 'blog/cohen-sutherland-line-clipping.html',
+    'blog/transformations-in-computer-graphics/index.html': 'blog/transformations-in-computer-graphics.html',
+    'blog/transformations-in-computer-graphics.html': 'blog/transformations-in-computer-graphics.html',
+    'blog/midpoint-circle-algorithm/index.html': 'blog/midpoint-circle-algorithm.html',
+    'blog/midpoint-circle-algorithm.html': 'blog/midpoint-circle-algorithm.html',
+    'blog/bresenham-line-drawing-algorithm/index.html': 'blog/bresenham-line-drawing-algorithm.html',
+    'blog/bresenham-line-drawing-algorithm.html': 'blog/bresenham-line-drawing-algorithm.html',
+    'blog/dda-line-drawing-algorithm/index.html': 'blog/dda-line-drawing-algorithm.html',
+    'blog/dda-line-drawing-algorithm.html': 'blog/dda-line-drawing-algorithm.html',
 }
 
 COMPILER_SOURCE_JS = {
@@ -152,9 +164,15 @@ def generate_sitemap(base_url: str) -> str:
     entries = [
         url('/compiler', '1.0', 'daily'),
         url('/', '0.95', 'weekly'),
+        url('/blog', '0.7', 'weekly'),
+        url('/blog/clipping-algorithm-in-computer-graphics', '0.65', 'monthly'),
+        url('/blog/cohen-sutherland-line-clipping', '0.65', 'monthly'),
+        url('/blog/transformations-in-computer-graphics', '0.65', 'monthly'),
+        url('/blog/midpoint-circle-algorithm', '0.65', 'monthly'),
+        url('/blog/bresenham-line-drawing-algorithm', '0.65', 'monthly'),
+        url('/blog/dda-line-drawing-algorithm', '0.65', 'monthly'),
         url('/about', '0.5', 'monthly'),
         url('/contact', '0.5', 'monthly'),
-        url('/blog/how-to-draw-a-house-in-graphics.h', '0.6', 'monthly'),
         url('/privacy-policy', '0.4', 'yearly'),
         url('/terms', '0.4', 'yearly'),
     ]
