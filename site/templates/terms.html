@@ -448,8 +448,10 @@
             <div class="legal-sidebar-title">On this page</div>
             <nav>
                 <a href="#use-of-service" class="active">Use of Service</a>
+                <a href="#compiler-runtime">Compiler Runtime</a>
                 <a href="#user-responsibility">User Responsibility</a>
                 <a href="#accounts">Accounts</a>
+                <a href="#advertising-terms">Advertising</a>
                 <a href="#stored-data">Stored Data</a>
                 <a href="#availability">Availability</a>
                 <a href="#liability">Liability</a>
@@ -478,40 +480,59 @@
 
             <div class="legal-section" id="use-of-service">
                 <h2>1. Use of Service</h2>
-                <p>This website provides an online graphics.h compiler for educational and development purposes. The
-                    service is provided free of charge.</p>
+                <p>This website provides an online graphics.h compiler, documentation, demos, and related tools for
+                    educational and development purposes. The service is currently provided free of charge.</p>
+                <p>You may use the compiler to write, save, compile, and run C/C++ graphics.h programs in your browser,
+                    subject to these terms and applicable law.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="compiler-runtime">
+                <h2>2. Compiler Runtime</h2>
+                <p>The online compiler runs a browser-based DOS/Turbo C environment. Compilation and program execution
+                    are designed to happen locally in your browser after the required runtime assets load.</p>
+                <p>You are responsible for reviewing code before running it. Do not run code that is malicious, abusive,
+                    designed to overload the browser, or intended to bypass browser or service restrictions.</p>
             </div>
 
             <hr class="legal-divider">
 
             <div class="legal-section" id="user-responsibility">
-                <h2>2. User Responsibility</h2>
+                <h2>3. User Responsibility</h2>
                 <p>You are responsible for:</p>
                 <ul>
                     <li>The code you write and execute</li>
-                    <li>The content you store</li>
+                    <li>The files, folders, names, and other content you save</li>
+                    <li>Keeping local backups of important code</li>
                 </ul>
                 <p>You must not:</p>
                 <ul>
                     <li>Use the service for illegal activities</li>
                     <li>Attempt to abuse or overload the system</li>
                     <li>Upload harmful or malicious code</li>
+                    <li>Attempt to access another user's account, files, sessions, or stored data</li>
+                    <li>Use automated traffic, scraping, or repeated requests in a way that harms service availability</li>
                 </ul>
             </div>
 
             <hr class="legal-divider">
 
             <div class="legal-section" id="accounts">
-                <h2>3. Accounts</h2>
-                <p>You may sign in using Google. You are responsible for maintaining your account security. I am not
-                    liable for unauthorized access to your account.</p>
+                <h2>4. Accounts</h2>
+                <p>You may sign in using Google to enable cloud file storage. You are responsible for maintaining the
+                    security of your Google account and browser session.</p>
+                <p>I may restrict write access, remove stored content, or terminate access if an account is used in a
+                    way that violates these terms, harms the service, or creates security or abuse risks.</p>
             </div>
 
             <hr class="legal-divider">
 
             <div class="legal-section" id="advertising-terms">
-                <h2>4. Advertising &amp; Cookies</h2>
-                <p>This website displays advertisements served by Google AdSense and may use cookies for advertising purposes. By using this service, you acknowledge that:</p>
+                <h2>5. Advertising &amp; Cookies</h2>
+                <p>This website may display advertisements served by Google AdSense and may use cookies or similar
+                    technologies for analytics, authentication, preferences, and advertising. By using this service, you
+                    acknowledge that:</p>
                 <ul>
                     <li>Third-party advertisers, including Google, may use cookies to serve ads based on your browsing history on this and other websites.</li>
                     <li>You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a> or <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">www.aboutads.info</a>.</li>
@@ -524,18 +545,24 @@
             <hr class="legal-divider">
 
             <div class="legal-section" id="stored-data">
-                <h2>4. Stored Data</h2>
-                <p>I store your files to provide functionality. I may remove data if:</p>
+                <h2>6. Stored Data</h2>
+                <p>If you sign in, I store your account profile details and cloud files to provide the save/sync
+                    functionality. Guest files may be stored locally in your browser using IndexedDB/localStorage and may
+                    be lost if you clear browser data or switch devices.</p>
+                <p>I may remove stored data if:</p>
                 <ul>
                     <li>It violates these terms</li>
                     <li>It affects system performance or security</li>
+                    <li>It appears abusive, malicious, or unlawful</li>
                 </ul>
+                <p>You remain responsible for keeping separate backups of important files. The service is not intended
+                    to be the only storage location for important coursework, projects, or submissions.</p>
             </div>
 
             <hr class="legal-divider">
 
             <div class="legal-section" id="availability">
-                <h2>5. Service Availability</h2>
+                <h2>7. Service Availability</h2>
                 <p>I do not guarantee:</p>
                 <ul>
                     <li>Continuous availability</li>
@@ -547,11 +574,12 @@
             <hr class="legal-divider">
 
             <div class="legal-section" id="liability">
-                <h2>6. Limitation of Liability</h2>
+                <h2>8. Limitation of Liability</h2>
                 <p>I am not responsible for:</p>
                 <ul>
                     <li>Data loss</li>
                     <li>Errors in execution</li>
+                    <li>Browser, device, network, or third-party service issues</li>
                     <li>Any damages resulting from use of the service</li>
                 </ul>
                 <p>The service is provided "as is" without warranties of any kind.</p>
@@ -560,23 +588,25 @@
             <hr class="legal-divider">
 
             <div class="legal-section" id="ip">
-                <h2>7. Intellectual Property</h2>
-                <p>You retain ownership of the code you create. The graphics.h Compiler platform, its design, and
-                    documentation are my property and are open source under the MIT license.
-                </p>
+                <h2>9. Intellectual Property</h2>
+                <p>You retain ownership of the code and files you create. The graphics.h Compiler platform, website,
+                    design, documentation, and source code belong to their respective owners and are made available under
+                    the licenses stated in the project repository.</p>
+                <p>Turbo C, Borland, Google, Microsoft, Discord, Cloudflare, and other third-party names, products, and
+                    services belong to their respective owners. This project is not affiliated with Borland or Turbo C.</p>
             </div>
 
             <hr class="legal-divider">
 
             <div class="legal-section" id="changes-service">
-                <h2>8. Changes to Service</h2>
+                <h2>10. Changes to Service</h2>
                 <p>I may modify or discontinue features at any time without prior notice.</p>
             </div>
 
             <hr class="legal-divider">
 
             <div class="legal-section" id="termination">
-                <h2>9. Termination</h2>
+                <h2>11. Termination</h2>
                 <p>I may restrict or terminate access if these terms are violated or if I determine that use of the
                     service is abusive.</p>
             </div>
@@ -584,7 +614,7 @@
             <hr class="legal-divider">
 
             <div class="legal-section" id="changes-terms">
-                <h2>10. Changes to Terms</h2>
+                <h2>12. Changes to Terms</h2>
                 <p>I may update these terms. Continued use of the service means you accept the changes. I recommend
                     checking this page periodically.</p>
             </div>
@@ -592,7 +622,7 @@
             <hr class="legal-divider">
 
             <div class="legal-section" id="contact">
-                <h2>11. Contact</h2>
+                <h2>13. Contact</h2>
                 <p>For questions about these Terms of Service, contact me through my <a href="/contact">contact
                         page</a>.</p>
                 <p>Also see my <a href="/privacy-policy">Privacy Policy</a> for information on how I handle your data.
