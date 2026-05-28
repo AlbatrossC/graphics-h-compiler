@@ -1,15 +1,5 @@
 // Analytics & Tracking Scripts
 
-// Google AdSense
-(function () {
-  var adScript = document.createElement("script");
-  adScript.async = true;
-  adScript.src =
-    "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005";
-  adScript.crossOrigin = "anonymous";
-  document.head.appendChild(adScript);
-})();
-
 // Google Analytics
 (function () {
   var gaScript = document.createElement("script");
