@@ -1,8 +1,16 @@
 {
+  "installCommand": "echo \"Skipping install for redirect-only deployment\"",
+  "buildCommand": "echo \"Redirect-only deployment\"",
+  "outputDirectory": ".",
   "redirects": [
     {
-      "source": "/(.*)",
-      "destination": "https://graphicsh.online/$1",
+      "source": "/",
+      "destination": "https://graphicsh.online",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://graphicsh.online/:path*",
       "permanent": true
     }
   ]
