@@ -95,6 +95,8 @@
   Cache-Control: public, max-age=0, must-revalidate
 /blog/how-to-draw-a-house-in-graphics.h.html
   Cache-Control: public, max-age=0, must-revalidate
+/blog/how-to-draw-a-house-in-graphics.h
+  Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate
 /embed.html

@@ -40,6 +40,7 @@ SIMPLE_PAGES = {
 }
 
 BLOG_PAGES = {
+    'blog/how-to-draw-a-house-in-graphics.h/index.html': 'blog/how-to-draw-a-house-in-graphics.h.html',
     'blog/how-to-draw-a-house-in-graphics.h.html': 'blog/how-to-draw-a-house-in-graphics.h.html',
 }
 
@@ -153,7 +154,7 @@ def generate_sitemap(base_url: str) -> str:
         url('/', '0.95', 'weekly'),
         url('/about', '0.5', 'monthly'),
         url('/contact', '0.5', 'monthly'),
-        url('/blog/how-to-draw-a-house-in-graphics.h.html', '0.6', 'monthly'),
+        url('/blog/how-to-draw-a-house-in-graphics.h', '0.6', 'monthly'),
         url('/privacy-policy', '0.4', 'yearly'),
         url('/terms', '0.4', 'yearly'),
     ]
