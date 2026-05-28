@@ -2,7 +2,7 @@
   "name": "graphics-h-online-compiler",
   "private": true,
   "scripts": {
-    "build": "python build.py"
+    "build": "python build-tools/build.py"
   },
   "devDependencies": {
     "esbuild": "0.21.5"
@@ -16,6 +16,8 @@
     "@codemirror/state": "6.6.0",
     "@codemirror/view": "6.41.1",
     "@fontsource-variable/jetbrains-mono": "5.2.8",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
+    "@fontsource/space-mono": "^5.2.9",
     "@lezer/highlight": "1.2.3"
   }
 }

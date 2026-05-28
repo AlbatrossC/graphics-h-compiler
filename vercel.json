@@ -1,89 +1,9 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "buildCommand": "python build.py",
-  "builds": [
+  "redirects": [
     {
-      "src": "static/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "compiler-assets/libs/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "compiler-assets/fonts/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "app.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/static/build/(compiler\\.[a-f0-9]+\\.(?:css|js))",
-      "dest": "/static/build/$1",
-      "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/static/fonts/(.*)",
-      "dest": "/static/fonts/$1",
-      "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/static/js/compiler/codemirror\\.bundle\\.v1\\.js",
-      "dest": "/static/js/compiler/codemirror.bundle.v1.js",
-      "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/static/analytics\\.js",
-      "dest": "/static/analytics.js",
-      "headers": {
-        "cache-control": "public, max-age=31536000"
-      }
-    },
-    {
-      "src": "/libs/js-dos\\.js",
-      "dest": "/compiler-assets/libs/js-dos.js",
-      "headers": {
-        "cache-control": "public, max-age=31536000"
-      }
-    },
-    {
-      "src": "/libs/wdosbox\\.wasm",
-      "dest": "/compiler-assets/libs/wdosbox.wasm.js",
-      "headers": {
-        "cache-control": "public, max-age=31536000"
-      }
-    },
-    {
-      "src": "/libs/(.*)",
-      "dest": "/compiler-assets/libs/$1"
-    },
-    {
-      "src": "/compiler-assets/fonts/(.*)",
-      "dest": "/compiler-assets/fonts/$1",
-      "headers": {
-        "cache-control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1",
-      "headers": {
-        "cache-control": "public, max-age=604800"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/app.py"
+      "source": "/(.*)",
+      "destination": "https://graphicsh.online/$1",
+      "permanent": true
     }
   ]
 }

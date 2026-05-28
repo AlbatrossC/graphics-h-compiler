@@ -1,0 +1,83 @@
+{
+    "version": "1.0.0",
+    "description": "Resource manifest for graphics.h online compiler - local Cloudflare Pages assets",
+    "libs": {
+        "jsdos": {
+            "name": "JS-DOS",
+            "urls": [],
+            "localPath": "/libs/js-dos.js"
+        },
+        "wdosbox": {
+            "name": "WDOSBOX",
+            "urls": [],
+            "localPath": "/libs/wdosbox.js"
+        },
+        "codemirror": {
+            "name": "CodeMirror Editor",
+            "type": "module",
+            "urls": [],
+            "localPath": "/static/js/compiler/codemirror.bundle.v1.js",
+            "note": "CodeMirror 6 loaded as ES module in editor.js"
+        },
+        "tailwindcss": {
+            "name": "Tailwind CSS",
+            "urls": [],
+            "localPath": null,
+            "required": false
+        },
+        "lucide": {
+            "name": "Lucide Icons",
+            "urls": [],
+            "localPath": "/libs/lucide.min.js",
+            "required": false
+        }
+    },
+    "assets": {
+        "tc-zip": {
+            "name": "Turbo C++ Compiler",
+            "urls": [],
+            "localPath": "/compiler-assets/zip-files/tc-v1.zip"
+        },
+        "demo-files-v1": {
+            "name": "Bundled Demo Files",
+            "urls": [],
+            "localPath": "/static/assets/demo-files-v1.json"
+        }
+    },
+    "demos": {
+        "graphics-demo": {
+            "name": "Graphics Demo",
+            "urls": [],
+            "localPath": "/compiler-assets/Demo_files/graphics_demo.cpp"
+        },
+        "circle-pattern": {
+            "name": "Circle Pattern",
+            "urls": [],
+            "localPath": "/compiler-assets/Demo_files/circle_pattern.cpp"
+        },
+        "bouncing-ball": {
+            "name": "Bouncing Ball",
+            "urls": [],
+            "localPath": "/compiler-assets/Demo_files/bouncing_ball.cpp"
+        },
+        "shooter-game": {
+            "name": "Shooter Game",
+            "urls": [],
+            "localPath": "/compiler-assets/Demo_files/shooter_game.cpp"
+        }
+    },
+    "videos": {
+        "vscode-demo": {
+            "name": "VS Code Demo",
+            "urls": [],
+            "localPath": "/static/videos/vscode-demo-v2.mp4",
+            "apiPath": "/static/videos/vscode-demo-v2.mp4"
+        },
+        "oc-demo": {
+            "name": "Online Compiler Demo",
+            "urls": [],
+            "localPath": "/static/videos/oc-demo.mp4",
+            "apiPath": "/static/videos/oc-demo.mp4"
+        }
+    }
+}

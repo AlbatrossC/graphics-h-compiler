@@ -1,0 +1,132 @@
+# ============================================================================
+#  Cloudflare Pages - Cache & Security Headers
+#  https://developers.cloudflare.com/pages/configuration/headers/
+# ============================================================================
+
+# ---------------------------------------------------------------------------
+# Immutable, cache-busted compiler bundles
+# ---------------------------------------------------------------------------
+/static/build/compiler.*.css
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/static/build/compiler.*.js
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+
+# ---------------------------------------------------------------------------
+# Runtime libraries. /libs/* is rewritten to /compiler-assets/libs/*.
+# These filenames are treated as vendored/version-pinned assets.
+# ---------------------------------------------------------------------------
+/libs/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/compiler-assets/libs/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+
+# ---------------------------------------------------------------------------
+# Versioned compiler filesystem zip. Keep this as sticky as possible because
+# app.js caches it client-side and the filename includes the version.
+# ---------------------------------------------------------------------------
+/compiler-assets/zip-files/*.zip
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+  Content-Disposition: attachment
+
+# ---------------------------------------------------------------------------
+# Fonts and versioned/static media assets
+# ---------------------------------------------------------------------------
+/static/fonts/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/static/images/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/static/audio/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/static/videos/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+
+# ---------------------------------------------------------------------------
+# Versioned JSON data bundles
+# ---------------------------------------------------------------------------
+/static/assets/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+
+# ---------------------------------------------------------------------------
+# Versioned standalone runtime files
+# ---------------------------------------------------------------------------
+/static/js/compiler/codemirror.bundle.v1.js
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/static/html/dos-runner.html
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+
+# ---------------------------------------------------------------------------
+# Non-hashed CSS/JS entry files. Keep these cacheable, but revalidatable.
+# ---------------------------------------------------------------------------
+/static/css/*
+  Cache-Control: public, max-age=604800, s-maxage=604800, must-revalidate
+/static/js/*
+  Cache-Control: public, max-age=604800, s-maxage=604800, must-revalidate
+
+# ---------------------------------------------------------------------------
+# Manifests and root metadata should reflect deploys quickly.
+# ---------------------------------------------------------------------------
+/static/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+/static/build/asset-manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+/robots.txt
+  Cache-Control: public, max-age=3600, must-revalidate
+/sitemap.xml
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# ---------------------------------------------------------------------------
+# HTML/pages: let the CDN/browser revalidate so deployments show up quickly.
+# ---------------------------------------------------------------------------
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/compiler
+  Cache-Control: public, max-age=0, must-revalidate
+/compiler.html
+  Cache-Control: public, max-age=0, must-revalidate
+/about
+  Cache-Control: public, max-age=0, must-revalidate
+/about.html
+  Cache-Control: public, max-age=0, must-revalidate
+/contact
+  Cache-Control: public, max-age=0, must-revalidate
+/contact.html
+  Cache-Control: public, max-age=0, must-revalidate
+/embed
+  Cache-Control: public, max-age=0, must-revalidate
+/embed.html
+  Cache-Control: public, max-age=0, must-revalidate
+/embed-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/embed-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/privacy-policy
+  Cache-Control: public, max-age=0, must-revalidate
+/privacy-policy.html
+  Cache-Control: public, max-age=0, must-revalidate
+/terms
+  Cache-Control: public, max-age=0, must-revalidate
+/terms.html
+  Cache-Control: public, max-age=0, must-revalidate
+/maintenance
+  Cache-Control: public, max-age=0, must-revalidate
+/maintenance.html
+  Cache-Control: public, max-age=0, must-revalidate
+/404.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# ---------------------------------------------------------------------------
+# Compiler page: allow Google Sign-In popup.
+# ---------------------------------------------------------------------------
+/compiler
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+/compiler.html
+  Cross-Origin-Opener-Policy: same-origin-allow-popups

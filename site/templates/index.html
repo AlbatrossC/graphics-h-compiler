@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>graphics.h Online Compiler — Run C Graphics in Browser</title>
+    <meta name="description"
+        content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler for learning BGI graphics.">
+    <meta name="keywords"
+        content="graphics.h, graphics.h online compiler, C graphics programming, online compiler, VS Code extension, computer graphics, Turbo C alternative, DOSBox alternative">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="en">
+
+    <meta name="google-adsense-account" content="ca-pub-3909487557887107">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/">
+    <meta property="og:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
+    <meta property="og:description"
+        content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ SITE_DOMAIN }}/">
+    <meta property="twitter:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
+    <meta property="twitter:description"
+        content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
+    <meta property="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/">
+
+    <!-- Hreflang Usage -->
+    <link rel="alternate" hreflang="en" href="{{ SITE_DOMAIN }}/" />
+    <link rel="alternate" hreflang="x-default" href="{{ SITE_DOMAIN }}/" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <link rel="stylesheet" href="/static/css/index.css?v=3.7">
+
+    <!-- Lucide Icons (deferred) -->
+    <script src="/libs/lucide.min.js" defer></script>
+</head>
+
+<body>
+    <!-- Background Elements -->
+    <div class="bg-pattern"></div>
+    <div class="noise-overlay"></div>
+    <div class="accent-corner top-right"></div>
+    <div class="accent-corner bottom-left"></div>
+
+    <main>
+
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <div class="logo header-brand" onclick="window.location.reload()" aria-label="graphics.h compiler">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="" class="header-logo-image" aria-hidden="true">
+                    <span class="header-brand-text"><span class="header-brand-primary">graphics.h</span> compiler</span>
+                </div>
+
+                <!-- Centered Navigation -->
+                <nav class="header-nav">
+                    <button class="nav-btn" onclick="toggleTheme()" title="Toggle theme">
+                        <i data-lucide="sun" class="theme-icon-light"></i>
+                        <i data-lucide="moon" class="theme-icon-dark"></i>
+                    </button>
+                    <div class="nav-divider"></div>
+                    <a href="/about" class="nav-btn">
+                        <i data-lucide="info"></i>
+                        <span>About</span>
+                    </a>
+                    <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                        rel="noopener noreferrer" class="nav-btn">
+                        <svg viewBox="0 0 24 24" fill="currentColor" class="lucide">
+                           <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        <span>Source</span>
+                    </a>
+                    <a href="/contact" class="nav-btn">
+                        <i data-lucide="mail"></i>
+                        <span>Contact</span>
+                    </a>
+
+                    <div class="nav-divider"></div>
+                    <a href="https://sppucodes.vercel.app/" target="_blank" class="nav-btn nav-btn-accent">
+                        <i data-lucide="external-link"></i>
+                        <span>Sppucodes</span>
+                    </a>
+                </nav>
+
+                <!-- Mobile Menu Button -->
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Open navigation menu">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobile-menu">
+            <button class="mobile-menu-close" onclick="toggleMobileMenu()" aria-label="Close navigation menu">
+                <i data-lucide="x"></i>
+            </button>
+
+            <div class="mobile-menu-items">
+                <button class="mobile-menu-item" onclick="toggleTheme(); toggleMobileMenu();">
+                    <i data-lucide="sun" class="theme-icon-light"></i>
+                    <i data-lucide="moon" class="theme-icon-dark"></i>
+                    <span>Toggle Theme</span>
+                </button>
+
+                <a href="/about" class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <i data-lucide="info"></i>
+                    <span>About</span>
+                </a>
+
+                <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
+                    class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>GitHub Source</span>
+                </a>
+
+                <a href="/contact" class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <i data-lucide="mail"></i>
+                    <span>Contact</span>
+                </a>
+
+
+                <a href="https://sppucodes.vercel.app/" target="_blank" class="mobile-menu-item"
+                    onclick="toggleMobileMenu()">
+                    <i data-lucide="external-link"></i>
+                    <span>Sppucodes</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ==================== SECTION 1: HERO ==================== -->
+        <section class="page-section hero-section" id="hero">
+            <div class="hero-watermark" aria-hidden="true">
+                <img src="/static/images/brand/graphics-h-turtle.png" alt="">
+            </div>
+            <div class="section-inner">
+                <div class="hero-kicker animate-in delay-1">
+                    <span class="hero-kicker-line"></span>
+                    <span>graphics.h compiler</span>
+                    <span class="hero-kicker-line"></span>
+                </div>
+
+                <div class="hero-brand-mark animate-in delay-1" aria-hidden="true">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="" class="hero-turtle">
+                </div>
+
+                <h1 class="headline animate-in delay-2">
+                    Run <span class="highlight">graphics.h</span> anywhere
+                </h1>
+
+                <p class="subheadline animate-in delay-3">
+                    A focused graphics.h workspace for writing, compiling, and previewing classic BGI programs in the
+                    browser or directly inside VS Code.
+                </p>
+
+                <div class="cta-group animate-in delay-4">
+                    <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                        target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
+                        <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon">
+                        <span>VS Code Extension</span>
+                    </a>
+                    <a href="/compiler" class="cta-btn cta-btn-primary">
+                        <i data-lucide="terminal"></i>
+                        <span>Online Compiler</span>
+                    </a>
+                </div>
+
+                <div class="features-list animate-in delay-5">
+                    <div class="feature-item">Zero setup</div>
+                    <div class="feature-item">Live graphics output</div>
+                    <div class="feature-item">VS Code ready</div>
+                </div>
+            </div>
+
+            <div class="scroll-indicator"
+                onclick="document.getElementById('online-section').scrollIntoView({behavior:'smooth'})">
+                <span>Scroll</span>
+                <i data-lucide="chevron-down" class="icon-md"></i>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 2: ONLINE COMPILER DEMO ==================== -->
+        <section class="page-section" id="online-section">
+            <div class="section-inner">
+                <div class="demo-grid">
+                    <!-- LEFT: Video -->
+                    <div class="video-col reveal">
+                        <div class="video-container">
+                            <div class="video-wrapper oc-ratio">
+                                <iframe
+                                    src="https://www.youtube.com/embed/t3i6AK7IxIs"
+                                    title="graphics.h Online Compiler Demo"
+                                    class="demo-embed"
+                                    loading="lazy"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                        </div>
+                        <div class="video-glow green"></div>
+                    </div>
+
+                    <!-- RIGHT: Text -->
+                    <div class="demo-text reveal reveal-delay-1">
+                        <div class="demo-label">Online Compiler</div>
+                        <h2 class="demo-heading">Code in Your Browser.<br>Run Instantly.</h2>
+                        <p class="demo-description">
+                            Open your browser, write graphics.h code, and see the output live. No downloads, no
+                            installations—just instant compile and run with real-time graphics output.
+                        </p>
+                        <div class="demo-features">
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Instant compile & run in browser</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Live graphics output preview</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>No installation required</span>
+                            </div>
+                        </div>
+                        <a href="/compiler" class="demo-cta">
+                            <span>Try the Online Compiler</span>
+                            <i data-lucide="arrow-right" class="icon-sm"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 3: VS CODE DEMO ==================== -->
+        <section class="page-section" id="vscode-section">
+            <div class="section-inner">
+                <div class="demo-grid reversed">
+                    <!-- LEFT: Text -->
+                    <div class="demo-text reveal">
+                        <div class="demo-label">VS Code Extension</div>
+                        <h2 class="demo-heading">Full Power.<br>Right in VS Code.</h2>
+                        <p class="demo-description">
+                            Install the extension and get IntelliSense, auto-complete, error detection, and one-click
+                            compilation for graphics.h—all inside your favourite editor.
+                        </p>
+                        <div class="demo-features">
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>IntelliSense & auto-complete</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Real-time error detection</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>One-click compile & run</span>
+                            </div>
+                            <div class="demo-feature-item">
+                                <span class="check-icon">✓</span>
+                                <span>Turbo C mode with DOSBox emulation</span>
+                            </div>
+                        </div>
+                        <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                            target="_blank" rel="noopener noreferrer" class="demo-cta">
+                            <span>Get the Extension</span>
+                            <i data-lucide="arrow-right" class="icon-sm"></i>
+                        </a>
+                    </div>
+
+                    <!-- RIGHT: Video -->
+                    <div class="video-col reveal reveal-delay-1">
+                        <div class="video-container">
+                            <div class="video-wrapper vscode-ratio">
+                                <iframe
+                                    src="https://www.youtube.com/embed/8CBJ-FWF9SU"
+                                    title="graphics.h VS Code Extension Demo"
+                                    class="demo-embed"
+                                    loading="lazy"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    referrerpolicy="strict-origin-when-cross-origin"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                        </div>
+                        <div class="video-glow blue"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SECTION 4: WHY GRAPHICS.H ==================== -->
+        <section class="page-section why-section" id="why-section">
+            <div class="section-inner why-section-inner">
+                <div class="reveal">
+                    <div class="demo-label why-demo-label">Why graphics.h?</div>
+                    <h2 class="demo-heading why-heading">The Modern Way to Learn C
+                        Graphics Programming</h2>
+                    <p class="why-description">
+                        The <strong class="accent-strong">graphics.h</strong> header file is part of the legacy
+                        Borland Graphics Interface (BGI). Traditionally, students had to install outdated 1990s software
+                        like Turbo C++ and DOSBox. This graphics.h online compiler removes that barrier entirely.
+                    </p>
+
+                    <div class="why-grid">
+                        <!-- Card 1 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="monitor" class="icon-lg"></i>
+                            </div>
+                            <h3 class="feature-card-title">Run in Your Browser</h3>
+                            <p class="feature-card-desc">
+                                Write code and execute instantly. Functions like <code
+                                    class="feature-code">initgraph()</code> and <code
+                                    class="feature-code">circle()</code> work seamlessly, creating a perfect online
+                                compiler environment.
+                            </p>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="zap" class="icon-lg"></i>
+                            </div>
+                            <h4 class="feature-card-title">Zero Setup Required</h4>
+                            <p class="feature-card-desc">
+                                Skip the 90s software setup. No DOSBox configuration, no missing BGI compiler settings.
+                                Simply code online and let our WebAssembly engine handle graphicsh execution.
+                            </p>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="code-2" class="icon-lg"></i>
+                            </div>
+                            <h5 class="feature-card-title">VS Code Integration</h5>
+                            <p class="feature-card-desc">
+                                Prefer local IDEs? Our VS Code graphics extension brings one-click graphics.h compiling
+                                right to your editor. A seamless code extension for modern developers.
+                            </p>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="feature-card">
+                            <div class="feature-icon-wrapper">
+                                <i data-lucide="graduation-cap" class="icon-lg"></i>
+                            </div>
+                            <h6 class="feature-card-title">Perfect for Students</h6>
+                            <p class="feature-card-desc">
+                                Built with Computer Graphics labs in mind. Easily implement algorithms like DDA,
+                                Bresenham's, and flood fill. Your complete Turbo C online alternative.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== FOOTER ==================== -->
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <div class="footer-grid">
+                    <!-- Brand -->
+                    <div class="footer-brand">
+                        <div class="footer-logo">
+                            <span class="bracket">&lt;</span>
+                            <span>graphics.h</span>
+                            <span class="bracket">/&gt;</span>
+                        </div>
+                        <p class="footer-tagline">
+                            A modern compiler for graphics.h programs. Run code instantly in your browser or VS Code.
+                        </p>
+                    </div>
+
+                    <!-- Product -->
+                    <div>
+                        <div class="footer-col-title">Product</div>
+                        <ul class="footer-links">
+                            <li><a href="/compiler"><i data-lucide="terminal"></i> Online Compiler</a></li>
+                            <li><a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                                    target="_blank" rel="noopener noreferrer"><i data-lucide="code"></i> VS Code
+                                    Extension</a></li>
+                            <li><a href="/embed-docs"><i data-lucide="layers"></i> Embed API</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Resources -->
+                    <div>
+                        <div class="footer-col-title">Resources</div>
+                        <ul class="footer-links">
+                            <li><a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                                    rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg> GitHub</a></li>
+                            <li><a href="https://sppucodes.vercel.app/" target="_blank"><i
+                                        data-lucide="external-link"></i>
+                                    Sppucodes</a></li>
+                            <li><a href="/about"><i data-lucide="info"></i> About</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Legal -->
+                    <div>
+                        <div class="footer-col-title">Legal &amp; Contact</div>
+                        <ul class="footer-links">
+                            <li><a href="/privacy-policy"><i data-lucide="shield"></i> Privacy Policy</a></li>
+                            <li><a href="/terms"><i data-lucide="file-text"></i> Terms of Service</a></li>
+                            <li><a href="/contact"><i data-lucide="mail"></i> Contact</a></li>
+                            <li><a href="https://github.com/AlbatrossC/graphics-h-compiler/issues" target="_blank"
+                                    rel="noopener noreferrer"><i data-lucide="bug"></i> Report a Bug</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <div class="footer-copyright-group" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <span class="footer-copyright">&copy; 2026 graphics.h Compiler. Open source under MIT.</span>
+                        <span class="made-by" style="display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 500;">
+                            <span style="opacity: 0.7;">Made by</span>
+                            <a href="https://github.com/AlbatrossC" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.2rem 0.6rem; background: rgba(0, 255, 136, 0.08); border-radius: 6px; border: 1px solid rgba(0, 255, 136, 0.2); transition: all 0.3s ease;">
+                                <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                                Soham Jadhav
+                            </a>
+                        </span>
+                    </div>
+                    <div class="footer-social" style="align-self: flex-end;">
+                        <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
+                            rel="noopener noreferrer" title="GitHub">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+                               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                        </a>
+                        <a href="/contact" title="Contact">
+                            <i data-lucide="mail"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </main>
+
+    <script src="/static/js/analytics.js" async></script>
+
+    <script>
+        // Initialize Lucide icons after deferred scripts load
+        function initIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        // Run on DOMContentLoaded (deferred scripts run before this event)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initIcons);
+        } else {
+            // In case DOMContentLoaded already fired, wait a tick for deferred scripts
+            setTimeout(initIcons, 0);
+        }
+        window.addEventListener('load', initIcons);
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('active');
+            document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : 'auto';
+            setTimeout(initIcons, 50);
+        }
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const isLight = body.classList.toggle('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
+            const lightIcons = document.querySelectorAll('.theme-icon-light');
+            const darkIcons = document.querySelectorAll('.theme-icon-dark');
+
+            lightIcons.forEach(icon => icon.style.display = isLight ? 'block' : 'none');
+            darkIcons.forEach(icon => icon.style.display = isLight ? 'none' : 'block');
+
+            initIcons();
+        }
+
+        // Initialize theme from localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+            document.querySelectorAll('.theme-icon-light').forEach(icon => icon.style.display = 'block');
+            document.querySelectorAll('.theme-icon-dark').forEach(icon => icon.style.display = 'none');
+        }
+
+        window.addEventListener('load', () => {
+            initIcons();
+        });
+
+        // Scroll-triggered reveal animations
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px'
+        });
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // Close mobile menu with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const menu = document.getElementById('mobile-menu');
+                if (menu.classList.contains('active')) {
+                    toggleMobileMenu();
+                }
+            }
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('mobile-menu');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            if (menu.classList.contains('active') && !menu.contains(e.target) && !menuBtn.contains(e.target)) {
+                toggleMobileMenu();
+            }
+        });
+    </script>
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "graphics.h Online Compiler",
+        "url": "{{ SITE_DOMAIN }}/",
+        "description": "A modern online compiler for running graphics.h C programs in the browser with zero setup. Alternative to Turbo C and DOSBox.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Windows, Ubuntu, Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Person",
+            "name": "AlbatrossC",
+            "url": "https://github.com/AlbatrossC"
+        }
+    }
+    </script>
+</body>
+
+</html>
+

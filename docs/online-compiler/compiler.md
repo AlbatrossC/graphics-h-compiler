@@ -1,262 +1,334 @@
-# Compiler — How Code Compiles and Runs on Turbo C++
+# Compilation Pipeline
 
-> The full compilation workflow: from clicking "Run" to seeing output in a DOS window in the browser.
+<div align="center">
+<img src="../images/online-demo-1.png" width="70%" alt="Graphics.h Online Compiler" />
+</div>
+
+<br>
+
+This document explains how C++ code gets compiled and executed inside the browser. It covers the entire flow from the moment a user clicks **Compile & Run** to when the DOS graphics output appears on screen.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [High-Level Architecture](#high-level-architecture)
-- [Key Technologies](#key-technologies)
-  - [JS-DOS](#js-dos)
-  - [WDOSBOX (WASM)](#wdosbox-wasm)
-  - [Turbo C++ ZIP (tc-v1.zip)](#turbo-c-zip-tc-v1zip)
-- [The tc.zip — What's Inside](#the-tczip--whats-inside)
-- [The Compilation Workflow](#the-compilation-workflow)
-  - [Step 1 — User Clicks "Compile and Run"](#step-1--user-clicks-compile-and-run)
-  - [Step 2 — Preload and Caching](#step-2--preload-and-caching)
-  - [Step 3 — INIT_DOS Message to Iframe](#step-3--init_dos-message-to-iframe)
-  - [Step 4 — DOS Startup Inside the Iframe](#step-4--dos-startup-inside-the-iframe)
-  - [Step 5 — ZIP Extraction into Emscripten FS](#step-5--zip-extraction-into-emscripten-fs)
-  - [Step 6 — Source Code Write](#step-6--source-code-write)
-  - [Step 7 — AUTOEXEC.BAT Execution](#step-7--autoexecbat-execution)
-  - [Step 8 — Error Detection (Polling)](#step-8--error-detection-polling)
-  - [Step 9 — Program Output](#step-9--program-output)
-- [The Batch Script (AUTOEXEC.BAT)](#the-batch-script-autoexecbat)
-- [The Compilation Command](#the-compilation-command)
-- [Error Handling Flow](#error-handling-flow)
-- [dos-runner.html — The Isolated Iframe](#dos-runnerhtml--the-isolated-iframe)
-  - [Why an Iframe?](#why-an-iframe)
-  - [PostMessage Protocol](#postmessage-protocol)
-  - [Mobile Keyboard Forwarding](#mobile-keyboard-forwarding)
-  - [Console Filtering](#console-filtering)
-- [Asset Sources and Fallbacks](#asset-sources-and-fallbacks)
-- [Original Plan (docs/plan.txt)](#original-plan-docsplantxt)
+- [Architecture Overview](#architecture-overview)
+- [Runtime Dependencies](#runtime-dependencies)
+- [Compiler Filesystem ZIP](#compiler-filesystem-zip)
+- [Step-by-Step Compilation Flow](#step-by-step-compilation-flow)
+- [The Batch Script](#the-batch-script)
+- [The TCC Compilation Command](#the-tcc-compilation-command)
+- [DOSBox Initialization Inside the Iframe](#dosbox-initialization-inside-the-iframe)
+- [Error Detection via Filesystem Polling](#error-detection-via-filesystem-polling)
+- [Error Panel UI](#error-panel-ui)
+- [Communication Protocol (postMessage)](#communication-protocol-postmessage)
+- [Client-Side Caching](#client-side-caching)
+- [Preloading System](#preloading-system)
+- [Mobile-Specific Behavior](#mobile-specific-behavior)
+- [Console Noise Suppression](#console-noise-suppression)
+- [Keyboard Shortcuts](#keyboard-shortcuts)
+- [Terminal Controls](#terminal-controls)
+- [File Reference](#file-reference)
 
 ---
 
-## Overview
+## Architecture Overview
 
-This project runs **real Turbo C++ 3.0** inside the browser. There is no server-side compilation. The entire toolchain (TCC.EXE, linker, libraries, BGI drivers) is packaged into a ZIP file, extracted into an in-browser DOS emulator, and the user's code is compiled and executed entirely on the client side.
-
-![Compiler workspace](../images/online-demo-1.png)
-
----
-
-## High-Level Architecture
+The compiler runs entirely client-side. No code leaves the browser. The architecture has two layers:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     compiler.html                           │
-│                                                             │
-│  ┌──────────────┐        ┌──────────────────────────────┐   │
-│  │   CodeMirror  │        │      dos-runner.html         │   │
-│  │   Editor      │        │      (iframe)                │   │
-│  │              │        │                              │   │
-│  │  C++ source   │─────>│  JS-DOS + WDOSBOX (WASM)    │   │
-│  │  code         │ post  │                              │   │
-│  │              │ Msg   │  ┌──────────────────────┐    │   │
-│  │              │       │  │ Emscripten Virtual FS │    │   │
-│  │              │       │  │                      │    │   │
-│  └──────────────┘        │  │  TURBOC3/             │    │   │
-│                          │  │  ├── BIN/TCC.EXE     │    │   │
-│                          │  │  ├── INCLUDE/         │    │   │
-│                          │  │  ├── LIB/             │    │   │
-│                          │  │  ├── BGI/             │    │   │
-│                          │  │  └── BIN/USER.CPP ◄──│────│───── user code
-│                          │  │                      │    │   │
-│                          │  └──────────────────────┘    │   │
-│                          │                              │   │
-│                          │  ┌──────────────────────┐    │   │
-│                          │  │   DOS Canvas          │    │   │
-│                          │  │   (graphics output)   │    │   │
-│                          │  └──────────────────────┘    │   │
-│                          └──────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  Main Page (compiler.html)                               │
+│                                                          │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐  │
+│  │ CodeMirror 6 │  │ execution.js │  │   app.js       │  │
+│  │ Editor       │  │ (run logic)  │  │   (caching,    │  │
+│  │              │  │              │  │    preload)     │  │
+│  └─────────────┘  └──────┬───────┘  └────────────────┘  │
+│                          │ postMessage                   │
+│  ┌───────────────────────▼───────────────────────────┐   │
+│  │  <iframe> dos-runner.html                         │   │
+│  │                                                   │   │
+│  │  ┌───────────┐  ┌───────────┐  ┌──────────────┐  │   │
+│  │  │ js-dos.js  │  │ Dos()     │  │ DOSBox WASM  │  │   │
+│  │  │ (loader)   │→ │ (runner)  │→ │ (emulator)   │  │   │
+│  │  └───────────┘  └───────────┘  └──────┬───────┘  │   │
+│  │                                       │           │   │
+│  │                              ┌────────▼────────┐  │   │
+│  │                              │ Emulated DOS FS │  │   │
+│  │                              │ TURBOC3/BIN/    │  │   │
+│  │                              │   TCC.EXE       │  │   │
+│  │                              │   USER.CPP      │  │   │
+│  │                              │   USER.EXE      │  │   │
+│  │                              │   ERR.TXT       │  │   │
+│  │                              │   FAIL.TXT      │  │   │
+│  │                              └─────────────────┘  │   │
+│  └───────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────┘
+```
+
+The main page handles the editor, UI, and caching. The iframe (`dos-runner.html`) handles DOSBox initialization, filesystem operations, and error polling. They communicate exclusively via `postMessage`.
+
+---
+
+## Runtime Dependencies
+
+These are the files that make DOSBox run in the browser. They live under `site/compiler-assets/libs/` and are served at `/libs/*` via a Cloudflare Pages rewrite rule in `_redirects`:
+
+```
+/libs/*  /compiler-assets/libs/:splat  200
+```
+
+| File | Size | Purpose |
+|:---|:---|:---|
+| `js-dos.js` | ~108 KB | JS-DOS loader. Exposes the global `Dos()` constructor that initializes DOSBox. Handles ZIP extraction, filesystem setup, and the emulator lifecycle. |
+| `wdosbox.js` | ~190 KB | DOSBox WASM glue code. Bridges JavaScript and the compiled C++ DOSBox emulator. Loaded by js-dos at runtime. |
+| `wdosbox.wasm.js` | ~1.8 MB | The actual DOSBox emulator compiled to WebAssembly, encoded as a JavaScript module. This is the largest asset and is aggressively cached. |
+
+These URLs are referenced in `app.js` under `CACHE_CONFIG`:
+
+```js
+const CACHE_CONFIG = {
+    JSDOS_RUNTIME_URL: '/libs/js-dos.js',
+    WDOSBOX_SCRIPT_URL: '/libs/wdosbox.js',
+    PRELOAD_WASM_URL: '/libs/wdosbox.wasm.js',
+    DOS_RUNNER_URL: '/static/html/dos-runner.html'
+};
 ```
 
 ---
 
-## Key Technologies
+## Compiler Filesystem ZIP
 
-### JS-DOS
+The compiler's entire filesystem is packaged as a single ZIP file:
 
-[JS-DOS](https://js-dos.com/) (v6.22) is a JavaScript wrapper around DOSBox that runs DOS programs in the browser. It provides:
-- A `Dos()` constructor that accepts a canvas element.
-- A `ready()` callback with access to the virtual filesystem and a `main()` function.
-- ZIP extraction directly into the Emscripten filesystem.
-
-The library is loaded from `/libs/js-dos.js` (served from `compiler-assets/libs/js-dos.js`).
-
-### WDOSBOX (WASM)
-
-WDOSBOX is the WebAssembly build of DOSBox used by JS-DOS. It consists of:
-- `/libs/wdosbox.js` — the JavaScript glue code (~190 KB)
-- `/libs/wdosbox.wasm` — the compiled DOSBox binary in WebAssembly (~1.8 MB, served as `wdosbox.wasm.js`)
-
-These files are mapped via `vercel.json` routes:
-```json
-{ "src": "/libs/js-dos\\.js", "dest": "/compiler-assets/libs/js-dos.js" },
-{ "src": "/libs/wdosbox\\.wasm", "dest": "/compiler-assets/libs/wdosbox.wasm.js" }
+```
+/compiler-assets/zip-files/tc-v1.zip
 ```
 
-### Turbo C++ ZIP (tc-v1.zip)
-
-A ~3.1 MB ZIP file containing the complete Turbo C++ 3.0 installation:
-- Located at `compiler-assets/zip-files/tc-v1.zip`
-- Also hosted on R2 and Vercel Blob Storage as fallbacks
-- Contains `TURBOC3/` directory with `BIN/`, `INCLUDE/`, `LIB/`, `BGI/`, and `SOURCE/`
-
----
-
-## The tc.zip — What's Inside
-
-The ZIP file was prepared based on the plan in `docs/plan.txt`:
+This ZIP contains the complete **Turbo C++ 3.0** installation directory (`TURBOC3/`):
 
 ```
 TURBOC3/
 ├── BIN/
-│   ├── TCC.EXE          ← Turbo C Compiler
-│   ├── TLINK.EXE        ← Turbo Linker
-│   ├── EGAVGA.BGI        ← Graphics driver (copied from BGI/)
-│   └── dosbox.conf       ← DOSBox configuration
+│   ├── TCC.EXE          ← The Turbo C++ compiler binary
+│   └── (other TC tools)
 ├── INCLUDE/
-│   ├── graphics.h        ← The graphics header
+│   ├── graphics.h       ← The graphics library header
 │   ├── conio.h
 │   ├── stdio.h
-│   └── ... (standard headers)
+│   └── (all standard TC headers)
 ├── LIB/
-│   ├── GRAPHICS.LIB      ← Graphics library (linked during compilation)
-│   ├── CS.LIB
-│   └── ... (standard libraries)
-├── BGI/
-│   ├── EGAVGA.BGI        ← EGA/VGA graphics driver
-│   └── ... (other BGI drivers)
-└── SOURCE/
-    └── TEST.CPP          ← Sample file (replaced with user code at runtime)
+│   ├── GRAPHICS.LIB     ← The graphics library binary
+│   └── (all standard TC libraries)
+└── dosbox.conf           ← DOSBox configuration
 ```
 
-### How the ZIP Was Prepared
+The ZIP is referenced in `app.js` as:
 
-From `docs/plan.txt`:
+```js
+const LOCAL_COMPILER_ASSETS = Object.freeze({
+    assets: Object.freeze({
+        'tc-zip': '/compiler-assets/zip-files/tc-v1.zip',
+        'demo-files-v1': '/static/assets/demo-files-v1.json'
+    }),
+    // ...
+});
+```
 
-1. Turbo C++ 3.0 was installed and the `LIB` / `INCLUDE` paths were configured.
-2. A `SOURCE` folder was created at `C:\TURBOC3\SOURCE`.
-3. The `BGI` and `BIN` folders were included.
-4. The `EGAVGA.BGI` driver was copied to the `BIN` directory (so it's in the working directory during compilation).
-5. The entire `TURBOC3` folder was zipped as `tc.zip` (now `tc-v1.zip`).
+The `tc-v1` version string in the filename means the ZIP is treated as an immutable asset. The `_headers` file sets a 1-year cache with the `immutable` directive:
+
+```
+/compiler-assets/zip-files/*.zip
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+```
 
 ---
 
-## The Compilation Workflow
+## Step-by-Step Compilation Flow
 
-### Step 1 — User Clicks "Compile and Run"
+### Step 1 — User clicks "Compile & Run"
 
-`execution.js → runProgram()` is called. This function:
-- Reads the current editor content via `editor.getValue()`.
-- Saves the code (cloud or local depending on auth state).
-- Shows the loading overlay.
-- On mobile, switches to the DOS output tab.
-
-### Step 2 — Preload and Caching
-
-Before compilation begins, the runtime assets are fetched and cached using the **Cache API** (`caches.open('graphics-h-compiler-runtime-v1')`):
-
-```
-startPreload() caches:
-  /libs/js-dos.js
-  /libs/wdosbox.js
-  /libs/wdosbox.wasm
-  tc-v1.zip (via cachedFetchCompilerAsset)
-```
-
-The `getTCZip()` function returns the tc.zip as a `Blob`, using a shared promise to prevent duplicate downloads.
-
-### Step 3 — INIT_DOS Message to Iframe
-
-The parent page sends a `postMessage` to the DOS runner iframe:
+The entry point is `runProgram()` in `execution.js` (line 210). It reads the editor content and validates it:
 
 ```js
+const code = editor.getValue();
+
+if (!code.trim()) {
+    alert('Please write some code first!');
+    return;
+}
+```
+
+Before compiling, the function also:
+- Increments `metrics.runtime.runCount`
+- Dispatches the `compiler-run-start` custom event
+- Saves the current code (autosave for logged-in users, localStorage for guests)
+- Shows the loading overlay and disables the Run button
+- On mobile, switches to the output tab via `switchMobileTab('output')`
+- Hides any previously visible error panel
+
+### Step 2 — DOS runner iframe is loaded
+
+The DOS emulator runs inside a sandboxed iframe. The iframe element is defined in `compiler.html`:
+
+```html
+<iframe id="dos-iframe"
+        data-src="/static/html/dos-runner.html"
+        sandbox="allow-scripts allow-same-origin">
+</iframe>
+```
+
+The iframe uses `data-src` instead of `src` so it's **lazy-loaded**. On first run, `ensureDosRunnerFrame()` in `app.js` (line 482) sets `iframe.src = iframe.dataset.src`, waits for the `load` event, and marks it as ready. The iframe is reused across multiple runs — it's never destroyed.
+
+```js
+async function ensureDosRunnerFrame() {
+    if (dosRunnerFramePromise) return dosRunnerFramePromise;
+
+    const iframe = document.getElementById('dos-iframe');
+    // ...
+    dosRunnerFramePromise = new Promise((resolve, reject) => {
+        iframe.addEventListener('load', handleLoad, { once: true });
+        iframe.addEventListener('error', handleError, { once: true });
+        if (!iframe.src) {
+            iframe.src = iframe.dataset.src || CACHE_CONFIG.DOS_RUNNER_URL;
+        }
+    });
+    return dosRunnerFramePromise;
+}
+```
+
+### Step 3 — Compiler ZIP is fetched and cached
+
+The TURBOC3 filesystem ZIP is downloaded (or served from the Cache API) and converted to an Object URL:
+
+```js
+const tcBlob = await getTCZip();
+
+if (currentTcZipObjectUrl) {
+    URL.revokeObjectURL(currentTcZipObjectUrl);
+    currentTcZipObjectUrl = null;
+}
+currentTcZipObjectUrl = URL.createObjectURL(tcBlob);
+```
+
+The `getTCZip()` function in `app.js` (line 397) uses a shared promise to prevent duplicate downloads. It calls `cachedFetchCompilerAsset('assets', 'tc-zip')` which checks the Cache API before hitting the network:
+
+```js
+async function getTCZip() {
+    await initializeResourcesFromManifest();
+    if (tcZipPromise) return tcZipPromise;
+
+    tcZipPromise = (async () => {
+        const response = await cachedFetchCompilerAsset('assets', 'tc-zip');
+        const blob = await response.blob();
+        return blob;
+    })();
+
+    return tcZipPromise;
+}
+```
+
+### Step 4 — Batch script is generated
+
+A DOS batch script (`AUTOEXEC.BAT`) is constructed inline in `execution.js` (line 290). This is the actual command sequence that DOSBox executes. See the [Batch Script section](#the-batch-script) below for the full script and explanation.
+
+### Step 5 — Payload is sent to the iframe
+
+The main page sends everything the iframe needs in a single `postMessage`:
+
+```js
+iframe.contentWindow.postMessage({ type: 'STOP_DOS' }, '*');
 iframe.contentWindow.postMessage({
     type: 'INIT_DOS',
     payload: {
         wdosboxUrl: '/libs/wdosbox.js',
-        zipUrl: currentTcZipObjectUrl,    // Object URL of the cached blob
-        code: code,                        // user's C++ source code
-        batchScript: batchScript,          // AUTOEXEC.BAT content
-        cycles: isMobile ? 'auto' : 'max'
+        zipUrl: currentTcZipObjectUrl,    // Object URL pointing to the TC ZIP blob
+        code: code,                        // The user's C++ source code
+        batchScript: batchScript,          // The AUTOEXEC.BAT content
+        cycles: isMobile ? 'auto' : 'max' // DOSBox CPU speed
     }
 }, '*');
 ```
 
-### Step 4 — DOS Startup Inside the Iframe
+A `STOP_DOS` is sent first to clean up any previous DOS instance.
 
-Inside `dos-runner.html`, the `startDos()` function:
+The `cycles` parameter controls DOSBox's emulation speed:
+- `'max'` on desktop — run as fast as possible
+- `'auto'` on mobile — automatically throttle to prevent battery drain
 
-1. Stops any existing DOS instance.
-2. Loads JS-DOS (`ensureJsdos()`).
-3. Creates a `Dos(canvas, { wdosboxUrl, cycles, autolock: false })` instance.
-4. Waits for the `ready` callback.
+### Step 6 — DOSBox boots inside the iframe
 
-### Step 5 — ZIP Extraction into Emscripten FS
-
-```js
-await fs.extract(payload.zipUrl);
-```
-
-The tc.zip is extracted into the Emscripten virtual filesystem. This creates the full `TURBOC3/` directory tree in memory.
-
-### Step 6 — Source Code Write
+Inside `dos-runner.html`, the `startDos()` function (line 418) handles the entire boot sequence. It first loads the js-dos library if needed:
 
 ```js
-fs.createFile('TURBOC3/BIN/USER.CPP', payload.code);
-fs.createFile('AUTOEXEC.BAT', payload.batchScript);
+async function startDos(payload) {
+    await stopDos();       // Clean up any previous instance
+    await ensureJsdos();   // Load /libs/js-dos.js if not already loaded
+
+    // 60-second safety timeout for stuck boots
+    startupTimeoutTimer = setTimeout(() => {
+        if (!dosInstance) {
+            post({ type: 'ERROR', message: 'Compiler took too long to start...' });
+        }
+    }, 60000);
 ```
 
-The user's code is written as `USER.CPP` in the `BIN` directory. The batch script is written as `AUTOEXEC.BAT` at the root.
+Then it creates the DOSBox instance with the canvas element:
 
-### Step 7 — AUTOEXEC.BAT Execution
+```js
+    const runner = Dos(canvas, {
+        wdosboxUrl: payload.wdosboxUrl,  // '/libs/wdosbox.js'
+        cycles: payload.cycles || 'max',
+        autolock: false                   // Don't lock mouse
+    });
+```
 
-DOSBox is started with the config file and the batch script:
+### Step 7 — Filesystem is extracted and code is written
+
+Inside the `runner.ready()` callback, the ZIP is extracted into the emulated filesystem, then the user's code and batch script are written as new files:
+
+```js
+    await runner.ready(async (fs, main) => {
+        await fs.extract(payload.zipUrl);
+
+        fs.createFile('TURBOC3/BIN/USER.CPP', payload.code || '');
+        fs.createFile('AUTOEXEC.BAT', payload.batchScript || '');
+
+        dosInstance = await main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT']);
+
+        startErrorPolling();
+        post({ type: 'STATUS', status: 'RUNNING' });
+    });
+```
+
+If `fs.createFile()` fails (e.g., the ZIP extraction was corrupted), an `ERROR` message is sent immediately to the parent rather than letting DOSBox silently compile an empty file.
+
+### Step 8 — DOSBox executes the batch script
 
 ```js
 dosInstance = await main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT']);
 ```
 
-### Step 8 — Error Detection (Polling)
-
-After DOSBox starts, `startErrorPolling()` begins polling the Emscripten filesystem every 400ms:
-
-1. Checks for `ERR.TXT` — compilation error output.
-2. Checks for `FAIL.TXT` — a flag file created by the batch script on compile failure.
-3. Checks for `USER.EXE` — the compiled executable (compile success).
-
-The polling logic:
-- If `USER.EXE` exists and `FAIL.TXT` does not → **COMPILE_SUCCESS** → stop polling.
-- If `FAIL.TXT` exists or `ERR.TXT` contains error text → **COMPILATION_ERROR** → send error to parent, stop polling.
-
-### Step 9 — Program Output
-
-If compilation succeeds, the batch script runs `USER.EXE` and the output appears on the DOS canvas. The canvas uses `image-rendering: pixelated` for authentic CRT-style graphics.
+At this point, DOSBox reads `dosbox.conf` for configuration, then runs `AUTOEXEC.BAT`, which invokes `TCC.EXE` to compile `USER.CPP`. The graphics output renders to the `<canvas>` element in real-time.
 
 ---
 
-## The Batch Script (AUTOEXEC.BAT)
+## The Batch Script
 
-This is the batch script generated by `execution.js` and written to the virtual filesystem:
+The batch script is generated in `execution.js` (line 290). This is the exact content written to `AUTOEXEC.BAT`:
 
-```batch
+```bat
 @ECHO OFF
-CD TURBOC3\\BIN
+CD TURBOC3\BIN
 IF EXIST USER.EXE DEL USER.EXE
 IF EXIST ERR.TXT DEL ERR.TXT
 IF EXIST FAIL.TXT DEL FAIL.TXT
-TCC -I..\\INCLUDE -L..\\LIB -n. USER.CPP ..\\LIB\\GRAPHICS.LIB > ERR.TXT
+TCC -I..\INCLUDE -L..\LIB -n. USER.CPP ..\LIB\GRAPHICS.LIB > ERR.TXT
 IF EXIST USER.EXE GOTO SUCCESS
 ECHO COMPILE_FAILED > FAIL.TXT
-COPY ERR.TXT C:\\ERR.TXT >NUL
-COPY FAIL.TXT C:\\FAIL.TXT >NUL
+COPY ERR.TXT C:\ERR.TXT >NUL
+COPY FAIL.TXT C:\FAIL.TXT >NUL
 CLS
 ECHO ========================================
 ECHO COMPILATION ERRORS:
@@ -271,153 +343,371 @@ USER.EXE
 PAUSE
 ```
 
+Line-by-line explanation:
+
+| Line | What it does |
+|:---|:---|
+| `@ECHO OFF` | Suppress command echoing in the DOS terminal |
+| `CD TURBOC3\BIN` | Navigate to the compiler binary directory |
+| `IF EXIST USER.EXE DEL USER.EXE` | Delete any previous compiled output |
+| `IF EXIST ERR.TXT DEL ERR.TXT` | Delete previous error log |
+| `IF EXIST FAIL.TXT DEL FAIL.TXT` | Delete previous failure marker |
+| `TCC -I.. -L.. ... > ERR.TXT` | **Compile the code** (see next section) |
+| `IF EXIST USER.EXE GOTO SUCCESS` | If compilation produced an EXE, jump to success path |
+| `ECHO COMPILE_FAILED > FAIL.TXT` | Create failure marker file (read by error polling) |
+| `COPY ERR.TXT C:\ERR.TXT >NUL` | Copy error log to root (fallback location for polling) |
+| `TYPE ERR.TXT` | Display errors in the DOS terminal |
+| `PAUSE` | Wait for user keypress |
+| `:SUCCESS` → `USER.EXE` | Run the compiled program |
+
 ---
 
-## The Compilation Command
+## The TCC Compilation Command
 
-The actual Turbo C compilation command is:
+The core compilation command inside the batch script:
 
 ```
 TCC -I..\INCLUDE -L..\LIB -n. USER.CPP ..\LIB\GRAPHICS.LIB > ERR.TXT
 ```
 
 | Flag | Meaning |
-|---|---|
-| `TCC` | Turbo C Compiler (command-line interface) |
-| `-I..\INCLUDE` | Set include path to `TURBOC3\INCLUDE` |
-| `-L..\LIB` | Set library path to `TURBOC3\LIB` |
-| `-n.` | Output the `.OBJ` and `.EXE` to the current directory (BIN) |
-| `USER.CPP` | Source file to compile |
-| `..\LIB\GRAPHICS.LIB` | Explicitly link the graphics library |
-| `> ERR.TXT` | Redirect stderr/stdout to error file for polling |
+|:---|:---|
+| `TCC` | Turbo C++ Compiler (command-line version of the Turbo C++ 3.0 IDE) |
+| `-I..\INCLUDE` | Include path for header files (`graphics.h`, `conio.h`, `stdio.h`, etc.) |
+| `-L..\LIB` | Library search path for linking |
+| `-n.` | Output directory for the compiled `.EXE` — current directory (`TURBOC3\BIN\`) |
+| `USER.CPP` | The user's source file (written by `fs.createFile` in Step 7) |
+| `..\LIB\GRAPHICS.LIB` | Explicitly links the BGI graphics library for `graphics.h` support |
+| `> ERR.TXT` | Redirect all compiler output (errors, warnings) to a text file |
 
-The output binary is `USER.EXE`.
-
----
-
-## Error Handling Flow
-
-```
-AUTOEXEC.BAT runs TCC.EXE
-  │
-  ├── USER.EXE exists? ──YES──> :SUCCESS → run USER.EXE
-  │
-  └── USER.EXE missing? ──────> Create FAIL.TXT
-                                 Copy ERR.TXT to C:\ERR.TXT
-                                 Display errors, PAUSE
-
-Meanwhile, dos-runner.html polls every 400ms:
-  │
-  ├── USER.EXE found, no FAIL.TXT → postMessage({ type: 'COMPILE_SUCCESS' })
-  │
-  └── FAIL.TXT found or ERR.TXT has error text
-        → postMessage({ type: 'COMPILATION_ERROR', content: errorText })
-              │
-              └── Parent page shows error panel below DOS output
-```
+The compiled output is `USER.EXE`. Its existence (or absence) after compilation is the primary signal used to determine success or failure.
 
 ---
 
-## dos-runner.html — The Isolated Iframe
+## DOSBox Initialization Inside the Iframe
 
-### Why an Iframe?
+The iframe file `dos-runner.html` contains all the logic for running DOSBox. Here's the detailed initialization flow:
 
-> **The iframe was created because earlier the DOS emulator was embedded directly in the main page. This caused critical UX problems:**
->
-> 1. **Mouse capture:** Once DOSBox captured the mouse, the user could not click on the code editor or any other UI element.
-> 2. **Keyboard capture:** DOSBox consumed all keyboard events, making it impossible to type in the CodeMirror editor while DOS was running.
-> 3. **Focus trapping:** Escaping from the DOS canvas back to the editor required workarounds that were fragile across browsers.
->
-> **By isolating DOSBox in an iframe (`dos-runner.html`), these problems are solved:**
-> - Mouse and keyboard events inside the iframe do not propagate to the parent page.
-> - The parent page uses `postMessage` to control focus: `FOCUS` (activate DOS input) and `BLUR` (release DOS input).
-> - A keyboard blocker overlay sits on top of the iframe and intercepts clicks to toggle focus.
+1. **Console filter is installed first** — Before anything else, a console filter intercepts `console.log`, `console.info`, and `console.warn` to suppress noisy DOSBox/js-dos output like `extracting:`, `CONFIG:`, `MIDI:`, etc.
 
-### PostMessage Protocol
+2. **`IFRAME_READY` is posted** — At the bottom of the script, the iframe signals the parent that it's ready: `post({ type: 'IFRAME_READY' })`.
 
-Communication between `compiler.html` (parent) and `dos-runner.html` (iframe):
+3. **`INIT_DOS` message is received** — The message handler calls `startDos(payload)`.
 
-**Parent → Iframe:**
+4. **`ensureJsdos()` loads the js-dos script** — The function dynamically creates a `<script>` tag for `/libs/js-dos.js` and waits for it to load. A deduplication promise prevents multiple loads.
 
-| Message Type | Purpose |
-|---|---|
-| `INIT_DOS` | Start a new DOS session with zip, code, and batch script |
-| `STOP_DOS` | Terminate the current DOS instance |
-| `FOCUS` | Focus the canvas and mobile keyboard helper |
-| `BLUR` | Release focus from canvas |
-| `TAKE_SCREENSHOT` | Capture the canvas as PNG |
+5. **`Dos(canvas, config)` creates the DOSBox instance** — This sets up the WASM runtime and binds it to the canvas.
 
-**Iframe → Parent:**
+6. **`fs.extract(zipUrl)` unpacks the compiler** — The ZIP is extracted into the Emscripten virtual filesystem.
 
-| Message Type | Purpose |
-|---|---|
-| `IFRAME_READY` | Iframe has loaded and is ready to receive messages |
-| `STATUS` | Status updates: `STARTING`, `EXTRACTING`, `WRITING_CODE`, `RUNNING` |
-| `PROGRESS` | Progress bar percentage (0–100) |
-| `COMPILE_SUCCESS` | USER.EXE was created successfully |
-| `COMPILATION_ERROR` | Compilation failed, includes error text |
-| `ERROR` | Fatal error (timeout, filesystem failure) |
-| `SCREENSHOT_DATA` | Screenshot blob or data URL |
+7. **Source files are written** — `USER.CPP` and `AUTOEXEC.BAT` are created in the virtual FS.
 
-### Mobile Keyboard Forwarding
+8. **`main(['-conf', 'dosbox.conf', 'AUTOEXEC.BAT'])` boots DOS** — This starts DOSBox execution.
 
-For mobile browsers, a hidden `<input>` element (`#mobile-keyboard-helper`) captures virtual keyboard input and forwards it to the DOS canvas:
+9. **Error polling begins** — After a 1.5-second delay, the iframe starts polling the virtual filesystem every 400ms.
 
-```
-Mobile keyboard input → hidden <input>
-  → keydown/keyup/keypress events cloned → dispatched to <canvas>
-  → DOS receives key events
-```
-
-This handles the `keyCode 229` issue on mobile browsers (composition events) by synthesizing proper key events from `input` events.
-
-### Console Filtering
-
-Both `dos-runner.html` and `execution.js` install console filters that suppress noisy JS-DOS/DOSBox log messages (extraction progress, version info, CONFIG/MIDI/SHELL messages) to keep the developer console clean.
+10. **A 60-second safety timeout** is active during steps 5-8. If DOS hasn't started by then, an error is reported.
 
 ---
 
-## Asset Sources and Fallbacks
+## Error Detection via Filesystem Polling
 
-`asset-sources.js` defines a multi-source fallback system for all critical assets:
+Error detection happens inside `dos-runner.html` in the `startErrorPolling()` function (line 334). It works by reading files directly from the Emscripten virtual filesystem (`dosInstance.em.FS`).
+
+### Polling mechanism
+
+After a 1.5-second initial delay (to let TCC start), a `setInterval` runs every 400ms:
+
+```js
+errorPollDelayTimer = setTimeout(() => {
+    const probe = () => {
+        if (!dosInstance || !dosInstance.em || !dosInstance.em.FS) return;
+        const FS = dosInstance.em.FS;
+        // ... check files ...
+    };
+
+    probe();
+    errorPollTimer = setInterval(probe, 400);
+}, 1500);
+```
+
+### Files checked
+
+Each probe checks for three files across multiple possible paths (because the Emscripten FS mount point can vary):
+
+**ERR.TXT** — Compiler output. Checked at:
+```
+/TURBOC3/BIN/ERR.TXT, TURBOC3/BIN/ERR.TXT, /ERR.TXT, ERR.TXT,
+/home/web_user/ERR.TXT, home/web_user/ERR.TXT,
+/turboc3/bin/err.txt, turboc3/bin/err.txt
+```
+
+**FAIL.TXT** — Failure marker (created by the batch script on compile failure). Same path variants.
+
+**USER.EXE** — Compiled binary. Same path variants.
+
+### Decision logic
 
 ```
-tc-v1.zip sources (tried in order):
-  1. https://r2-public-assets.albatrossc.workers.dev/system/tc-v1.zip  (R2)
-  2. https://ltjlklxc9homgiye.public.blob.vercel-storage.com/zips/tc-v1.zip  (Vercel Blob)
-  3. /compiler-assets/zip-files/tc-v1.zip  (local fallback)
+IF   USER.EXE exists  AND  FAIL.TXT does not exist
+  → COMPILE_SUCCESS — stop polling
+
+IF   FAIL.TXT exists
+  → Read ERR.TXT content → send COMPILATION_ERROR to parent
+
+IF   ERR.TXT has error-like patterns AND USER.EXE does not exist
+  → Send COMPILATION_ERROR to parent
 ```
 
-If the user is offline, the local path is tried first. URL health is checked via `HEAD` requests with a 5-minute cache.
+The error pattern check uses a regex:
+
+```js
+const looksLikeError =
+    hasFailMarker ||
+    /(^|\b)(error|fatal|undefined|unable|unresolved|not found)(\b|:)/i.test(trimmed) ||
+    (!hasUserExe && lower.length > 0);
+```
+
+Once an error is detected and sent, `compileErrorSent` is set to `true` to prevent duplicate notifications, and polling stops.
 
 ---
 
-## Original Plan (docs/plan.txt)
+## Error Panel UI
 
-The original plan that guided the tc.zip preparation:
+When the parent page receives a `COMPILATION_ERROR` message, the handler in `execution.js` (line 131) populates and shows the error panel:
 
-```
-1st step) Adjust LIB and Include path as per shown in Turbo.exe UI.
-             which is C:\TURBOC3\LIB
-                      C:\TURBOC3\INCLUDE
-         and create a empty SOURCE folder in C:\TURBOC3
-         and in the SOURCE folder will be a sample test.cpp
-
-2nd Step) Include other files like BGI and BIN as well
-3rd step) ZIP the TURBOC3 folder and name it tc.zip
-
-In the browser:
-1st) Extract tc.zip file
-2nd) Run commands in DOS shell:
-        cd TURBOC3\\BIN
-        COPY ..\\BGI\\EGAVGA.BGI .
-        TCC.EXE -I..\\INCLUDE -L..\\LIB ..\\SOURCE\\TEST.CPP ..\\LIB\\GRAPHICS.LIB
-        CLS
-        TEST.EXE
+```js
+outputContent.textContent = data.content || '';
+outputContent.classList.add('output-error');
+outputPanel.classList.add('visible');
+terminalWrapper.classList.add('has-panel');
 ```
 
-> **Note:** The production batch script evolved from this original plan — it now uses `USER.CPP` instead of `TEST.CPP`, adds error handling with `ERR.TXT`/`FAIL.TXT` flag files, and the `EGAVGA.BGI` driver is pre-copied into the ZIP's `BIN/` folder during ZIP preparation.
+The error panel is defined in `compiler.html` as `#output-panel`. It includes:
+
+| Element | ID | Purpose |
+|:---|:---|:---|
+| Error text display | `#output-content` | Shows the raw TCC error output |
+| Close button | `#close-output-btn` | Hides the panel and triggers a resize to fix canvas layout |
+| Copy errors button | `#copy-error-btn` | Copies error text to clipboard with visual feedback ("Copied" for 2 seconds) |
+| Expand/collapse button | `#expand-output-btn` | Toggles an expanded view of the error panel |
+
+The copy function has a fallback for older browsers that uses `document.execCommand('copy')` when `navigator.clipboard.writeText()` is unavailable.
+
+On mobile, if the editor is fullscreen when errors arrive, the editor is automatically exited from fullscreen so the error panel is visible. On desktop, the editor is focused so the user can fix the error immediately.
 
 ---
 
-*Last updated: May 2026*
+## Communication Protocol (postMessage)
+
+The main page and the DOS iframe communicate exclusively via `window.postMessage`. Both sides validate `event.origin` — the iframe checks against `window.location.origin` (the `parentOrigin` variable at line 91 of `dos-runner.html`).
+
+### Main page → Iframe
+
+| Message Type | Payload | Purpose |
+|:---|:---|:---|
+| `INIT_DOS` | `{ wdosboxUrl, zipUrl, code, batchScript, cycles }` | Start a new DOSBox instance with the given code and compiler ZIP. `cycles` is `'auto'` on mobile, `'max'` on desktop. |
+| `STOP_DOS` | (none) | Shut down the current DOS instance. Clears all timers, calls `dosInstance.exit()`. Always sent before `INIT_DOS`. |
+| `FOCUS` | (none) | Focus the DOS canvas and the mobile keyboard helper input for keyboard capture. |
+| `BLUR` | (none) | Release keyboard capture from the canvas and mobile helper. Used when user clicks back into the editor. |
+| `TAKE_SCREENSHOT` | `{ purpose, requestId }` | Capture the canvas as a PNG. `purpose` is typically `'download'`. Uses `canvas.toBlob()` with a `canvas.toDataURL()` fallback. |
+
+### Iframe → Main page
+
+| Message Type | Payload | Purpose |
+|:---|:---|:---|
+| `IFRAME_READY` | (none) | Sent once on iframe load. Signals that the iframe can receive messages. |
+| `STATUS` | `{ status }` | Status updates during boot. Values: `STARTING` → `EXTRACTING` → `WRITING_CODE` → `RUNNING`. Each triggers a loading text update and progress bar change. |
+| `PROGRESS` | `{ percent }` | Loading progress (0–100). Uses a monotonic counter — progress never decreases. Incremented by `pulseProgress()` which uses a setInterval to smoothly animate between stages. |
+| `COMPILATION_ERROR` | `{ content }` | Compiler errors. `content` is the raw text from `ERR.TXT`. If ERR.TXT is empty but FAIL.TXT exists, a generic message is sent. |
+| `COMPILE_SUCCESS` | (none) | Code compiled without errors (`USER.EXE` exists, `FAIL.TXT` does not). |
+| `ERROR` | `{ message }` | Fatal runtime error (e.g., failed to load js-dos, ZIP extraction failed, 60s startup timeout). |
+| `SCREENSHOT_DATA` | `{ blob?, dataUrl?, error?, purpose, requestId }` | Canvas screenshot response. Includes either a Blob or a data URL. The main page creates a download link. |
+
+---
+
+## Client-Side Caching
+
+The compiler uses a two-layer caching system to minimize downloads.
+
+### Layer 1 — Cache API (runtime assets)
+
+Managed by `cachedFetch()` in `app.js` (line 291). All runtime files are stored in a named cache:
+
+```js
+const COMPILER_CACHE_NAME = 'graphics-h-compiler-runtime-v1';
+```
+
+The caching flow for each asset:
+1. Normalize the URL to an absolute URL
+2. Check if a fetch for this URL is already in-flight (deduplication via `compilerFetchPromises` Map)
+3. Check the Cache API for a stored response
+4. If miss, fetch from network
+5. Validate the response (reject empty responses)
+6. Clone the response and store it in the cache
+7. Return a clone to the caller
+
+```js
+async function cachedFetch(url, fetchOptions = {}) {
+    const normalizedUrl = normalizeCacheUrl(url);
+    const existingPromise = compilerFetchPromises.get(normalizedUrl);
+    if (existingPromise) {
+        return (await existingPromise).clone();
+    }
+
+    const requestPromise = (async () => {
+        const cached = await getCachedResponse(normalizedUrl);
+        if (cached) return cached;
+
+        const response = await fetch(normalizedUrl, { cache: 'default', ...fetchOptions });
+        // ... validate, cache, return ...
+    })().finally(() => {
+        compilerFetchPromises.delete(normalizedUrl);
+    });
+
+    compilerFetchPromises.set(normalizedUrl, requestPromise);
+    return (await requestPromise).clone();
+}
+```
+
+If the Cache API is unavailable (e.g., in some private browsing modes), the system falls back to normal `fetch()` without caching.
+
+### Layer 2 — Demo file cache (localStorage)
+
+Demo source files (graphics demo, circle pattern, bouncing ball, shooter game) are cached in localStorage with a 7-day TTL:
+
+```js
+const DemoCache = {
+    get(demoKey) {
+        const cached = localStorage.getItem(CACHE_CONFIG.DEMO_CACHE_PREFIX + demoKey);
+        if (!cached) return null;
+        const { code, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_CONFIG.CACHE_TTL) return code;
+        localStorage.removeItem(cacheKey);  // Expired
+        return null;
+    },
+    set(demoKey, code) {
+        localStorage.setItem(cacheKey, JSON.stringify({ code, timestamp: Date.now() }));
+    }
+};
+```
+
+Demo files are also available in a JSON bundle (`/static/assets/demo-files-v1.json`) loaded by `loadDemoBundle()`.
+
+---
+
+## Preloading System
+
+When the compiler page loads, runtime assets are eagerly preloaded in the background. This happens in `startPreload()` in `app.js` (line 417):
+
+```js
+async function startPreload() {
+    if (preloadStarted && preloadPromise) return preloadPromise;
+    preloadStarted = true;
+
+    preloadPromise = (async () => {
+        await initializeResourcesFromManifest();
+        await cachedFetch(CACHE_CONFIG.JSDOS_RUNTIME_URL);    // js-dos.js
+        await cachedFetch(CACHE_CONFIG.WDOSBOX_SCRIPT_URL);   // wdosbox.js
+        await cachedFetch(CACHE_CONFIG.PRELOAD_WASM_URL);     // wdosbox.wasm.js
+        await cachedFetchCompilerAsset('assets', 'tc-zip');   // tc-v1.zip
+    })();
+
+    return preloadPromise;
+}
+```
+
+Preloading is triggered from `loadAllScripts()` in `editor.js` after the editor is initialized. It's scheduled via `requestIdleCallback` so it doesn't block editor rendering:
+
+```js
+if (window.requestIdleCallback) {
+    window.requestIdleCallback(queuePreload);
+} else {
+    Promise.resolve().then(queuePreload);
+}
+```
+
+This means the first "Compile & Run" click is fast even on the first visit, since assets are already downloading while the user writes code.
+
+---
+
+## Mobile-Specific Behavior
+
+Mobile devices (detected via user agent regex or `window.innerWidth <= 768`) get different treatment:
+
+| Behavior | Desktop | Mobile |
+|:---|:---|:---|
+| DOSBox CPU cycles | `'max'` (full speed) | `'auto'` (throttled) |
+| Layout on run | Side-by-side panels | Switches to output tab |
+| Error handling | Focus editor | Exit fullscreen if active |
+| Keyboard input | Direct canvas events | Forwarded via hidden `<input>` helper |
+
+### Mobile keyboard forwarding
+
+DOSBox expects keyboard events on the canvas, but mobile browsers don't fire keyboard events for canvas elements. The iframe solves this with a hidden `<input>` element (`#mobile-keyboard-helper`):
+
+1. When the canvas is tapped, the hidden input is focused (bringing up the mobile keyboard)
+2. `keydown`, `keyup`, and `keypress` events on the input are cloned and dispatched to the canvas
+3. For virtual keyboards that send `keyCode: 229` (composition events), the `input` event is intercepted and synthetic keyboard events are constructed from the input data
+4. The helper always keeps at least one character (`' '`) so the Backspace key works
+
+---
+
+## Console Noise Suppression
+
+Both `execution.js` and `dos-runner.html` install console filters to suppress noisy DOSBox/js-dos output. The filter runs before js-dos loads (in the iframe) to catch all messages:
+
+```js
+const shouldBlock = (msg) => {
+    if (typeof msg !== 'string') return false;
+    if (msg.includes('extracting:')) return true;
+    if (msg.includes('js-dos version')) return true;
+    if (msg.includes('Copyright') && msg.includes('DOSBox')) return true;
+    if (msg.startsWith('CONFIG:')) return true;
+    if (msg.startsWith('MIDI:')) return true;
+    // ... more patterns
+    return false;
+};
+```
+
+---
+
+## Keyboard Shortcuts
+
+Defined in `execution.js` (line 360):
+
+| Shortcut | Action |
+|:---|:---|
+| `Ctrl+Enter` (or `Cmd+Enter`) | Run program (calls `runProgram()`) |
+| `Ctrl+S` (or `Cmd+S`) | Save code |
+
+Both shortcuts are blocked when `terminalFocused` is `true` (i.e., when the DOS terminal has focus) to prevent conflicts with DOS programs.
+
+---
+
+## Terminal Controls
+
+The terminal panel in `compiler.html` includes zoom controls managed by `execution.js`:
+
+| Control | Function |
+|:---|:---|
+| Zoom in button (`#increase-terminal-btn`) | `updateTerminalZoom(0.1)` — applies CSS `scale()` transform |
+| Zoom out button (`#decrease-terminal-btn`) | `updateTerminalZoom(-0.1)` |
+| Download button (`#download-terminal-btn`) | Sends `TAKE_SCREENSHOT` to iframe, saves PNG |
+
+Zoom range: 0.5x to 3.0x. The iframe canvas uses `image-rendering: pixelated` for crisp pixel scaling.
+
+---
+
+## File Reference
+
+| File | Lines | Role |
+|:---|:---|:---|
+| `site/static/js/compiler/execution.js` | 420 | Run button handler, batch script generation, iframe message handling, keyboard shortcuts, terminal zoom, screenshot download |
+| `site/static/js/compiler/app.js` | 797 | Global state, caching system (`cachedFetch`, Cache API, `DemoCache`), preloading, TC ZIP download, iframe lazy-loading, output panel handlers, panel splitters, settings/metrics |
+| `site/static/html/dos-runner.html` | 560 | Sandboxed iframe that runs DOSBox: js-dos loading, filesystem operations, error polling (checks ERR.TXT/FAIL.TXT/USER.EXE every 400ms), mobile keyboard forwarding, console noise filter, screenshot capture, 60s safety timeout |
+| `site/compiler-assets/libs/js-dos.js` | — | JS-DOS library. Exposes the `Dos()` constructor for DOSBox initialization. |
+| `site/compiler-assets/libs/wdosbox.js` | — | DOSBox WASM glue code (loaded by js-dos) |
+| `site/compiler-assets/libs/wdosbox.wasm.js` | — | DOSBox WASM binary (~1.8 MB) |
+| `site/compiler-assets/zip-files/tc-v1.zip` | — | TURBOC3 filesystem: headers (`INCLUDE/`), libraries (`LIB/`), TCC.EXE (`BIN/`) |
+| `site/templates/compiler.html` | ~1400 | Main compiler page Jinja2 template with the editor, terminal, error panel, and sidebar HTML |

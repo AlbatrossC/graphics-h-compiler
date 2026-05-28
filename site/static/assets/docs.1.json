@@ -1,0 +1,1887 @@
+{
+  "categories": [
+    {
+      "name": "Setup & Screen Queries",
+      "slug": "setup-screen-queries",
+      "functions": [
+        {
+          "name": "initgraph",
+          "slug": "initgraph",
+          "description": "Initializes the BGI graphics system and switches the program into graphics mode. Use it once before drawing with graphics.h.",
+          "syntax": "void far initgraph(int far *graphdriver, int far *graphmode, const char far *pathtodriver);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "graphdriver",
+              "type": "int far *",
+              "description": "Pointer to an integer specifying the graphics driver to use. Pass DETECT (0) for auto-detection."
+            },
+            {
+              "name": "graphmode",
+              "type": "int far *",
+              "description": "Pointer to an integer specifying the initial graphics mode. Ignored when DETECT is used."
+            },
+            {
+              "name": "pathtodriver",
+              "type": "const char far *",
+              "description": "Path to the directory containing the .BGI graphics driver files. Use empty string or NULL to search the current directory."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "#include <graphics.h>\n#include <conio.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    outtextxy(100, 100, \"graphics.h is ready\");\n    getch();\n    closegraph();\n    return 0;\n}"
+          },
+          "notes": [
+            "Call graphresult() after initgraph() if you need detailed startup error handling.",
+            "Use an empty BGI path in this online compiler environment."
+          ],
+          "related": [
+            "closegraph"
+          ],
+          "keywords": [
+            "init",
+            "initialize",
+            "start graphics",
+            "graphics mode",
+            "BGI"
+          ]
+        },
+        {
+          "name": "closegraph",
+          "slug": "closegraph",
+          "description": "Closes graphics mode, releases graphics memory, and returns the screen to text mode.",
+          "syntax": "void far closegraph(void);",
+          "returns": "void",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "#include <graphics.h>\n\nint main() {\n    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"\");\n    closegraph();\n    return 0;\n}"
+          },
+          "notes": [
+            "Call it before the program exits after graphics mode has been initialized."
+          ],
+          "related": [
+            "initgraph"
+          ],
+          "keywords": [
+            "close",
+            "cleanup",
+            "exit graphics",
+            "restore mode"
+          ]
+        },
+        {
+          "name": "cleardevice",
+          "slug": "cleardevice",
+          "description": "Clears the full graphics screen and moves the current drawing position back to (0, 0).",
+          "syntax": "void far cleardevice(void);",
+          "returns": "void",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    getch();\n    cleardevice();\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Resets the current position to (0, 0).",
+            "Uses the current background color to clear."
+          ],
+          "related": [
+            "clearviewport",
+            "setbkcolor"
+          ],
+          "keywords": [
+            "clear screen",
+            "erase",
+            "wipe",
+            "cls"
+          ]
+        },
+        {
+          "name": "clearviewport",
+          "slug": "clearviewport",
+          "description": "Clears only the active viewport and moves the current position to the viewport origin.",
+          "syntax": "void far clearviewport(void);",
+          "returns": "void",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    getch();\n    clearviewport();\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Only affects the current viewport area.",
+            "Coordinate (0,0) in the viewport maps to its top-left corner."
+          ],
+          "related": [
+            "cleardevice"
+          ],
+          "keywords": [
+            "clear viewport",
+            "erase viewport",
+            "viewport clear"
+          ]
+        },
+        {
+          "name": "getmaxx",
+          "slug": "getmaxx",
+          "description": "Returns the largest valid x-coordinate in the current graphics mode. In VGA 640x480 mode, this is usually 639.",
+          "syntax": "int far getmaxx(void);",
+          "returns": "int — the maximum x pixel coordinate",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "int right = getmaxx();\nline(0, 0, right, getmaxy());"
+          },
+          "notes": [
+            "In VGAHI mode (640x480), getmaxx() returns 639.",
+            "Use with getmaxy() to handle any screen resolution."
+          ],
+          "related": [
+            "getmaxy",
+            "getx",
+            "gety"
+          ],
+          "keywords": [
+            "screen width",
+            "max x",
+            "resolution",
+            "screen size"
+          ]
+        },
+        {
+          "name": "getmaxy",
+          "slug": "getmaxy",
+          "description": "Returns the largest valid y-coordinate in the current graphics mode. In VGA 640x480 mode, this is usually 479.",
+          "syntax": "int far getmaxy(void);",
+          "returns": "int — the maximum y pixel coordinate",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "int bottom = getmaxy();\nline(0, bottom, getmaxx(), 0);"
+          },
+          "notes": [
+            "In VGAHI mode (640x480), getmaxy() returns 479.",
+            "Use with getmaxx() to build resolution-independent graphics."
+          ],
+          "related": [
+            "getmaxx",
+            "getx",
+            "gety"
+          ],
+          "keywords": [
+            "screen height",
+            "max y",
+            "resolution",
+            "screen size"
+          ]
+        },
+        {
+          "name": "getmaxmode",
+          "slug": "getmaxmode",
+          "description": "Returns the highest graphics mode number supported by the currently loaded graphics driver.",
+          "syntax": "int far getmaxmode(void);",
+          "returns": "int — the maximum mode number for the loaded driver",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "int lastMode = getmaxmode();"
+          },
+          "notes": [
+            "Useful when iterating through available modes.",
+            "Combine with getmoderange() for full mode range info."
+          ],
+          "related": [],
+          "keywords": [
+            "max mode",
+            "available modes",
+            "mode range"
+          ]
+        },
+        {
+          "name": "getmaxcolor",
+          "slug": "getmaxcolor",
+          "description": "Returns the highest color index available in the current graphics mode.",
+          "syntax": "int far getmaxcolor(void);",
+          "returns": "int — the highest valid color index",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "int lastColor = getmaxcolor();\nsetcolor(lastColor);"
+          },
+          "notes": [
+            "Returns 15 for 16-color VGA/EGA modes.",
+            "Returns 255 for 256-color modes (IBM8514)."
+          ],
+          "related": [
+            "setcolor",
+            "getcolor"
+          ],
+          "keywords": [
+            "max color",
+            "color count",
+            "palette size",
+            "available colors"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Drawing & Cursor Movement",
+      "slug": "drawing-cursor-movement",
+      "functions": [
+        {
+          "name": "moveto",
+          "slug": "moveto",
+          "description": "Moves the current graphics cursor to an absolute screen coordinate without drawing anything.",
+          "syntax": "void far moveto(int x, int y);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "The absolute x-coordinate to move to."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "The absolute y-coordinate to move to."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moveto(100, 100);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Does not draw—only repositions the current position.",
+            "Coordinates are relative to the current viewport."
+          ],
+          "related": [
+            "moverel",
+            "lineto",
+            "linerel",
+            "getx",
+            "gety"
+          ],
+          "keywords": [
+            "move",
+            "cursor",
+            "current position",
+            "CP"
+          ]
+        },
+        {
+          "name": "moverel",
+          "slug": "moverel",
+          "description": "Moves the current graphics cursor by a relative x/y offset without drawing anything.",
+          "syntax": "void far moverel(int dx, int dy);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "dx",
+              "type": "int",
+              "description": "Horizontal offset from the current x position."
+            },
+            {
+              "name": "dy",
+              "type": "int",
+              "description": "Vertical offset from the current y position."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    moverel(50, 50);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Negative dx moves left; negative dy moves up.",
+            "Relative movement is from the current CP, not the origin."
+          ],
+          "related": [
+            "moveto",
+            "linerel",
+            "lineto",
+            "getx",
+            "gety"
+          ],
+          "keywords": [
+            "move relative",
+            "offset",
+            "current position"
+          ]
+        },
+        {
+          "name": "lineto",
+          "slug": "lineto",
+          "description": "Draws a line from the current graphics cursor to an absolute coordinate, then updates the cursor position.",
+          "syntax": "void far lineto(int x, int y);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "Absolute x-coordinate of the endpoint."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Absolute y-coordinate of the endpoint."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    lineto(200, 50);\n    lineto(200, 200);\n    lineto(50, 200);\n    lineto(50, 50);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Updates the CP to the endpoint (x, y) after drawing.",
+            "Uses current color, line style, and thickness set by setlinestyle() and setcolor()."
+          ],
+          "related": [
+            "moveto",
+            "linerel",
+            "line"
+          ],
+          "keywords": [
+            "draw line",
+            "line to",
+            "current position"
+          ]
+        },
+        {
+          "name": "linerel",
+          "slug": "linerel",
+          "description": "Draws a line from the current graphics cursor by a relative x/y offset, then updates the cursor position.",
+          "syntax": "void far linerel(int dx, int dy);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "dx",
+              "type": "int",
+              "description": "Horizontal offset from current x to the endpoint."
+            },
+            {
+              "name": "dy",
+              "type": "int",
+              "description": "Vertical offset from current y to the endpoint."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    linerel(100, 0);\n    linerel(0, 100);\n    linerel(-100, 0);\n    linerel(0, -100);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Combines a move and a draw in relative coordinates.",
+            "Good for drawing shapes step-by-step from a starting point."
+          ],
+          "related": [
+            "lineto",
+            "moverel",
+            "moveto"
+          ],
+          "keywords": [
+            "relative line",
+            "draw offset",
+            "line relative"
+          ]
+        },
+        {
+          "name": "line",
+          "slug": "line",
+          "description": "Draws a straight line between two absolute screen coordinates using the current color and line style.",
+          "syntax": "void far line(int x1, int y1, int x2, int y2);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x1",
+              "type": "int",
+              "description": "X-coordinate of the starting point."
+            },
+            {
+              "name": "y1",
+              "type": "int",
+              "description": "Y-coordinate of the starting point."
+            },
+            {
+              "name": "x2",
+              "type": "int",
+              "description": "X-coordinate of the ending point."
+            },
+            {
+              "name": "y2",
+              "type": "int",
+              "description": "Y-coordinate of the ending point."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    line(0, 0, 639, 479);\n    line(639, 0, 0, 479);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Does NOT update the current drawing position.",
+            "Respects the current color, line style, and thickness."
+          ],
+          "related": [
+            "lineto",
+            "linerel",
+            "setlinestyle",
+            "setcolor"
+          ],
+          "keywords": [
+            "draw line",
+            "line segment",
+            "two points"
+          ]
+        },
+        {
+          "name": "getx",
+          "slug": "getx",
+          "description": "Returns the current graphics cursor x-coordinate.",
+          "syntax": "int far getx(void);",
+          "returns": "int — the current x position",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "moveto(100, 120);\nprintf(\"x = %d\", getx());"
+          },
+          "notes": [
+            "Returns position relative to the current viewport.",
+            "Initially 0 after initgraph()."
+          ],
+          "related": [
+            "gety",
+            "moveto",
+            "moverel"
+          ],
+          "keywords": [
+            "current x",
+            "position x",
+            "cursor x"
+          ]
+        },
+        {
+          "name": "gety",
+          "slug": "gety",
+          "description": "Returns the current graphics cursor y-coordinate.",
+          "syntax": "int far gety(void);",
+          "returns": "int — the current y position",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "moveto(100, 120);\nprintf(\"y = %d\", gety());"
+          },
+          "notes": [
+            "Returns position relative to the current viewport.",
+            "Initially 0 after initgraph()."
+          ],
+          "related": [
+            "getx",
+            "moveto",
+            "moverel"
+          ],
+          "keywords": [
+            "current y",
+            "position y",
+            "cursor y"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Shapes",
+      "slug": "shapes",
+      "functions": [
+        {
+          "name": "circle",
+          "slug": "circle",
+          "description": "Draws the outline of a circle using a center point and radius.",
+          "syntax": "void far circle(int x, int y, int radius);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the center."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the center."
+            },
+            {
+              "name": "radius",
+              "type": "int",
+              "description": "Radius of the circle in pixels."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(YELLOW);\n    circle(320, 240, 100);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "The circle is an outline; use fillellipse() for a filled circular shape."
+          ],
+          "related": [
+            "ellipse",
+            "arc",
+            "fillellipse",
+            "pieslice"
+          ],
+          "keywords": [
+            "circle",
+            "round",
+            "outline",
+            "shape"
+          ]
+        },
+        {
+          "name": "arc",
+          "slug": "arc",
+          "description": "Draws part of a circle between two angles, measured in degrees.",
+          "syntax": "void far arc(int x, int y, int stangle, int endangle, int radius);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the arc's center."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the arc's center."
+            },
+            {
+              "name": "stangle",
+              "type": "int",
+              "description": "Starting angle in degrees (0 = 3 o'clock, increases counter-clockwise)."
+            },
+            {
+              "name": "endangle",
+              "type": "int",
+              "description": "Ending angle in degrees."
+            },
+            {
+              "name": "radius",
+              "type": "int",
+              "description": "Radius of the arc in pixels."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    arc(320, 240, 0, 180, 100);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Angles are in degrees, measured counter-clockwise from 3 o'clock (east).",
+            "To get the arc endpoints, call getarccoords() after drawing."
+          ],
+          "related": [
+            "circle",
+            "ellipse",
+            "pieslice"
+          ],
+          "keywords": [
+            "arc",
+            "curved line",
+            "angle",
+            "partial circle"
+          ]
+        },
+        {
+          "name": "ellipse",
+          "slug": "ellipse",
+          "description": "Draws an elliptical arc using a center point, angle range, and horizontal/vertical radii.",
+          "syntax": "void far ellipse(int x, int y, int stangle, int endangle, int xradius, int yradius);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the ellipse center."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the ellipse center."
+            },
+            {
+              "name": "stangle",
+              "type": "int",
+              "description": "Starting angle in degrees."
+            },
+            {
+              "name": "endangle",
+              "type": "int",
+              "description": "Ending angle in degrees."
+            },
+            {
+              "name": "xradius",
+              "type": "int",
+              "description": "Horizontal radius in pixels."
+            },
+            {
+              "name": "yradius",
+              "type": "int",
+              "description": "Vertical radius in pixels."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    ellipse(320, 240, 0, 360, 200, 100);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Draws only the outline; use fillellipse() to fill.",
+            "When xradius == yradius and stangle=0, endangle=360, result is a circle."
+          ],
+          "related": [
+            "fillellipse",
+            "arc",
+            "circle",
+            "sector"
+          ],
+          "keywords": [
+            "ellipse",
+            "oval",
+            "arc",
+            "shape"
+          ]
+        },
+        {
+          "name": "fillellipse",
+          "slug": "fillellipse",
+          "description": "Draws a filled ellipse using the current fill style and fill color.",
+          "syntax": "void far fillellipse(int x, int y, int xradius, int yradius);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the ellipse center."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the ellipse center."
+            },
+            {
+              "name": "xradius",
+              "type": "int",
+              "description": "Horizontal radius in pixels."
+            },
+            {
+              "name": "yradius",
+              "type": "int",
+              "description": "Vertical radius in pixels."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, GREEN);\n    fillellipse(320, 240, 150, 80);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Draws the border in the current drawing color and fills using setfillstyle().",
+            "When xradius == yradius, this draws a filled circle."
+          ],
+          "related": [
+            "ellipse",
+            "circle",
+            "floodfill",
+            "setfillstyle"
+          ],
+          "keywords": [
+            "filled ellipse",
+            "filled oval",
+            "solid ellipse"
+          ]
+        },
+        {
+          "name": "rectangle",
+          "slug": "rectangle",
+          "description": "Draws the outline of a rectangle from the top-left corner to the bottom-right corner.",
+          "syntax": "void far rectangle(int left, int top, int right, int bottom);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "left",
+              "type": "int",
+              "description": "X-coordinate of the left edge."
+            },
+            {
+              "name": "top",
+              "type": "int",
+              "description": "Y-coordinate of the top edge."
+            },
+            {
+              "name": "right",
+              "type": "int",
+              "description": "X-coordinate of the right edge."
+            },
+            {
+              "name": "bottom",
+              "type": "int",
+              "description": "Y-coordinate of the bottom edge."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(CYAN);\n    rectangle(100, 100, 400, 300);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Use bar() when you need a filled rectangle instead of an outline."
+          ],
+          "related": [
+            "bar",
+            "bar3d",
+            "setlinestyle"
+          ],
+          "keywords": [
+            "rectangle",
+            "box",
+            "outline",
+            "square"
+          ]
+        },
+        {
+          "name": "bar",
+          "slug": "bar",
+          "description": "Draws a filled rectangle using the current fill style and fill color.",
+          "syntax": "void far bar(int left, int top, int right, int bottom);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "left",
+              "type": "int",
+              "description": "X-coordinate of the left edge."
+            },
+            {
+              "name": "top",
+              "type": "int",
+              "description": "Y-coordinate of the top edge."
+            },
+            {
+              "name": "right",
+              "type": "int",
+              "description": "X-coordinate of the right edge."
+            },
+            {
+              "name": "bottom",
+              "type": "int",
+              "description": "Y-coordinate of the bottom edge."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, BLUE);\n    bar(100, 100, 300, 300);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Does NOT draw a border. To draw a bordered filled rectangle, use rectangle() + floodfill() or bar3d() with depth=0.",
+            "Uses the fill style and color set by setfillstyle()."
+          ],
+          "related": [
+            "rectangle",
+            "bar3d",
+            "setfillstyle"
+          ],
+          "keywords": [
+            "filled rectangle",
+            "bar chart",
+            "solid box",
+            "fill"
+          ]
+        },
+        {
+          "name": "bar3d",
+          "slug": "bar3d",
+          "description": "Draws a filled rectangle with a simple 3D edge effect.",
+          "syntax": "void far bar3d(int left, int top, int right, int bottom, int depth, int topflag);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "left",
+              "type": "int",
+              "description": "X-coordinate of the left edge of the bar face."
+            },
+            {
+              "name": "top",
+              "type": "int",
+              "description": "Y-coordinate of the top edge of the bar face."
+            },
+            {
+              "name": "right",
+              "type": "int",
+              "description": "X-coordinate of the right edge of the bar face."
+            },
+            {
+              "name": "bottom",
+              "type": "int",
+              "description": "Y-coordinate of the bottom edge of the bar face."
+            },
+            {
+              "name": "depth",
+              "type": "int",
+              "description": "Depth of the 3D effect in pixels."
+            },
+            {
+              "name": "topflag",
+              "type": "int",
+              "description": "Non-zero to draw a 3D top; 0 to omit the top (useful when stacking bars)."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, CYAN);\n    bar3d(100, 100, 200, 400, 20, 1);\n    setfillstyle(SOLID_FILL, GREEN);\n    bar3d(220, 200, 320, 400, 20, 1);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "The border is drawn in the current drawing color; interior uses setfillstyle().",
+            "Set topflag=0 for the lower bars in a stacked bar chart."
+          ],
+          "related": [
+            "bar",
+            "rectangle",
+            "setfillstyle"
+          ],
+          "keywords": [
+            "3D bar",
+            "bar chart",
+            "3D rectangle",
+            "depth"
+          ]
+        },
+        {
+          "name": "pieslice",
+          "slug": "pieslice",
+          "description": "Draws and fills a circular slice between two angles.",
+          "syntax": "void far pieslice(int x, int y, int stangle, int endangle, int radius);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the pie's center."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the pie's center."
+            },
+            {
+              "name": "stangle",
+              "type": "int",
+              "description": "Starting angle in degrees."
+            },
+            {
+              "name": "endangle",
+              "type": "int",
+              "description": "Ending angle in degrees."
+            },
+            {
+              "name": "radius",
+              "type": "int",
+              "description": "Radius of the pie in pixels."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, RED);\n    pieslice(320, 240, 0, 90, 100);\n    setfillstyle(SOLID_FILL, BLUE);\n    pieslice(320, 240, 90, 270, 100);\n    setfillstyle(SOLID_FILL, GREEN);\n    pieslice(320, 240, 270, 360, 100);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "The outline is drawn in the current color; the fill uses setfillstyle().",
+            "For elliptical pie slices, use sector()."
+          ],
+          "related": [
+            "arc",
+            "sector",
+            "setfillstyle",
+            "circle"
+          ],
+          "keywords": [
+            "pie chart",
+            "pie slice",
+            "sector",
+            "wedge"
+          ]
+        },
+        {
+          "name": "sector",
+          "slug": "sector",
+          "description": "Draws and fills an elliptical slice between two angles.",
+          "syntax": "void far sector(int x, int y, int stangle, int endangle, int xradius, int yradius);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the sector center."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the sector center."
+            },
+            {
+              "name": "stangle",
+              "type": "int",
+              "description": "Starting angle in degrees."
+            },
+            {
+              "name": "endangle",
+              "type": "int",
+              "description": "Ending angle in degrees."
+            },
+            {
+              "name": "xradius",
+              "type": "int",
+              "description": "Horizontal radius in pixels."
+            },
+            {
+              "name": "yradius",
+              "type": "int",
+              "description": "Vertical radius in pixels."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, MAGENTA);\n    sector(320, 240, 30, 150, 150, 80);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Like pieslice() but for ellipses (xradius and yradius can differ).",
+            "The fill uses the current fill style set by setfillstyle()."
+          ],
+          "related": [
+            "pieslice",
+            "ellipse",
+            "fillellipse",
+            "setfillstyle"
+          ],
+          "keywords": [
+            "elliptical sector",
+            "ellipse pie",
+            "filled arc",
+            "sector"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Polygons & Fill",
+      "slug": "polygons-fill",
+      "functions": [
+        {
+          "name": "drawpoly",
+          "slug": "drawpoly",
+          "description": "Draws a connected polygon outline from an array of x/y coordinate pairs.",
+          "syntax": "void far drawpoly(int numpoints, const int far *polypoints);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "numpoints",
+              "type": "int",
+              "description": "Number of points (vertices) in the polygon."
+            },
+            {
+              "name": "polypoints",
+              "type": "const int far *",
+              "description": "Array of (x, y) coordinate pairs: {x0, y0, x1, y1, ...}."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(WHITE);\n    drawpoly(4, pts);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "To close the polygon visually, the last point must equal the first point (requiring numpoints+1 entries).",
+            "Uses the current color and line style."
+          ],
+          "related": [
+            "fillpoly",
+            "line",
+            "rectangle"
+          ],
+          "keywords": [
+            "polygon",
+            "outline",
+            "vertices",
+            "shape"
+          ]
+        },
+        {
+          "name": "fillpoly",
+          "slug": "fillpoly",
+          "description": "Draws and fills a polygon from an array of x/y coordinate pairs.",
+          "syntax": "void far fillpoly(int numpoints, const int far *polypoints);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "numpoints",
+              "type": "int",
+              "description": "Number of vertices in the polygon."
+            },
+            {
+              "name": "polypoints",
+              "type": "const int far *",
+              "description": "Array of (x, y) coordinate pairs: {x0, y0, x1, y1, ...}."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(HATCH_FILL, RED);\n    fillpoly(3, pts);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Automatically closes the polygon (no need to repeat the first point).",
+            "The outline is drawn in the current drawing color; fill uses setfillstyle()."
+          ],
+          "related": [
+            "drawpoly",
+            "floodfill",
+            "setfillstyle"
+          ],
+          "keywords": [
+            "filled polygon",
+            "solid shape",
+            "fill polygon",
+            "vertices"
+          ]
+        },
+        {
+          "name": "floodfill",
+          "slug": "floodfill",
+          "description": "Fills a bounded region starting at a point until it reaches the specified border color.",
+          "syntax": "void far floodfill(int x, int y, int border);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the seed point (must be inside the boundary)."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the seed point."
+            },
+            {
+              "name": "border",
+              "type": "int",
+              "description": "Color of the boundary to stop filling at."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(WHITE);\n    setfillstyle(SOLID_FILL, RED);\n    floodfill(200, 200, WHITE);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "The fill starts from an interior point, so the boundary must already be drawn and closed."
+          ],
+          "related": [
+            "fillpoly",
+            "bar",
+            "setfillstyle"
+          ],
+          "keywords": [
+            "flood fill",
+            "bucket fill",
+            "fill region",
+            "paint fill"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Colors & Palette",
+      "slug": "colors-palette",
+      "functions": [
+        {
+          "name": "setcolor",
+          "slug": "setcolor",
+          "description": "Sets the active drawing color for outlines, lines, and text.",
+          "syntax": "void far setcolor(int color);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "color",
+              "type": "int",
+              "description": "Color value from the COLORS enum (e.g., RED, BLUE) or a palette index 0–getmaxcolor()."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setcolor(RED);\n    setcolor(LIGHTBLUE);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Available colors depend on the current graphics mode and driver.",
+            "Use getmaxcolor() to find the maximum valid color index."
+          ],
+          "related": [
+            "getcolor",
+            "setbkcolor",
+            "getbkcolor",
+            "setpalette"
+          ],
+          "keywords": [
+            "color",
+            "drawing color",
+            "foreground color",
+            "pen color"
+          ]
+        },
+        {
+          "name": "getcolor",
+          "slug": "getcolor",
+          "description": "Returns the currently selected drawing color index.",
+          "syntax": "int far getcolor(void);",
+          "returns": "int — the current foreground color index",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "setcolor(RED);\nint active = getcolor();"
+          },
+          "notes": [
+            "Default color is WHITE (15) after initgraph().",
+            "Returned value is a palette index, not an RGB value."
+          ],
+          "related": [
+            "setcolor",
+            "getbkcolor",
+            "getmaxcolor"
+          ],
+          "keywords": [
+            "get color",
+            "current color",
+            "foreground"
+          ]
+        },
+        {
+          "name": "setbkcolor",
+          "slug": "setbkcolor",
+          "description": "Sets the background color used by the graphics screen.",
+          "syntax": "void far setbkcolor(int color);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "color",
+              "type": "int",
+              "description": "Background color from the COLORS enum or a palette index."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setbkcolor(BLUE);\n    setcolor(YELLOW);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "The background change takes effect immediately for new drawing but does not repaint existing pixels.",
+            "Default background is BLACK."
+          ],
+          "related": [
+            "getbkcolor",
+            "setcolor",
+            "cleardevice"
+          ],
+          "keywords": [
+            "background color",
+            "background",
+            "bkcolor"
+          ]
+        },
+        {
+          "name": "getbkcolor",
+          "slug": "getbkcolor",
+          "description": "Returns the current background color index.",
+          "syntax": "int far getbkcolor(void);",
+          "returns": "int — the current background color index",
+          "parameters": [],
+          "example": {
+            "language": "c",
+            "code": "setbkcolor(BLUE);\nint bg = getbkcolor();"
+          },
+          "notes": [
+            "Default is BLACK (0) after initgraph()."
+          ],
+          "related": [
+            "setbkcolor",
+            "getcolor"
+          ],
+          "keywords": [
+            "get background",
+            "background color",
+            "query color"
+          ]
+        },
+        {
+          "name": "setpalette",
+          "slug": "setpalette",
+          "description": "Changes one palette entry so a color index maps to a different physical color.",
+          "syntax": "void far setpalette(int colornum, int color);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "colornum",
+              "type": "int",
+              "description": "The palette entry index to change (0 to getmaxcolor())."
+            },
+            {
+              "name": "color",
+              "type": "int",
+              "description": "The new color value (from EGA_COLORS or similar driver-specific constants)."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setpalette(RED, EGA_LIGHTGREEN);\n    setcolor(RED);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Palette behavior depends on the active driver and graphics mode."
+          ],
+          "related": [
+            "getpalette"
+          ],
+          "keywords": [
+            "palette",
+            "color mapping",
+            "remap color",
+            "EGA color"
+          ]
+        },
+        {
+          "name": "getpalette",
+          "slug": "getpalette",
+          "description": "Copies the current palette information into a palettetype structure.",
+          "syntax": "void far getpalette(struct palettetype far *palette);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "palette",
+              "type": "struct palettetype far *",
+              "description": "Pointer to a palettetype structure to be filled with current palette data."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "struct palettetype pal;\ngetpalette(&pal);"
+          },
+          "notes": [
+            "Pass the address of a palettetype variable."
+          ],
+          "related": [
+            "setpalette"
+          ],
+          "keywords": [
+            "get palette",
+            "read palette",
+            "palette info"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Line & Fill Style",
+      "slug": "line-fill-style",
+      "functions": [
+        {
+          "name": "setlinestyle",
+          "slug": "setlinestyle",
+          "description": "Sets the pattern and thickness used by line, rectangle, circle, and other outline drawing functions.",
+          "syntax": "void far setlinestyle(int linestyle, unsigned upattern, int thickness);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "linestyle",
+              "type": "int",
+              "description": "Line style constant: SOLID_LINE, DOTTED_LINE, CENTER_LINE, DASHED_LINE, or USERBIT_LINE."
+            },
+            {
+              "name": "upattern",
+              "type": "unsigned",
+              "description": "16-bit custom pattern used only when linestyle is USERBIT_LINE. Ignored for other styles."
+            },
+            {
+              "name": "thickness",
+              "type": "int",
+              "description": "Line thickness: NORM_WIDTH (1) or THICK_WIDTH (3)."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setlinestyle(DASHED_LINE, 0, THICK_WIDTH);\n    setlinestyle(DOTTED_LINE, 0, NORM_WIDTH);\n    setlinestyle(USERBIT_LINE, 0xF0F0, NORM_WIDTH);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "USERBIT_LINE uses the upattern value as a 16-bit bitmask for the line pattern.",
+            "Thickness only supports NORM_WIDTH (1 pixel) and THICK_WIDTH (3 pixels)."
+          ],
+          "related": [
+            "getlinesettings",
+            "setcolor",
+            "line",
+            "lineto"
+          ],
+          "keywords": [
+            "line style",
+            "dashed",
+            "dotted",
+            "line thickness",
+            "pattern"
+          ]
+        },
+        {
+          "name": "getlinesettings",
+          "slug": "getlinesettings",
+          "description": "Reads the current line style, pattern, and thickness into a linesettingstype structure.",
+          "syntax": "void far getlinesettings(struct linesettingstype far *lineinfo);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "lineinfo",
+              "type": "struct linesettingstype far *",
+              "description": "Pointer to a linesettingstype structure to be filled with current line settings."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "struct linesettingstype ls;\ngetlinesettings(&ls);"
+          },
+          "notes": [
+            "The linesettingstype struct has linestyle, upattern, and thickness fields.",
+            "Useful for saving and restoring line settings."
+          ],
+          "related": [
+            "setlinestyle"
+          ],
+          "keywords": [
+            "get line settings",
+            "line info",
+            "line query"
+          ]
+        },
+        {
+          "name": "setfillstyle",
+          "slug": "setfillstyle",
+          "description": "Sets the fill pattern and fill color used by filled shapes.",
+          "syntax": "void far setfillstyle(int pattern, int color);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "pattern",
+              "type": "int",
+              "description": "Fill pattern from fill_patterns enum: SOLID_FILL, HATCH_FILL, SLASH_FILL, EMPTY_FILL, etc."
+            },
+            {
+              "name": "color",
+              "type": "int",
+              "description": "Fill color index (from COLORS enum or palette index)."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n        setfillstyle(patterns[i], i + 1);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "EMPTY_FILL fills with the current background color.",
+            "USER_FILL requires setfillpattern() to define the custom 8x8 pattern."
+          ],
+          "related": [
+            "getfillsettings",
+            "bar",
+            "fillpoly",
+            "floodfill"
+          ],
+          "keywords": [
+            "fill style",
+            "fill pattern",
+            "fill color",
+            "hatch",
+            "solid fill"
+          ]
+        },
+        {
+          "name": "getfillsettings",
+          "slug": "getfillsettings",
+          "description": "Reads the current fill pattern and fill color into a fillsettingstype structure.",
+          "syntax": "void far getfillsettings(struct fillsettingstype far *fillinfo);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "fillinfo",
+              "type": "struct fillsettingstype far *",
+              "description": "Pointer to a fillsettingstype structure to fill with current settings."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "struct fillsettingstype fs;\ngetfillsettings(&fs);"
+          },
+          "notes": [
+            "The fillsettingstype struct has pattern and color fields."
+          ],
+          "related": [
+            "setfillstyle"
+          ],
+          "keywords": [
+            "fill settings",
+            "get fill",
+            "fill query"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Text & Fonts",
+      "slug": "text-fonts",
+      "functions": [
+        {
+          "name": "outtext",
+          "slug": "outtext",
+          "description": "Writes text at the current graphics cursor position using the active text style and color.",
+          "syntax": "void far outtext(const char far *textstring);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "textstring",
+              "type": "const char far *",
+              "description": "The null-terminated string to display."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    outtext(\"Hello from outtext!\");\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "After drawing, the CP moves to the end of the string.",
+            "Use outtextxy() to specify an exact position without moving the CP first."
+          ],
+          "related": [
+            "outtextxy",
+            "settextstyle",
+            "settextjustify",
+            "textheight",
+            "textwidth"
+          ],
+          "keywords": [
+            "text",
+            "string",
+            "print",
+            "outtext",
+            "draw text"
+          ]
+        },
+        {
+          "name": "outtextxy",
+          "slug": "outtextxy",
+          "description": "Writes text at a specific x/y coordinate using the active text style and color.",
+          "syntax": "void far outtextxy(int x, int y, const char far *textstring);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the text's left (or justified) position."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the text's top (or justified) position."
+            },
+            {
+              "name": "textstring",
+              "type": "const char far *",
+              "description": "Null-terminated string to display."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(TRIPLEX_FONT, HORIZ_DIR, 3);\n    setcolor(YELLOW);\n    outtextxy(100, 200, \"Hello Graphics!\");\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Does not change the current position.",
+            "Justification is affected by settextjustify()."
+          ],
+          "related": [
+            "outtext",
+            "settextstyle",
+            "settextjustify",
+            "textheight",
+            "textwidth"
+          ],
+          "keywords": [
+            "text xy",
+            "print text",
+            "display string",
+            "label"
+          ]
+        },
+        {
+          "name": "settextstyle",
+          "slug": "settextstyle",
+          "description": "Sets the font, direction, and size used by graphics text output.",
+          "syntax": "void far settextstyle(int font, int direction, int charsize);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "font",
+              "type": "int",
+              "description": "Font constant from font_names enum: DEFAULT_FONT, TRIPLEX_FONT, SMALL_FONT, SANS_SERIF_FONT, GOTHIC_FONT, etc."
+            },
+            {
+              "name": "direction",
+              "type": "int",
+              "description": "HORIZ_DIR (0) for left-to-right, VERT_DIR (1) for bottom-to-top."
+            },
+            {
+              "name": "charsize",
+              "type": "int",
+              "description": "Character size multiplier (1–10). Use 0 (USER_CHAR_SIZE) with setusercharsize() for custom scaling."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(GOTHIC_FONT, HORIZ_DIR, 4);\n    settextstyle(SANS_SERIF_FONT, VERT_DIR, 3);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "DEFAULT_FONT is a built-in 8x8 bitmap font; others are stroked fonts requiring .CHR files.",
+            "Stroked fonts scale smoothly at any size; bitmap font only doubles at size 2+."
+          ],
+          "related": [
+            "outtext",
+            "outtextxy"
+          ],
+          "keywords": [
+            "font",
+            "text style",
+            "text direction",
+            "char size",
+            "typography"
+          ]
+        },
+        {
+          "name": "settextjustify",
+          "slug": "settextjustify",
+          "description": "Controls how text is aligned relative to its output point.",
+          "syntax": "void far settextjustify(int horiz, int vert);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "horiz",
+              "type": "int",
+              "description": "Horizontal justification: LEFT_TEXT (0), CENTER_TEXT (1), or RIGHT_TEXT (2)."
+            },
+            {
+              "name": "vert",
+              "type": "int",
+              "description": "Vertical justification: BOTTOM_TEXT (0), CENTER_TEXT (1), or TOP_TEXT (2)."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);\n    settextjustify(CENTER_TEXT, CENTER_TEXT);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Default is LEFT_TEXT, TOP_TEXT.",
+            "Justification applies to both outtext() and outtextxy()."
+          ],
+          "related": [
+            "settextstyle",
+            "outtext",
+            "outtextxy"
+          ],
+          "keywords": [
+            "text justify",
+            "text alignment",
+            "center text",
+            "text anchor"
+          ]
+        },
+        {
+          "name": "textheight",
+          "slug": "textheight",
+          "description": "Returns the pixel height of a string in the current text style.",
+          "syntax": "int far textheight(const char far *textstring);",
+          "returns": "int — height of the text in pixels",
+          "parameters": [
+            {
+              "name": "textstring",
+              "type": "const char far *",
+              "description": "The string to measure (content doesn't affect height for standard fonts)."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "int h = textheight(\"Hello\");"
+          },
+          "notes": [
+            "For DEFAULT_FONT, height is always the same regardless of the string content.",
+            "Useful for centering or spacing text precisely."
+          ],
+          "related": [
+            "textwidth",
+            "settextstyle",
+            "outtextxy"
+          ],
+          "keywords": [
+            "text height",
+            "font height",
+            "text size",
+            "measure text"
+          ]
+        },
+        {
+          "name": "textwidth",
+          "slug": "textwidth",
+          "description": "Returns the pixel width of a string in the current text style.",
+          "syntax": "int far textwidth(const char far *textstring);",
+          "returns": "int — width of the text string in pixels",
+          "parameters": [
+            {
+              "name": "textstring",
+              "type": "const char far *",
+              "description": "The string to measure."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "int w = textwidth(\"Hello\");"
+          },
+          "notes": [
+            "Width varies by the actual characters in the string for stroked fonts.",
+            "Use with textheight() to perfectly center text on screen."
+          ],
+          "related": [
+            "textheight",
+            "settextstyle",
+            "outtextxy"
+          ],
+          "keywords": [
+            "text width",
+            "string width",
+            "measure text",
+            "font width"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pixels & Images",
+      "slug": "pixels-images",
+      "functions": [
+        {
+          "name": "putpixel",
+          "slug": "putpixel",
+          "description": "Sets a single pixel at an x/y coordinate to a color index.",
+          "syntax": "void far putpixel(int x, int y, int color);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the pixel."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the pixel."
+            },
+            {
+              "name": "color",
+              "type": "int",
+              "description": "Color index to set."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n        putpixel(x, y, YELLOW);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Color 0 effectively erases the pixel (sets to background).",
+            "Coordinates outside the current viewport are ignored if clipping is on."
+          ],
+          "related": [
+            "getpixel",
+            "putimage",
+            "getimage"
+          ],
+          "keywords": [
+            "pixel",
+            "dot",
+            "point",
+            "putpixel",
+            "draw pixel"
+          ]
+        },
+        {
+          "name": "getpixel",
+          "slug": "getpixel",
+          "description": "Returns the color index of a single pixel at an x/y coordinate.",
+          "syntax": "unsigned far getpixel(int x, int y);",
+          "returns": "unsigned — the color index of the pixel at (x, y)",
+          "parameters": [
+            {
+              "name": "x",
+              "type": "int",
+              "description": "X-coordinate of the pixel to read."
+            },
+            {
+              "name": "y",
+              "type": "int",
+              "description": "Y-coordinate of the pixel to read."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "int color = getpixel(100, 100);"
+          },
+          "notes": [
+            "Returns the palette index, not an RGB value.",
+            "Reading outside the screen may return undefined values."
+          ],
+          "related": [
+            "putpixel"
+          ],
+          "keywords": [
+            "get pixel",
+            "read pixel",
+            "pixel color",
+            "sample pixel"
+          ]
+        },
+        {
+          "name": "getimage",
+          "slug": "getimage",
+          "description": "Copies a rectangular area of the screen into memory.",
+          "syntax": "void far getimage(int left, int top, int right, int bottom, void far *bitmap);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "left",
+              "type": "int",
+              "description": "Left x-coordinate of the region."
+            },
+            {
+              "name": "top",
+              "type": "int",
+              "description": "Top y-coordinate of the region."
+            },
+            {
+              "name": "right",
+              "type": "int",
+              "description": "Right x-coordinate of the region."
+            },
+            {
+              "name": "bottom",
+              "type": "int",
+              "description": "Bottom y-coordinate of the region."
+            },
+            {
+              "name": "bitmap",
+              "type": "void far *",
+              "description": "Pointer to a memory buffer large enough to store the image. Use imagesize() to determine the required buffer size."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n    setfillstyle(SOLID_FILL, RED);\n    getimage(100, 100, 200, 200, buf);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Allocate a buffer large enough for imagesize() before calling getimage()."
+          ],
+          "related": [
+            "putimage",
+            "imagesize"
+          ],
+          "keywords": [
+            "save image",
+            "capture screen",
+            "screenshot",
+            "sprite"
+          ]
+        },
+        {
+          "name": "putimage",
+          "slug": "putimage",
+          "description": "Draws a previously captured image buffer back onto the screen.",
+          "syntax": "void far putimage(int left, int top, const void far *bitmap, int op);",
+          "returns": "void",
+          "parameters": [
+            {
+              "name": "left",
+              "type": "int",
+              "description": "X-coordinate of the top-left corner where the image will be drawn."
+            },
+            {
+              "name": "top",
+              "type": "int",
+              "description": "Y-coordinate of the top-left corner where the image will be drawn."
+            },
+            {
+              "name": "bitmap",
+              "type": "const void far *",
+              "description": "Pointer to the image buffer previously filled by getimage()."
+            },
+            {
+              "name": "op",
+              "type": "int",
+              "description": "Bitwise operation: COPY_PUT (overwrite), XOR_PUT, OR_PUT, AND_PUT, or NOT_PUT."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "    int gd = DETECT, gm;\n    initgraph(&gd, &gm, \"C:\\\\TC\\\\BGI\");\n        putimage(x, 200, img, COPY_PUT);\n    getch();\n    closegraph();"
+          },
+          "notes": [
+            "Common write modes include COPY_PUT, XOR_PUT, OR_PUT, AND_PUT, and NOT_PUT."
+          ],
+          "related": [
+            "getimage",
+            "imagesize"
+          ],
+          "keywords": [
+            "put image",
+            "blit",
+            "sprite",
+            "stamp",
+            "BitBlt"
+          ]
+        },
+        {
+          "name": "imagesize",
+          "slug": "imagesize",
+          "description": "Returns the number of bytes needed to store an image rectangle for getimage().",
+          "syntax": "unsigned far imagesize(int left, int top, int right, int bottom);",
+          "returns": "unsigned — bytes needed to store the region",
+          "parameters": [
+            {
+              "name": "left",
+              "type": "int",
+              "description": "Left x-coordinate of the region."
+            },
+            {
+              "name": "top",
+              "type": "int",
+              "description": "Top y-coordinate."
+            },
+            {
+              "name": "right",
+              "type": "int",
+              "description": "Right x-coordinate."
+            },
+            {
+              "name": "bottom",
+              "type": "int",
+              "description": "Bottom y-coordinate."
+            }
+          ],
+          "example": {
+            "language": "c",
+            "code": "unsigned int size = imagesize(10, 10, 100, 100);"
+          },
+          "notes": [
+            "If the region is too large for a single unsigned int to represent, returns 0xFFFF (-1).",
+            "Always call this before malloc-ing a buffer for getimage()."
+          ],
+          "related": [
+            "getimage",
+            "putimage"
+          ],
+          "keywords": [
+            "image size",
+            "buffer size",
+            "memory size",
+            "bitmap bytes"
+          ]
+        }
+      ]
+    }
+  ]
+}

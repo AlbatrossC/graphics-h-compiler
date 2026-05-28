@@ -1,0 +1,13 @@
+# ============================================================================
+#  Cloudflare Pages - Redirects & Rewrites
+#  https://developers.cloudflare.com/pages/configuration/redirects/
+# ============================================================================
+
+# ── Pretty URLs ─────────────────────────────────────────────────────
+/compiler.html  /compiler  301
+
+# ── Runtime library alias ───────────────────────────────────────────
+/libs/*  /compiler-assets/libs/:splat  200
+
+# ── Public SDK shortcut ─────────────────────────────────────────────
+/sdk.js                                      /static/js/sdk.js                         200

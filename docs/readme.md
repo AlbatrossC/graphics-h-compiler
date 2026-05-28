@@ -191,7 +191,7 @@ git clone https://github.com/AlbatrossC/graphics-h-compiler.git
 cd graphics-h-compiler
 pip install -r requirements.txt
 npm install
-python build.py
+python build-tools/build.py
 python app.py
 # → http://localhost:5000/compiler
 ```

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Privacy Policy — graphics.h Online Compiler</title>
+    <meta name="description"
+        content="Privacy Policy for graphics.h Online Compiler. Learn how I collect, use, and protect your data.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="AlbatrossC">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/privacy-policy">
+    <meta property="og:title" content="Privacy Policy — graphics.h Online Compiler">
+    <meta property="og:description"
+        content="Privacy Policy for graphics.h Online Compiler. Learn how I collect, use, and protect your data.">
+    <meta property="twitter:card" content="summary">
+    <meta property="twitter:title" content="Privacy Policy — graphics.h Online Compiler">
+    <meta property="twitter:description"
+        content="Privacy Policy for graphics.h Online Compiler. Learn how I collect, use, and protect your data.">
+
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/privacy-policy">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="/static/css/fonts.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-light: #fafafa;
+            --text-dark: #0a0a0a;
+            --text-light: #fafafa;
+            --accent: #00ff88;
+            --accent-dark: #00cc6a;
+            --border-light: #e5e5e5;
+            --border-dark: #1a1a1a;
+            --surface-dark: rgba(255, 255, 255, 0.03);
+            --surface-light: rgba(0, 0, 0, 0.02);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            line-height: 1.6;
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.light {
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        /* Header */
+        .legal-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 10, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+
+        body.light .legal-header {
+            background: rgba(250, 250, 250, 0.75);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .legal-header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .legal-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .legal-home-btn {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.7;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        body.light .legal-home-btn {
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .legal-home-btn:hover {
+            opacity: 1;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .legal-home-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .legal-logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .legal-logo .bracket {
+            color: var(--accent);
+            font-size: 1.05rem;
+        }
+
+        .theme-toggle-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: inherit;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        body.light .theme-toggle-btn {
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Layout */
+        .legal-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem 4rem;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        /* Sidebar */
+        .legal-sidebar {
+            position: sticky;
+            top: 5rem;
+        }
+
+        .legal-sidebar-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .legal-sidebar nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .legal-sidebar nav a {
+            font-size: 0.82rem;
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.5;
+            padding: 0.4rem 0.7rem;
+            border-radius: 6px;
+            transition: var(--transition);
+            border-left: 2px solid transparent;
+        }
+
+        .legal-sidebar nav a:hover,
+        .legal-sidebar nav a.active {
+            opacity: 1;
+            color: var(--accent);
+            border-left-color: var(--accent);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .legal-sidebar-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 1rem 0;
+        }
+
+        body.light .legal-sidebar-divider {
+            border-top-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .legal-sidebar-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .legal-sidebar-links a {
+            font-size: 0.78rem;
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.4;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .legal-sidebar-links a:hover {
+            opacity: 0.8;
+            color: var(--accent);
+        }
+
+        /* Content */
+        .legal-content h1 {
+            font-size: clamp(1.8rem, 4vw, 2.4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.6rem;
+            line-height: 1.2;
+        }
+
+        .legal-updated {
+            font-size: 0.82rem;
+            opacity: 0.45;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .legal-intro {
+            font-size: 1rem;
+            line-height: 1.8;
+            opacity: 0.75;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        body.light .legal-intro {
+            border-bottom-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .legal-section {
+            margin-bottom: 2.2rem;
+        }
+
+        .legal-section h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.01em;
+            color: var(--accent);
+        }
+
+        .legal-section h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            margin-top: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .legal-section p {
+            font-size: 0.92rem;
+            line-height: 1.8;
+            opacity: 0.7;
+            margin-bottom: 0.8rem;
+        }
+
+        .legal-section ul {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .legal-section li {
+            font-size: 0.92rem;
+            line-height: 1.8;
+            opacity: 0.7;
+            margin-bottom: 0.3rem;
+        }
+
+        .legal-section a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .legal-section a:hover {
+            text-decoration: underline;
+        }
+
+        .legal-divider {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 2rem 0;
+        }
+
+        body.light .legal-divider {
+            border-top-color: rgba(0, 0, 0, 0.06);
+        }
+
+        /* Footer */
+        .legal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        body.light .legal-footer {
+            border-top-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .legal-footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+
+        .legal-footer-links a {
+            font-size: 0.8rem;
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.5;
+            transition: var(--transition);
+        }
+
+        .legal-footer-links a:hover {
+            opacity: 1;
+            color: var(--accent);
+        }
+
+        .legal-footer p {
+            font-size: 0.75rem;
+            opacity: 0.35;
+        }
+
+        /* Responsive */
+        @media (max-width: 860px) {
+            .legal-layout {
+                grid-template-columns: 1fr;
+                gap: 0;
+                padding: 2rem 1.5rem 3rem;
+            }
+
+            .legal-sidebar {
+                position: static;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                padding-bottom: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            body.light .legal-sidebar {
+                border-bottom-color: rgba(0, 0, 0, 0.06);
+            }
+
+            .legal-sidebar nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 0.3rem;
+            }
+
+            .legal-sidebar nav a {
+                border-left: none;
+                border-bottom: 2px solid transparent;
+                padding: 0.3rem 0.6rem;
+                font-size: 0.78rem;
+            }
+
+            .legal-sidebar nav a:hover,
+            .legal-sidebar nav a.active {
+                border-left-color: transparent;
+                border-bottom-color: var(--accent);
+            }
+
+            .legal-sidebar-divider,
+            .legal-sidebar-links {
+                display: none;
+            }
+
+            .legal-header-inner {
+                padding: 0.7rem 1.5rem;
+            }
+
+            .legal-logo span:not(.bracket) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="legal-header">
+        <div class="legal-header-inner">
+            <div class="legal-header-left">
+                <a href="/" class="legal-home-btn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                    </svg>
+                    Home
+                </a>
+                <a href="/" class="legal-logo">
+                    <span class="bracket">&lt;</span>
+                    <span>graphics.h</span>
+                    <span class="bracket">/&gt;</span>
+                </a>
+            </div>
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☾</button>
+        </div>
+    </header>
+
+    <div class="legal-layout">
+        <aside class="legal-sidebar">
+            <div class="legal-sidebar-title">On this page</div>
+            <nav>
+                <a href="#info-collect" class="active">Information I Collect</a>
+                <a href="#cookies">Cookies &amp; Tracking</a>
+                <a href="#advertising">Advertising &amp; AdSense</a>
+                <a href="#how-use">How I Use It</a>
+                <a href="#third-party">Third-Party Services</a>
+                <a href="#gdpr">GDPR &amp; Your Rights</a>
+                <a href="#data-storage">Data Storage</a>
+                <a href="#security">Security</a>
+                <a href="#changes">Changes</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <hr class="legal-sidebar-divider">
+            <div class="legal-sidebar-links">
+                <a href="/terms">→ Terms of Service</a>
+                <a href="/about">→ About</a>
+                <a href="/contact">→ Contact Me</a>
+            </div>
+        </aside>
+
+        <main class="legal-content">
+            <h1>Privacy Policy</h1>
+            <p class="legal-updated">Last updated: May 2026</p>
+
+            <p class="legal-intro">
+                This Privacy Policy explains how graphics.h Compiler ("I", "my") collects, uses, and
+                protects
+                your information when you use my website at graphicsh.online.
+            </p>
+
+            <div class="legal-section" id="info-collect">
+                <h2>1. Information I Collect</h2>
+
+                <h3>a) Personal Information</h3>
+                <p>When you sign in using Google, I may collect:</p>
+                <ul>
+                    <li>Your email address</li>
+                    <li>Your display name</li>
+                </ul>
+
+                <h3>b) User Content</h3>
+                <p>I store files and code that you create or upload while using the compiler.</p>
+
+                <h3>c) Usage Data</h3>
+                <p>I collect anonymous usage data through:</p>
+                <ul>
+                    <li>Google Analytics</li>
+                    <li>Microsoft Clarity</li>
+                </ul>
+                <p>This may include:</p>
+                <ul>
+                    <li>Pages visited</li>
+                    <li>Time spent on site</li>
+                    <li>Device and browser information</li>
+                    <li>Interaction behavior (clicks, scrolling)</li>
+                </ul>
+
+                <h3>d) Cookies &amp; Local Storage</h3>
+                <p>I use cookies and browser local storage to:</p>
+                <ul>
+                    <li>Maintain login sessions and authentication state</li>
+                    <li>Remember your theme preference (light/dark mode)</li>
+                    <li>Save your compiler code between sessions (localStorage)</li>
+                    <li>Analyze traffic via analytics services</li>
+                    <li>Serve relevant advertisements via Google AdSense</li>
+                </ul>
+                <p>Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this website or other websites. You may opt out as described in the Advertising section below.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="cookies">
+                <h2>2. Cookie Policy</h2>
+                <p>This website uses the following types of cookies:</p>
+
+                <h3>Essential Cookies</h3>
+                <p>Required for the service to function. These include session tokens for Google Sign-In and LocalStorage values for the code editor. You cannot opt out of these without disabling the service entirely.</p>
+
+                <h3>Analytics Cookies</h3>
+                <p>Used to understand how visitors use the site. Provided by Google Analytics and Microsoft Clarity. These may set cookies or use similar tracking technologies.</p>
+
+                <h3>Advertising Cookies (Google AdSense)</h3>
+                <p>Google AdSense, a third-party advertising service operated by Google LLC, serves ads on this website. Google uses cookies to serve ads based on your prior visits to this website or other websites across the Internet. This enables Google and its partners to show you personalized ads.</p>
+                <p>You can control or opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>. You can also opt out of third-party vendor use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">www.aboutads.info</a> or the <a href="https://www.networkadvertising.org/choices/" target="_blank" rel="noopener noreferrer">Network Advertising Initiative opt-out page</a>.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="advertising">
+                <h2>3. Google AdSense &amp; Advertising</h2>
+                <p>This website participates in the Google AdSense program. By using this site, you acknowledge that:</p>
+                <ul>
+                    <li>Third-party vendors, including <strong>Google</strong>, use cookies to serve ads based on your prior visits to this website or other websites.</li>
+                    <li>Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to this site and/or other sites on the Internet.</li>
+                    <li>You may <strong>opt out of personalized advertising</strong> by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
+                    <li>Alternatively, you can opt out of third-party vendor cookie use for personalized advertising by visiting <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">www.aboutads.info</a>.</li>
+                </ul>
+
+                <h3>Ad Networks Used</h3>
+                <p>The following third-party ad vendors or networks may serve ads on this site:</p>
+                <ul>
+                    <li><strong>Google AdSense</strong> — <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a> · <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Opt-Out</a></li>
+                </ul>
+                <p>If you have not opted out of third-party ad serving, the cookies of other third-party vendors or ad networks may also be used to serve ads on this site. Refer to each vendor's privacy policy and opt-out instructions via the links above.</p>
+
+                <h3>EU / EEA Users (GDPR)</h3>
+                <p>If you are located in the European Union or European Economic Area, you will be presented with a consent notice before personalized advertising cookies are set. You may withdraw consent at any time via the Ads Settings links provided above.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="how-use">
+                <h2>4. How I Use Your Information</h2>
+                <p>I use collected data to:</p>
+                <ul>
+                    <li>Provide and operate the compiler service</li>
+                    <li>Store and retrieve your files</li>
+                    <li>Improve website performance and user experience</li>
+                    <li>Analyze usage patterns</li>
+                    <li>Serve and display advertising via Google AdSense</li>
+                    <li>Measure ad performance and improve ad relevance</li>
+                </ul>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="third-party">
+                <h2>5. Third-Party Services</h2>
+                <p>I use the following third-party services that may collect data independently:</p>
+                <ul>
+                    <li><strong>Google Analytics</strong> (Google LLC) — <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a></li>
+                    <li><strong>Google AdSense</strong> (Google LLC) — <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> · <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Opt-Out</a></li>
+                    <li><strong>Google Sign-In</strong> (Google LLC) — <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a></li>
+                    <li><strong>Microsoft Clarity</strong> (Microsoft Corporation) — <a href="https://privacy.microsoft.com/en-us/privacystatement" target="_blank" rel="noopener noreferrer">Privacy Policy</a></li>
+                </ul>
+                <p>Each of these services has its own privacy policies governing how they handle data. I encourage you to review them via the links above.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="gdpr">
+                <h2>6. Your Rights (GDPR &amp; Privacy)</h2>
+                <p>Depending on your location, you may have the following rights regarding your personal data:</p>
+                <ul>
+                    <li><strong>Right of access</strong> — Request a copy of the data I hold about you</li>
+                    <li><strong>Right to erasure</strong> — Request deletion of your account and stored files</li>
+                    <li><strong>Right to object</strong> — Object to personalized advertising at any time via <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a></li>
+                    <li><strong>Right to withdraw consent</strong> — Withdraw cookie or advertising consent at any time</li>
+                    <li><strong>Right to portability</strong> — Request an export of your stored data</li>
+                </ul>
+                <p>To exercise any of these rights, please use the <a href="/contact">contact page</a>. For advertising-related opt-outs, use the links in the Advertising section above.</p>
+
+                <h3>California Residents (CCPA)</h3>
+                <p>California residents have additional rights under the California Consumer Privacy Act (CCPA), including the right to know what personal information is collected, the right to delete it, and the right to opt out of the sale of personal information. I do not sell personal information.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="data-storage">
+                <h2>7. Data Storage &amp; Retention</h2>
+                <p>User data (including files and account information) is stored securely using a backend database. Data is retained for as long as your account is active or as needed to provide the service. You may request deletion at any time via the contact page.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="security">
+                <h2>8. Security</h2>
+                <p>I take reasonable technical and organisational measures to protect your data against unauthorised access, loss, or misuse. However, no internet transmission or electronic storage system is 100% secure. Use the service at your own risk and contact me immediately if you suspect any unauthorised use of your data.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="changes">
+                <h2>9. Changes to This Policy</h2>
+                <p>I may update this Privacy Policy from time to time. When I do, I will update the "Last updated" date at the top of this page. I encourage you to review this page periodically. Continued use of the service after changes are posted constitutes acceptance of the updated policy.</p>
+            </div>
+
+            <hr class="legal-divider">
+
+            <div class="legal-section" id="contact">
+                <h2>10. Contact</h2>
+                <p>For any questions about this Privacy Policy, your data, or advertising practices, contact me through the <a href="/contact">contact page</a>.</p>
+                <p>For additional resources on privacy and advertising, see:</p>
+                <ul>
+                    <li><a href="https://www.networkadvertising.org/" target="_blank" rel="noopener noreferrer">Network Advertising Initiative (NAI)</a></li>
+                    <li><a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">Digital Advertising Alliance (aboutads.info)</a></li>
+                    <li><a href="https://cookiechoices.org" target="_blank" rel="noopener noreferrer">cookiechoices.org</a></li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <footer class="legal-footer">
+        <div class="legal-footer-links">
+            <a href="/">Home</a>
+            <a href="/compiler">Compiler</a>
+            <a href="/compiler#docs-reference">Docs</a>
+            <a href="/about">About</a>
+            <a href="/contact">Contact</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+        </div>
+        <p>&copy; 2026 graphics.h Online Compiler. Community educational resource. Not affiliated with Borland or Turbo C.</p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.getElementById('theme-toggle').textContent = isLight ? '☀' : '☾';
+        }
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light');
+            document.getElementById('theme-toggle').textContent = '☀';
+        }
+
+        // Highlight active sidebar link on scroll
+        const sections = document.querySelectorAll('.legal-section[id]');
+        const sidebarLinks = document.querySelectorAll('.legal-sidebar nav a');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    sidebarLinks.forEach(link => link.classList.remove('active'));
+                    const activeLink = document.querySelector(`.legal-sidebar nav a[href="#${entry.target.id}"]`);
+                    if (activeLink) activeLink.classList.add('active');
+                }
+            });
+        }, { rootMargin: '-20% 0px -70% 0px' });
+        sections.forEach(section => observer.observe(section));
+    </script>
+</body>
+
+</html>

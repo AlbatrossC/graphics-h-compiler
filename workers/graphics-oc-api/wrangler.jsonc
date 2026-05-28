@@ -1,0 +1,24 @@
+{
+  "name": "graphics-oc-api",
+  "main": "worker.js",
+  "compatibility_date": "2026-05-26",
+
+  "kv_namespaces": [
+    {
+      "binding": "MAINTENANCE_KV",
+      "id": "9c060181c3184231949421f4ed905d9b"
+    }
+  ],
+
+  "services": [
+    {
+      "binding": "USER_FILES_WORKER",
+      "service": "graphics-oc-files"
+    }
+  ],
+
+  // Secrets — set via CLI, never in this file:
+  //   npx wrangler secret put DISCORD_WEBHOOK_URL
+  //   npx wrangler secret put GOOGLE_CLIENT_ID
+  "vars": {}
+}

@@ -8,6 +8,8 @@ const GOOGLE_TOKEN_CACHE_TTL_MS = 300_000;
 
 const SESSION_COOKIE_NAME = 'session';
 const SESSION_DURATION_SEC = 7 * 24 * 60 * 60;
+const SESSION_ISSUER = 'graphics-oc-files';
+const SESSION_AUDIENCE = 'graphics-oc-api';
 const SESSION_KEY_CACHE = new Map();
 
 function parseCookies(cookieHeader) {
@@ -124,7 +126,15 @@ async function verifySessionJwt(token, secret) {
 
   const payload = decodeJsonBase64Url(encodedPayload);
   const nowSec = Math.floor(Date.now() / 1000);
-  if (!payload?.user_id || !payload?.email || !payload?.exp || payload.exp <= nowSec) {
+  if (
+    payload?.iss !== SESSION_ISSUER ||
+    payload?.aud !== SESSION_AUDIENCE ||
+    !payload?.user_id ||
+    !payload?.email ||
+    !payload?.iat ||
+    !payload?.exp ||
+    payload.exp <= nowSec
+  ) {
     throw {
       statusCode: 401,
       code: 'unauthorized',
@@ -243,7 +253,8 @@ function buildSessionCookie(token, maxAgeSec = SESSION_DURATION_SEC) {
     `${SESSION_COOKIE_NAME}=${token}`,
     'HttpOnly',
     'Secure',
-    'SameSite=Lax',
+    // SameSite=None is required while the static Pages app calls the workers.dev API host.
+    'SameSite=None',
     'Path=/',
     `Max-Age=${maxAgeSec}`,
   ].join('; ');
@@ -254,7 +265,8 @@ function buildLogoutCookie() {
     `${SESSION_COOKIE_NAME}=`,
     'HttpOnly',
     'Secure',
-    'SameSite=Lax',
+    // SameSite=None is required while the static Pages app calls the workers.dev API host.
+    'SameSite=None',
     'Path=/',
     'Max-Age=0',
   ].join('; ');
@@ -328,6 +340,9 @@ async function issueSessionLoginResponse(env, user, corsHeaders) {
     {
       user_id: user.user_id,
       email: user.email,
+      iss: SESSION_ISSUER,
+      aud: SESSION_AUDIENCE,
+      iat: nowSec,
       exp: nowSec + SESSION_DURATION_SEC,
     },
     env.SESSION_SECRET

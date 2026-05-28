@@ -1,8 +1,10 @@
 const ALLOWED_ORIGINS = new Set([
-  'https://graphics-h-compiler.vercel.app',
-  'https://graphics-h-online-compiler-git-test-albatrosscs-projects.vercel.app',
-  'http://localhost:5000',
-  'http://127.0.0.1:5000',
+  'https://graphicsh.online',
+  'https://www.graphicsh.online',
+  'https://graphics-h-compiler.pages.dev',
+  'https://cloudflare.graphics-h-compiler.pages.dev',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
 ]);
 
 export function withCors(request) {

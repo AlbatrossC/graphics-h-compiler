@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found — graphics.h Online Compiler</title>
+    <meta name="description" content="The page you are looking for does not exist on graphics.h Online Compiler. Head back home, open the compiler, or browse the docs.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #08110d;
+            --text: #effcf4;
+            --muted: rgba(239, 252, 244, 0.66);
+            --soft: rgba(239, 252, 244, 0.08);
+            --line: rgba(239, 252, 244, 0.14);
+            --accent: #41f59f;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'IBM Plex Sans', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(65, 245, 159, 0.12), transparent 0 28%),
+                radial-gradient(circle at 85% 80%, rgba(65, 245, 159, 0.08), transparent 0 24%),
+                linear-gradient(135deg, #050a07 0%, #09120d 50%, #08110d 100%);
+        }
+
+        main {
+            min-height: 100vh;
+            width: min(760px, calc(100% - 40px));
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 56px 0;
+        }
+
+        .eyebrow {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(239, 252, 244, 0.42);
+            margin-bottom: 22px;
+        }
+
+        .status {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: clamp(2.4rem, 9vw, 5.3rem);
+            line-height: 0.92;
+            letter-spacing: -0.06em;
+            max-width: 8ch;
+            margin-bottom: 18px;
+        }
+
+        p {
+            max-width: 38rem;
+            color: var(--muted);
+            font-size: 1.02rem;
+            line-height: 1.8;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 34px;
+        }
+
+        a.action {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--line);
+            transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        }
+
+        a.action:hover {
+            color: var(--accent);
+            border-color: rgba(65, 245, 159, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .note {
+            margin-top: 34px;
+            padding-top: 18px;
+            border-top: 1px solid var(--soft);
+            font-size: 0.92rem;
+            color: rgba(239, 252, 244, 0.48);
+        }
+
+        @media (max-width: 640px) {
+            main {
+                width: min(760px, calc(100% - 28px));
+                padding: 40px 0;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 14px;
+                align-items: flex-start;
+            }
+
+            p {
+                font-size: 0.98rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="eyebrow">graphics.h online compiler</div>
+        <div class="status">404</div>
+        <h1>Page not found.</h1>
+        <p>
+            The page you tried to open does not exist, may have moved, or the link is outdated.
+            You can go back home, open the compiler, or continue through the documentation.
+        </p>
+
+        <div class="actions">
+            <a class="action" href="/">Home</a>
+            <a class="action" href="/compiler">Compiler</a>
+            <a class="action" href="/compiler#docs-reference">Docs</a>
+            <a class="action" href="/contact">Contact</a>
+        </div>
+
+        <div class="note">
+            If you reached this from an old bookmark or search result, the route may have changed.
+        </div>
+    </main>
+</body>
+</html>

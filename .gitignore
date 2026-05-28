@@ -1,14 +1,24 @@
+# Environment
 .env
-.vercel
 .env*.local
+.env.Cloudflare
 
+# Python
 __pycache__/
 *.pyc
 
-worker/node_modules/
-worker/.wrangler/
-worker/dist/
-worker/.dev.vars
+# Node
 node_modules/
 
-dashboard/
+# Build output (deployed to Cloudflare Pages)
+dist/
+
+# Wrangler
+workers/*/.wrangler/
+workers/*/.dev.vars
+
+# Vercel (legacy — can be deleted)
+.vercel/
+
+# Dashboard (local admin tool)
+workers/dashboard/

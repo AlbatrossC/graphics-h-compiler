@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://graphics-h-compiler.vercel.app/sitemap.xml
