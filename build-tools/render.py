@@ -39,6 +39,10 @@ SIMPLE_PAGES = {
     'maintenance.html': 'maintenance.html',
 }
 
+BLOG_PAGES = {
+    'blog/how-to-draw-a-house-in-graphics.h.html': 'blog/how-to-draw-a-house-in-graphics.h.html',
+}
+
 COMPILER_SOURCE_JS = {
     'app.js',
     'autocomplete.js',
@@ -149,6 +153,7 @@ def generate_sitemap(base_url: str) -> str:
         url('/', '0.95', 'weekly'),
         url('/about', '0.5', 'monthly'),
         url('/contact', '0.5', 'monthly'),
+        url('/blog/how-to-draw-a-house-in-graphics.h.html', '0.6', 'monthly'),
         url('/privacy-policy', '0.4', 'yearly'),
         url('/terms', '0.4', 'yearly'),
     ]
@@ -266,6 +271,12 @@ def render_site(compiler_assets: dict) -> None:
         if template_name == 'maintenance.html':
             ctx['maintenance_date'] = get_env('MAINTENANCE_DATE', '25 Feb 2026 - 2:00 PM IST')
         failure = render_template_page(env, output_path, template_name, ctx)
+        if failure:
+            failures.append(failure)
+
+    # ── Blog/tutorial pages ─────────────────────────────────────────────
+    for output_path, template_name in BLOG_PAGES.items():
+        failure = render_template_page(env, output_path, template_name, global_ctx)
         if failure:
             failures.append(failure)
 

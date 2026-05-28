@@ -93,6 +93,8 @@
   Cache-Control: public, max-age=0, must-revalidate
 /contact.html
   Cache-Control: public, max-age=0, must-revalidate
+/blog/how-to-draw-a-house-in-graphics.h.html
+  Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate
 /embed.html
@@ -117,6 +119,7 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 /*
+  Content-Security-Policy: default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' https: data: blob:; font-src 'self' https: data:; connect-src 'self' https: wss:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Strict-Transport-Security: max-age=31536000; includeSubDomains

@@ -114,6 +114,12 @@
             user-select: none;
         }
 
+        .header-brand picture {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
         .header-brand {
             line-height: 1;
         }
@@ -375,6 +381,12 @@
         .hero-watermark img {
             width: 100%;
             height: auto;
+            display: block;
+        }
+
+        .hero-brand-mark picture {
+            width: 100%;
+            height: 100%;
             display: block;
         }
 

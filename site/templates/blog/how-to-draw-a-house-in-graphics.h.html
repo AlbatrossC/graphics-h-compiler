@@ -1,0 +1,905 @@
+    <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Draw a House in graphics.h: Complete C Program</title>
+    <meta name="description" content="Step-by-step graphics.h tutorial to draw a house in C. Learn coordinates, line, rectangle, circle, bar, floodfill, colors, and run the complete code online.">
+    <meta name="keywords" content="how to draw a house in graphics.h, graphics.h house program, C graphics house, graphics.h tutorial, BGI graphics house">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html">
+    <meta property="og:title" content="How to Draw a House in graphics.h: Complete C Program">
+    <meta property="og:description" content="Learn to draw a house in graphics.h using basic C graphics functions, with full runnable code and explanation.">
+    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-05-28">
+    <meta property="article:modified_time" content="2026-05-28">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="C Graphics Programming">
+    <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="C programming">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Draw a House in graphics.h">
+    <meta name="twitter:description" content="Complete C graphics.h house drawing program with explanation.">
+    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --surface: #111412;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --accent-2: #0084de;
+            --warm: #f5b942;
+            --roof: #e84d4d;
+            --shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1040px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .article {
+            width: min(1120px, calc(100% - 32px));
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand picture {
+            display: flex;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .brand span span,
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article {
+            padding: 44px 0 76px;
+        }
+
+        .crumbs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 22px;
+        }
+
+        .crumbs a {
+            color: var(--soft);
+            text-decoration: none;
+        }
+
+        .crumbs a:hover {
+            color: var(--accent);
+        }
+
+        .article-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 38px;
+            align-items: start;
+        }
+
+        .article-body {
+            min-width: 0;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.82rem;
+            margin-bottom: 14px;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 34px;
+            height: 1px;
+            background: currentColor;
+            opacity: 0.62;
+        }
+
+        h1 {
+            font-size: clamp(2.2rem, 6vw, 4.4rem);
+            line-height: 1.06;
+            letter-spacing: 0;
+            margin: 0 0 20px;
+            max-width: 900px;
+        }
+
+        .lede {
+            max-width: 780px;
+            color: var(--muted);
+            font-size: clamp(1.05rem, 1.6vw, 1.18rem);
+            margin: 0 0 20px;
+        }
+
+        .article-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0 0 28px;
+            color: var(--soft);
+            font-size: 0.92rem;
+        }
+
+        .article-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .article-meta span + span::before {
+            content: "";
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.7;
+        }
+
+        .hero-card {
+            margin: 30px 0 34px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(135deg, rgba(0, 255, 136, 0.09), rgba(0, 132, 222, 0.06)),
+                var(--surface);
+            border-radius: 8px;
+            padding: clamp(22px, 4vw, 38px);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 330px);
+            gap: 28px;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-card p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .hero-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .hero-points {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .hero-point {
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 8px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.18);
+        }
+
+        .hero-point strong {
+            display: block;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .hero-point span {
+            color: var(--soft);
+            font-size: 0.84rem;
+        }
+
+        .house-preview {
+            position: relative;
+            min-height: 230px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background:
+                linear-gradient(#8ed5ff 0 61%, #47a34a 61% 100%);
+            overflow: hidden;
+        }
+
+        .house-preview::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 42px;
+            width: 172px;
+            height: 118px;
+            transform: translateX(-50%);
+            background: #d9dee3;
+            border: 3px solid #ffffff;
+        }
+
+        .house-preview::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 154px;
+            width: 142px;
+            height: 142px;
+            transform: translateX(-50%) rotate(45deg);
+            background: var(--roof);
+            border-left: 3px solid #9d2525;
+            border-top: 3px solid #9d2525;
+        }
+
+        .sun {
+            position: absolute;
+            right: 28px;
+            top: 26px;
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--warm);
+            box-shadow: 0 0 0 8px rgba(245, 185, 66, 0.25);
+        }
+
+        .door,
+        .window-left,
+        .window-right,
+        .path {
+            position: absolute;
+            z-index: 2;
+        }
+
+        .door {
+            left: calc(50% - 22px);
+            bottom: 42px;
+            width: 44px;
+            height: 70px;
+            background: #8c542b;
+            border: 2px solid #5f3519;
+        }
+
+        .door::after {
+            content: "";
+            position: absolute;
+            right: 8px;
+            top: 34px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--warm);
+        }
+
+        .window-left,
+        .window-right {
+            bottom: 102px;
+            width: 42px;
+            height: 38px;
+            background:
+                linear-gradient(90deg, transparent 48%, #ffffff 48% 53%, transparent 53%),
+                linear-gradient(0deg, transparent 48%, #ffffff 48% 53%, transparent 53%),
+                #36d8ef;
+            border: 2px solid #ffffff;
+        }
+
+        .window-left {
+            left: calc(50% - 76px);
+        }
+
+        .window-right {
+            right: calc(50% - 76px);
+        }
+
+        .path {
+            left: calc(50% - 32px);
+            bottom: 0;
+            width: 64px;
+            height: 42px;
+            background: #cfd4d9;
+            clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%);
+        }
+
+        .toc,
+        .note {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .toc {
+            margin: 0;
+            position: sticky;
+            top: 88px;
+        }
+        }
+
+        .toc strong,
+        .note strong {
+            color: var(--accent);
+        }
+
+        .toc a {
+            display: block;
+            margin-top: 10px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        h2 {
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            line-height: 1.2;
+            margin: 50px 0 14px;
+            letter-spacing: 0;
+            scroll-margin-top: 86px;
+        }
+
+        h3 {
+            font-size: 1.24rem;
+            margin: 28px 0 10px;
+        }
+
+        p,
+        li {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .summary-box,
+        .faq {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.035);
+            padding: 20px;
+            margin: 26px 0;
+        }
+
+        .summary-box ul,
+        .faq ul {
+            margin: 10px 0 0;
+            padding-left: 1.2rem;
+        }
+
+        code,
+        pre {
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        code {
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.08);
+            border-radius: 4px;
+            padding: 0.08em 0.32em;
+        }
+
+        pre {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            background: #060606;
+            border-radius: 8px;
+            padding: 22px;
+            color: #e8fff4;
+            font-size: 0.92rem;
+            line-height: 1.55;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+
+        .step {
+            border-left: 3px solid var(--accent);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 16px 18px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .cta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 34px;
+        }
+
+        .btn {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 136, 0.38);
+            padding: 0 18px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            border-color: var(--accent);
+            background: rgba(0, 255, 136, 0.08);
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            color: #07130d;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            padding: 28px 0;
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 940px) {
+            .article-layout {
+                display: block;
+            }
+
+            .toc {
+                position: static;
+                margin: 0 0 34px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .hero-card {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-points,
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+
+            .article-meta span + span::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" width="547" height="282" loading="lazy" decoding="async">
+                </picture>
+                <span><span>graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Online Compiler</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article">
+        <nav class="crumbs" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            <span>graphics.h tutorial</span>
+        </nav>
+
+        <article class="article-layout">
+            <div class="article-body">
+            <div class="eyebrow">C graphics tutorial</div>
+            <h1>How to Draw a House in <span class="accent">graphics.h</span></h1>
+            <p class="lede">Drawing a house is one of the best beginner exercises in C graphics programming. It uses straight lines, rectangles, triangles, circles, colors, and fills in one small program, so you get practical experience with the core <code>graphics.h</code> drawing functions.</p>
+            <div class="article-meta">
+                <span>By AlbatrossC</span>
+                <span>Updated May 28, 2026</span>
+                <span>15 minute tutorial</span>
+                <span>Beginner friendly</span>
+            </div>
+
+            <section class="hero-card" aria-label="Tutorial summary">
+                <div>
+                    <h2 style="margin-top: 0;">What you will build</h2>
+                    <p>You will create a simple scene with a house body, roof, door, windows, sun, ground, and a few decorative details. The program runs in the graphics.h online compiler and also works in Turbo C or WinBGI style setups with small path changes.</p>
+                    <div class="hero-points" aria-label="Tutorial highlights">
+                        <div class="hero-point"><strong>Shape basics</strong><span>line, bar, circle</span></div>
+                        <div class="hero-point"><strong>Color fills</strong><span>setfillstyle, floodfill</span></div>
+                        <div class="hero-point"><strong>Runnable code</strong><span>copy, paste, run</span></div>
+                    </div>
+                </div>
+                <div class="house-preview" role="img" aria-label="Preview of a graphics.h house drawing with roof, door, windows, sun, and ground">
+                    <span class="sun"></span>
+                    <span class="window-left"></span>
+                    <span class="window-right"></span>
+                    <span class="door"></span>
+                    <span class="path"></span>
+                </div>
+            </section>
+
+            <div class="summary-box">
+                <strong>Quick answer:</strong>
+                <p>To draw a house in <code>graphics.h</code>, initialize graphics mode with <code>initgraph()</code>, draw the house body with <code>bar()</code> or <code>rectangle()</code>, create the roof with three <code>line()</code> calls, fill closed areas with <code>floodfill()</code>, and add details such as windows, a door, and the sun using simple coordinates.</p>
+            </div>
+
+            <section id="concept">
+                <h2>1. Understand the House Drawing Concept</h2>
+                <p>A computer graphics screen is a grid of pixels. In most classic <code>graphics.h</code> examples, the top-left corner is coordinate <code>(0, 0)</code>. The x-coordinate increases as you move right, and the y-coordinate increases as you move down. This is different from the coordinate plane used in math class, so it is worth remembering before you start drawing.</p>
+                <p>A simple house can be broken into basic shapes. The main wall is a rectangle. The roof is a triangle made with three lines. The door is another rectangle. The windows are small rectangles or squares. The sun is a circle, and the ground can be a long line or filled rectangle. Once you think in shapes, the program becomes easy to plan.</p>
+                <p>For this tutorial, the house body starts at x = 180 and y = 220. The body ends at x = 460 and y = 420. That gives enough room for the roof above it and the ground below it. You can change these numbers later to move or resize the house.</p>
+            </section>
+
+            <section id="functions">
+                <h2>2. graphics.h Functions Used in This Program</h2>
+                <p>The program uses a small group of common functions. If you understand these, you can draw many beginner graphics scenes.</p>
+                <div class="steps">
+                    <div class="step"><strong><code>initgraph()</code></strong><br>Starts graphics mode. In many online compilers, the driver path is handled for you.</div>
+                    <div class="step"><strong><code>setcolor()</code></strong><br>Selects the outline color used by drawing commands like <code>line()</code>, <code>rectangle()</code>, and <code>circle()</code>.</div>
+                    <div class="step"><strong><code>setfillstyle()</code></strong><br>Chooses the fill pattern and fill color for shapes.</div>
+                    <div class="step"><strong><code>bar()</code></strong><br>Draws a filled rectangle. It is useful for walls, doors, windows, and the ground.</div>
+                    <div class="step"><strong><code>line()</code></strong><br>Draws a straight line between two points. Three lines can form the roof triangle.</div>
+                    <div class="step"><strong><code>circle()</code></strong><br>Draws a circle. Here it is used for the sun and the door knob.</div>
+                    <div class="step"><strong><code>floodfill()</code></strong><br>Fills an enclosed area with the current fill style. It is used for the roof.</div>
+                </div>
+            </section>
+
+            <section id="code">
+                <h2>3. Complete C Program to Draw a House in graphics.h</h2>
+                <p>Paste the following program into the graphics.h online compiler, click run, and you should see the house scene. The code is intentionally written with clear coordinates so it is easy to edit.</p>
+<pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main()
+{
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setbkcolor(LIGHTBLUE);
+    cleardevice();
+
+    /* Ground */
+    setfillstyle(SOLID_FILL, GREEN);
+    bar(0, 420, 640, 480);
+
+    /* Sun */
+    setcolor(YELLOW);
+    setfillstyle(SOLID_FILL, YELLOW);
+    circle(540, 80, 40);
+    floodfill(540, 80, YELLOW);
+
+    /* House body */
+    setcolor(WHITE);
+    setfillstyle(SOLID_FILL, LIGHTGRAY);
+    bar(180, 220, 460, 420);
+    rectangle(180, 220, 460, 420);
+
+    /* Roof outline */
+    setcolor(RED);
+    line(160, 220, 320, 110);
+    line(320, 110, 480, 220);
+    line(160, 220, 480, 220);
+
+    /* Roof fill */
+    setfillstyle(SOLID_FILL, RED);
+    floodfill(320, 160, RED);
+
+    /* Door */
+    setcolor(BROWN);
+    setfillstyle(SOLID_FILL, BROWN);
+    bar(295, 315, 365, 420);
+    rectangle(295, 315, 365, 420);
+
+    /* Door knob */
+    setcolor(YELLOW);
+    setfillstyle(SOLID_FILL, YELLOW);
+    circle(350, 370, 5);
+    floodfill(350, 370, YELLOW);
+
+    /* Left window */
+    setcolor(CYAN);
+    setfillstyle(SOLID_FILL, CYAN);
+    bar(215, 265, 275, 325);
+    rectangle(215, 265, 275, 325);
+    line(245, 265, 245, 325);
+    line(215, 295, 275, 295);
+
+    /* Right window */
+    bar(385, 265, 445, 325);
+    rectangle(385, 265, 445, 325);
+    line(415, 265, 415, 325);
+    line(385, 295, 445, 295);
+
+    /* Small path */
+    setcolor(LIGHTGRAY);
+    setfillstyle(SOLID_FILL, LIGHTGRAY);
+    bar(285, 420, 375, 480);
+
+    setcolor(WHITE);
+    outtextxy(170, 450, "House drawing using graphics.h");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+            </section>
+
+            <section id="explanation">
+                <h2>4. Step-by-Step Code Explanation</h2>
+                <h3>Initialize graphics mode</h3>
+                <p>The variables <code>gd</code> and <code>gm</code> store the graphics driver and graphics mode. The value <code>DETECT</code> asks the library to select a suitable driver. The call to <code>initgraph()</code> opens the graphics window and prepares the screen for drawing.</p>
+                <h3>Draw the background and ground</h3>
+                <p>The call to <code>setbkcolor(LIGHTBLUE)</code> gives the scene a sky color. After that, <code>cleardevice()</code> applies the background color. The ground is drawn with <code>bar(0, 420, 640, 480)</code>, which fills the lower part of the screen with green.</p>
+                <h3>Draw the sun</h3>
+                <p>The sun is a yellow circle centered at <code>(540, 80)</code> with radius <code>40</code>. The circle command draws the outline. The <code>floodfill()</code> call fills the inside with yellow. Flood fill needs the boundary color, so the third argument is also <code>YELLOW</code>.</p>
+                <h3>Draw the house body</h3>
+                <p>The main house wall is a filled rectangle from <code>(180, 220)</code> to <code>(460, 420)</code>. The <code>bar()</code> function fills it, and <code>rectangle()</code> draws the outline. This combination is common in graphics.h because it gives you both color and a visible border.</p>
+                <h3>Draw the roof</h3>
+                <p>The roof is a triangle. Its left base point is <code>(160, 220)</code>, its top point is <code>(320, 110)</code>, and its right base point is <code>(480, 220)</code>. Three calls to <code>line()</code> connect those points. Then <code>floodfill(320, 160, RED)</code> fills the enclosed roof area.</p>
+                <h3>Add door and windows</h3>
+                <p>The door uses a brown filled rectangle, while each window uses a cyan filled rectangle. Extra vertical and horizontal lines divide each window into four panes. These details make the house easier to recognize while keeping the program beginner friendly.</p>
+            </section>
+
+            <section id="customize">
+                <h2>5. Ways to Customize the House</h2>
+                <p>Once the basic program works, try changing one thing at a time. Move the roof higher by decreasing its y-coordinate. Make the house wider by increasing the right x-coordinate of the body. Change the window colors, add a chimney, draw clouds, or place trees beside the house.</p>
+                <p>You can also convert this static drawing into a mini scene. Use loops to draw multiple houses in a row, add random stars at night, or animate the sun by clearing and redrawing it at different positions. These are small changes, but they teach important graphics programming ideas: coordinates, layering, repainting, and shape composition.</p>
+                <div class="note">
+                    <strong>Tip:</strong> If a fill does not appear, check whether the shape is fully closed and whether the boundary color passed to <code>floodfill()</code> matches the outline color.
+                </div>
+                <div class="cta">
+                    <a class="btn primary" href="/compiler">Run This Code Online</a>
+                    <a class="btn" href="/contact">Ask a Question</a>
+                </div>
+            </section>
+
+            <section id="faq" class="faq">
+                <h2 style="margin-top: 0;">Frequently Asked Questions</h2>
+                <h3>Which graphics.h function draws the roof of the house?</h3>
+                <p>The roof is drawn with three <code>line()</code> calls. These lines connect the left base point, top point, and right base point to create a triangle.</p>
+                <h3>Why is floodfill not filling my roof?</h3>
+                <p>The roof must be fully closed, and the boundary color passed to <code>floodfill()</code> must match the actual outline color. If either is wrong, the fill may leak or fail.</p>
+                <h3>Can I run this graphics.h house program online?</h3>
+                <p>Yes. Open the online compiler, paste the full C program, and run it directly in the browser.</p>
+            </section>
+            </div>
+
+            <aside class="toc">
+                <strong>In this guide</strong>
+                <a href="#concept">House drawing concept</a>
+                <a href="#functions">graphics.h functions</a>
+                <a href="#code">Complete code</a>
+                <a href="#explanation">Code explanation</a>
+                <a href="#customize">Customize it</a>
+                <a href="#faq">FAQ</a>
+                <div class="cta" style="margin-top: 18px;">
+                    <a class="btn primary" href="/compiler">Try Code</a>
+                </div>
+            </aside>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span> Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html#breadcrumb",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "{{ SITE_DOMAIN }}/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "How to Draw a House in graphics.h",
+                        "item": "{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html"
+                    }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html#article",
+                "headline": "How to Draw a House in graphics.h: Complete C Program",
+                "description": "Step-by-step graphics.h tutorial to draw a house in C using coordinates, line, rectangle, circle, bar, floodfill, and colors.",
+                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "datePublished": "2026-05-28",
+                "dateModified": "2026-05-28",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html",
+                "articleSection": "C Graphics Programming",
+                "keywords": "graphics.h house program, C graphics, BGI graphics, draw house in graphics.h"
+            },
+            {
+                "@type": "HowTo",
+                "@id": "{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html#howto",
+                "name": "How to Draw a House in graphics.h",
+                "description": "A step-by-step tutorial for drawing a house in C using graphics.h.",
+                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "totalTime": "PT15M",
+                "tool": [
+                    {
+                        "@type": "HowToTool",
+                        "name": "graphics.h online compiler"
+                    }
+                ],
+                "step": [
+                    {
+                        "@type": "HowToStep",
+                        "name": "Initialize graphics mode",
+                        "text": "Start graphics mode with initgraph and clear the drawing screen."
+                    },
+                    {
+                        "@type": "HowToStep",
+                        "name": "Draw the house body and roof",
+                        "text": "Use bar and rectangle for the body, then three line calls for the triangular roof."
+                    },
+                    {
+                        "@type": "HowToStep",
+                        "name": "Add colors and details",
+                        "text": "Apply setfillstyle and floodfill, then draw windows, a door, the sun, ground, and a path."
+                    }
+                ]
+            },
+            {
+                "@type": "FAQPage",
+                "@id": "{{ SITE_DOMAIN }}/blog/how-to-draw-a-house-in-graphics.h.html#faq",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "Which graphics.h function draws the roof of the house?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "The roof is drawn with three line() calls that connect the left base point, top point, and right base point to form a triangle."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Why is floodfill not filling my roof?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "The roof must be fully closed, and the boundary color passed to floodfill() must match the outline color used to draw the roof."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Can I run this graphics.h house program online?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Yes. Paste the complete C program into the graphics.h online compiler and run it in the browser."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

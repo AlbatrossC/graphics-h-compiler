@@ -5,6 +5,13 @@
 
 # ── Pretty URLs ─────────────────────────────────────────────────────
 /compiler.html  /compiler  301
+/contact-us     /contact  301
+/contact-us/    /contact  301
+/privacy        /privacy-policy  301
+/privacy/       /privacy-policy  301
+/privacy.html   /privacy-policy  301
+/blog/how-to-draw-a-house-in-graphics.h      /blog/how-to-draw-a-house-in-graphics.h.html  301
+/blog/how-to-draw-a-house-in-graphics.h/     /blog/how-to-draw-a-house-in-graphics.h.html  301
 
 # ── Runtime library alias ───────────────────────────────────────────
 /libs/*  /compiler-assets/libs/:splat  200

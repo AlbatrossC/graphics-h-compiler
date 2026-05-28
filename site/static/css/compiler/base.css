@@ -202,6 +202,12 @@ header {
     user-select: none;
 }
 
+.header-brand-logo picture {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 .header-brand-text {
     display: inline-flex;
     align-items: baseline;

@@ -66,7 +66,10 @@
         <header>
             <div class="header-content">
                 <div class="logo header-brand" onclick="window.location.reload()" aria-label="graphics.h compiler">
-                    <img src="/static/images/brand/graphics-h-turtle.png" alt="" class="header-logo-image" aria-hidden="true">
+                    <picture>
+                        <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="lazy" decoding="async">
+                    </picture>
                     <span class="header-brand-text"><span class="header-brand-primary">graphics.h</span> compiler</span>
                 </div>
 
@@ -80,6 +83,10 @@
                     <a href="/about" class="nav-btn">
                         <i data-lucide="info"></i>
                         <span>About</span>
+                    </a>
+                    <a href="/blog/how-to-draw-a-house-in-graphics.h.html" class="nav-btn">
+                        <i data-lucide="book-open"></i>
+                        <span>Blog</span>
                     </a>
                     <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
                         rel="noopener noreferrer" class="nav-btn">
@@ -125,6 +132,11 @@
                     <span>About</span>
                 </a>
 
+                <a href="/blog/how-to-draw-a-house-in-graphics.h.html" class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <i data-lucide="book-open"></i>
+                    <span>Blog</span>
+                </a>
+
                 <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
                     class="mobile-menu-item" onclick="toggleMobileMenu()">
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -150,7 +162,10 @@
         <!-- ==================== SECTION 1: HERO ==================== -->
         <section class="page-section hero-section" id="hero">
             <div class="hero-watermark" aria-hidden="true">
-                <img src="/static/images/brand/graphics-h-turtle.png" alt="">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h turtle watermark" width="547" height="282" loading="lazy" decoding="async">
+                </picture>
             </div>
             <div class="section-inner">
                 <div class="hero-kicker animate-in delay-1">
@@ -160,7 +175,10 @@
                 </div>
 
                 <div class="hero-brand-mark animate-in delay-1" aria-hidden="true">
-                    <img src="/static/images/brand/graphics-h-turtle.png" alt="" class="hero-turtle">
+                    <picture>
+                        <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h turtle mascot" class="hero-turtle" width="547" height="282" loading="lazy" decoding="async">
+                    </picture>
                 </div>
 
                 <h1 class="headline animate-in delay-2">
@@ -175,7 +193,7 @@
                 <div class="cta-group animate-in delay-4">
                     <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
                         target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
-                        <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon">
+                        <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon" loading="lazy" decoding="async">
                         <span>VS Code Extension</span>
                     </a>
                     <a href="/compiler" class="cta-btn cta-btn-primary">
@@ -415,6 +433,7 @@
                             <li><a href="https://sppucodes.vercel.app/" target="_blank"><i
                                         data-lucide="external-link"></i>
                                     Sppucodes</a></li>
+                            <li><a href="/blog/how-to-draw-a-house-in-graphics.h.html"><i data-lucide="book-open"></i> Draw a House Tutorial</a></li>
                             <li><a href="/about"><i data-lucide="info"></i> About</a></li>
                         </ul>
                     </div>
