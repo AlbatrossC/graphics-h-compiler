@@ -13,8 +13,8 @@
 /* ── Sidebar — now the leftmost panel ── */
 
 #sidebar {
-    width: 240px;
-    min-width: 240px;
+    width: 262px;
+    min-width: 262px;
     background: var(--vscode-sidebar);
     border-right: 1px solid var(--border-color);
     display: flex;
@@ -689,15 +689,13 @@
     font-weight: 400;
 }
 
-/* ── Auth section: minimal horizontal padding ── */
+/* ── Auth section ── */
 .auth-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    /* Only 6px padding on each side — gives Google iframe
-       nearly the full sidebar width to render into. */
-    padding: 0 6px;
+    padding: 0 16px;
     width: 100%;
     box-sizing: border-box;
 }
@@ -708,6 +706,21 @@
     justify-content: center;
     width: 100%;
     min-height: 44px;
+}
+
+/*
+ * CRITICAL: The global * { box-sizing: border-box } in base.css
+ * overrides Google Identity Services' expected content-box sizing.
+ * Google's GIS library creates wrapper divs + iframes and sizes them
+ * assuming content-box. With border-box any border/padding Google
+ * adds internally gets subtracted from the width → the button
+ * renders a few px too narrow → the right edge clips.
+ * Reset every element inside the render target back to content-box.
+ */
+.google-btn-render *,
+.google-btn-render *::before,
+.google-btn-render *::after {
+    box-sizing: content-box !important;
 }
 
 /* Google's internal wrapper div */

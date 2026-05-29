@@ -958,20 +958,16 @@ async function initGoogleIdentity(clientId) {
 
         const renderTarget = document.getElementById('google-btn-render');
         if (renderTarget) {
-            // Read the sidebar's actual rendered width. The auth-section
-            // has only 6px padding on each side (12px total), so the
-            // button can use almost the entire sidebar width.
-            const sidebar = document.getElementById('sidebar');
-            const sidebarW = sidebar ? sidebar.clientWidth : 240;
-            // 12px = auth-section left+right padding, 2px extra safety
-            const btnWidth = Math.max(200, Math.min(sidebarW - 14, 400));
+            // Fixed 200px width (Google's guaranteed min) — no dynamic
+            // calculation, no chance of overflow. Pill shape for a
+            // clean, modern look centered in the sidebar.
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
                 size: 'large',
-                shape: 'rectangular',
+                shape: 'pill',
                 text: 'signin_with',
                 logo_alignment: 'left',
-                width: btnWidth
+                width: 200
             });
         }
 
