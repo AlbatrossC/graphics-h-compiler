@@ -375,8 +375,8 @@ def render_site(compiler_assets: dict) -> None:
         shutil.copy2(sdk_src, DIST_DIR / 'sdk.js')
         print('  [ok] sdk.js (root)')
 
-    # _headers and _redirects
-    for cfg_file in ['_headers', '_redirects']:
+    # Static hosting configs
+    for cfg_file in ['_headers', '_redirects', 'serve.json']:
         src = SITE_DIR / cfg_file
         if src.exists():
             shutil.copy2(src, DIST_DIR / cfg_file)

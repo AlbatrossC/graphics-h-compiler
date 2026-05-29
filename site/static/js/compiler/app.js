@@ -245,7 +245,7 @@ const CACHE_CONFIG = {
     COMPILER_CACHE_NAME: 'graphics-h-compiler-runtime-v1',
     JSDOS_RUNTIME_URL: '/libs/js-dos.js',
     WDOSBOX_SCRIPT_URL: '/libs/wdosbox.js',
-    PRELOAD_WASM_URL: '/libs/wdosbox.wasm.js',
+    PRELOAD_WASM_URL: '/libs/wdosbox.wasm',
     DOS_RUNNER_URL: '/static/html/dos-runner.html'
 };
 
