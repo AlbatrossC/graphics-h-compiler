@@ -1012,9 +1012,30 @@ async function signOut() {
         updateSaveIndicator();
     }
 
-    // Cleanup runs in background — doesn't block UI
+    try {
+        if (window.google?.accounts?.id?.disableAutoSelect) {
+            window.google.accounts.id.disableAutoSelect();
+        }
+
+        const logoutUrl = apiUrl('/api/auth/logout');
+        const logoutResponse = await fetch(logoutUrl, {
+            method: 'POST',
+            credentials: logoutUrl.startsWith('http') ? 'include' : 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}',
+            cache: 'no-cache',
+            keepalive: true
+        });
+
+        if (!logoutResponse.ok) {
+            Logger.warn(`[Auth] Logout returned HTTP ${logoutResponse.status}`);
+        }
+    } catch (error) {
+        Logger.warn(`[Auth] Logout request failed: ${error.message}`);
+    }
+
+    // Local draft cleanup can finish after the auth cookie has been cleared.
     (async () => {
-        try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' }); } catch { }
         await clearAllLocalDrafts().catch(() => { });
         if (currentCode !== null) {
             await setLocalDraft('root', 'main.cpp', currentCode).catch(() => { });
