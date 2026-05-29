@@ -958,16 +958,20 @@ async function initGoogleIdentity(clientId) {
 
         const renderTarget = document.getElementById('google-btn-render');
         if (renderTarget) {
-            // Don't pass a width param — Google's 'width' sets a MINIMUM,
-            // not an exact size. The personalized button (name + email)
-            // may render wider than specified. CSS on .google-btn-render
-            // and its children constrains the button to the container.
+            // Read the sidebar's actual rendered width. The auth-section
+            // has only 6px padding on each side (12px total), so the
+            // button can use almost the entire sidebar width.
+            const sidebar = document.getElementById('sidebar');
+            const sidebarW = sidebar ? sidebar.clientWidth : 240;
+            // 12px = auth-section left+right padding, 2px extra safety
+            const btnWidth = Math.max(200, Math.min(sidebarW - 14, 400));
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
                 size: 'large',
                 shape: 'rectangular',
                 text: 'signin_with',
-                logo_alignment: 'left'
+                logo_alignment: 'left',
+                width: btnWidth
             });
         }
 

@@ -583,23 +583,43 @@
 }
 
 /* Cloud Promo */
+/* ============================================================
+   CLOUD PROMO — redesigned for Google Sign-In button fit
+   ============================================================
+   Layout: two zones inside .cloud-promo
+     1. .cloud-promo-inner — text/badge, comfortable padding
+     2. .auth-section      — Google button, minimal padding
+   The button area avoids horizontal padding so the Google
+   iframe has maximum width and never gets clipped by
+   #sidebar's overflow:hidden.
+   ============================================================ */
+
 .cloud-promo {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 28px 14px;
-    text-align: center;
-    gap: 20px;
+    gap: 18px;
     height: 100%;
     width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
+    padding: 24px 0;
     box-sizing: border-box;
 }
 
 .cloud-promo-compact {
     flex-grow: 1;
+}
+
+/* ── Inner padded zone: badge + text ── */
+.cloud-promo-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 0 20px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .cloud-promo-badge {
@@ -612,8 +632,7 @@
     align-items: center;
     justify-content: center;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: visible;
+    margin-bottom: 4px;
 }
 
 .cloud-promo:hover .cloud-promo-badge {
@@ -633,14 +652,6 @@
     transform: scale(1.05);
 }
 
-.cloud-promo-copy {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-}
-
 .cloud-promo-tag {
     display: inline-flex;
     align-items: center;
@@ -649,7 +660,6 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--primary);
-    margin-bottom: 2px;
     transition: color var(--transition-fast);
 }
 
@@ -676,20 +686,83 @@
     font-size: 0.78rem;
     color: var(--text-muted);
     line-height: 1.45;
-    padding: 0 6px;
     font-weight: 400;
 }
 
-/* Features Points */
+/* ── Auth section: minimal horizontal padding ── */
+.auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    /* Only 6px padding on each side — gives Google iframe
+       nearly the full sidebar width to render into. */
+    padding: 0 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Google Sign-in Button — official renderButton target */
+.google-btn-render {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+}
+
+/* Google's internal wrapper div */
+.google-btn-render > div {
+    max-width: 100% !important;
+}
+
+/* Google iframe */
+.google-btn-render iframe {
+    display: block !important;
+    max-width: 100% !important;
+    border: none !important;
+}
+
+/* Fallback custom button (hidden when official renders) */
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: #ffffff;
+    color: #1f1f1f;
+    border: 1px solid #dadce0;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: normal;
+    text-align: center;
+}
+
+.google-btn:hover {
+    background: #f8faff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.google-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* ── Feature points ── */
 .cloud-promo-features {
     list-style: none;
-    padding: 0;
-    margin: 4px 0;
+    padding: 0 20px;
+    margin: 2px 0;
     display: flex;
     flex-direction: column;
     gap: 6px;
     align-self: center;
     width: fit-content;
+    box-sizing: border-box;
 }
 
 .cloud-promo-features li {
@@ -1319,72 +1392,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     100% {
         opacity: 0;
     }
-}
-
-/* Auth Section */
-.auth-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 0;
-    border-top: none;
-    margin-top: 8px;
-    width: 100%;
-}
-
-.google-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 14px;
-    background: #ffffff;
-    color: #1f1f1f;
-    border: 1px solid #dadce0;
-    border-radius: 6px;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    white-space: normal;
-    text-align: center;
-}
-
-.google-btn:hover {
-    background: #f8faff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.google-icon {
-    width: 18px;
-    height: 18px;
-}
-
-/* Google Sign-in Button wrapper */
-.google-btn-render {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin: 0 auto;
-    min-height: 44px;
-    /* hidden (not visible) so any overflow is clipped at OUR container
-       boundary instead of the sidebar — keeps clipping symmetric. */
-    overflow: hidden;
-}
-
-/* Force Google's internal wrapper div to stay within our container */
-.google-btn-render > div {
-    max-width: 100% !important;
-    overflow: hidden !important;
-}
-
-/* Ensure the Google-rendered iframe respects container bounds */
-.google-btn-render iframe {
-    display: block;
-    max-width: 100% !important;
-    border: none !important;
 }
 
 /* User Profile */
