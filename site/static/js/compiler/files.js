@@ -960,11 +960,13 @@ async function initGoogleIdentity(clientId) {
         if (renderTarget) {
             // Compute available width from the container so the button
             // never overflows the sidebar (which is often only 240px).
+            // Subtract a small buffer because Google's rendered button
+            // adds its own border/outline outside the stated width.
             const containerWidth = renderTarget.parentElement
                 ? renderTarget.parentElement.clientWidth
                 : renderTarget.clientWidth;
             // Google's minimum rendered button width is 200; cap at 400.
-            const btnWidth = Math.max(200, Math.min(containerWidth, 400));
+            const btnWidth = Math.max(200, Math.min(containerWidth - 4, 400));
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
                 size: 'large',
