@@ -1366,8 +1366,7 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 .google-btn-render {
     display: flex;
     justify-content: center;
-    width: min(220px, calc(100% - 32px));
-    max-width: 220px;
+    width: 100%;
     margin: 0 auto;
     min-height: 44px;
     overflow: visible;
@@ -1376,7 +1375,6 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
 /* Ensure the Google-rendered iframe scales naturally */
 .google-btn-render iframe {
     display: block;
-    width: 220px !important;
     max-width: 100% !important;
     border: none;
 }
