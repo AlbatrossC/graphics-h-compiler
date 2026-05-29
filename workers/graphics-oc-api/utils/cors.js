@@ -7,6 +7,7 @@ const ALLOWED_ORIGINS = new Set([
   'https://www.graphicsh.online',
   'https://graphics-h-compiler.pages.dev',
   'https://cloudflare.graphics-h-compiler.pages.dev',
+  'https://test.graphics-h-compiler.pages.dev',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
 ]);
