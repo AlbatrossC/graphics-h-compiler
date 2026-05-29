@@ -1028,6 +1028,59 @@
   </button>
   <div id="floating-run-btn-tooltip" role="tooltip">🖱️ Drag me anywhere! Click to <strong>run</strong> your code. To hide, check <strong>Settings → Floating Run Button</strong>.</div>
 
+  <script>
+  (function(){
+    var BAD_WDOSBOX_WASM_URL = '/libs/wdosbox.wasm.js';
+    var GOOD_WDOSBOX_WASM_URL = '/libs/wdosbox.wasm';
+
+    function patchDosRunnerWasmUrl() {
+      var iframe = document.getElementById('dos-iframe');
+      if (!iframe || !iframe.contentWindow) return;
+
+      try {
+        var frameWindow = iframe.contentWindow;
+        var proto = frameWindow.XMLHttpRequest && frameWindow.XMLHttpRequest.prototype;
+        if (!proto || proto.__graphicsCompilerWasmUrlPatched) return;
+
+        var originalOpen = proto.open;
+        proto.open = function(method, url) {
+          var args = Array.prototype.slice.call(arguments);
+          if (typeof url === 'string') {
+            try {
+              var parsed = new URL(url, frameWindow.location.href);
+              if (parsed.pathname === BAD_WDOSBOX_WASM_URL) {
+                url = GOOD_WDOSBOX_WASM_URL + parsed.search + parsed.hash;
+              }
+            } catch (e) {
+              if (url === BAD_WDOSBOX_WASM_URL) {
+                url = GOOD_WDOSBOX_WASM_URL;
+              }
+            }
+          }
+          args[1] = url;
+          return originalOpen.apply(this, args);
+        };
+        proto.__graphicsCompilerWasmUrlPatched = true;
+      } catch (e) {
+        /* Same-origin iframe patch is best-effort; runner will report load errors. */
+      }
+    }
+
+    window.addEventListener('message', function(event) {
+      if (event.origin === window.location.origin && event.data && event.data.type === 'IFRAME_READY') {
+        patchDosRunnerWasmUrl();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var iframe = document.getElementById('dos-iframe');
+      if (!iframe) return;
+      iframe.addEventListener('load', patchDosRunnerWasmUrl);
+      patchDosRunnerWasmUrl();
+    });
+  })();
+  </script>
+
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>
   {% endfor %}
