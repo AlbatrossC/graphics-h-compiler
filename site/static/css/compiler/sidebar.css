@@ -1369,14 +1369,22 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     width: 100%;
     margin: 0 auto;
     min-height: 44px;
-    overflow: visible;
+    /* hidden (not visible) so any overflow is clipped at OUR container
+       boundary instead of the sidebar — keeps clipping symmetric. */
+    overflow: hidden;
 }
 
-/* Ensure the Google-rendered iframe scales naturally */
+/* Force Google's internal wrapper div to stay within our container */
+.google-btn-render > div {
+    max-width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Ensure the Google-rendered iframe respects container bounds */
 .google-btn-render iframe {
     display: block;
     max-width: 100% !important;
-    border: none;
+    border: none !important;
 }
 
 /* User Profile */

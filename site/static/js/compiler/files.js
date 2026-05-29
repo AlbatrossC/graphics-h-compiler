@@ -958,22 +958,16 @@ async function initGoogleIdentity(clientId) {
 
         const renderTarget = document.getElementById('google-btn-render');
         if (renderTarget) {
-            // Compute available width from the container so the button
-            // never overflows the sidebar (which is often only 240px).
-            // Subtract a small buffer because Google's rendered button
-            // adds its own border/outline outside the stated width.
-            const containerWidth = renderTarget.parentElement
-                ? renderTarget.parentElement.clientWidth
-                : renderTarget.clientWidth;
-            // Google's minimum rendered button width is 200; cap at 400.
-            const btnWidth = Math.max(200, Math.min(containerWidth - 4, 400));
+            // Don't pass a width param — Google's 'width' sets a MINIMUM,
+            // not an exact size. The personalized button (name + email)
+            // may render wider than specified. CSS on .google-btn-render
+            // and its children constrains the button to the container.
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
                 size: 'large',
                 shape: 'rectangular',
                 text: 'signin_with',
-                logo_alignment: 'left',
-                width: btnWidth
+                logo_alignment: 'left'
             });
         }
 
