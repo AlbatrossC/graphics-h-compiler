@@ -46,11 +46,29 @@
     <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
 
-    <link rel="stylesheet" href="/static/css/fonts.css">
-    <link rel="stylesheet" href="/static/css/index.css?v=3.7">
+    <link rel="preload" href="/static/images/brand/graphics-h-turtle.webp" as="image" fetchpriority="high">
+    <link rel="preload" href="/static/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/fonts/SpaceMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+    <style>
+        @font-face {
+            font-family: "IBM Plex Sans";
+            src: url("/static/fonts/IBMPlexSans-Regular.woff2") format("woff2");
+            font-weight: 400 800;
+            font-style: normal;
+            font-display: swap;
+        }
 
-    <!-- Lucide Icons (deferred) -->
-    <script src="/libs/lucide.min.js" defer></script>
+        @font-face {
+            font-family: "Space Mono";
+            src: url("/static/fonts/SpaceMono-Regular.woff2") format("woff2");
+            font-weight: 400 800;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <link rel="stylesheet" href="/static/vendor/lite-youtube-embed/lite-yt-embed.css">
+    <link rel="stylesheet" href="/static/css/index.css?v=3.9">
+    <script src="/static/vendor/lite-youtube-embed/lite-yt-embed.js" defer></script>
 </head>
 
 <body>
@@ -68,7 +86,7 @@
                 <div class="logo header-brand" onclick="window.location.reload()" aria-label="graphics.h compiler">
                     <picture>
                         <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
-                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="lazy" decoding="async">
+                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" decoding="async">
                     </picture>
                     <span class="header-brand-text"><span class="header-brand-primary">graphics.h</span> compiler</span>
                 </div>
@@ -177,7 +195,7 @@
                 <div class="hero-brand-mark animate-in delay-1" aria-hidden="true">
                     <picture>
                         <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
-                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h turtle mascot" class="hero-turtle" width="547" height="282" loading="lazy" decoding="async">
+                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h turtle mascot" class="hero-turtle" width="547" height="282" loading="eager" decoding="async" fetchpriority="high">
                     </picture>
                 </div>
 
@@ -224,15 +242,13 @@
                     <div class="video-col reveal">
                         <div class="video-container">
                             <div class="video-wrapper oc-ratio">
-                                <iframe
-                                    src="https://www.youtube.com/embed/t3i6AK7IxIs"
-                                    title="graphics.h Online Compiler Demo"
+                                <lite-youtube
                                     class="demo-embed"
-                                    loading="lazy"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    referrerpolicy="strict-origin-when-cross-origin"
-                                    allowfullscreen>
-                                </iframe>
+                                    videoid="t3i6AK7IxIs"
+                                    title="graphics.h Online Compiler Demo"
+                                    playlabel="Play: graphics.h Online Compiler Demo"
+                                    params="rel=0">
+                                </lite-youtube>
                             </div>
                         </div>
                         <div class="video-glow green"></div>
@@ -310,15 +326,13 @@
                     <div class="video-col reveal reveal-delay-1">
                         <div class="video-container">
                             <div class="video-wrapper vscode-ratio">
-                                <iframe
-                                    src="https://www.youtube.com/embed/8CBJ-FWF9SU"
-                                    title="graphics.h VS Code Extension Demo"
+                                <lite-youtube
                                     class="demo-embed"
-                                    loading="lazy"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    referrerpolicy="strict-origin-when-cross-origin"
-                                    allowfullscreen>
-                                </iframe>
+                                    videoid="8CBJ-FWF9SU"
+                                    title="graphics.h VS Code Extension Demo"
+                                    playlabel="Play: graphics.h VS Code Extension Demo"
+                                    params="rel=0">
+                                </lite-youtube>
                             </div>
                         </div>
                         <div class="video-glow blue"></div>
@@ -484,11 +498,39 @@
     <script src="/static/js/analytics.js" async></script>
 
     <script>
-        // Initialize Lucide icons after deferred scripts load
+        const iconPaths = {
+            "arrow-right": '<path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path>',
+            "book-open": '<path d="M12 7v14"></path><path d="M3 18a2 2 0 0 1 2-2h7V5H5a2 2 0 0 0-2 2z"></path><path d="M21 18a2 2 0 0 0-2-2h-7V5h7a2 2 0 0 1 2 2z"></path>',
+            "bug": '<path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3 3 0 0 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6 13H2"></path><path d="M22 13h-4"></path><path d="m4.5 8.5-2-2"></path><path d="m21.5 6.5-2 2"></path>',
+            "chevron-down": '<path d="m6 9 6 6 6-6"></path>',
+            "code": '<path d="m16 18 6-6-6-6"></path><path d="m8 6-6 6 6 6"></path>',
+            "code-2": '<path d="m18 16 4-4-4-4"></path><path d="m6 8-4 4 4 4"></path><path d="m14.5 4-5 16"></path>',
+            "external-link": '<path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>',
+            "file-text": '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path>',
+            "graduation-cap": '<path d="M22 10 12 5 2 10l10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>',
+            "info": '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>',
+            "layers": '<path d="m12.83 2.18 7.93 4.44a1 1 0 0 1 0 1.76l-7.93 4.44a1.7 1.7 0 0 1-1.66 0L3.24 8.38a1 1 0 0 1 0-1.76l7.93-4.44a1.7 1.7 0 0 1 1.66 0"></path><path d="m22 12-9.17 5.14a1.7 1.7 0 0 1-1.66 0L2 12"></path><path d="m22 17-9.17 5.14a1.7 1.7 0 0 1-1.66 0L2 17"></path>',
+            "mail": '<rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>',
+            "menu": '<path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path>',
+            "monitor": '<rect width="20" height="14" x="2" y="3" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path>',
+            "moon": '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>',
+            "play": '<path d="M6 3v18l15-9z"></path>',
+            "shield": '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.8 17 5 19 5a1 1 0 0 1 1 1z"></path>',
+            "sun": '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>',
+            "terminal": '<polyline points="4 17 10 11 4 5"></polyline><line x1="12" x2="20" y1="19" y2="19"></line>',
+            "x": '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>',
+            "zap": '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>'
+        };
+
+        // Initialize the small icon set used on this page.
         function initIcons() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
+            document.querySelectorAll('i[data-lucide]').forEach(icon => {
+                const name = icon.getAttribute('data-lucide');
+                const svg = iconPaths[name];
+                if (!svg) return;
+                const className = icon.getAttribute('class') || '';
+                icon.outerHTML = `<svg class="lucide lucide-${name} ${className}" data-lucide="${name}" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${svg}</svg>`;
+            });
         }
         // Run on DOMContentLoaded (deferred scripts run before this event)
         if (document.readyState === 'loading') {
@@ -568,6 +610,7 @@
                 toggleMobileMenu();
             }
         });
+
     </script>
 
     <!-- Structured Data for SEO -->

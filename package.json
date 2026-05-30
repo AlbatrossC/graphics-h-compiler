@@ -18,6 +18,7 @@
     "@fontsource-variable/jetbrains-mono": "5.2.8",
     "@fontsource/ibm-plex-sans": "^5.2.8",
     "@fontsource/space-mono": "^5.2.9",
-    "@lezer/highlight": "1.2.3"
+    "@lezer/highlight": "1.2.3",
+    "lite-youtube-embed": "^0.3.4"
   }
 }

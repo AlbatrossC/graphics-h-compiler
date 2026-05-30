@@ -45,6 +45,8 @@
   Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
 /static/videos/*
   Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
+/static/vendor/*
+  Cache-Control: public, max-age=31536000, s-maxage=31536000, immutable, no-transform
 
 # ---------------------------------------------------------------------------
 # Versioned JSON data bundles
