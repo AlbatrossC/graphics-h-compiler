@@ -23,6 +23,12 @@ JS_DIR = STATIC_DIR / "js" / "compiler"
 CODEMIRROR_ENTRY = Path(__file__).resolve().parent / "codemirror-entry.js"
 CODEMIRROR_BUNDLE = JS_DIR / "codemirror.bundle.v1.js"
 ASSET_MANIFEST = BUILD_DIR / "asset-manifest.json"
+LANDING_CSS = STATIC_DIR / "css" / "index.css"
+LANDING_CSS_MIN = STATIC_DIR / "css" / "index.min.css"
+LITE_YOUTUBE_DIR = STATIC_DIR / "vendor" / "lite-youtube-embed"
+LITE_YOUTUBE_CSS = LITE_YOUTUBE_DIR / "lite-yt-embed.css"
+LITE_YOUTUBE_JS = LITE_YOUTUBE_DIR / "lite-yt-embed.js"
+LITE_YOUTUBE_JS_MIN = LITE_YOUTUBE_DIR / "lite-yt-embed.min.js"
 
 CSS_PRIORITY = [
     "base.css",
@@ -179,8 +185,25 @@ def write_asset_manifest(compiler_assets: dict[str, object]) -> dict[str, object
 def build_assets() -> dict[str, object]:
     clean_compiler_build_outputs()
     build_codemirror_bundle()
+    build_landing_page_assets()
     compiler_assets = build_compiler_bundle()
     return write_asset_manifest(compiler_assets)
+
+
+def build_landing_page_assets() -> None:
+    landing_css = "\n".join([
+        css_source_comment(relative_to_root(LITE_YOUTUBE_CSS)),
+        LITE_YOUTUBE_CSS.read_text(encoding="utf-8"),
+        css_source_comment(relative_to_root(LANDING_CSS)),
+        LANDING_CSS.read_text(encoding="utf-8"),
+    ])
+    LANDING_CSS_MIN.write_text(cssmin(landing_css), encoding="utf-8", newline="\n")
+
+    LITE_YOUTUBE_JS_MIN.write_text(
+        jsmin(LITE_YOUTUBE_JS.read_text(encoding="utf-8")),
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def render_dist(manifest: dict[str, object]) -> None:

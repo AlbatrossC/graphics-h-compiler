@@ -379,7 +379,7 @@
             position: absolute;
             top: 9rem;
             left: 50%;
-            width: min(66vw, 760px);
+            width: min(56vw, 547px);
             transform: translateX(-50%);
             opacity: 0.035;
             z-index: -1;
@@ -1413,7 +1413,7 @@
             }
 
             .hero-watermark {
-                width: 96vw;
+                width: min(88vw, 547px);
                 top: 8rem;
                 opacity: 0.028;
             }
