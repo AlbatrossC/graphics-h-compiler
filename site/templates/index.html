@@ -46,7 +46,7 @@
     <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
 
-    <link rel="preload" href="/static/images/brand/graphics-h-turtle.webp" as="image" fetchpriority="high">
+    <link rel="preload" as="image" href="/static/images/brand/graphics-h-turtle.webp" fetchpriority="high">
     <link rel="preload" href="/static/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/static/fonts/SpaceMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
     <style>
@@ -178,12 +178,7 @@
 
         <!-- ==================== SECTION 1: HERO ==================== -->
         <section class="page-section hero-section" id="hero">
-            <div class="hero-watermark" aria-hidden="true">
-                <picture>
-                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
-                    <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h turtle watermark" width="547" height="282" loading="lazy" decoding="async">
-                </picture>
-            </div>
+            <div class="hero-watermark" aria-hidden="true"></div>
             <div class="section-inner">
                 <div class="hero-kicker animate-in delay-1">
                     <span class="hero-kicker-line"></span>
@@ -191,12 +186,7 @@
                     <span class="hero-kicker-line"></span>
                 </div>
 
-                <div class="hero-brand-mark animate-in delay-1" aria-hidden="true">
-                    <picture>
-                        <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
-                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h turtle mascot" class="hero-turtle" width="547" height="282" loading="eager" decoding="async" fetchpriority="high">
-                    </picture>
-                </div>
+                <div class="hero-brand-mark animate-in delay-1" aria-hidden="true"></div>
 
                 <h1 class="headline animate-in delay-2">
                     Run <span class="highlight">graphics.h</span> anywhere
@@ -210,7 +200,7 @@
                 <div class="cta-group animate-in delay-4">
                     <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
                         target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
-                        <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon" loading="lazy" decoding="async">
+                        <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon" width="100" height="100" loading="lazy" decoding="async">
                         <span>VS Code Extension</span>
                     </a>
                     <a href="/compiler" class="cta-btn cta-btn-primary">
@@ -375,7 +365,7 @@
                             <div class="feature-icon-wrapper">
                                 <i data-lucide="zap" class="icon-lg"></i>
                             </div>
-                            <h4 class="feature-card-title">Zero Setup Required</h4>
+                            <h3 class="feature-card-title">Zero Setup Required</h3>
                             <p class="feature-card-desc">
                                 Skip the 90s software setup. No DOSBox configuration, no missing BGI compiler settings.
                                 Simply code online and let our WebAssembly engine handle graphicsh execution.
@@ -387,7 +377,7 @@
                             <div class="feature-icon-wrapper">
                                 <i data-lucide="code-2" class="icon-lg"></i>
                             </div>
-                            <h5 class="feature-card-title">VS Code Integration</h5>
+                            <h3 class="feature-card-title">VS Code Integration</h3>
                             <p class="feature-card-desc">
                                 Prefer local IDEs? Our VS Code graphics extension brings one-click graphics.h compiling
                                 right to your editor. A seamless code extension for modern developers.
@@ -399,7 +389,7 @@
                             <div class="feature-icon-wrapper">
                                 <i data-lucide="graduation-cap" class="icon-lg"></i>
                             </div>
-                            <h6 class="feature-card-title">Perfect for Students</h6>
+                            <h3 class="feature-card-title">Perfect for Students</h3>
                             <p class="feature-card-desc">
                                 Built with Computer Graphics labs in mind. Easily implement algorithms like DDA,
                                 Bresenham's, and flood fill. Your complete Turbo C online alternative.
