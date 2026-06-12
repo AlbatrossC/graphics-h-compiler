@@ -796,7 +796,7 @@
     }
 }
 
-/* Copy Error Button - Matches Compile & Run button style, solid red */
+/* Copy Error Button - Styled with clean red borders and text, filling solid red on hover, and turning green when copied. No glows or gradients. */
 .copy-error-btn {
     height: 32px;
     display: inline-flex;
@@ -806,29 +806,47 @@
     padding: 0 14px;
     font-size: 0.8125rem;
     font-weight: 700;
-    background: var(--danger);
-    color: #fff;
+    background: transparent;
+    color: var(--danger);
     border: 1px solid var(--danger);
     border-radius: 6px;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-fast), transform 0.1s ease;
     white-space: nowrap;
 }
 
 .copy-error-btn:hover {
-    background: #e03b3b;
-    border-color: #e03b3b;
-}
-
-.copy-error-btn.copied {
     background: var(--danger);
     border-color: var(--danger);
     color: #fff;
 }
 
+.copy-error-btn:active {
+    transform: scale(0.96);
+}
+
+.copy-error-btn.copied {
+    background: var(--success);
+    border-color: var(--success);
+    color: var(--primary-text);
+}
+
 .copy-error-btn svg {
     width: 14px;
     height: 14px;
+    flex-shrink: 0;
+}
+
+.copy-error-btn .icon-check {
+    display: none;
+}
+
+.copy-error-btn.copied .icon-copy {
+    display: none;
+}
+
+.copy-error-btn.copied .icon-check {
+    display: inline-block;
 }
 
 .expand-btn {
