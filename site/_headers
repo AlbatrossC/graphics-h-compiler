@@ -81,6 +81,8 @@
   Cache-Control: public, max-age=3600, must-revalidate
 /sitemap.xml
   Cache-Control: public, max-age=3600, must-revalidate
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
 
 # ---------------------------------------------------------------------------
 # HTML/pages: let the CDN/browser revalidate so deployments show up quickly.
