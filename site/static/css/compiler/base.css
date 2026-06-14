@@ -157,7 +157,10 @@ header {
 
 .header-center {
     flex: 1;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
 }
 
 @media (min-width: 769px) {
@@ -707,12 +710,12 @@ header {
     color: var(--primary-text);
     border: none;
     font-weight: 700;
-    height: 34px;
-    padding: 0 14px;
-    gap: 6px;
-    border-radius: 6px;
-    font-size: 0.78rem;
-    letter-spacing: 0.01em;
+    height: 40px;
+    padding: 0 22px;
+    gap: 8px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    letter-spacing: 0.015em;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -726,7 +729,7 @@ header {
 }
 
 .btn-run-primary:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale(0.96);
 }
 
 .btn-run-primary:disabled {
@@ -736,8 +739,8 @@ header {
 }
 
 .btn-run-primary svg {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
 }
 
 /* Light Theme Borders removed for elegance */

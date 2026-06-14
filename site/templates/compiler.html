@@ -143,6 +143,18 @@
           </svg>
         </button>
 
+        <span class="header-divider"></span>
+
+        <h1 class="logo header-brand-logo" style="font-size: 1.1rem; margin: 0;" onclick="window.location.reload()">
+          <picture>
+            <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+            <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="lazy" decoding="async">
+          </picture>
+          <span class="header-brand-text"><span class="header-brand-primary">graphics.h</span> compiler</span>
+        </h1>
+      </div>
+
+      <div class="header-center">
         <button id="files-header-btn" class="btn header-btn-files" title="Toggle Files Explorer" aria-label="Toggle Files Explorer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -150,6 +162,16 @@
           <span class="btn-text">Files</span>
         </button>
 
+        <button id="run-btn" class="btn btn-run-primary" title="Compile and Run" aria-label="Compile and run program" onclick="runProgram()">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <span class="btn-text btn-text-desktop">Compile &amp; Run</span>
+          <span class="btn-text btn-text-mobile btn-text-hidden">Run</span>
+        </button>
+      </div>
+
+      <div class="header-right">
         <div class="clean-dropdown header-dropdown-muted" title="Select Demo">
           <select id="demo-select" aria-label="Select demo program">
             <option value="graphics-demo" selected>Graphics Demo</option>
@@ -162,20 +184,6 @@
           </svg>
         </div>
 
-        <span class="header-divider"></span>
-      </div>
-
-      <div class="header-center">
-        <h1 class="logo header-brand-logo" style="font-size: 1.1rem; margin: 0;" onclick="window.location.reload()">
-          <picture>
-            <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
-            <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="lazy" decoding="async">
-          </picture>
-          <span class="header-brand-text"><span class="header-brand-primary">graphics.h</span> compiler</span>
-        </h1>
-      </div>
-
-      <div class="header-right">
         <span class="header-divider"></span>
 
         <div class="save-indicator" id="save-indicator">
@@ -215,14 +223,6 @@
             <path
               d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z" />
           </svg>
-        </button>
-
-        <button id="run-btn" class="btn btn-run-primary" title="Compile and Run" aria-label="Compile and run program" onclick="runProgram()">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-          <span class="btn-text btn-text-desktop">Compile &amp; Run</span>
-          <span class="btn-text btn-text-mobile btn-text-hidden">Run</span>
         </button>
       </div>
     </div>
@@ -1133,34 +1133,6 @@
   </script>
 
   <!-- Adsterra Social Bar (floating widget) -->
-  <!-- Push floating ad notifications below the header so they don't cover the Run button -->
-  <script>
-  (function() {
-    var HEADER_H = 62;
-    function offsetAdOverlays(node) {
-      if (node.nodeType !== 1 || node.id || node.closest('header')) return;
-      var s = node.style || {};
-      if (s.position === 'fixed') {
-        var top = parseInt(s.top, 10);
-        if (isNaN(top) || top < HEADER_H) s.top = HEADER_H + 'px';
-      }
-      // Also check iframes injected by ad scripts
-      var iframes = node.querySelectorAll ? node.querySelectorAll('iframe') : [];
-      iframes.forEach(function(f) {
-        var fs = window.getComputedStyle(f);
-        if (fs.position === 'fixed' && parseInt(fs.top, 10) < HEADER_H) {
-          f.style.top = HEADER_H + 'px';
-        }
-      });
-    }
-    var obs = new MutationObserver(function(list) {
-      list.forEach(function(m) {
-        m.addedNodes.forEach(offsetAdOverlays);
-      });
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-  })();
-  </script>
   <script src="https://pl29745905.effectivecpmnetwork.com/6d/70/86/6d70864c8b1bb94fc1a594779fd8e70d.js"></script>
 
   {% for js_url in compiler_assets.js_urls %}
