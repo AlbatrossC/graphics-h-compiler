@@ -128,7 +128,7 @@ header {
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 2147483647; /* Must be max to stay above Adsterra Social Bar */
     transition:
         background-color var(--transition-slow),
         border-color var(--transition-slow);
