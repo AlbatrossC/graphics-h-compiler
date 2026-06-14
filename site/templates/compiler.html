@@ -1133,6 +1133,34 @@
   </script>
 
   <!-- Adsterra Social Bar (floating widget) -->
+  <!-- Push floating ad notifications below the header so they don't cover the Run button -->
+  <script>
+  (function() {
+    var HEADER_H = 62;
+    function offsetAdOverlays(node) {
+      if (node.nodeType !== 1 || node.id || node.closest('header')) return;
+      var s = node.style || {};
+      if (s.position === 'fixed') {
+        var top = parseInt(s.top, 10);
+        if (isNaN(top) || top < HEADER_H) s.top = HEADER_H + 'px';
+      }
+      // Also check iframes injected by ad scripts
+      var iframes = node.querySelectorAll ? node.querySelectorAll('iframe') : [];
+      iframes.forEach(function(f) {
+        var fs = window.getComputedStyle(f);
+        if (fs.position === 'fixed' && parseInt(fs.top, 10) < HEADER_H) {
+          f.style.top = HEADER_H + 'px';
+        }
+      });
+    }
+    var obs = new MutationObserver(function(list) {
+      list.forEach(function(m) {
+        m.addedNodes.forEach(offsetAdOverlays);
+      });
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  })();
+  </script>
   <script src="https://pl29745905.effectivecpmnetwork.com/6d/70/86/6d70864c8b1bb94fc1a594779fd8e70d.js"></script>
 
   {% for js_url in compiler_assets.js_urls %}
