@@ -1551,3 +1551,11 @@ body[data-sidebar-view="ai"][data-ai-view="chat"] #user-profile-section {
     color: var(--primary-hover) !important;
     border-color: var(--primary) !important;
 }
+
+/* ── Sidebar Ad Slot (cloud promo, logged-out only) ── */
+.sidebar-ad-slot {
+    margin: 12px 0 0;
+    padding: 0 4px;
+    overflow: hidden;
+    text-align: center;
+}
