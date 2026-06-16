@@ -29,6 +29,7 @@ LITE_YOUTUBE_DIR = STATIC_DIR / "vendor" / "lite-youtube-embed"
 LITE_YOUTUBE_CSS = LITE_YOUTUBE_DIR / "lite-yt-embed.css"
 LITE_YOUTUBE_JS = LITE_YOUTUBE_DIR / "lite-yt-embed.js"
 LITE_YOUTUBE_JS_MIN = LITE_YOUTUBE_DIR / "lite-yt-embed.min.js"
+SW_JS = STATIC_DIR / "js" / "sw (1).js"
 
 CSS_PRIORITY = [
     "base.css",
@@ -159,9 +160,16 @@ def build_compiler_bundle() -> dict[str, object]:
     }
 
 
-def write_asset_manifest(compiler_assets: dict[str, object]) -> dict[str, object]:
+def build_sw() -> str:
+    """Hash and copy the service worker into the build dir, return its URL."""
+    content = SW_JS.read_text(encoding="utf-8")
+    return write_hashed_asset("sw", "js", content)
+
+
+def write_asset_manifest(compiler_assets: dict[str, object], sw_url: str) -> dict[str, object]:
     manifest = {
         "compiler": compiler_assets,
+        "sw": sw_url,
         "separate": {
             "codemirror_bundle": "/static/js/compiler/codemirror.bundle.v1.js",
             "lazy_loaded": [
@@ -187,7 +195,8 @@ def build_assets() -> dict[str, object]:
     build_codemirror_bundle()
     build_landing_page_assets()
     compiler_assets = build_compiler_bundle()
-    return write_asset_manifest(compiler_assets)
+    sw_url = build_sw()
+    return write_asset_manifest(compiler_assets, sw_url)
 
 
 def build_landing_page_assets() -> None:
@@ -220,6 +229,7 @@ def main() -> int:
 
     print(f"Built CSS: {compiler['css']}")
     print(f"Built JS:  {compiler['js']}")
+    print(f"Built SW:  {manifest['sw']}")
     print("Updated:   site/static/build/asset-manifest.json")
     print()
 
