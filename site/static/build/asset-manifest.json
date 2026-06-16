@@ -21,6 +21,7 @@
       "site/static/js/compiler/preferences.js"
     ]
   },
+  "sw": "/static/build/sw.0663349ee830.js",
   "separate": {
     "codemirror_bundle": "/static/js/compiler/codemirror.bundle.v1.js",
     "lazy_loaded": [
