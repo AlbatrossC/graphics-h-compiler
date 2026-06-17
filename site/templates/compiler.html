@@ -119,6 +119,11 @@
       }
     </script>
 
+  <!-- Google AdSense -->
+  <meta name="google-adsense-account" content="ca-pub-6317839573120005">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005"
+       crossorigin="anonymous"></script>
+
   {% for css_url in compiler_assets.css_urls %}
   <link rel="stylesheet" href="{{ css_url }}" />
   {% endfor %}
@@ -360,18 +365,6 @@
             </li>
           </ul>
 
-          <!-- Monetag Direct Link Banner — sidebar ad slot -->
-          <div class="sidebar-ad-slot" style="display:flex;justify-content:center;margin:10px 0;">
-            <iframe src="https://omg10.com/4/11161542"
-              width="160" height="300"
-              style="border:0;overflow:hidden;display:block;"
-              scrolling="no"
-              frameborder="0"
-              allowtransparency="true"
-              loading="lazy"
-              title="Advertisement">
-            </iframe>
-          </div>
 
           <p id="auth-status-text" class="auth-hint" style="display: none;">
             Unlimited projects · Cloud synced
@@ -672,18 +665,6 @@
         </div>
         <div id="output-content" class="output-content"></div>
 
-        <!-- Monetag Direct Link Banner — error panel ad slot -->
-        <div class="error-ad-slot" style="display:flex;justify-content:center;padding:12px 0;">
-          <iframe src="https://omg10.com/4/11161542"
-            width="300" height="250"
-            style="border:0;overflow:hidden;display:block;"
-            scrolling="no"
-            frameborder="0"
-            allowtransparency="true"
-            loading="lazy"
-            title="Advertisement">
-          </iframe>
-        </div>
 
       </div>
     </div>
@@ -1118,8 +1099,6 @@
 
 
 
-  <!-- Monetag Push Notifications -->
-  <script src="https://5gvci.com/act/files/tag.min.js?z=11158521" data-cfasync="false" async></script>
 
   {% for js_url in compiler_assets.js_urls %}
   <script src="{{ js_url }}" defer></script>

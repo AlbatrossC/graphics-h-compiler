@@ -410,6 +410,31 @@ var isTerminalFullscreen = false;
                 applyMobileTabLayout(getCurrentMobileTab());
                 return;
             }
+
+            // If settings panel is currently shown, switch back to explorer view
+            const currentView = typeof window.getSidebarView === 'function'
+                ? window.getSidebarView()
+                : 'explorer';
+            if (currentView === 'settings') {
+                if (typeof window.setSidebarView === 'function') {
+                    window.setSidebarView('explorer');
+                }
+                // Make sure the sidebar is expanded so the user sees the switch
+                if (sidebar && sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    sidebar.style.width = '';
+                    sidebar.style.minWidth = '';
+                    if (sidebarToggle) {
+                        sidebarToggle.classList.add('sidebar-active');
+                    }
+                    setTimeout(() => {
+                        if (editor && editor.requestMeasure) editor.requestMeasure();
+                        window.dispatchEvent(new Event('resize'));
+                    }, 350);
+                }
+                return;
+            }
+
             toggleDesktopSidebar();
         });
     }

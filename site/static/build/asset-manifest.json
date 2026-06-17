@@ -1,7 +1,7 @@
 {
   "compiler": {
-    "css": "/static/build/compiler.b037f88a1bee.css",
-    "js": "/static/build/compiler.ef52248304f3.js",
+    "css": "/static/build/compiler.0b950704b39a.css",
+    "js": "/static/build/compiler.13f3ff3e47b7.js",
     "css_sources": [
       "site/static/css/compiler/base.css",
       "site/static/css/compiler/panels.css",
@@ -21,7 +21,6 @@
       "site/static/js/compiler/preferences.js"
     ]
   },
-  "sw": "/static/build/sw.0663349ee830.js",
   "separate": {
     "codemirror_bundle": "/static/js/compiler/codemirror.bundle.v1.js",
     "lazy_loaded": [
