@@ -699,3 +699,36 @@ a.docs-fn-tag-link:hover {
         word-break: break-word;
     }
 }
+
+/* ── Docs Section Banner Ads (responsive) ── */
+.docs-banner-ad {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 0;
+    background: transparent;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.docs-banner-desktop {
+    display: block;
+}
+
+.docs-banner-mobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .docs-banner-desktop {
+        display: none;
+    }
+
+    .docs-banner-mobile {
+        display: block;
+    }
+
+    .docs-banner-ad {
+        padding: 12px 8px;
+    }
+}

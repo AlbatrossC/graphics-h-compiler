@@ -160,6 +160,9 @@ window.addEventListener('message', (event) => {
         document.dispatchEvent(new CustomEvent('compiler-compilation-error', {
             detail: { content: data.content || '' }
         }));
+        // Show error ad
+        const errorAdSlot = document.getElementById('error-ad-slot');
+        if (errorAdSlot) errorAdSlot.classList.add('visible');
         document.dispatchEvent(new CustomEvent('compiler-run-end'));
     } else if (data.type === 'COMPILE_SUCCESS') {
         document.dispatchEvent(new CustomEvent('compiler-compile-success'));
@@ -262,6 +265,9 @@ async function runProgram() {
 
     outputPanel.classList.remove('visible');
     outputPanel.classList.remove('expanded');
+    // Hide error ad
+    const errorAdSlot = document.getElementById('error-ad-slot');
+    if (errorAdSlot) errorAdSlot.classList.remove('visible');
     expandOutputBtn.classList.remove('expanded');
     expandOutputBtn.title = 'Expand panel';
     isOutputExpanded = false;

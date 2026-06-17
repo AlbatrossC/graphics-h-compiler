@@ -30,6 +30,7 @@ LITE_YOUTUBE_CSS = LITE_YOUTUBE_DIR / "lite-yt-embed.css"
 LITE_YOUTUBE_JS = LITE_YOUTUBE_DIR / "lite-yt-embed.js"
 LITE_YOUTUBE_JS_MIN = LITE_YOUTUBE_DIR / "lite-yt-embed.min.js"
 
+
 CSS_PRIORITY = [
     "base.css",
     "panels.css",
@@ -157,6 +158,9 @@ def build_compiler_bundle() -> dict[str, object]:
         "css_sources": [relative_to_root(path) for path in css_files],
         "js_sources": [relative_to_root(path) for path in js_files],
     }
+
+
+
 
 
 def write_asset_manifest(compiler_assets: dict[str, object]) -> dict[str, object]:
