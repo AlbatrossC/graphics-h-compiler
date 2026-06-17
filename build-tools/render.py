@@ -356,13 +356,6 @@ def render_site(compiler_assets: dict) -> None:
         shutil.copytree(libs_src, DIST_DIR / 'libs', dirs_exist_ok=True)
         print('  [ok] libs/')
 
-    # Root files (ads.txt removed)
-    # for root_file in ['ads.txt']:
-    #     src = ROOT / root_file
-    #     if src.exists():
-    #         shutil.copy2(src, DIST_DIR / root_file)
-    #         print(f'  [ok] {root_file}')
-
     # robots.txt (copy from static to root)
     robots_src = STATIC_DIR / 'robots.txt'
     if robots_src.exists():
@@ -375,11 +368,11 @@ def render_site(compiler_assets: dict) -> None:
         shutil.copy2(sdk_src, DIST_DIR / 'sdk.js')
         print('  [ok] sdk.js (root)')
 
-    # sw.js (served from root)
-    sw_src = STATIC_DIR / 'sw.js'
-    if sw_src.exists():
-        shutil.copy2(sw_src, DIST_DIR / 'sw.js')
-        print('  [ok] sw.js (root)')
+    # ads.txt (copy from site root to dist root for AdSense verification)
+    ads_src = SITE_DIR / 'ads.txt'
+    if ads_src.exists():
+        shutil.copy2(ads_src, DIST_DIR / 'ads.txt')
+        print('  [ok] ads.txt (root)')
 
     # Static hosting configs
     for cfg_file in ['_headers', '_redirects', 'serve.json']:
