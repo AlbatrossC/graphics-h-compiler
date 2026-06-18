@@ -107,29 +107,53 @@
   Cache-Control: public, max-age=0, must-revalidate
 /blog.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/clipping-algorithm-in-computer-graphics
+/docs
   Cache-Control: public, max-age=0, must-revalidate
-/blog/clipping-algorithm-in-computer-graphics.html
+/docs.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/cohen-sutherland-line-clipping
+/clipping-algorithm-in-computer-graphics-blog
   Cache-Control: public, max-age=0, must-revalidate
-/blog/cohen-sutherland-line-clipping.html
+/clipping-algorithm-in-computer-graphics-blog.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/transformations-in-computer-graphics
+/cohen-sutherland-line-clipping-blog
   Cache-Control: public, max-age=0, must-revalidate
-/blog/transformations-in-computer-graphics.html
+/cohen-sutherland-line-clipping-blog.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/midpoint-circle-algorithm
+/transformations-in-computer-graphics-blog
   Cache-Control: public, max-age=0, must-revalidate
-/blog/midpoint-circle-algorithm.html
+/transformations-in-computer-graphics-blog.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/bresenham-line-drawing-algorithm
+/midpoint-circle-algorithm-blog
   Cache-Control: public, max-age=0, must-revalidate
-/blog/bresenham-line-drawing-algorithm.html
+/midpoint-circle-algorithm-blog.html
   Cache-Control: public, max-age=0, must-revalidate
-/blog/dda-line-drawing-algorithm
+/bresenham-line-drawing-algorithm-blog
   Cache-Control: public, max-age=0, must-revalidate
-/blog/dda-line-drawing-algorithm.html
+/bresenham-line-drawing-algorithm-blog.html
+  Cache-Control: public, max-age=0, must-revalidate
+/dda-line-drawing-algorithm-blog
+  Cache-Control: public, max-age=0, must-revalidate
+/dda-line-drawing-algorithm-blog.html
+  Cache-Control: public, max-age=0, must-revalidate
+/circle-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/circle-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/rectangle-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/rectangle-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/line-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/line-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/arc-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/arc-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/ellipse-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/ellipse-docs.html
   Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate

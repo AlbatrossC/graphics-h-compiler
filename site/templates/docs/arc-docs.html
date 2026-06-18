@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>arc() in graphics.h | Syntax, Angles, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h arc() with angle direction, syntax, parameter table, return value, runnable C examples, output notes, common mistakes, and related functions.">
+    <meta name="keywords" content="arc graphics.h, arc function in C graphics, graphics.h arc example, BGI arc angles">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/arc-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/arc-docs">
+    <meta property="og:title" content="arc() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing circular arcs in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="arc() in graphics.h">
+    <meta name="twitter:description" content="Syntax, angles, examples, and mistakes for graphics.h arc().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Curve drawing function</p>
+                <h1>arc() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>arc(int x, int y, int stangle, int endangle, int radius);</code></pre>
+                </div>
+                <p>The <code>arc()</code> function draws part of a circle. You provide a center point, a starting angle, an ending angle, and a radius. Instead of drawing a full circumference like <code>circle()</code>, it draws only the circular section between the two angle values. This makes it useful for speedometers, gauges, smile curves, circular progress drawings, pie-chart outlines, clock marks, and diagrams where only a portion of a circle should be visible.</p>
+                <p>Angles in graphics.h are measured in degrees, with <code>0</code> degrees pointing to the right, like the 3 o'clock position on a clock. The angle increases counter-clockwise: <code>90</code> points upward, <code>180</code> points left, and <code>270</code> points downward. This convention is one of the most important things to remember when using <code>arc()</code>, because it differs from how the screen y-axis grows downward.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The x-coordinate of the arc center.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The y-coordinate of the arc center.</td></tr>
+                            <tr><td><code>stangle</code></td><td><code>int</code></td><td>The starting angle in degrees. Zero degrees is the right side of the circle.</td></tr>
+                            <tr><td><code>endangle</code></td><td><code>int</code></td><td>The ending angle in degrees. The arc is drawn counter-clockwise from the start angle to this value.</td></tr>
+                            <tr><td><code>radius</code></td><td><code>int</code></td><td>The radius of the circular arc in pixels.</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="callout">Quick angle guide: <code>arc(320, 240, 0, 180, 100)</code> draws the upper half of a circle. <code>arc(320, 240, 180, 360, 100)</code> draws the lower half.</div>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>arc()</code> returns <code>void</code>. It does not return the arc length, endpoint coordinates, or clipping state. If you need to label the endpoints of an arc, calculate them from the center, radius, and angles using trigonometry, or draw guide lines while testing.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Upper semicircle</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    arc(320, 240, 0, 180, 120);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is the upper half of a circle. The arc begins at the right side of the circle and travels counter-clockwise to the left side.</p>
+
+                    <h3>Gauge outline</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTGREEN);
+    arc(320, 300, 30, 150, 160);
+    arc(320, 300, 30, 150, 120);
+    line(320, 300, 410, 220);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This draws two curved gauge boundaries and one needle line. It resembles a simple meter. The two arcs share the same center and angles but use different radii.</p>
+
+                    <h3>Smile curve</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    circle(320, 240, 120);
+    circle(275, 210, 12);
+    circle(365, 210, 12);
+    arc(320, 245, 200, 340, 70);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a simple face. The mouth is an arc from 200 to 340 degrees, which creates a smile-shaped curve near the bottom of the face.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Using radians instead of degrees</h3>
+                    <p><code>arc()</code> expects degrees. Values like <code>3.14</code> are not meaningful here, and the function parameters are integers.</p>
+                    <h3>Forgetting the angle direction</h3>
+                    <p>Angles increase counter-clockwise from the right side. If your arc appears in the opposite half of the circle, check the start and end angle values first.</p>
+                    <h3>Expecting a filled sector</h3>
+                    <p><code>arc()</code> draws only the curved outline. Use <code>pieslice()</code> or fill functions if you need a filled circular sector.</p>
+                    <h3>Confusing arc() with ellipse()</h3>
+                    <p><code>arc()</code> uses one radius and always follows a circle. Use <code>ellipse()</code> when the horizontal and vertical radii need to be different.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/ellipse-docs">ellipse()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples and change only the start and end angles. You will quickly build a mental map of where 0, 90, 180, and 270 degrees land on the graphics screen.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Circular curve</p>
+                    <p><strong>Input:</strong> center, angles, and radius</p>
+                    <p><strong>Best for:</strong> gauges, smiles, clocks, and circular arcs</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/arc-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "arc()", "item": "https://graphicsh.online/arc-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/arc-docs#article",
+                "headline": "arc() in graphics.h",
+                "description": "Syntax, parameters, angle rules, examples, and mistakes for the graphics.h arc function.",
+                "datePublished": "2026-06-18",
+                "dateModified": "2026-06-18",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/arc-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

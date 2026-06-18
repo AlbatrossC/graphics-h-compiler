@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rectangle() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h rectangle() with syntax, coordinate rules, parameter table, runnable C examples, output notes, common mistakes, and related functions.">
+    <meta name="keywords" content="rectangle graphics.h, rectangle function in C graphics, graphics.h rectangle example, BGI rectangle">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/rectangle-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/rectangle-docs">
+    <meta property="og:title" content="rectangle() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing rectangular outlines in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="rectangle() in graphics.h">
+    <meta name="twitter:description" content="Syntax, coordinate rules, examples, and mistakes for graphics.h rectangle().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Shape drawing function</p>
+                <h1>rectangle() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>rectangle(int left, int top, int right, int bottom);</code></pre>
+                </div>
+                <p>The <code>rectangle()</code> function draws the outline of an axis-aligned rectangle. It is ideal when you need boxes, panels, clipping windows, borders, chart frames, buttons, or coordinate regions. Unlike <code>circle()</code>, which starts from a center and radius, <code>rectangle()</code> uses two opposite corners: the top-left corner and the bottom-right corner.</p>
+                <p>This corner-based style is simple once you remember the graphics.h coordinate direction. The x-axis grows from left to right, while the y-axis grows from top to bottom. That means the top value should normally be smaller than the bottom value. The left value should normally be smaller than the right value. The function draws only the boundary; it does not fill the inside. For filled boxes, use <code>bar()</code> with the current fill style.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>left</code></td><td><code>int</code></td><td>The x-coordinate of the left edge. Smaller x values are closer to the left side of the screen.</td></tr>
+                            <tr><td><code>top</code></td><td><code>int</code></td><td>The y-coordinate of the top edge. Smaller y values are closer to the top of the screen.</td></tr>
+                            <tr><td><code>right</code></td><td><code>int</code></td><td>The x-coordinate of the right edge. This should usually be greater than <code>left</code>.</td></tr>
+                            <tr><td><code>bottom</code></td><td><code>int</code></td><td>The y-coordinate of the bottom edge. This should usually be greater than <code>top</code>.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The rectangle is drawn with the active color and line style. If you call <code>setcolor(GREEN)</code> before <code>rectangle()</code>, the border appears green. If you call <code>setlinestyle()</code> before drawing, the border can become dotted, dashed, or thicker, depending on the mode you select.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>rectangle()</code> returns <code>void</code>. It does not report invalid corner order, clipping, or visibility. If part of a rectangle lies outside the viewport, graphics.h clips it to the visible region. In most assignments this is acceptable, but for neat diagrams you should calculate coordinates so the full box remains on screen.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Simple rectangle border</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTGREEN);
+    rectangle(150, 100, 500, 350);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a light green rectangular outline. Its left edge starts at x = 150, top edge at y = 100, right edge at x = 500, and bottom edge at y = 350.</p>
+
+                    <h3>Nested frames</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int i;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (i = 0; i &lt; 5; i++) {
+        setcolor(i + 1);
+        rectangle(80 + i * 25, 60 + i * 20, 560 - i * 25, 420 - i * 20);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This creates several rectangular frames inside each other. Each loop iteration moves the top-left corner inward and the bottom-right corner inward, so the boxes become progressively smaller.</p>
+
+                    <h3>Rectangle with diagonals</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int left = 140, top = 90, right = 500, bottom = 360;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(CYAN);
+    rectangle(left, top, right, bottom);
+    line(left, top, right, bottom);
+    line(right, top, left, bottom);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a rectangle crossed by two diagonals. This example is useful when explaining corners, center intersection, and bounding boxes.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Swapping top and bottom</h3>
+                    <p>Beginners sometimes use a larger y value for <code>top</code> and a smaller y value for <code>bottom</code>. Remember that y increases downward, so the top edge normally has the smaller number.</p>
+                    <h3>Expecting the inside to be filled</h3>
+                    <p><code>rectangle()</code> draws the outline only. Use <code>bar()</code> to draw a filled rectangle, or draw the outline after <code>bar()</code> if you need both fill and border.</p>
+                    <h3>Using width and height as arguments</h3>
+                    <p>The third and fourth parameters are not width and height. They are the right and bottom coordinates. To draw from a position with a known size, use <code>right = left + width</code> and <code>bottom = top + height</code>.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/line-docs">line()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/arc-docs">arc()</a>
+                        <a href="/ellipse-docs">ellipse()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Open the compiler, paste an example, and adjust the four edge coordinates. Watching the rectangle move is the fastest way to understand graphics.h screen geometry.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Shape outline</p>
+                    <p><strong>Input:</strong> two opposite corners</p>
+                    <p><strong>Best for:</strong> panels, borders, boxes, and clipping windows</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/rectangle-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "rectangle()", "item": "https://graphicsh.online/rectangle-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/rectangle-docs#article",
+                "headline": "rectangle() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h rectangle function.",
+                "datePublished": "2026-06-18",
+                "dateModified": "2026-06-18",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/rectangle-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

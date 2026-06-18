@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>line() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h line() with syntax, endpoint parameters, return value, runnable C examples, output notes, common mistakes, and related functions.">
+    <meta name="keywords" content="line graphics.h, line function in C graphics, graphics.h line example, BGI line function">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/line-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/line-docs">
+    <meta property="og:title" content="line() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing straight line segments in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="line() in graphics.h">
+    <meta name="twitter:description" content="Syntax, endpoints, examples, and mistakes for graphics.h line().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Drawing primitive</p>
+                <h1>line() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>line(int x1, int y1, int x2, int y2);</code></pre>
+                </div>
+                <p>The <code>line()</code> function draws a straight line segment between two absolute screen coordinates. It is the basic building block behind grids, axes, polygons, diagrams, charts, houses, stars, and many Computer Graphics lab drawings. You give the start point and the end point, and graphics.h draws the visible pixels between them using the current color, line style, and thickness.</p>
+                <p>This function is different from <code>lineto()</code>. <code>line()</code> uses two complete points and does not depend on the current drawing position. That makes it predictable for beginner programs because each call contains all the information needed to draw one segment. If you are implementing DDA or Bresenham manually, you normally use <code>putpixel()</code>. If you simply need a built-in straight segment, <code>line()</code> is the right function.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x1</code></td><td><code>int</code></td><td>The x-coordinate of the starting point.</td></tr>
+                            <tr><td><code>y1</code></td><td><code>int</code></td><td>The y-coordinate of the starting point.</td></tr>
+                            <tr><td><code>x2</code></td><td><code>int</code></td><td>The x-coordinate of the ending point.</td></tr>
+                            <tr><td><code>y2</code></td><td><code>int</code></td><td>The y-coordinate of the ending point.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The endpoints use the active graphics coordinate system. In a typical 640 by 480 graphics mode, <code>(0, 0)</code> is the top-left corner, <code>(639, 0)</code> is near the top-right corner, and <code>(0, 479)</code> is near the bottom-left corner. The line may be horizontal, vertical, diagonal, or slanted at any angle. If an endpoint is outside the screen, graphics.h clips the visible part.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>line()</code> returns <code>void</code>. It does not return the slope, length, or clipping result. If you need mathematical values, calculate them yourself before calling the function. For example, horizontal distance is <code>x2 - x1</code>, vertical distance is <code>y2 - y1</code>, and the visual length can be estimated with the distance formula.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Draw two diagonals</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    line(0, 0, 639, 479);
+    line(639, 0, 0, 479);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is an X shape across the drawing area. It demonstrates that a line can travel in either direction; the function is not limited to left-to-right drawing.</p>
+
+                    <h3>Coordinate axes</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int cx = 320, cy = 240;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTGRAY);
+    line(40, cy, 600, cy);
+    line(cx, 40, cx, 440);
+
+    setcolor(YELLOW);
+    outtextxy(604, cy - 8, "X");
+    outtextxy(cx + 8, 44, "Y");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This example draws horizontal and vertical axes through the screen center. It is useful for transformation assignments because objects can be positioned relative to the center intersection.</p>
+
+                    <h3>House outline with line()</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(CYAN);
+    rectangle(220, 220, 420, 380);
+    line(220, 220, 320, 120);
+    line(420, 220, 320, 120);
+    line(260, 380, 260, 300);
+    line(260, 300, 320, 300);
+    line(320, 300, 320, 380);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a simple house: a rectangular wall, a triangular roof, and a door. This shows how multiple line segments can create larger objects.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Thinking y increases upward</h3>
+                    <p>In mathematics, y often increases upward. In graphics.h screen coordinates, y increases downward. A point with y = 400 appears lower than a point with y = 100.</p>
+                    <h3>Expecting line() to update the current position</h3>
+                    <p><code>line()</code> does not update the current graphics cursor. Use <code>lineto()</code> if your drawing should continue from the current position.</p>
+                    <h3>Forgetting setcolor()</h3>
+                    <p>The line uses the current drawing color. If the current color matches the background, the line may be technically drawn but invisible.</p>
+                    <h3>Using line() inside manual algorithm assignments</h3>
+                    <p>If the assignment asks for DDA or Bresenham implementation, calling <code>line()</code> skips the algorithm. Use <code>putpixel()</code> and calculate intermediate points manually.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/rectangle-docs">rectangle()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/arc-docs">arc()</a>
+                        <a href="/ellipse-docs">ellipse()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples in the online compiler and adjust the endpoint coordinates. Small coordinate changes make the screen coordinate system much easier to remember.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Drawing primitive</p>
+                    <p><strong>Input:</strong> start point and end point</p>
+                    <p><strong>Best for:</strong> axes, grids, polygons, and diagrams</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/line-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "line()", "item": "https://graphicsh.online/line-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/line-docs#article",
+                "headline": "line() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h line function.",
+                "datePublished": "2026-06-18",
+                "dateModified": "2026-06-18",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/line-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

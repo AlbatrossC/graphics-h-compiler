@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>graphics.h Function Documentation | C Graphics Reference</title>
+    <meta name="description" content="Standalone graphics.h documentation pages for C graphics functions including circle, rectangle, line, arc, ellipse, colors, fills, text, pixels, and setup.">
+    <meta name="keywords" content="graphics.h documentation, graphics.h functions, C graphics reference, circle docs, line docs, rectangle docs">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://graphicsh.online/docs">
+    <meta property="og:title" content="graphics.h Function Documentation">
+    <meta property="og:description" content="A practical C graphics.h reference with syntax, parameters, examples, mistakes, and online compiler links.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="graphics.h Function Documentation">
+    <meta name="twitter:description" content="Learn graphics.h functions with complete runnable C programs.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+    <style>
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 0;
+            border-top: 1px solid var(--line-soft);
+        }
+
+        .doc-card {
+            min-height: 168px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 22px 24px;
+            border-right: 1px solid var(--line-soft);
+            border-bottom: 1px solid var(--line-soft);
+            background: transparent;
+            text-decoration: none;
+        }
+
+        .doc-card[href]:hover {
+            background: rgba(0, 255, 136, 0.045);
+        }
+
+        .doc-card span {
+            color: var(--warm);
+            font-family: "JetBrains Mono", "Space Mono", monospace;
+            font-size: 0.74rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .doc-card h2 {
+            margin-bottom: 4px;
+        }
+
+        .doc-card p {
+            margin-bottom: 0;
+        }
+
+        .doc-card.disabled {
+            opacity: 0.58;
+        }
+
+        @media (max-width: 720px) {
+            .doc-card {
+                border-right: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Function reference</p>
+                <h1>graphics.h documentation for C graphics programming</h1>
+                <p>Use these standalone references when you need syntax, parameter behavior, runnable examples, and practical mistakes for classic BGI functions. The first documentation batch focuses on shape drawing functions because they are the functions students usually meet before color, fill, text, and image handling.</p>
+            </div>
+            <div class="syntax-card">
+                <p class="section-label">Phase 1</p>
+                <pre><code>circle()
+rectangle()
+line()
+arc()
+ellipse()</code></pre>
+            </div>
+        </section>
+
+        <section class="content-card">
+            <p class="section-label">Shapes</p>
+            <h2>Drawing primitives</h2>
+            <div class="docs-grid">
+                <a class="doc-card" href="/circle-docs">
+                    <span>Outline shape</span>
+                    <h2>circle()</h2>
+                    <p>Draw a circle from a center point and radius, with examples for targets, rings, and classroom diagrams.</p>
+                </a>
+                <a class="doc-card" href="/rectangle-docs">
+                    <span>Outline shape</span>
+                    <h2>rectangle()</h2>
+                    <p>Draw boxes, frames, panels, and coordinate windows from left, top, right, and bottom edges.</p>
+                </a>
+                <a class="doc-card" href="/line-docs">
+                    <span>Drawing primitive</span>
+                    <h2>line()</h2>
+                    <p>Create straight segments between two absolute points using the active color and line style.</p>
+                </a>
+                <a class="doc-card" href="/arc-docs">
+                    <span>Curve segment</span>
+                    <h2>arc()</h2>
+                    <p>Draw a circular curve between start and end angles measured in degrees.</p>
+                </a>
+                <a class="doc-card" href="/ellipse-docs">
+                    <span>Curve shape</span>
+                    <h2>ellipse()</h2>
+                    <p>Draw oval outlines and partial elliptical arcs with independent x and y radii.</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="content-card">
+            <p class="section-label">Upcoming batches</p>
+            <h2>More documentation pages planned</h2>
+            <div class="docs-grid">
+                <div class="doc-card disabled"><span>Fill</span><h2>bar()</h2><p>Filled rectangles and chart blocks.</p></div>
+                <div class="doc-card disabled"><span>Color</span><h2>setcolor()</h2><p>Foreground drawing color.</p></div>
+                <div class="doc-card disabled"><span>Color</span><h2>setbkcolor()</h2><p>Screen background color.</p></div>
+                <div class="doc-card disabled"><span>Fill</span><h2>setfillstyle()</h2><p>Fill pattern and fill color.</p></div>
+                <div class="doc-card disabled"><span>Fill</span><h2>floodfill()</h2><p>Boundary-based area filling.</p></div>
+                <div class="doc-card disabled"><span>Text</span><h2>outtextxy()</h2><p>Text at a precise coordinate.</p></div>
+                <div class="doc-card disabled"><span>Pixel</span><h2>putpixel()</h2><p>Single-pixel plotting.</p></div>
+                <div class="doc-card disabled"><span>Setup</span><h2>initgraph()</h2><p>Graphics mode startup.</p></div>
+                <div class="doc-card disabled"><span>Setup</span><h2>closegraph()</h2><p>Graphics cleanup.</p></div>
+                <div class="doc-card disabled"><span>Timing</span><h2>delay()</h2><p>Animation pauses.</p></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Reference pages for practical C graphics.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "@id": "https://graphicsh.online/docs#collection",
+        "name": "graphics.h Function Documentation",
+        "url": "https://graphicsh.online/docs",
+        "description": "Standalone graphics.h function documentation pages with syntax, parameters, examples, and related functions.",
+        "hasPart": [
+            {"@type": "TechArticle", "name": "circle() documentation", "url": "https://graphicsh.online/circle-docs"},
+            {"@type": "TechArticle", "name": "rectangle() documentation", "url": "https://graphicsh.online/rectangle-docs"},
+            {"@type": "TechArticle", "name": "line() documentation", "url": "https://graphicsh.online/line-docs"},
+            {"@type": "TechArticle", "name": "arc() documentation", "url": "https://graphicsh.online/arc-docs"},
+            {"@type": "TechArticle", "name": "ellipse() documentation", "url": "https://graphicsh.online/ellipse-docs"}
+        ]
+    }
+    </script>
+</body>
+
+</html>

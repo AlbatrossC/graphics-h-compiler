@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>circle() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h circle() with syntax, parameters, return value, runnable C programs, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="circle graphics.h, circle function in C graphics, graphics.h circle example, BGI circle function">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/circle-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/circle-docs">
+    <meta property="og:title" content="circle() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing circles in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="circle() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and mistakes for graphics.h circle().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Shape drawing function</p>
+                <h1>circle() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>circle(int x, int y, int radius);</code></pre>
+                </div>
+                <p>The <code>circle()</code> function draws the outline of a circle on the active graphics screen. It is one of the first BGI functions students use because it demonstrates the graphics coordinate system clearly: a center point controls position, and a radius controls size. The function does not fill the circle and it does not return a status value. It simply plots the circumference using the current drawing color, line style, and viewport rules.</p>
+                <p>In practical graphics.h programs, <code>circle()</code> is useful for targets, clock faces, wheels, orbit diagrams, simple logos, and lab assignments that need a quick circular boundary. Because it works from a center point, it is often easier to place than a rectangle. If you know the screen center, you can draw a balanced circle without calculating left and right edges manually.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The x-coordinate of the circle center. Larger values move the center toward the right side of the screen.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The y-coordinate of the circle center. Larger values move the center downward because graphics.h uses a top-left screen origin.</td></tr>
+                            <tr><td><code>radius</code></td><td><code>int</code></td><td>The circle radius in pixels. A positive radius draws an outline around the center point. Very large radii may extend outside the visible viewport.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>All three arguments are integer pixel values. In the usual VGA graphics mode, the top-left coordinate is <code>(0, 0)</code>, x increases to the right, and y increases downward. A circle centered at <code>(320, 240)</code> with radius <code>100</code> fits nicely on a 640 by 480 screen. A circle centered near an edge can be clipped by the screen boundary, which is normal behavior rather than an error.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>circle()</code> returns <code>void</code>. It does not tell you whether the circle was visible, clipped, or hidden outside the viewport. If you need startup error handling, check <code>graphresult()</code> after <code>initgraph()</code>. If you need to prevent clipping, calculate the center and radius yourself so that <code>x - radius</code>, <code>x + radius</code>, <code>y - radius</code>, and <code>y + radius</code> stay within the screen or viewport.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Basic centered circle</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program opens graphics mode, sets the drawing color to yellow, and draws one circle in the center area of the screen. The output is a clean yellow circular outline on the default background.</p>
+
+                    <h3>Concentric circles</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int r;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (r = 40; r &lt;= 160; r += 30) {
+        setcolor(1 + r / 30);
+        circle(320, 240, r);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The loop draws several circles around the same center. This produces a target-like pattern and shows how changing only the radius changes the size without moving the shape.</p>
+
+                    <h3>Circle with crosshair lines</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x = 320, y = 240, r = 90;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    circle(x, y, r);
+    line(x - r, y, x + r, y);
+    line(x, y - r, x, y + r);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a circle with horizontal and vertical diameter lines. This is a helpful classroom sketch because it makes the center point, radius, and diameter visible.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Forgetting initgraph()</h3>
+                    <p>Drawing functions require graphics mode. If <code>initgraph()</code> is missing or fails, <code>circle()</code> cannot display the expected output.</p>
+                    <h3>Confusing radius with diameter</h3>
+                    <p>The third argument is radius, not diameter. A radius of <code>100</code> creates a circle that is about <code>200</code> pixels wide.</p>
+                    <h3>Using a center too close to the edge</h3>
+                    <p>If the center is near a border and the radius is large, part of the circle will be outside the visible screen. Choose a smaller radius or move the center inward.</p>
+                    <h3>Expecting a filled circle</h3>
+                    <p><code>circle()</code> draws only an outline. For a filled circular shape, use <code>fillellipse()</code> or combine outlines with fill functions where appropriate.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/ellipse-docs">ellipse()</a>
+                        <a href="/arc-docs">arc()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Paste any example into the browser compiler to see the circle rendered without installing Turbo C or configuring BGI paths locally.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Shape outline</p>
+                    <p><strong>Input:</strong> center point and radius</p>
+                    <p><strong>Best for:</strong> targets, wheels, clocks, and circular guides</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/circle-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "circle()", "item": "https://graphicsh.online/circle-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/circle-docs#article",
+                "headline": "circle() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h circle function.",
+                "datePublished": "2026-06-18",
+                "dateModified": "2026-06-18",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/circle-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

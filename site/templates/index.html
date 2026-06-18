@@ -21,26 +21,26 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ SITE_DOMAIN }}/">
+    <meta property="og:url" content="https://graphicsh.online/">
     <meta property="og:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
     <meta property="og:description"
         content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
-    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.png">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ SITE_DOMAIN }}/">
+    <meta property="twitter:url" content="https://graphicsh.online/">
     <meta property="twitter:title" content="graphics.h Online Compiler — Run C Graphics in Browser">
     <meta property="twitter:description"
         content="Run graphics.h programs online in your browser or VS Code extension with zero setup. A modern Turbo C alternative compiler.">
-    <meta property="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.png">
+    <meta property="twitter:image" content="https://graphicsh.online/static/images/og-image.png">
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="{{ SITE_DOMAIN }}/">
+    <link rel="canonical" href="https://graphicsh.online/">
 
     <!-- Hreflang Usage -->
-    <link rel="alternate" hreflang="en" href="{{ SITE_DOMAIN }}/" />
-    <link rel="alternate" hreflang="x-default" href="{{ SITE_DOMAIN }}/" />
+    <link rel="alternate" hreflang="en" href="https://graphicsh.online/" />
+    <link rel="alternate" hreflang="x-default" href="https://graphicsh.online/" />
 
     <!-- Favicon -->
     <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
@@ -105,6 +105,10 @@
                         <i data-lucide="book-open"></i>
                         <span>Blog</span>
                     </a>
+                    <a href="/docs" class="nav-btn">
+                        <i data-lucide="file-text"></i>
+                        <span>Docs</span>
+                    </a>
                     <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank"
                         rel="noopener noreferrer" class="nav-btn">
                         <svg viewBox="0 0 24 24" fill="currentColor" class="lucide">
@@ -152,6 +156,11 @@
                 <a href="/blog" class="mobile-menu-item" onclick="toggleMobileMenu()">
                     <i data-lucide="book-open"></i>
                     <span>Blog</span>
+                </a>
+
+                <a href="/docs" class="mobile-menu-item" onclick="toggleMobileMenu()">
+                    <i data-lucide="file-text"></i>
+                    <span>Docs</span>
                 </a>
 
                 <a href="https://github.com/AlbatrossC/graphics-h-compiler" target="_blank" rel="noopener noreferrer"
@@ -439,6 +448,7 @@
                                         data-lucide="external-link"></i>
                                     Sppucodes</a></li>
                             <li><a href="/blog"><i data-lucide="book-open"></i> Blog Tutorials</a></li>
+                            <li><a href="/docs"><i data-lucide="file-text"></i> Function Docs</a></li>
                             <li><a href="/about"><i data-lucide="info"></i> About</a></li>
                         </ul>
                     </div>
@@ -610,7 +620,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "graphics.h Online Compiler",
-        "url": "{{ SITE_DOMAIN }}/",
+        "url": "https://graphicsh.online/",
         "description": "A modern online compiler for running graphics.h C programs in the browser with zero setup. Alternative to Turbo C and DOSBox.",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Windows, Ubuntu, Web Browser",

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ellipse() in graphics.h | Syntax, Parameters, Angles, and C Examples</title>
+    <meta name="description" content="Learn graphics.h ellipse() with syntax, angle behavior, x radius and y radius parameters, runnable C examples, output notes, mistakes, and related functions.">
+    <meta name="keywords" content="ellipse graphics.h, ellipse function in C graphics, graphics.h ellipse example, BGI ellipse">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/ellipse-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/ellipse-docs">
+    <meta property="og:title" content="ellipse() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing ellipses and elliptical arcs in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ellipse() in graphics.h">
+    <meta name="twitter:description" content="Syntax, radii, examples, and mistakes for graphics.h ellipse().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Curve drawing function</p>
+                <h1>ellipse() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>ellipse(int x, int y, int stangle, int endangle, int xradius, int yradius);</code></pre>
+                </div>
+                <p>The <code>ellipse()</code> function draws an elliptical outline or an elliptical arc. It is similar to <code>arc()</code>, but it uses two radii instead of one: a horizontal radius and a vertical radius. When both radii are equal, the result behaves like a circle or circular arc. When they differ, the result becomes an oval. This makes <code>ellipse()</code> useful for planets, wheels viewed from an angle, faces, lenses, buttons, shadows, or any shape that needs a stretched curve.</p>
+                <p>The function accepts start and end angles in degrees. Like <code>arc()</code>, <code>0</code> degrees points to the right, <code>90</code> points upward, <code>180</code> points left, and <code>270</code> points downward. With <code>stangle = 0</code> and <code>endangle = 360</code>, you draw a complete ellipse. With smaller angle ranges, you draw only part of the oval.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The x-coordinate of the ellipse center.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The y-coordinate of the ellipse center.</td></tr>
+                            <tr><td><code>stangle</code></td><td><code>int</code></td><td>The starting angle in degrees.</td></tr>
+                            <tr><td><code>endangle</code></td><td><code>int</code></td><td>The ending angle in degrees.</td></tr>
+                            <tr><td><code>xradius</code></td><td><code>int</code></td><td>The horizontal radius in pixels. Larger values make the ellipse wider.</td></tr>
+                            <tr><td><code>yradius</code></td><td><code>int</code></td><td>The vertical radius in pixels. Larger values make the ellipse taller.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The center and radii define the bounding region. A full ellipse centered at <code>(320, 240)</code> with <code>xradius = 160</code> and <code>yradius = 80</code> stretches from x = 160 to x = 480, and from y = 160 to y = 320. This mental calculation helps you keep the shape on screen.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>ellipse()</code> returns <code>void</code>. It does not return a bounding box or tell you whether the shape was clipped. If the ellipse is partly outside the screen, only the visible portion appears. For reliable diagrams, keep <code>x - xradius</code>, <code>x + xradius</code>, <code>y - yradius</code>, and <code>y + yradius</code> inside the screen limits.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Full ellipse</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTCYAN);
+    ellipse(320, 240, 0, 360, 160, 80);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a wide oval centered on the screen. The horizontal radius is twice the vertical radius, so the ellipse is wider than it is tall.</p>
+
+                    <h3>Partial ellipse arc</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    ellipse(320, 250, 20, 160, 180, 90);
+    line(150, 250, 490, 250);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This draws the upper curved portion of an ellipse with a guide line through the center. It is a good way to see how angle limits affect the visible part of the oval.</p>
+
+                    <h3>Simple planet with rings</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    circle(320, 240, 70);
+    setcolor(LIGHTGREEN);
+    ellipse(320, 240, 0, 360, 160, 42);
+    ellipse(320, 240, 0, 360, 180, 52);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a circle with two wide ellipses passing around it, forming a basic ringed planet. This combines <code>circle()</code> and <code>ellipse()</code> in one drawing.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Using one radius value mentally</h3>
+                    <p><code>ellipse()</code> has separate horizontal and vertical radii. If you expect a circle but use different values, the output will be stretched.</p>
+                    <h3>Mixing up xradius and yradius</h3>
+                    <p><code>xradius</code> controls width and <code>yradius</code> controls height. Swapping them changes a wide ellipse into a tall ellipse.</p>
+                    <h3>Forgetting to use 0 to 360 for a full ellipse</h3>
+                    <p>If you provide a smaller angle range, only part of the ellipse is drawn. Use <code>0, 360</code> when you want the entire outline.</p>
+                    <h3>Expecting a filled oval</h3>
+                    <p><code>ellipse()</code> draws an outline. Use <code>fillellipse()</code> when a filled oval is required.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/arc-docs">arc()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Paste an example into the compiler and experiment with <code>xradius</code>, <code>yradius</code>, and angle values. Ellipse behavior becomes intuitive once you see the shape stretch live.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Elliptical curve</p>
+                    <p><strong>Input:</strong> center, angles, x radius, and y radius</p>
+                    <p><strong>Best for:</strong> ovals, rings, planets, and stretched curves</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/ellipse-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "ellipse()", "item": "https://graphicsh.online/ellipse-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/ellipse-docs#article",
+                "headline": "ellipse() in graphics.h",
+                "description": "Syntax, parameters, angle rules, examples, and mistakes for the graphics.h ellipse function.",
+                "datePublished": "2026-06-18",
+                "dateModified": "2026-06-18",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/ellipse-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

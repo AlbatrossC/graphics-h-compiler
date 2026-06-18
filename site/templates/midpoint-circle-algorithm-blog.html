@@ -3,34 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cohen-Sutherland Line Clipping Algorithm | graphics.h</title>
-    <meta name="description" content="Learn Cohen-Sutherland Line Clipping Algorithm with region codes, accept/reject rules, worked explanation, and complete C graphics.h program.">
-    <meta name="keywords" content="Cohen Sutherland line clipping, line clipping algorithm, computer graphics clipping, graphics.h clipping program, region code algorithm">
+    <title>Midpoint Circle Algorithm in Computer Graphics | graphics.h</title>
+    <meta name="description" content="Learn the Midpoint Circle Algorithm in computer graphics with decision parameter, eight-way symmetry, step-by-step example, and complete C graphics.h program.">
+    <meta name="keywords" content="Midpoint circle algorithm, circle drawing algorithm in computer graphics, graphics.h circle algorithm, midpoint circle program in C, eight way symmetry">
     <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow, max-image-preview:large">
-    <link rel="canonical" href="{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping">
+    <link rel="canonical" href="https://graphicsh.online/midpoint-circle-algorithm-blog">
     <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/static/css/fonts.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
 
 
     <meta property="og:type" content="article">
-    <meta property="og:url" content="{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping">
-    <meta property="og:title" content="Cohen-Sutherland Line Clipping Algorithm">
-    <meta property="og:description" content="Region codes and line clipping explained with a complete graphics.h program.">
-    <meta property="og:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta property="og:url" content="https://graphicsh.online/midpoint-circle-algorithm-blog">
+    <meta property="og:title" content="Midpoint Circle Algorithm in Computer Graphics">
+    <meta property="og:description" content="Step-by-step midpoint circle algorithm explanation with complete C graphics.h source code.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
     <meta property="og:site_name" content="graphics.h Compiler">
     <meta property="article:published_time" content="2026-05-28">
     <meta property="article:modified_time" content="2026-05-28">
     <meta property="article:author" content="AlbatrossC">
-    <meta property="article:section" content="Computer Graphics Clipping">
-    <meta property="article:tag" content="Cohen-Sutherland">
-    <meta property="article:tag" content="line clipping">
+    <meta property="article:section" content="Computer Graphics Algorithms">
+    <meta property="article:tag" content="Midpoint circle algorithm">
     <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="C programming">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Cohen-Sutherland Line Clipping">
-    <meta name="twitter:description" content="Learn line clipping with region codes and graphics.h code.">
-    <meta name="twitter:image" content="{{ SITE_DOMAIN }}/static/images/og-image.webp">
+    <meta name="twitter:title" content="Midpoint Circle Algorithm">
+    <meta name="twitter:description" content="Learn midpoint circle drawing with decision parameter, symmetry, and graphics.h code.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
 
     <style>
         :root {
@@ -160,6 +160,7 @@
         .toc,
         .formula,
         .code-block,
+        .example-table,
         .cta,
         .related {
             border: 1px solid var(--line);
@@ -167,11 +168,7 @@
             background: rgba(21, 25, 23, 0.86);
         }
 
-        .quick-card,
-        .toc,
-        .formula,
-        .cta,
-        .related {
+        .quick-card {
             padding: 18px;
         }
 
@@ -180,10 +177,9 @@
             margin: 0;
         }
 
-        .quick-card h2,
-        .toc h2 {
-            color: var(--warm);
+        .quick-card h2 {
             font-size: 1rem;
+            color: var(--warm);
             letter-spacing: 0;
         }
 
@@ -206,10 +202,14 @@
         .toc {
             position: sticky;
             top: 84px;
+            padding: 18px;
         }
 
         .toc h2 {
             margin: 0 0 10px;
+            font-size: 0.95rem;
+            color: var(--warm);
+            letter-spacing: 0;
         }
 
         .toc a {
@@ -251,6 +251,7 @@
         }
 
         .formula {
+            padding: 18px;
             color: var(--text);
             font-family: 'Space Mono', monospace;
             overflow-x: auto;
@@ -273,7 +274,7 @@
         }
 
         .code-block {
-            margin: 14px 0 24px;
+            margin: 14px 0;
             overflow: hidden;
             background: #080a09;
         }
@@ -312,18 +313,61 @@
             background: rgba(0, 255, 136, 0.14);
         }
 
-        .code-token-keyword { color: #7dd3fc; }
-        .code-token-type { color: #fbbf24; }
-        .code-token-function { color: #86efac; }
-        .code-token-number { color: #fca5a5; }
-        .code-token-string { color: #fde68a; }
-        .code-token-preprocessor { color: #c4b5fd; }
-        .code-token-comment { color: #8ca39a; }
+        .code-token-keyword {
+            color: #7dd3fc;
+        }
+
+        .code-token-type {
+            color: #fbbf24;
+        }
+
+        .code-token-function {
+            color: #86efac;
+        }
+
+        .code-token-number {
+            color: #fca5a5;
+        }
+
+        .code-token-string {
+            color: #fde68a;
+        }
+
+        .code-token-preprocessor {
+            color: #c4b5fd;
+        }
+
+        .code-token-comment {
+            color: #8ca39a;
+        }
+
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+
+        .example-table th,
+        .example-table td {
+            border-bottom: 1px solid var(--line);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .example-table th {
+            color: var(--warm);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .example-table td {
+            color: var(--muted);
+        }
 
         .cta,
         .related {
             border-color: rgba(0, 255, 136, 0.28);
             background: rgba(0, 255, 136, 0.06);
+            padding: 20px;
         }
 
         .cta a,
@@ -385,6 +429,7 @@
             <nav class="nav" aria-label="Main navigation">
                 <a href="/compiler">Compiler</a>
                 <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
                 <a href="/about">About</a>
                 <a href="/contact">Contact</a>
             </nav>
@@ -395,197 +440,154 @@
         <article>
             <header class="hero">
                 <div>
-                    <p class="eyebrow">Clipping Algorithms</p>
-                    <h1>Cohen-Sutherland Line Clipping Algorithm</h1>
-                    <p class="dek">The Cohen-Sutherland algorithm clips a line against a rectangular window. It assigns region codes to both endpoints, quickly accepts fully visible lines, rejects fully invisible lines, and calculates intersections only when needed.</p>
-                    <p class="meta">Published May 28, 2026 - 11 min read</p>
+                    <p class="eyebrow">Circle Drawing Algorithms</p>
+                    <h1>Midpoint Circle Algorithm in Computer Graphics</h1>
+                    <p class="dek">The Midpoint Circle Algorithm draws a circle by calculating one octant and reflecting each point into the other seven octants. It uses an integer decision parameter, so it is efficient and widely taught in computer graphics courses.</p>
+                    <p class="meta">Published May 28, 2026 - 9 min read</p>
                 </div>
                 <aside class="quick-card">
                     <h2>At a glance</h2>
-                    <p><strong>Input:</strong> a line and clipping window</p>
-                    <p><strong>Output:</strong> visible part of the line</p>
-                    <p><strong>Core idea:</strong> use region codes to avoid unnecessary intersection work.</p>
+                    <p><strong>Input:</strong> center point and radius</p>
+                    <p><strong>Output:</strong> pixels that approximate a circle</p>
+                    <p><strong>Core idea:</strong> calculate one octant, then mirror points using eight-way symmetry.</p>
                 </aside>
             </header>
 
             <div class="content">
                 <div class="post-body">
-                    <section id="what-is-clipping">
-                        <h2>What is line clipping?</h2>
-                        <p>Line clipping is the process of removing the part of a line that lies outside a viewing window. Only the portion inside the window is displayed.</p>
-                        <p>In computer graphics, clipping is useful because the screen or viewport has fixed boundaries. Objects outside those boundaries should not be drawn.</p>
+                    <section id="what-is-midpoint">
+                        <h2>What is the Midpoint Circle Algorithm?</h2>
+                        <p>The Midpoint Circle Algorithm is a raster graphics algorithm used to draw a circle on a pixel screen. Instead of checking every point on the screen, it calculates the best next pixel around the circle boundary.</p>
+                        <p>The algorithm starts at the top of the circle, moves through one octant, and uses symmetry to plot the remaining seven matching points. This makes circle drawing much faster than testing all possible coordinates.</p>
                     </section>
 
-                    <section id="region-codes">
-                        <h2>Region codes in Cohen-Sutherland algorithm</h2>
-                        <p>The rectangular clipping window divides the plane into nine regions. Each endpoint receives a 4-bit region code:</p>
+                    <section id="symmetry">
+                        <h2>Eight-way symmetry of a circle</h2>
+                        <p>A circle is symmetric in eight directions. If one point <code>(x, y)</code> lies on the circle relative to the center, then seven more points can be plotted without recalculating them.</p>
                         <div class="formula">
-                            TOP = 1000<br>
-                            BOTTOM = 0100<br>
-                            RIGHT = 0010<br>
-                            LEFT = 0001
+                            (xc + x, yc + y) &nbsp;&nbsp; (xc - x, yc + y)<br>
+                            (xc + x, yc - y) &nbsp;&nbsp; (xc - x, yc - y)<br>
+                            (xc + y, yc + x) &nbsp;&nbsp; (xc - y, yc + x)<br>
+                            (xc + y, yc - x) &nbsp;&nbsp; (xc - y, yc - x)
                         </div>
-                        <p>If a point is inside the clipping window, its region code is <code>0000</code>. If it is outside, one or more bits are set depending on its position.</p>
                     </section>
 
-                    <section id="rules">
-                        <h2>Accept and reject rules</h2>
-                        <ul>
-                            <li><strong>Trivial accept:</strong> if both endpoint codes are <code>0000</code>, the full line is visible.</li>
-                            <li><strong>Trivial reject:</strong> if the bitwise AND of both codes is not <code>0000</code>, the full line is outside on the same side.</li>
-                            <li><strong>Partial clipping:</strong> otherwise, calculate an intersection with the clipping window and repeat.</li>
-                        </ul>
+                    <section id="decision-parameter">
+                        <h2>Decision parameter formula</h2>
+                        <p>For a circle with radius <code>r</code>, the algorithm starts with:</p>
+                        <div class="formula">
+                            x = 0<br>
+                            y = r<br>
+                            p = 1 - r
+                        </div>
+                        <p>If <code>p &lt; 0</code>, the midpoint is inside the circle, so x increases and y stays the same. If <code>p &gt;= 0</code>, the midpoint is outside or on the circle, so x increases and y decreases.</p>
                     </section>
 
                     <section id="steps">
-                        <h2>Steps of Cohen-Sutherland Line Clipping</h2>
+                        <h2>Steps of Midpoint Circle Algorithm</h2>
                         <ol>
-                            <li>Define the clipping window using <code>xmin</code>, <code>ymin</code>, <code>xmax</code>, and <code>ymax</code>.</li>
-                            <li>Read the two endpoints of the line.</li>
-                            <li>Compute the region code for each endpoint.</li>
-                            <li>If both codes are zero, accept the line.</li>
-                            <li>If the bitwise AND of the two codes is non-zero, reject the line.</li>
-                            <li>Otherwise, clip the outside endpoint to a window boundary and repeat.</li>
+                            <li>Read the circle center <code>(xc, yc)</code> and radius <code>r</code>.</li>
+                            <li>Initialize <code>x = 0</code>, <code>y = r</code>, and <code>p = 1 - r</code>.</li>
+                            <li>Plot the eight symmetric points.</li>
+                            <li>If <code>p &lt; 0</code>, update <code>p = p + 2x + 3</code>.</li>
+                            <li>If <code>p &gt;= 0</code>, decrease y and update <code>p = p + 2(x - y) + 5</code>.</li>
+                            <li>Increase x and repeat until <code>x &gt; y</code>.</li>
                         </ol>
                     </section>
 
+                    <section id="example">
+                        <h2>Example calculation</h2>
+                        <p>Suppose the radius is <code>5</code>. The initial values are:</p>
+                        <div class="formula">
+                            x = 0<br>
+                            y = 5<br>
+                            p = 1 - 5 = -4
+                        </div>
+                        <table class="example-table">
+                            <thead>
+                                <tr>
+                                    <th>Step</th>
+                                    <th>x</th>
+                                    <th>y</th>
+                                    <th>p</th>
+                                    <th>Decision</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>0</td><td>0</td><td>5</td><td>-4</td><td>Inside, y unchanged</td></tr>
+                                <tr><td>1</td><td>1</td><td>5</td><td>-1</td><td>Inside, y unchanged</td></tr>
+                                <tr><td>2</td><td>2</td><td>5</td><td>4</td><td>Outside, decrease y</td></tr>
+                                <tr><td>3</td><td>3</td><td>4</td><td>3</td><td>Outside, decrease y</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
                     <section id="program">
-                        <h2>Cohen-Sutherland Line Clipping program in C using graphics.h</h2>
-                        <p>This program asks for two endpoints, draws the clipping window, draws the original line in red, and then draws the clipped visible line in green.</p>
+                        <h2>Midpoint Circle Algorithm program in C using graphics.h</h2>
+                        <p>This program draws a circle using the midpoint method. It does not call the built-in <code>circle()</code> function; instead, it plots pixels manually with <code>putpixel()</code>.</p>
                         <div class="code-block">
                             <div class="code-toolbar">
-                                <span class="code-language">C / Line Clipping</span>
-                                <button class="copy-code-btn" type="button" data-copy-code="cohen-code">Copy</button>
+                                <span class="code-language">C / graphics.h</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="midpoint-circle-code">Copy</button>
                             </div>
-<pre><code id="cohen-code" class="language-c">#include &lt;graphics.h&gt;
+<pre><code id="midpoint-circle-code" class="language-c">#include &lt;graphics.h&gt;
 #include &lt;conio.h&gt;
 #include &lt;dos.h&gt;
 #include &lt;stdio.h&gt;
 
-#define LEFT 1
-#define RIGHT 2
-#define BOTTOM 4
-#define TOP 8
-
-int xmin = 150, ymin = 120, xmax = 450, ymax = 340;
-
-int computeCode(float x, float y)
+void plotCirclePoints(int xc, int yc, int x, int y)
 {
-    int code = 0;
-
-    if (x &lt; xmin)
-        code = code | LEFT;
-    else if (x &gt; xmax)
-        code = code | RIGHT;
-
-    if (y &lt; ymin)
-        code = code | TOP;
-    else if (y &gt; ymax)
-        code = code | BOTTOM;
-
-    return code;
+    putpixel(xc + x, yc + y, WHITE);
+    putpixel(xc - x, yc + y, WHITE);
+    putpixel(xc + x, yc - y, WHITE);
+    putpixel(xc - x, yc - y, WHITE);
+    putpixel(xc + y, yc + x, WHITE);
+    putpixel(xc - y, yc + x, WHITE);
+    putpixel(xc + y, yc - x, WHITE);
+    putpixel(xc - y, yc - x, WHITE);
 }
 
-void cohenSutherlandClip(float x1, float y1, float x2, float y2)
+void drawMidpointCircle(int xc, int yc, int radius)
 {
-    int code1 = computeCode(x1, y1);
-    int code2 = computeCode(x2, y2);
-    int accept = 0;
-    float x, y;
-    int codeOut;
+    int x = 0;
+    int y = radius;
+    int p = 1 - radius;
 
-    while (1)
+    plotCirclePoints(xc, yc, x, y);
+
+    while (x &lt; y)
     {
-        if ((code1 == 0) &amp;&amp; (code2 == 0))
+        x++;
+
+        if (p &lt; 0)
         {
-            accept = 1;
-            break;
-        }
-        else if (code1 &amp; code2)
-        {
-            break;
+            p = p + (2 * x) + 3;
         }
         else
         {
-            if (code1 != 0)
-                codeOut = code1;
-            else
-                codeOut = code2;
-
-            if (codeOut &amp; TOP)
-            {
-                x = x1 + (x2 - x1) * (ymin - y1) / (y2 - y1);
-                y = ymin;
-            }
-            else if (codeOut &amp; BOTTOM)
-            {
-                x = x1 + (x2 - x1) * (ymax - y1) / (y2 - y1);
-                y = ymax;
-            }
-            else if (codeOut &amp; RIGHT)
-            {
-                y = y1 + (y2 - y1) * (xmax - x1) / (x2 - x1);
-                x = xmax;
-            }
-            else
-            {
-                y = y1 + (y2 - y1) * (xmin - x1) / (x2 - x1);
-                x = xmin;
-            }
-
-            if (codeOut == code1)
-            {
-                x1 = x;
-                y1 = y;
-                code1 = computeCode(x1, y1);
-            }
-            else
-            {
-                x2 = x;
-                y2 = y;
-                code2 = computeCode(x2, y2);
-            }
+            y--;
+            p = p + (2 * (x - y)) + 5;
         }
-    }
 
-    if (accept)
-    {
-        setcolor(GREEN);
-        line(x1, y1, x2, y2);
-        outtextxy(170, 360, "Green line is the clipped visible line");
-    }
-    else
-    {
-        outtextxy(170, 360, "Line is outside the clipping window");
+        plotCirclePoints(xc, yc, x, y);
+        delay(40);
     }
 }
 
 int main()
 {
     int gd = DETECT, gm;
-    float x1, y1, x2, y2;
+    int xc, yc, radius;
 
-    printf("Enter x1 y1: ");
-    scanf("%f %f", &amp;x1, &amp;y1);
+    printf("Enter center x y: ");
+    scanf("%d %d", &amp;xc, &amp;yc);
 
-    printf("Enter x2 y2: ");
-    scanf("%f %f", &amp;x2, &amp;y2);
+    printf("Enter radius: ");
+    scanf("%d", &amp;radius);
 
     initgraph(&amp;gd, &amp;gm, "");
 
-    setcolor(WHITE);
-    rectangle(xmin, ymin, xmax, ymax);
-    outtextxy(xmin, ymin - 20, "Clipping Window");
-
-    setcolor(RED);
-    line(x1, y1, x2, y2);
-    outtextxy(170, 380, "Red line is the original line");
-    getch();
-
-    cleardevice();
-    setcolor(WHITE);
-    rectangle(xmin, ymin, xmax, ymax);
-    cohenSutherlandClip(x1, y1, x2, y2);
+    drawMidpointCircle(xc, yc, radius);
 
     getch();
     closegraph();
@@ -593,56 +595,63 @@ int main()
 }</code></pre>
                         </div>
                         <div class="cta">
-                            <p><strong>Try it online:</strong> open the <a href="/compiler">graphics.h online compiler</a>, paste the program, then use sample inputs <strong><code>100 160</code></strong> and <strong><code>520 310</code></strong>.</p>
+                            <p><strong>Try it online:</strong> open the <a href="/compiler">graphics.h online compiler</a>, paste the program, then use center <strong><code>320 240</code></strong> and radius <strong><code>100</code></strong>.</p>
                         </div>
                     </section>
 
                     <section id="advantages">
-                        <h2>Advantages of Cohen-Sutherland algorithm</h2>
+                        <h2>Advantages of Midpoint Circle Algorithm</h2>
                         <ul>
-                            <li>It quickly accepts lines that are fully inside the window.</li>
-                            <li>It quickly rejects lines that are fully outside on the same side.</li>
-                            <li>It calculates intersections only for partially visible lines.</li>
-                            <li>It is easy to implement using bitwise operations.</li>
+                            <li>It uses integer arithmetic, so it is efficient.</li>
+                            <li>It plots only one octant and mirrors the remaining points.</li>
+                            <li>It avoids expensive trigonometric functions.</li>
+                            <li>It is easy to adapt for classic graphics.h programs.</li>
                         </ul>
                     </section>
 
                     <section id="limitations">
                         <h2>Limitations</h2>
                         <ul>
-                            <li>It is designed for rectangular clipping windows.</li>
-                            <li>For complex polygon clipping, other algorithms are needed.</li>
-                            <li>Partially visible lines may require repeated intersection calculations.</li>
+                            <li>The circle boundary can look jagged because pixels are square.</li>
+                            <li>The algorithm draws only the outline, not a filled circle.</li>
+                            <li>Anti-aliasing is not included in the classic midpoint approach.</li>
                         </ul>
                     </section>
 
                     <section id="mistakes">
                         <h2>Common mistakes</h2>
-                        <h3>Using the wrong y-direction</h3>
-                        <p>In graphics.h, smaller y-values are higher on the screen. That is why <code>y &lt; ymin</code> means the point is above the window and gets the TOP code.</p>
+                        <h3>Plotting only one point</h3>
+                        <p>If you plot only <code>(x, y)</code>, you will draw just one octant. Use eight-way symmetry to complete the circle.</p>
 
-                        <h3>Forgetting the bitwise AND reject test</h3>
-                        <p>If <code>code1 &amp; code2</code> is non-zero, both endpoints share an outside region and the line can be rejected immediately.</p>
+                        <h3>Calling circle() instead of putpixel()</h3>
+                        <p>The goal is to implement the algorithm manually. Calling <code>circle(xc, yc, radius)</code> uses the built-in graphics.h function and skips the midpoint logic.</p>
 
-                        <h3>Dividing by zero</h3>
-                        <p>Horizontal and vertical lines need careful intersection logic. The common algorithm avoids invalid divisions by clipping only against boundaries that the outside code actually crosses.</p>
+                        <h3>Using the wrong loop condition</h3>
+                        <p>The loop should continue while <code>x &lt; y</code> or <code>x &lt;= y</code>. Stopping too early leaves gaps near the diagonal of the circle.</p>
+                    </section>
+
+                    <section id="summary">
+                        <h2>Summary</h2>
+                        <p>The Midpoint Circle Algorithm draws a circle efficiently by using a decision parameter and eight-way symmetry. It is one of the most important beginner algorithms for understanding how curved shapes are rasterized on a pixel screen.</p>
                     </section>
 
                     <section class="related" aria-label="Related tutorials">
                         <h2>Related tutorials</h2>
-                        <p><a href="/blog/clipping-algorithm-in-computer-graphics">Clipping Algorithm in Computer Graphics</a></p>
-                        <p><a href="/blog/transformations-in-computer-graphics">Transformations in Computer Graphics</a></p>
-                        <p><a href="/blog/bresenham-line-drawing-algorithm">Bresenham Line Drawing Algorithm in Computer Graphics</a></p>
-                        <p><a href="/blog/dda-line-drawing-algorithm">DDA Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/cohen-sutherland-line-clipping-blog">Cohen-Sutherland Line Clipping Algorithm</a></p>
+                        <p><a href="/transformations-in-computer-graphics-blog">Transformations in Computer Graphics</a></p>
+                        <p><a href="/bresenham-line-drawing-algorithm-blog">Bresenham Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/dda-line-drawing-algorithm-blog">DDA Line Drawing Algorithm in Computer Graphics</a></p>
+                        <p><a href="/blog">View all graphics.h tutorials</a></p>
                     </section>
                 </div>
 
                 <aside class="toc" aria-label="Table of contents">
                     <h2>In this tutorial</h2>
-                    <a href="#what-is-clipping">Line clipping</a>
-                    <a href="#region-codes">Region codes</a>
-                    <a href="#rules">Accept/reject rules</a>
+                    <a href="#what-is-midpoint">What is it?</a>
+                    <a href="#symmetry">Eight-way symmetry</a>
+                    <a href="#decision-parameter">Decision parameter</a>
                     <a href="#steps">Algorithm steps</a>
+                    <a href="#example">Example</a>
                     <a href="#program">graphics.h program</a>
                     <a href="#advantages">Advantages</a>
                     <a href="#limitations">Limitations</a>
@@ -686,14 +695,14 @@ int main()
                     return hold('code-token-comment', match);
                 });
 
-                escaped = escaped.replace(/^#(?:include|define)\s+.*$/gm, function (match) {
+                escaped = escaped.replace(/^#include\s+&lt;[^&]+&gt;/gm, function (match) {
                     return hold('code-token-preprocessor', match);
                 });
 
                 escaped = escaped
-                    .replace(/\b(int|float|void|return|if|else|for|while|break)\b/g, '<span class="code-token-keyword">$1</span>')
-                    .replace(/\b(DETECT|WHITE|GREEN|RED|LEFT|RIGHT|TOP|BOTTOM)\b/g, '<span class="code-token-type">$1</span>')
-                    .replace(/\b(computeCode|cohenSutherlandClip|setcolor|line|rectangle|outtextxy|cleardevice|printf|scanf|initgraph|getch|closegraph)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
+                    .replace(/\b(int|float|void|return|if|else|for|while)\b/g, '<span class="code-token-keyword">$1</span>')
+                    .replace(/\b(DETECT|WHITE)\b/g, '<span class="code-token-type">$1</span>')
+                    .replace(/\b(putpixel|delay|printf|scanf|initgraph|getch|closegraph|plotCirclePoints|drawMidpointCircle)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
                     .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="code-token-number">$1</span>');
 
                 placeholders.forEach(function (value, index) {
@@ -754,34 +763,34 @@ int main()
         "@graph": [
             {
                 "@type": "BreadcrumbList",
-                "@id": "{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping#breadcrumb",
+                "@id": "https://graphicsh.online/midpoint-circle-algorithm-blog#breadcrumb",
                 "itemListElement": [
                     {
                         "@type": "ListItem",
                         "position": 1,
                         "name": "Home",
-                        "item": "{{ SITE_DOMAIN }}/"
+                        "item": "https://graphicsh.online/"
                     },
                     {
                         "@type": "ListItem",
                         "position": 2,
                         "name": "Blog",
-                        "item": "{{ SITE_DOMAIN }}/blog"
+                        "item": "https://graphicsh.online/blog"
                     },
                     {
                         "@type": "ListItem",
                         "position": 3,
-                        "name": "Cohen-Sutherland Line Clipping",
-                        "item": "{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping"
+                        "name": "Midpoint Circle Algorithm",
+                        "item": "https://graphicsh.online/midpoint-circle-algorithm-blog"
                     }
                 ]
             },
             {
                 "@type": "Article",
-                "@id": "{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping#article",
-                "headline": "Cohen-Sutherland Line Clipping Algorithm",
-                "description": "Learn Cohen-Sutherland Line Clipping Algorithm with region codes, accept and reject rules, and complete C graphics.h source code.",
-                "image": "{{ SITE_DOMAIN }}/static/images/og-image.webp",
+                "@id": "https://graphicsh.online/midpoint-circle-algorithm-blog#article",
+                "headline": "Midpoint Circle Algorithm in Computer Graphics",
+                "description": "Learn the Midpoint Circle Algorithm with decision parameter, eight-way symmetry, example calculation, and complete C graphics.h source code.",
+                "image": "https://graphicsh.online/static/images/og-image.webp",
                 "datePublished": "2026-05-28",
                 "dateModified": "2026-05-28",
                 "author": {
@@ -794,39 +803,39 @@ int main()
                     "name": "graphics.h Compiler",
                     "logo": {
                         "@type": "ImageObject",
-                        "url": "{{ SITE_DOMAIN }}/static/images/brand/graphics-h-turtle.webp"
+                        "url": "https://graphicsh.online/static/images/brand/graphics-h-turtle.webp"
                     }
                 },
-                "mainEntityOfPage": "{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping",
-                "articleSection": "Computer Graphics Clipping",
-                "keywords": "Cohen-Sutherland, line clipping, clipping algorithm, computer graphics, graphics.h"
+                "mainEntityOfPage": "https://graphicsh.online/midpoint-circle-algorithm-blog",
+                "articleSection": "Computer Graphics Algorithms",
+                "keywords": "Midpoint Circle Algorithm, circle drawing algorithm, computer graphics, graphics.h, C programming"
             },
             {
                 "@type": "FAQPage",
-                "@id": "{{ SITE_DOMAIN }}/blog/cohen-sutherland-line-clipping#faq",
+                "@id": "https://graphicsh.online/midpoint-circle-algorithm-blog#faq",
                 "mainEntity": [
                     {
                         "@type": "Question",
-                        "name": "What is Cohen-Sutherland Line Clipping?",
+                        "name": "What is the Midpoint Circle Algorithm?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "Cohen-Sutherland Line Clipping is a computer graphics algorithm that clips a line against a rectangular viewing window using 4-bit region codes."
+                            "text": "The Midpoint Circle Algorithm is a computer graphics algorithm that draws a circle using a decision parameter and eight-way symmetry."
                         }
                     },
                     {
                         "@type": "Question",
-                        "name": "What is a region code?",
+                        "name": "Why does the Midpoint Circle Algorithm use symmetry?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "A region code is a 4-bit code that describes whether a point is left, right, above, below, or inside the clipping window."
+                            "text": "A circle is symmetric in eight directions, so calculating one point allows seven additional matching points to be plotted."
                         }
                     },
                     {
                         "@type": "Question",
-                        "name": "When is a line trivially rejected?",
+                        "name": "Does the algorithm use the built-in circle function?",
                         "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "A line is trivially rejected when the bitwise AND of the two endpoint region codes is non-zero, meaning both endpoints are outside on a shared side."
+                            "text": "No. A manual midpoint implementation uses putpixel to plot the circle boundary instead of calling the built-in graphics.h circle function."
                         }
                     }
                 ]

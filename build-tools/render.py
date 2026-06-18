@@ -28,11 +28,14 @@ DIST_DIR = ROOT / 'dist'
 
 ASSET_MANIFEST_PATH = STATIC_DIR / 'build' / 'asset-manifest.json'
 DOCS_JSON_PATH = STATIC_DIR / 'assets' / 'docs.1.json'
+SITE_DOMAIN = 'https://graphicsh.online'
 
 SIMPLE_PAGES = {
     'index.html': 'index.html',
     'blog/index.html': 'blog.html',
     'blog.html': 'blog.html',
+    'docs/index.html': 'docs.html',
+    'docs.html': 'docs.html',
     'about.html': 'about.html',
     'privacy-policy.html': 'privacy-policy.html',
     'terms.html': 'terms.html',
@@ -42,18 +45,20 @@ SIMPLE_PAGES = {
 }
 
 BLOG_PAGES = {
-    'blog/clipping-algorithm-in-computer-graphics/index.html': 'blog/clipping-algorithm-in-computer-graphics.html',
-    'blog/clipping-algorithm-in-computer-graphics.html': 'blog/clipping-algorithm-in-computer-graphics.html',
-    'blog/cohen-sutherland-line-clipping/index.html': 'blog/cohen-sutherland-line-clipping.html',
-    'blog/cohen-sutherland-line-clipping.html': 'blog/cohen-sutherland-line-clipping.html',
-    'blog/transformations-in-computer-graphics/index.html': 'blog/transformations-in-computer-graphics.html',
-    'blog/transformations-in-computer-graphics.html': 'blog/transformations-in-computer-graphics.html',
-    'blog/midpoint-circle-algorithm/index.html': 'blog/midpoint-circle-algorithm.html',
-    'blog/midpoint-circle-algorithm.html': 'blog/midpoint-circle-algorithm.html',
-    'blog/bresenham-line-drawing-algorithm/index.html': 'blog/bresenham-line-drawing-algorithm.html',
-    'blog/bresenham-line-drawing-algorithm.html': 'blog/bresenham-line-drawing-algorithm.html',
-    'blog/dda-line-drawing-algorithm/index.html': 'blog/dda-line-drawing-algorithm.html',
-    'blog/dda-line-drawing-algorithm.html': 'blog/dda-line-drawing-algorithm.html',
+    'clipping-algorithm-in-computer-graphics-blog.html': 'clipping-algorithm-in-computer-graphics-blog.html',
+    'cohen-sutherland-line-clipping-blog.html': 'cohen-sutherland-line-clipping-blog.html',
+    'transformations-in-computer-graphics-blog.html': 'transformations-in-computer-graphics-blog.html',
+    'midpoint-circle-algorithm-blog.html': 'midpoint-circle-algorithm-blog.html',
+    'bresenham-line-drawing-algorithm-blog.html': 'bresenham-line-drawing-algorithm-blog.html',
+    'dda-line-drawing-algorithm-blog.html': 'dda-line-drawing-algorithm-blog.html',
+}
+
+DOCS_PAGES = {
+    'circle-docs.html': 'docs/circle-docs.html',
+    'rectangle-docs.html': 'docs/rectangle-docs.html',
+    'line-docs.html': 'docs/line-docs.html',
+    'arc-docs.html': 'docs/arc-docs.html',
+    'ellipse-docs.html': 'docs/ellipse-docs.html',
 }
 
 COMPILER_SOURCE_JS = {
@@ -75,10 +80,6 @@ class RenderError(RuntimeError):
 
 def get_env(key: str, default: str = '') -> str:
     return os.environ.get(key, default)
-
-
-def get_site_domain() -> str:
-    return get_env('SITE_DOMAIN', 'https://graphicsh.online').rstrip('/')
 
 
 def get_public_assets_url() -> str:
@@ -151,11 +152,11 @@ def create_jinja_env() -> Environment:
 
 # ── Sitemap generator ───────────────────────────────────────────────────────
 
-def generate_sitemap(base_url: str) -> str:
+def generate_sitemap() -> str:
     def url(path, priority, changefreq='weekly'):
         return (
             f'  <url>\n'
-            f'    <loc>{base_url}{path}</loc>\n'
+            f'    <loc>{SITE_DOMAIN}{path}</loc>\n'
             f'    <changefreq>{changefreq}</changefreq>\n'
             f'    <priority>{priority}</priority>\n'
             f'  </url>'
@@ -165,12 +166,18 @@ def generate_sitemap(base_url: str) -> str:
         url('/compiler', '1.0', 'daily'),
         url('/', '0.95', 'weekly'),
         url('/blog', '0.7', 'weekly'),
-        url('/blog/clipping-algorithm-in-computer-graphics', '0.65', 'monthly'),
-        url('/blog/cohen-sutherland-line-clipping', '0.65', 'monthly'),
-        url('/blog/transformations-in-computer-graphics', '0.65', 'monthly'),
-        url('/blog/midpoint-circle-algorithm', '0.65', 'monthly'),
-        url('/blog/bresenham-line-drawing-algorithm', '0.65', 'monthly'),
-        url('/blog/dda-line-drawing-algorithm', '0.65', 'monthly'),
+        url('/docs', '0.75', 'weekly'),
+        url('/clipping-algorithm-in-computer-graphics-blog', '0.65', 'monthly'),
+        url('/cohen-sutherland-line-clipping-blog', '0.65', 'monthly'),
+        url('/transformations-in-computer-graphics-blog', '0.65', 'monthly'),
+        url('/midpoint-circle-algorithm-blog', '0.65', 'monthly'),
+        url('/bresenham-line-drawing-algorithm-blog', '0.65', 'monthly'),
+        url('/dda-line-drawing-algorithm-blog', '0.65', 'monthly'),
+        url('/circle-docs', '0.7', 'monthly'),
+        url('/rectangle-docs', '0.7', 'monthly'),
+        url('/line-docs', '0.7', 'monthly'),
+        url('/arc-docs', '0.7', 'monthly'),
+        url('/ellipse-docs', '0.7', 'monthly'),
         url('/about', '0.5', 'monthly'),
         url('/contact', '0.5', 'monthly'),
         url('/privacy-policy', '0.4', 'yearly'),
@@ -248,7 +255,6 @@ def render_template_page(env: Environment, output_path: str, template_name: str,
 def render_site(compiler_assets: dict) -> None:
     """Render all pages and copy all assets into dist/."""
 
-    site_domain = get_site_domain()
     public_assets_url = get_public_assets_url()
     public_api_url = get_public_api_url()
     docs_categories = load_docs_categories()
@@ -279,7 +285,6 @@ def render_site(compiler_assets: dict) -> None:
 
     # ── Global template context ──────────────────────────────────────────
     global_ctx = {
-        'SITE_DOMAIN': site_domain,
         'PUBLIC_ASSETS_URL': public_assets_url,
         'PUBLIC_API_URL': public_api_url,
     }
@@ -295,6 +300,12 @@ def render_site(compiler_assets: dict) -> None:
 
     # ── Blog/tutorial pages ─────────────────────────────────────────────
     for output_path, template_name in BLOG_PAGES.items():
+        failure = render_template_page(env, output_path, template_name, global_ctx)
+        if failure:
+            failures.append(failure)
+
+    # ── Documentation pages ─────────────────────────────────────────────
+    for output_path, template_name in DOCS_PAGES.items():
         failure = render_template_page(env, output_path, template_name, global_ctx)
         if failure:
             failures.append(failure)
@@ -324,9 +335,6 @@ def render_site(compiler_assets: dict) -> None:
     if failure:
         failures.append(failure)
 
-    # ── Docs landing page (DISABLED) ────────────────────────────────────
-    # Documentation and tutorials pages are not rendered.
-
     # ── 404 page ─────────────────────────────────────────────────────────
     failure = render_template_page(env, '404.html', '404.html', global_ctx)
     if failure:
@@ -336,7 +344,7 @@ def render_site(compiler_assets: dict) -> None:
         raise RenderError('Static render failed:\n' + '\n'.join(f'  - {failure}' for failure in failures))
 
     # ── Sitemap ──────────────────────────────────────────────────────────
-    sitemap_xml = generate_sitemap(site_domain)
+    sitemap_xml = generate_sitemap()
     write_page(sitemap_xml, 'sitemap.xml')
     print('  [ok] sitemap.xml')
 

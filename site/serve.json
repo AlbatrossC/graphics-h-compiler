@@ -81,7 +81,7 @@
       ]
     },
     {
-      "source": "@(index|compiler|about|contact|blog|embed|embed-docs|privacy-policy|terms|maintenance|404).html",
+      "source": "**/*.html",
       "headers": [
         {
           "key": "Cache-Control",
