@@ -593,8 +593,8 @@
             });
             escaped = escaped
                 .replace(/\b(int|float|double|char|return|if|else|for|while|void)\b/g, '<span class="code-token-keyword">$1</span>')
-                .replace(/\b(DETECT|WHITE|YELLOW|CYAN|LIGHTCYAN|LIGHTGREEN|LIGHTGRAY)\b/g, '<span class="code-token-type">$1</span>')
-                .replace(/\b(initgraph|closegraph|getch|setcolor|circle|rectangle|line|arc|ellipse|outtextxy)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
+                .replace(/\b(DETECT|WHITE|YELLOW|CYAN|LIGHTCYAN|LIGHTGREEN|LIGHTGRAY|DARKGRAY|RED|BLUE|GREEN|BROWN|MAGENTA|BLACK|CENTER_TEXT|DEFAULT_FONT|HORIZ_DIR|SOLID_FILL|grOk)\b/g, '<span class="code-token-type">$1</span>')
+                .replace(/\b(initgraph|closegraph|graphresult|grapherrormsg|getch|printf|sprintf|setcolor|setbkcolor|setfillstyle|settextstyle|settextjustify|cleardevice|delay|circle|rectangle|line|arc|ellipse|bar|floodfill|outtextxy|putpixel)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>')
                 .replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="code-token-number">$1</span>');
 
             placeholders.forEach(function (value, index) {

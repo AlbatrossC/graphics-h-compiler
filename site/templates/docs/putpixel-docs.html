@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>putpixel() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h putpixel() with syntax, color values, coordinate behavior, runnable C examples, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="putpixel graphics.h, putpixel function in C graphics, graphics.h pixel example, BGI pixel plotting">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/putpixel-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/putpixel-docs">
+    <meta property="og:title" content="putpixel() in graphics.h">
+    <meta property="og:description" content="A practical reference for plotting individual pixels in C graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="putpixel() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and mistakes for graphics.h putpixel().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Pixel plotting function</p>
+                <h1>putpixel() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far putpixel(int x, int y, int color);</code></pre>
+                </div>
+                <p>The <code>putpixel()</code> function draws a single pixel at the given screen coordinate using the specified color. It is the lowest-level drawing operation most students use in BGI graphics. Higher-level functions such as <code>line()</code>, <code>circle()</code>, and <code>ellipse()</code> are built around the same idea: deciding which screen pixels should be colored to form a shape.</p>
+                <p>Because <code>putpixel()</code> works one pixel at a time, it is ideal for understanding raster graphics algorithms. You can use it to implement DDA lines, Bresenham lines, midpoint circles, star fields, particles, noise patterns, and custom plotting logic. It is slower and more verbose than shape functions for ordinary drawing, but it gives complete control over every coordinate and color choice.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The horizontal pixel coordinate. In standard VGA-like modes, <code>0</code> is the left edge.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The vertical pixel coordinate. In graphics.h, <code>0</code> is the top edge and larger values move downward.</td></tr>
+                            <tr><td><code>color</code></td><td><code>int</code></td><td>The BGI color index or color constant used for that one pixel, such as <code>WHITE</code>, <code>RED</code>, or <code>YELLOW</code>.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The color argument is direct. It does not depend on the active <code>setcolor()</code> value. That makes <code>putpixel()</code> convenient for multicolor plotting loops where each point may use a different color. Coordinates outside the visible screen are ignored or clipped by the driver, so algorithms should still guard their ranges when they generate many points.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>putpixel()</code> returns <code>void</code>. It does not report whether the pixel was visible or clipped. If you need to read a pixel after plotting, use <code>getpixel(x, y)</code>. If you are drawing many points, validate graphics initialization with <code>graphresult()</code> after <code>initgraph()</code> before entering the plotting loop.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Draw a dotted diagonal</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int i;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (i = 0; i &lt; 300; i += 4) {
+        putpixel(100 + i, 80 + i, YELLOW);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a dotted yellow diagonal line. Each dot is one plotted pixel, spaced four pixels apart, which makes the individual coordinate steps easier to see.</p>
+
+                    <h3>Plot a simple sine wave</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;math.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x, y;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(DARKGRAY);
+    line(40, 240, 600, 240);
+    line(40, 80, 40, 400);
+
+    for (x = 0; x &lt; 540; x++) {
+        y = 240 - (int)(80 * sin(x * 3.14159 / 90));
+        putpixel(40 + x, y, LIGHTCYAN);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program uses <code>putpixel()</code> to sample and draw a sine curve. The curve is not a built-in graphics.h shape; it appears because a loop calculates each coordinate and plots it.</p>
+
+                    <h3>Colored pixel grid</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x, y, color;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (y = 80; y &lt; 240; y++) {
+        for (x = 120; x &lt; 520; x++) {
+            color = 1 + ((x / 20 + y / 20) % 15);
+            putpixel(x, y, color);
+        }
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The nested loops paint a rectangular area pixel by pixel. The color formula creates repeating bands, which helps demonstrate that every pixel can be assigned independently.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Expecting setcolor() to control the pixel</h3>
+                    <p><code>putpixel()</code> receives its own color argument. If you call <code>setcolor(RED)</code> but then call <code>putpixel(x, y, YELLOW)</code>, the pixel is yellow.</p>
+                    <h3>Plotting too slowly in large loops</h3>
+                    <p>Single-pixel loops can be expensive. Keep animation loops tight, avoid unnecessary calculations inside nested loops, and draw only the pixels that changed when possible.</p>
+                    <h3>Using console-style coordinates</h3>
+                    <p>Graphics coordinates are pixel-based, not row-and-column text positions. A coordinate like <code>(10, 10)</code> is ten pixels from the top-left corner, not text row ten.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/line-docs">line()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/setcolor-docs">setcolor()</a>
+                        <a href="/outtextxy-docs">outtextxy()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples in the online compiler and adjust the loops to see how individual pixels build full drawings.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Pixel plotting</p>
+                    <p><strong>Input:</strong> coordinate and color</p>
+                    <p><strong>Best for:</strong> algorithms, curves, particles, and custom plots</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/putpixel-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "putpixel()", "item": "https://graphicsh.online/putpixel-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/putpixel-docs#article",
+                "headline": "putpixel() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h putpixel function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/putpixel-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

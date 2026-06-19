@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>delay() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h delay() with syntax, millisecond timing behavior, animation examples, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="delay graphics.h, delay function in C graphics, graphics.h animation delay, BGI timing example">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/delay-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/delay-docs">
+    <meta property="og:title" content="delay() in graphics.h">
+    <meta property="og:description" content="A practical reference for pausing animations and timed output in C graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="delay() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and animation mistakes for graphics.h delay().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Timing function</p>
+                <h1>delay() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void delay(unsigned int milliseconds);</code></pre>
+                </div>
+                <p>The <code>delay()</code> function pauses program execution for a specified number of milliseconds. In graphics.h programs, it is commonly used to slow down animation loops so motion is visible to the viewer. Without a pause, a loop that clears and redraws the screen may complete too quickly, making the output look like a flicker or a final still frame.</p>
+                <p><code>delay()</code> is a simple teaching tool rather than a modern high-precision timer. It blocks the program while it waits, so no other work runs during the pause. For beginner BGI assignments, that is usually acceptable because the goal is to see basic movement: a bouncing ball, moving car, loading bar, clock hand, or step-by-step drawing algorithm.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>milliseconds</code></td><td><code>unsigned int</code></td><td>The approximate pause duration in milliseconds. <code>1000</code> is about one second, and <code>50</code> is a short animation frame delay.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>A smaller value makes animation faster, while a larger value makes it slower. Values around <code>20</code> to <code>60</code> milliseconds are common for simple motion. Values above <code>500</code> milliseconds are better for step-by-step teaching displays where each state needs to remain visible before the next one appears.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>delay()</code> returns <code>void</code>. It does not return elapsed time and does not indicate whether the wait was exact. Timing can vary by runtime environment, emulator, browser, CPU load, and graphics backend. Use it as a practical pause, not as a stopwatch-grade measurement tool.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Pause before showing the final screen</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    outtextxy(180, 180, "This message waits for two seconds");
+    delay(2000);
+
+    outtextxy(180, 220, "Now press any key to exit");
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The first message stays on screen for about two seconds before the second message appears. This is useful for splash screens, loading notices, or guided demonstrations.</p>
+
+                    <h3>Move a ball across the screen</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (x = 60; x &lt;= 560; x += 8) {
+        cleardevice();
+        setcolor(LIGHTCYAN);
+        circle(x, 220, 30);
+        delay(35);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The loop clears the screen, redraws the ball at a new x-coordinate, and waits briefly. The delay controls the speed of movement.</p>
+
+                    <h3>Step through a line drawing process</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTGREEN);
+    for (x = 100; x &lt;= 500; x += 10) {
+        line(100, 260, x, 260);
+        delay(80);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program reveals a horizontal line gradually. The slower delay makes each extension visible, which is helpful when explaining incremental algorithms.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Using delay() as an input wait</h3>
+                    <p><code>delay()</code> waits for time, not for a key press. Use <code>getch()</code> when you want the user to decide when to continue.</p>
+                    <h3>Making animation too slow</h3>
+                    <p>A delay of <code>1000</code> inside a movement loop creates one frame per second. For smooth beginner animations, start closer to <code>30</code> or <code>50</code>.</p>
+                    <h3>Clearing the screen without redrawing enough</h3>
+                    <p>Animation loops often use <code>cleardevice()</code>. After clearing, redraw every object that should remain visible before calling <code>delay()</code>.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/initgraph-docs">initgraph()</a>
+                        <a href="/closegraph-docs">closegraph()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/putpixel-docs">putpixel()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the animation examples and change the millisecond value to feel how timing affects motion.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Timing</p>
+                    <p><strong>Input:</strong> milliseconds</p>
+                    <p><strong>Best for:</strong> simple animation pauses and teaching demos</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/delay-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "delay()", "item": "https://graphicsh.online/delay-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/delay-docs#article",
+                "headline": "delay() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h delay function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/delay-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

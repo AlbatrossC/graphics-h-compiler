@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>closegraph() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h closegraph() with syntax, cleanup behavior, complete C examples, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="closegraph graphics.h, closegraph function in C graphics, graphics.h cleanup, BGI close graphics mode">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/closegraph-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/closegraph-docs">
+    <meta property="og:title" content="closegraph() in graphics.h">
+    <meta property="og:description" content="A practical reference for closing graphics mode in C graphics programs.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="closegraph() in graphics.h">
+    <meta name="twitter:description" content="Syntax, examples, and cleanup mistakes for graphics.h closegraph().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Graphics cleanup function</p>
+                <h1>closegraph() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far closegraph(void);</code></pre>
+                </div>
+                <p>The <code>closegraph()</code> function shuts down the active BGI graphics system and returns control to the previous text mode. It is normally the final graphics.h call in a complete C graphics program. After a drawing is displayed and the user has had time to view it, <code>closegraph()</code> releases graphics resources and restores the environment.</p>
+                <p>In classroom examples, the common sequence is <code>initgraph()</code>, drawing commands, <code>getch()</code>, and then <code>closegraph()</code>. The <code>getch()</code> call is important because it pauses the screen before cleanup. If you call <code>closegraph()</code> immediately after drawing, the graphics screen may disappear so quickly that the output looks blank.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>none</code></td><td><code>void</code></td><td><code>closegraph()</code> does not accept any arguments. It closes the currently active graphics mode.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Because there are no parameters, the function is simple to call. The important part is placement. Put it after the final drawing and after any pause or animation loop. In programs with early error returns, call it only after graphics mode was successfully initialized.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>closegraph()</code> returns <code>void</code>. It does not report a cleanup status. If your program failed during startup, check <code>graphresult()</code> after <code>initgraph()</code> instead of relying on cleanup to reveal the problem.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Standard close sequence</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program shows the most common lifecycle. The circle remains visible until a key is pressed, then <code>closegraph()</code> restores the previous mode.</p>
+
+                    <h3>Close after a small animation</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (x = 80; x &lt;= 520; x += 8) {
+        cleardevice();
+        setcolor(LIGHTGREEN);
+        circle(x, 220, 35);
+        delay(35);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a moving circle. Cleanup happens only after the loop completes and the user presses a key, so the animation is not interrupted by an early mode reset.</p>
+
+                    <h3>Close only after successful initialization</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int errorcode;
+
+    initgraph(&amp;gd, &amp;gm, "");
+    errorcode = graphresult();
+
+    if (errorcode != grOk) {
+        printf("Graphics error: %s\n", grapherrormsg(errorcode));
+        return 1;
+    }
+
+    outtextxy(150, 150, "Initialized successfully");
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This structure avoids trying to continue drawing after a failed startup. The cleanup function is used only in the successful graphics path.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Closing before the user can see output</h3>
+                    <p>Place <code>getch()</code> or another pause before <code>closegraph()</code>. Otherwise the drawing can disappear immediately.</p>
+                    <h3>Calling drawing functions after cleanup</h3>
+                    <p>Once graphics mode is closed, do not call <code>circle()</code>, <code>line()</code>, or other graphics functions unless you initialize graphics mode again.</p>
+                    <h3>Skipping cleanup in examples</h3>
+                    <p>Small programs may appear to work without cleanup, but complete examples should close graphics mode clearly. It teaches the correct lifecycle and keeps local environments tidy.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/initgraph-docs">initgraph()</a>
+                        <a href="/delay-docs">delay()</a>
+                        <a href="/outtextxy-docs">outtextxy()</a>
+                        <a href="/circle-docs">circle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples in the browser compiler and test what happens when you move <code>getch()</code> before or after cleanup.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Setup</p>
+                    <p><strong>Input:</strong> none</p>
+                    <p><strong>Best for:</strong> ending graphics mode cleanly</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/closegraph-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "closegraph()", "item": "https://graphicsh.online/closegraph-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/closegraph-docs#article",
+                "headline": "closegraph() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h closegraph function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/closegraph-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

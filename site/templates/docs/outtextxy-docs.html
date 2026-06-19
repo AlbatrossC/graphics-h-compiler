@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>outtextxy() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h outtextxy() with syntax, coordinate rules, text styling examples, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="outtextxy graphics.h, outtextxy function in C graphics, graphics.h text example, BGI text at coordinate">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/outtextxy-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/outtextxy-docs">
+    <meta property="og:title" content="outtextxy() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing text at exact screen coordinates in C graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="outtextxy() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and mistakes for graphics.h outtextxy().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Text output function</p>
+                <h1>outtextxy() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far outtextxy(int x, int y, const char far *textstring);</code></pre>
+                </div>
+                <p>The <code>outtextxy()</code> function draws a text string at a specific coordinate on the active graphics screen. Unlike <code>outtext()</code>, which writes from the current text position, <code>outtextxy()</code> lets you place labels, scores, captions, axis names, and interface text exactly where you want them. It uses the active text style, active text direction, active justification, and active drawing color.</p>
+                <p>This function is especially useful in student graphics programs because most drawings need annotation. A graph needs x and y labels, a clock needs numbers, a menu needs button text, and an animation often needs a status line. With <code>outtextxy()</code>, the text belongs to the graphics canvas rather than to the console, so it appears beside shapes drawn with <code>line()</code>, <code>rectangle()</code>, <code>circle()</code>, and other BGI functions.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The x-coordinate where the text reference point is placed. Larger values move text toward the right.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The y-coordinate where the text reference point is placed. Larger values move text downward on the screen.</td></tr>
+                            <tr><td><code>textstring</code></td><td><code>const char *</code></td><td>The null-terminated string to draw. It can be a string literal, a character array, or text built with <code>sprintf()</code>.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The exact visual position depends on <code>settextjustify()</code>. With the default left and top alignment, <code>x</code> and <code>y</code> mark the upper-left starting point of the text. If you change justification to center text, the same coordinate becomes the center anchor. That makes it possible to center labels inside rectangles or under circles without manually calculating the full string width.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>outtextxy()</code> returns <code>void</code>. It does not report whether the text fit on the screen. If text appears clipped, check the coordinate, text size, text direction, and viewport. For layout-sensitive programs, use <code>textwidth()</code> and <code>textheight()</code> before drawing so you can position the string within a panel or around a shape.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Basic text label</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    outtextxy(120, 100, "Hello Graphics!");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program draws one yellow string near the upper-left area of the graphics screen. The output is simple, but it shows the most important rule: text appears at the graphics coordinate, not in the console window.</p>
+
+                    <h3>Label a rectangle panel</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    rectangle(140, 110, 500, 260);
+
+    settextjustify(CENTER_TEXT, CENTER_TEXT);
+    settextstyle(DEFAULT_FONT, HORIZ_DIR, 2);
+    setcolor(LIGHTCYAN);
+    outtextxy(320, 185, "Graphics Menu");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>Here the text is centered inside a rectangle by changing text justification. This is a common pattern for menus, dialog boxes, title cards, and simple user interface mockups.</p>
+
+                    <h3>Print changing numeric values</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int radius = 90;
+    char label[40];
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    circle(320, 220, radius);
+
+    sprintf(label, "Radius = %d pixels", radius);
+    setcolor(LIGHTGREEN);
+    outtextxy(230, 340, label);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This example builds a text string at runtime with <code>sprintf()</code>. It is useful for showing scores, coordinates, distances, iteration counts, and live values in animation demos.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Using printf() instead of graphics text</h3>
+                    <p><code>printf()</code> writes to the console, while <code>outtextxy()</code> writes to the graphics screen. In graphics mode, use BGI text functions when the label must appear inside the drawing area.</p>
+                    <h3>Forgetting active color and text style</h3>
+                    <p>The function does not accept color, size, or font arguments. Set those with <code>setcolor()</code>, <code>settextstyle()</code>, and <code>settextjustify()</code> before calling it.</p>
+                    <h3>Placing text outside the viewport</h3>
+                    <p>Large x or y values can place the label off-screen. Large fonts can also extend beyond a panel even when the anchor point is inside it.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/setcolor-docs">setcolor()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/putpixel-docs">putpixel()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Paste an example into the online compiler and change the coordinates, text size, and justification to see how BGI text placement behaves.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Text output</p>
+                    <p><strong>Input:</strong> coordinate and string</p>
+                    <p><strong>Best for:</strong> labels, scores, captions, and UI text</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/outtextxy-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "outtextxy()", "item": "https://graphicsh.online/outtextxy-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/outtextxy-docs#article",
+                "headline": "outtextxy() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h outtextxy function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/outtextxy-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

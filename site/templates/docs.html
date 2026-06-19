@@ -107,7 +107,8 @@
             <div class="syntax-card">
                 <p class="section-label">Active Batches</p>
                 <pre><code>Phase 1: Shape primitives
-Phase 2: Colors and Fills</code></pre>
+Phase 2: Colors and Fills
+Phase 3: Text, Pixels, Setup, Timing</code></pre>
             </div>
         </section>
 
@@ -176,14 +177,34 @@ Phase 2: Colors and Fills</code></pre>
         </section>
 
         <section class="content-card">
-            <p class="section-label">Upcoming batches</p>
-            <h2>More documentation pages planned</h2>
+            <p class="section-label">Text, Pixels & Setup</p>
+            <h2>Program control and precise drawing</h2>
             <div class="docs-grid">
-                <div class="doc-card disabled"><span>Text</span><h2>outtextxy()</h2><p>Text at a precise coordinate.</p></div>
-                <div class="doc-card disabled"><span>Pixel</span><h2>putpixel()</h2><p>Single-pixel plotting.</p></div>
-                <div class="doc-card disabled"><span>Setup</span><h2>initgraph()</h2><p>Graphics mode startup.</p></div>
-                <div class="doc-card disabled"><span>Setup</span><h2>closegraph()</h2><p>Graphics cleanup.</p></div>
-                <div class="doc-card disabled"><span>Timing</span><h2>delay()</h2><p>Animation pauses.</p></div>
+                <a class="doc-card" href="/outtextxy-docs">
+                    <span>Text Output</span>
+                    <h2>outtextxy()</h2>
+                    <p>Draw labels, scores, and captions at exact graphics coordinates using the active text settings.</p>
+                </a>
+                <a class="doc-card" href="/putpixel-docs">
+                    <span>Pixel Plotting</span>
+                    <h2>putpixel()</h2>
+                    <p>Plot individual pixels for raster algorithms, curves, particles, and custom low-level drawings.</p>
+                </a>
+                <a class="doc-card" href="/initgraph-docs">
+                    <span>Setup</span>
+                    <h2>initgraph()</h2>
+                    <p>Start BGI graphics mode, detect a driver, configure the graphics mode, and handle startup errors.</p>
+                </a>
+                <a class="doc-card" href="/closegraph-docs">
+                    <span>Setup</span>
+                    <h2>closegraph()</h2>
+                    <p>Close graphics mode cleanly after displaying output, animations, or interactive drawing screens.</p>
+                </a>
+                <a class="doc-card" href="/delay-docs">
+                    <span>Timing</span>
+                    <h2>delay()</h2>
+                    <p>Pause drawing loops for simple animations, step-by-step demos, and timed screen updates.</p>
+                </a>
             </div>
         </section>
     </main>
@@ -213,7 +234,12 @@ Phase 2: Colors and Fills</code></pre>
             {"@type": "TechArticle", "name": "setcolor() documentation", "url": "https://graphicsh.online/setcolor-docs"},
             {"@type": "TechArticle", "name": "setbkcolor() documentation", "url": "https://graphicsh.online/setbkcolor-docs"},
             {"@type": "TechArticle", "name": "setfillstyle() documentation", "url": "https://graphicsh.online/setfillstyle-docs"},
-            {"@type": "TechArticle", "name": "floodfill() documentation", "url": "https://graphicsh.online/floodfill-docs"}
+            {"@type": "TechArticle", "name": "floodfill() documentation", "url": "https://graphicsh.online/floodfill-docs"},
+            {"@type": "TechArticle", "name": "outtextxy() documentation", "url": "https://graphicsh.online/outtextxy-docs"},
+            {"@type": "TechArticle", "name": "putpixel() documentation", "url": "https://graphicsh.online/putpixel-docs"},
+            {"@type": "TechArticle", "name": "initgraph() documentation", "url": "https://graphicsh.online/initgraph-docs"},
+            {"@type": "TechArticle", "name": "closegraph() documentation", "url": "https://graphicsh.online/closegraph-docs"},
+            {"@type": "TechArticle", "name": "delay() documentation", "url": "https://graphicsh.online/delay-docs"}
         ]
     }
     </script>

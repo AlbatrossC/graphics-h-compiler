@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>initgraph() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h initgraph() with driver detection, mode setup, BGI path behavior, runnable C examples, common mistakes, and related functions.">
+    <meta name="keywords" content="initgraph graphics.h, initgraph function in C graphics, graphics.h setup, BGI driver path">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/initgraph-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/initgraph-docs">
+    <meta property="og:title" content="initgraph() in graphics.h">
+    <meta property="og:description" content="A practical reference for starting graphics mode in C graphics programs.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="initgraph() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and startup mistakes for graphics.h initgraph().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Graphics startup function</p>
+                <h1>initgraph() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far initgraph(int far *graphdriver, int far *graphmode, const char far *pathtodriver);</code></pre>
+                </div>
+                <p>The <code>initgraph()</code> function initializes BGI graphics mode. Almost every classic <code>graphics.h</code> program begins by declaring a graphics driver variable, a graphics mode variable, and then passing their addresses to <code>initgraph()</code>. After this call succeeds, the program can draw shapes, text, pixels, fills, and animations on the graphics screen.</p>
+                <p>In beginner programs, the most common pattern is <code>int gd = DETECT, gm;</code> followed by <code>initgraph(&amp;gd, &amp;gm, "");</code>. The <code>DETECT</code> constant asks BGI to choose a suitable driver automatically. The path argument tells the runtime where to find BGI driver files such as <code>EGAVGA.BGI</code> when the environment needs them. Online compilers and bundled setups often accept an empty path because the runtime already knows where its graphics assets live.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>graphdriver</code></td><td><code>int *</code></td><td>Pointer to the graphics driver variable. Use <code>DETECT</code> for automatic detection in typical student programs.</td></tr>
+                            <tr><td><code>graphmode</code></td><td><code>int *</code></td><td>Pointer to the graphics mode variable. BGI writes the chosen mode here after detection.</td></tr>
+                            <tr><td><code>pathtodriver</code></td><td><code>const char *</code></td><td>Directory path containing BGI driver files. Use an empty string when your environment is already configured.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The first two arguments are pointers, so the address operator <code>&amp;</code> is required when passing ordinary integer variables. If you pass <code>gd</code> instead of <code>&amp;gd</code>, the program will not call the function correctly. The third argument differs by setup: Turbo C on DOS often needs a path like <code>"C:\\TC\\BGI"</code>, while browser-based compilers and packaged runners often use <code>""</code>.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>initgraph()</code> returns <code>void</code>. To check whether initialization succeeded, call <code>graphresult()</code> immediately after <code>initgraph()</code>. A value of <code>grOk</code> means graphics mode is ready. If the result is not <code>grOk</code>, use <code>grapherrormsg()</code> to display a readable startup error before attempting to draw.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Minimal graphics startup</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    outtextxy(100, 100, "graphics.h is ready");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This is the smallest practical startup pattern. It enters graphics mode, writes a confirmation string, waits for a key, and closes graphics mode cleanly.</p>
+
+                    <h3>Check initialization errors</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int errorcode;
+
+    initgraph(&amp;gd, &amp;gm, "");
+    errorcode = graphresult();
+
+    if (errorcode != grOk) {
+        printf("Graphics error: %s\n", grapherrormsg(errorcode));
+        return 1;
+    }
+
+    circle(320, 240, 90);
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This version is better for real debugging. If the graphics driver cannot be loaded, the program prints a message instead of silently failing or drawing on an uninitialized screen.</p>
+
+                    <h3>Use an explicit BGI driver path</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "C:\\TC\\BGI");
+
+    setcolor(LIGHTGREEN);
+    rectangle(120, 100, 520, 300);
+    outtextxy(180, 190, "Driver path example");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>Traditional Turbo C installations may require the BGI directory path. If the driver files are in a different folder, adjust the string to match your setup.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Forgetting the address operator</h3>
+                    <p>The first two arguments must be addresses. Use <code>&amp;gd</code> and <code>&amp;gm</code>, not just <code>gd</code> and <code>gm</code>.</p>
+                    <h3>Drawing before initialization</h3>
+                    <p>Functions like <code>circle()</code> and <code>outtextxy()</code> require graphics mode. Always initialize first.</p>
+                    <h3>Using the wrong driver path</h3>
+                    <p>A bad path is a common local Turbo C problem. If the program fails before drawing, check that the BGI files exist at the path you passed.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/closegraph-docs">closegraph()</a>
+                        <a href="/outtextxy-docs">outtextxy()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/delay-docs">delay()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Use the online compiler to test standard <code>initgraph()</code> startup code without installing a local BGI environment.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Setup</p>
+                    <p><strong>Input:</strong> driver pointer, mode pointer, driver path</p>
+                    <p><strong>Best for:</strong> starting every graphics.h program</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/initgraph-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "initgraph()", "item": "https://graphicsh.online/initgraph-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/initgraph-docs#article",
+                "headline": "initgraph() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h initgraph function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/initgraph-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

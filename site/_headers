@@ -175,6 +175,26 @@
   Cache-Control: public, max-age=0, must-revalidate
 /floodfill-docs.html
   Cache-Control: public, max-age=0, must-revalidate
+/outtextxy-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/outtextxy-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/putpixel-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/putpixel-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/initgraph-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/initgraph-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/closegraph-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/closegraph-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/delay-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/delay-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate
 /embed.html
