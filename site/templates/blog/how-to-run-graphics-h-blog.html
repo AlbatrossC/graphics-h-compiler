@@ -1,0 +1,994 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Run graphics.h Programs — 5 Methods (2026) | graphics.h Compiler</title>
+    <meta name="description" content="Learn how to run graphics.h programs using an online compiler, VS Code extension, Turbo C++, Dev-C++, or Code::Blocks. Step-by-step setup guide for each method.">
+    <meta name="keywords" content="how to run graphics.h, graphics.h setup, graphics.h online compiler, graphics.h VS Code, Turbo C graphics.h, Dev-C++ graphics.h, Code::Blocks graphics.h, run graphics.h online">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/how-to-run-graphics-h-blog">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/how-to-run-graphics-h-blog">
+    <meta property="og:title" content="How to Run graphics.h Programs — 5 Methods (2026)">
+    <meta property="og:description" content="Step-by-step guide to running graphics.h programs using 5 different methods, from zero-setup online compilers to traditional IDEs.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-06-20">
+    <meta property="article:modified_time" content="2026-06-20">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Setup Guides">
+    <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="setup guide">
+    <meta property="article:tag" content="online compiler">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Run graphics.h Programs — 5 Methods">
+    <meta name="twitter:description" content="Complete guide to running graphics.h C programs using online compiler, VS Code, Turbo C, Dev-C++, or Code::Blocks.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    <style>
+        :root {
+            --bg: #0b0d0c;
+            --surface: #111412;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --accent-2: #0084de;
+            --warm: #f5b942;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article {
+            padding: 44px 0 76px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow,
+        .meta {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.7rem);
+            line-height: 1.04;
+            letter-spacing: 0;
+        }
+
+        .dek {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
+        }
+
+        .quick-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+            padding: 18px;
+        }
+
+        .quick-card h2,
+        .quick-card p {
+            margin: 0;
+        }
+
+        .quick-card h2 {
+            font-size: 1rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .quick-card p {
+            margin-top: 8px;
+            color: var(--muted);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .post-body {
+            min-width: 0;
+        }
+
+        .toc {
+            position: sticky;
+            top: 84px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.8);
+            padding: 18px;
+        }
+
+        .toc h2 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .toc a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin: 0 0 34px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 1.2rem;
+            letter-spacing: 0;
+        }
+
+        p,
+        li {
+            color: var(--muted);
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        pre {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #080a09;
+            margin: 14px 0;
+            padding: 18px;
+            color: #dfffea;
+            font-size: 0.92rem;
+            line-height: 1.62;
+        }
+
+        code,
+        pre {
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        code {
+            font-size: 0.88em;
+            background: rgba(0, 255, 136, 0.08);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: inherit;
+        }
+
+        .method-card {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: rgba(21, 25, 23, 0.7);
+            padding: 24px;
+            margin: 18px 0;
+        }
+
+        .method-card.recommended {
+            border-color: rgba(0, 255, 136, 0.4);
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .method-badge {
+            display: inline-block;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.25em 0.6em;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .badge-recommended {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .badge-classic {
+            background: rgba(245, 185, 66, 0.12);
+            color: var(--warm);
+            border: 1px solid rgba(245, 185, 66, 0.25);
+        }
+
+        .badge-alt {
+            background: rgba(0, 132, 222, 0.12);
+            color: var(--accent-2);
+            border: 1px solid rgba(0, 132, 222, 0.25);
+        }
+
+        .method-card h3 {
+            margin-top: 0;
+            font-size: 1.35rem;
+        }
+
+        .method-card ol {
+            padding-left: 1.3rem;
+            margin: 12px 0;
+        }
+
+        .method-card li {
+            margin-bottom: 8px;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 14px 0 0;
+        }
+
+        .pros, .cons {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .pros h4, .cons h4 {
+            margin: 0 0 8px;
+            font-size: 0.9rem;
+        }
+
+        .pros h4 { color: var(--accent); }
+        .cons h4 { color: #ff6b6b; }
+
+        .pros ul, .cons ul {
+            margin: 0;
+            padding-left: 1.2rem;
+        }
+
+        .pros li, .cons li {
+            font-size: 0.88rem;
+            margin-bottom: 4px;
+        }
+
+        .cta,
+        .related {
+            border: 1px solid rgba(0, 255, 136, 0.28);
+            border-radius: 8px;
+            background: rgba(0, 255, 136, 0.06);
+            padding: 20px;
+        }
+
+        .cta a,
+        .related a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            margin: 18px 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            border-bottom: 1px solid var(--line);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th {
+            color: var(--warm);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.85rem;
+        }
+
+        .comparison-table td {
+            color: var(--muted);
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+            }
+
+            .pros-cons {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Setup Guide</p>
+                    <h1>How to Run graphics.h Programs</h1>
+                    <p class="dek">graphics.h is a legacy C/C++ graphics library from the Borland BGI era, still widely used in university computer graphics labs. Running it on modern systems can be frustrating. This guide covers five different methods — from zero-setup online tools to traditional desktop IDEs — so you can pick the one that works best for you.</p>
+                    <p class="meta">Published June 20, 2026 · 10 min read</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>Quick recommendation</h2>
+                    <p><strong>Fastest way:</strong> Use the <a href="/compiler" style="color: var(--accent)">online compiler</a> — zero downloads, runs in your browser, works on any device.</p>
+                    <p><strong>Best for daily use:</strong> Install the <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler" target="_blank" rel="noopener noreferrer" style="color: var(--accent-2)">VS Code extension</a> for a modern editing experience with one-click compile.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="overview">
+                        <h2>What is graphics.h?</h2>
+                        <p><strong>graphics.h</strong> is a C/C++ header file that provides simple functions for drawing shapes, lines, circles, text, and colors on screen. It was originally part of the <strong>Borland Graphics Interface (BGI)</strong> included with Turbo C/C++ in the late 1980s and early 1990s.</p>
+                        <p>Despite being over three decades old, <code>graphics.h</code> is still widely used in computer graphics lab courses at universities across India and other countries. Functions like <a href="/docs" style="color: var(--accent)"><code>initgraph()</code></a>, <code>circle()</code>, <code>line()</code>, <code>rectangle()</code>, and <code>closegraph()</code> are standard in these courses.</p>
+                        <p>The problem? <strong>graphics.h was designed for 16-bit DOS</strong>. It does not work natively on modern 64-bit operating systems like Windows 10/11, macOS, or Linux. That is why setting it up can be so frustrating — and why students often spend more time configuring their environment than actually learning graphics programming.</p>
+                        <p>Below are five ways to run graphics.h programs, ordered from easiest to most complex.</p>
+                    </section>
+
+                    <section id="method-1">
+                        <div class="method-card recommended">
+                            <span class="method-badge badge-recommended">✦ Recommended</span>
+                            <h3>Method 1: Online Compiler (Zero Setup)</h3>
+                            <p>The <a href="/compiler" style="color: var(--accent)">graphics.h Online Compiler</a> lets you write, compile, and run graphics.h programs <strong>directly in your web browser</strong>. There is nothing to download or install. It works on Windows, macOS, Linux, Chromebooks, and even phones.</p>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">How it works</h4>
+                            <p>The online compiler runs a full <strong>Turbo C 3.0</strong> environment inside a WebAssembly-based DOS emulator (JS-DOS). When you click "Compile & Run", your code is compiled by the real Turbo C compiler (<code>TCC.EXE</code>) inside the emulator, and the graphics output is rendered on a standard HTML5 canvas.</p>
+                            <p>Because it uses the actual Turbo C compiler under the hood, <strong>every standard graphics.h function works natively</strong> — including <code>initgraph()</code>, <code>circle()</code>, <code>line()</code>, <code>setcolor()</code>, <code>floodfill()</code>, <code>delay()</code>, and all 40+ functions documented in the <a href="/docs" style="color: var(--accent)">function reference</a>.</p>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Steps</h4>
+                            <ol>
+                                <li>Open <a href="/compiler" style="color: var(--accent)">graphicsh.online/compiler</a> in any modern browser.</li>
+                                <li>Write or paste your C/C++ graphics.h program in the editor.</li>
+                                <li>Click <strong>Compile & Run</strong>.</li>
+                                <li>View the graphics output in the integrated DOS canvas.</li>
+                            </ol>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Features</h4>
+                            <ul>
+                                <li>Modern code editor with syntax highlighting and autocomplete.</li>
+                                <li>Built-in code templates for common programs.</li>
+                                <li>Optional Google Sign-In for cloud file saving and sync.</li>
+                                <li>Works on any operating system — Windows, macOS, Linux, ChromeOS.</li>
+                                <li>No installation, no downloads, no configuration. Just open and code.</li>
+                            </ul>
+
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4>✓ Pros</h4>
+                                    <ul>
+                                        <li>Zero setup — works instantly</li>
+                                        <li>Cross-platform (any browser)</li>
+                                        <li>Uses real Turbo C compiler</li>
+                                        <li>All graphics.h functions supported</li>
+                                        <li>Cloud save with Google Sign-In</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4>✗ Cons</h4>
+                                    <ul>
+                                        <li>Requires internet connection</li>
+                                        <li>Emulation is slower than native</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="method-2">
+                        <div class="method-card recommended">
+                            <span class="method-badge badge-recommended">✦ Recommended</span>
+                            <h3>Method 2: VS Code Extension</h3>
+                            <p>If you prefer working locally with a modern code editor, the <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler" target="_blank" rel="noopener noreferrer" style="color: var(--accent-2)">graphics.h Compiler VS Code extension</a> gives you one-click compile and run inside Visual Studio Code — no DOSBox, no linker flags, no path configuration.</p>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Steps</h4>
+                            <ol>
+                                <li>Open <strong>Visual Studio Code</strong>.</li>
+                                <li>Go to the Extensions panel (<code>Ctrl+Shift+X</code>).</li>
+                                <li>Search for <strong>"graphics.h compiler"</strong> and install the extension by AlbatrossC.</li>
+                                <li>Open any <code>.c</code> or <code>.cpp</code> file that uses <code>#include &lt;graphics.h&gt;</code>.</li>
+                                <li>Click the <strong>Compile & Run</strong> button in the editor toolbar.</li>
+                                <li>The graphics output opens in an integrated panel inside VS Code.</li>
+                            </ol>
+
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4>✓ Pros</h4>
+                                    <ul>
+                                        <li>Modern editor with IntelliSense</li>
+                                        <li>One-click compile & run</li>
+                                        <li>No manual configuration</li>
+                                        <li>Works on Windows, macOS, Linux</li>
+                                        <li>Syntax highlighting & autocomplete</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4>✗ Cons</h4>
+                                    <ul>
+                                        <li>Requires VS Code installed</li>
+                                        <li>Requires internet for the extension runtime</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="method-3">
+                        <div class="method-card">
+                            <span class="method-badge badge-classic">Classic</span>
+                            <h3>Method 3: Turbo C++ with DOSBox</h3>
+                            <p>Turbo C++ is the original IDE that ships with <code>graphics.h</code>. Since it is a 16-bit DOS application, it cannot run natively on modern 64-bit Windows. You need <strong>DOSBox</strong> (a DOS emulator) to run it.</p>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Steps</h4>
+                            <ol>
+                                <li>Download <strong>Turbo C++ 3.0</strong> (commonly available as a zip archive from educational sites).</li>
+                                <li>Download and install <a href="https://www.dosbox.com/" target="_blank" rel="noopener noreferrer" style="color: var(--accent)">DOSBox</a>.</li>
+                                <li>Extract the Turbo C++ folder to a location like <code>C:\TURBOC3</code>.</li>
+                                <li>Open DOSBox and mount the drive:
+<pre><code>mount c c:\TURBOC3
+c:
+cd BIN
+TC.EXE</code></pre>
+                                </li>
+                                <li>Write your program in the Turbo C++ editor and press <code>Ctrl+F9</code> to compile and run.</li>
+                                <li>Press <code>Alt+F5</code> to view the graphics output.</li>
+                            </ol>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Known problems</h4>
+                            <ul>
+                                <li><strong>Outdated editor:</strong> The Turbo C++ editor has no syntax highlighting, no autocomplete, no tabs, and no undo history. It uses a tiny fixed-resolution window that is difficult to use on modern high-DPI screens.</li>
+                                <li><strong>DOSBox issues:</strong> Screen resolution scaling glitches, fullscreen problems, and mouse capture issues are common.</li>
+                                <li><strong>No modern features:</strong> No autosave, no file tree, no copy-paste from external sources.</li>
+                                <li><strong>Path errors:</strong> The BGI path (<code>C:\\TURBOC3\\BGI</code>) must be set correctly in <code>initgraph()</code> or the program will crash.</li>
+                            </ul>
+
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4>✓ Pros</h4>
+                                    <ul>
+                                        <li>Uses the original Turbo C compiler</li>
+                                        <li>100% compatibility with graphics.h</li>
+                                        <li>Works offline</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4>✗ Cons</h4>
+                                    <ul>
+                                        <li>Extremely outdated editor</li>
+                                        <li>DOSBox setup is confusing</li>
+                                        <li>Resolution and scaling issues</li>
+                                        <li>No modern editing features</li>
+                                        <li>Only works on Windows</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="method-4">
+                        <div class="method-card">
+                            <span class="method-badge badge-alt">Alternative</span>
+                            <h3>Method 4: Dev-C++ with WinBGIm</h3>
+                            <p>Dev-C++ is a free C/C++ IDE for Windows. It does not include <code>graphics.h</code> by default, but you can add it using the <strong>WinBGIm</strong> library — a Windows port of the Borland Graphics Interface.</p>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Steps</h4>
+                            <ol>
+                                <li>Download and install <a href="https://sourceforge.net/projects/orwelldevcpp/" target="_blank" rel="noopener noreferrer" style="color: var(--accent)">Dev-C++</a> (Orwell or Embarcadero edition).</li>
+                                <li>Download the <strong>WinBGIm</strong> library files: <code>graphics.h</code>, <code>winbgim.h</code>, and <code>libbgi.a</code>.</li>
+                                <li>Copy <code>graphics.h</code> and <code>winbgim.h</code> into the Dev-C++ <code>MinGW64\include</code> folder.</li>
+                                <li>Copy <code>libbgi.a</code> into the Dev-C++ <code>MinGW64\lib</code> folder.</li>
+                                <li>Create a new project in Dev-C++ (<strong>File → New → Project</strong>).</li>
+                                <li>Go to <strong>Project → Project Options → Parameters → Linker</strong> and add:
+<pre><code>-lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32</code></pre>
+                                </li>
+                                <li>Write your program, save it as <code>.cpp</code>, and compile with <code>F11</code>.</li>
+                            </ol>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Important notes</h4>
+                            <ul>
+                                <li>Always create a <strong>project</strong>, not a single file. Linker settings are project-level.</li>
+                                <li>Use a <strong>32-bit compiler</strong> (TDM-GCC 32-bit) — the WinBGIm library may not work with 64-bit compilers.</li>
+                                <li>Use <code>initwindow(800, 600)</code> instead of <code>initgraph()</code> with a BGI path for easier setup.</li>
+                                <li>Some graphics.h functions behave slightly differently under WinBGIm compared to the original Turbo C implementation.</li>
+                            </ul>
+
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4>✓ Pros</h4>
+                                    <ul>
+                                        <li>Free and lightweight IDE</li>
+                                        <li>Runs natively on Windows</li>
+                                        <li>Better editor than Turbo C</li>
+                                        <li>Works offline</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4>✗ Cons</h4>
+                                    <ul>
+                                        <li>Manual file and linker setup</li>
+                                        <li>Must use 32-bit compiler</li>
+                                        <li>WinBGIm is not 100% compatible</li>
+                                        <li>Windows only</li>
+                                        <li>Linker flag errors are common</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="method-5">
+                        <div class="method-card">
+                            <span class="method-badge badge-alt">Alternative</span>
+                            <h3>Method 5: Code::Blocks with WinBGIm</h3>
+                            <p><a href="https://www.codeblocks.org/" target="_blank" rel="noopener noreferrer" style="color: var(--accent)">Code::Blocks</a> is another free C/C++ IDE. Like Dev-C++, it requires the WinBGIm library to support <code>graphics.h</code>.</p>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Steps</h4>
+                            <ol>
+                                <li>Download and install Code::Blocks (with MinGW bundled).</li>
+                                <li>Download the WinBGIm files: <code>graphics.h</code>, <code>winbgim.h</code>, and <code>libbgi.a</code>.</li>
+                                <li>Copy <code>graphics.h</code> and <code>winbgim.h</code> to the Code::Blocks <code>MinGW\include</code> folder.</li>
+                                <li>Copy <code>libbgi.a</code> to the Code::Blocks <code>MinGW\lib</code> folder.</li>
+                                <li>Open Code::Blocks and go to <strong>Settings → Compiler → Linker settings</strong>.</li>
+                                <li>Click <strong>Add</strong> and browse to the <code>libbgi.a</code> file.</li>
+                                <li>In <strong>Other linker options</strong>, paste:
+<pre><code>-lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32</code></pre>
+                                </li>
+                                <li>Click OK. Create a new project, write your program as <code>.cpp</code>, and compile.</li>
+                            </ol>
+
+                            <h4 style="margin: 16px 0 8px; font-size: 1rem;">Important notes</h4>
+                            <ul>
+                                <li>Always save files with the <code>.cpp</code> extension, not <code>.c</code>.</li>
+                                <li>If you encounter errors in <code>graphics.h</code> around line 302, you may need to manually edit the header file (known WinBGIm bug on newer compilers).</li>
+                                <li>Ensure your MinGW installation path is correctly set under <strong>Settings → Compiler → Toolchain executables</strong>.</li>
+                            </ul>
+
+                            <div class="pros-cons">
+                                <div class="pros">
+                                    <h4>✓ Pros</h4>
+                                    <ul>
+                                        <li>Free and feature-rich IDE</li>
+                                        <li>Better project management</li>
+                                        <li>Active community support</li>
+                                        <li>Works offline</li>
+                                    </ul>
+                                </div>
+                                <div class="cons">
+                                    <h4>✗ Cons</h4>
+                                    <ul>
+                                        <li>Manual setup required</li>
+                                        <li>WinBGIm compatibility issues</li>
+                                        <li>Header file bugs on newer compilers</li>
+                                        <li>Windows only</li>
+                                        <li>Confusing for beginners</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="comparison">
+                        <h2>Comparison table</h2>
+                        <p>Here is a side-by-side comparison of all five methods:</p>
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Online Compiler</th>
+                                    <th>VS Code Extension</th>
+                                    <th>Turbo C++</th>
+                                    <th>Dev-C++</th>
+                                    <th>Code::Blocks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Setup time</strong></td>
+                                    <td>0 minutes</td>
+                                    <td>2 minutes</td>
+                                    <td>15+ minutes</td>
+                                    <td>20+ minutes</td>
+                                    <td>20+ minutes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Platform</strong></td>
+                                    <td>Any (browser)</td>
+                                    <td>Win / Mac / Linux</td>
+                                    <td>Windows only</td>
+                                    <td>Windows only</td>
+                                    <td>Windows only</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Compiler used</strong></td>
+                                    <td>Turbo C (real)</td>
+                                    <td>Turbo C (emulated)</td>
+                                    <td>Turbo C (native)</td>
+                                    <td>GCC + WinBGIm</td>
+                                    <td>GCC + WinBGIm</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>100% compatible</strong></td>
+                                    <td>Yes</td>
+                                    <td>Yes</td>
+                                    <td>Yes</td>
+                                    <td>Partial</td>
+                                    <td>Partial</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Modern editor</strong></td>
+                                    <td>Yes</td>
+                                    <td>Yes</td>
+                                    <td>No</td>
+                                    <td>Basic</td>
+                                    <td>Basic</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Works offline</strong></td>
+                                    <td>No</td>
+                                    <td>No</td>
+                                    <td>Yes</td>
+                                    <td>Yes</td>
+                                    <td>Yes</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Cost</strong></td>
+                                    <td>Free</td>
+                                    <td>Free</td>
+                                    <td>Free</td>
+                                    <td>Free</td>
+                                    <td>Free</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="which-to-use">
+                        <h2>Which method should you use?</h2>
+                        <ul>
+                            <li><strong>Just need to run a program quickly?</strong> Use the <a href="/compiler" style="color: var(--accent)">online compiler</a>. Open it, paste your code, click run. Done.</li>
+                            <li><strong>Working on multiple programs regularly?</strong> Install the <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler" target="_blank" rel="noopener noreferrer" style="color: var(--accent-2)">VS Code extension</a> for the best editing experience with one-click compile.</li>
+                            <li><strong>Your college specifically requires Turbo C++?</strong> Use Method 3, but be prepared for the old-school editor experience.</li>
+                            <li><strong>Need a native Windows IDE without DOSBox?</strong> Try Dev-C++ or Code::Blocks with WinBGIm, but note that not all functions may behave identically to the original.</li>
+                        </ul>
+                    </section>
+
+                    <section id="test-program">
+                        <h2>Test program</h2>
+                        <p>Use this simple program to verify your setup works, regardless of which method you chose:</p>
+<pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main()
+{
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    circle(320, 240, 100);
+
+    setcolor(GREEN);
+    rectangle(220, 140, 420, 340);
+
+    setcolor(WHITE);
+    outtextxy(260, 230, "graphics.h works!");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        <div class="cta">
+                            <p><strong>Try it instantly:</strong> Open the <a href="/compiler">graphics.h online compiler</a>, paste this code, and click Compile & Run to see the output.</p>
+                        </div>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/dda-line-drawing-algorithm-blog">DDA Line Drawing Algorithm</a></p>
+                        <p><a href="/bresenham-line-drawing-algorithm-blog">Bresenham Line Drawing Algorithm</a></p>
+                        <p><a href="/midpoint-circle-algorithm-blog">Midpoint Circle Algorithm</a></p>
+                        <p><a href="/transformations-in-computer-graphics-blog">Transformations in Computer Graphics</a></p>
+                        <p><a href="/docs">graphics.h Function Reference</a></p>
+                        <p><a href="/blog">View all tutorials</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this guide</h2>
+                    <a href="#overview">What is graphics.h?</a>
+                    <a href="#method-1">Method 1: Online Compiler</a>
+                    <a href="#method-2">Method 2: VS Code Extension</a>
+                    <a href="#method-3">Method 3: Turbo C++</a>
+                    <a href="#method-4">Method 4: Dev-C++</a>
+                    <a href="#method-5">Method 5: Code::Blocks</a>
+                    <a href="#comparison">Comparison table</a>
+                    <a href="#which-to-use">Which to use?</a>
+                    <a href="#test-program">Test program</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/how-to-run-graphics-h-blog#breadcrumb",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://graphicsh.online/"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Blog",
+                        "item": "https://graphicsh.online/blog"
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": "How to Run graphics.h Programs",
+                        "item": "https://graphicsh.online/how-to-run-graphics-h-blog"
+                    }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "https://graphicsh.online/how-to-run-graphics-h-blog#article",
+                "headline": "How to Run graphics.h Programs — 5 Methods (2026)",
+                "description": "Complete guide to running graphics.h C programs using 5 different methods: online compiler, VS Code extension, Turbo C++, Dev-C++, and Code::Blocks.",
+                "image": "https://graphicsh.online/static/images/og-image.webp",
+                "datePublished": "2026-06-20",
+                "dateModified": "2026-06-20",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://graphicsh.online/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "https://graphicsh.online/how-to-run-graphics-h-blog",
+                "articleSection": "Setup Guides",
+                "keywords": "graphics.h, how to run graphics.h, online compiler, VS Code extension, Turbo C, Dev-C++, Code::Blocks, WinBGIm"
+            },
+            {
+                "@type": "FAQPage",
+                "@id": "https://graphicsh.online/how-to-run-graphics-h-blog#faq",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "How can I run graphics.h programs online?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "You can use the graphics.h Online Compiler at graphicsh.online/compiler. It runs a real Turbo C compiler inside your browser using WebAssembly — no downloads or setup needed."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Does graphics.h work on Windows 10 and Windows 11?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Not natively. graphics.h is a 16-bit DOS library that does not run on modern 64-bit Windows. You need either an online compiler, a VS Code extension, DOSBox with Turbo C, or the WinBGIm library with Dev-C++ or Code::Blocks."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What is WinBGIm?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "WinBGIm is a Windows port of the Borland Graphics Interface. It provides graphics.h and winbgim.h header files plus a libbgi.a library that allows GCC-based compilers like Dev-C++ and Code::Blocks to run graphics.h programs on modern Windows."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What are the linker flags needed for graphics.h in Dev-C++ or Code::Blocks?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "You need to add the following linker flags: -lbgi -lgdi32 -lcomdlg32 -luuid -loleaut32 -lole32. These link the WinBGIm library and required Windows system libraries."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Can I run graphics.h on macOS or Linux?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "The original graphics.h and WinBGIm are Windows-only. The easiest cross-platform option is the graphics.h Online Compiler (works in any browser) or the VS Code extension, both of which work on macOS, Linux, and Windows."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>
