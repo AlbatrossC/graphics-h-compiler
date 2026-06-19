@@ -1,5 +1,4 @@
-// ==================== SETTINGS PANEL ====================
-// Manages the settings panel in the sidebar with editor configuration
+// Manages the settings panel in the sidebar with editor configuration.
 
 (function () {
     'use strict';
@@ -55,7 +54,7 @@
     let currentSettings = loadSettingsState();
     let currentSidebarView = 'explorer';
 
-    // ==================== DOM ELEMENTS ====================
+    // DOM elements caching for preferences controls.
     const settingsHeaderBtn = document.getElementById('settings-header-btn');
     const settingsActivityBtn = document.getElementById('settings-activity-btn');
     const mobileMenuSettingsBtn = document.getElementById('mobile-menu-settings-btn');
@@ -87,7 +86,7 @@
     const resetBtn = document.getElementById('settings-reset-btn');
     const headerFontDisplay = document.getElementById('font-size-display');
 
-    // ==================== PANEL SWITCHING ====================
+    // Panel switching and sidebar viewport controls.
     function setSidebarHeading(label) {
         if (!sidebarHeader) return;
         const headerLeft = sidebarHeader.querySelector('.sidebar-header-left span');
@@ -351,7 +350,7 @@
         emitSettingsChanged();
     }
 
-    // ==================== PANEL EVENT LISTENERS ====================
+    // Panel event listeners for sidebar tabs.
     if (settingsActivityBtn) {
         settingsActivityBtn.addEventListener('click', () => {
             if (currentSidebarView === 'settings') {
@@ -394,7 +393,7 @@
         }
     });
 
-    // ==================== SETTINGS CONTROL EVENTS ====================
+    // Settings controls input change handlers.
     if (fontRange) {
         fontRange.addEventListener('input', (event) => {
             applyFontSize(event.target.value, true);
@@ -472,7 +471,7 @@
         });
     }
 
-    // ==================== THEME TOGGLE LOGIC ====================
+    // Theme toggle initialization and events.
     function applyTheme(theme, save = true) {
         if (theme === 'light') {
             document.documentElement.setAttribute('data-theme', 'light');
@@ -499,7 +498,7 @@
     const savedTheme = localStorage.getItem('app-theme') || 'dark';
     applyTheme(savedTheme, false);
 
-    // ==================== CROSS-MODULE EVENTS ====================
+    // Cross-module editor preferences syncing.
     document.addEventListener('editor-ready', () => {
         applySavedSettings();
     });

@@ -519,11 +519,7 @@ var isTerminalFullscreen = false;
     applyMobileTabLayout('editor');
     updateLoginUI(false);
 
-    // ============================================================
-    // FLOATING RUN BUTTON (desktop only)
-    // Draggable, shows run icon; becomes a stop icon while running.
-    // Shows a one-time attached tooltip for 5 s on first page load.
-    // ============================================================
+    // Initialize floating compile and run button configuration for desktop views.
     (function initFloatingRunBtn() {
         const floatBtn = document.getElementById('floating-run-btn');
         const floatTooltip = document.getElementById('floating-run-btn-tooltip');

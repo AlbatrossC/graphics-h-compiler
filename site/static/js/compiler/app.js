@@ -1,4 +1,4 @@
-// ==================== APP SETTINGS ====================
+// App settings configuration and helpers.
 
 const SETTINGS_STORAGE_KEY = 'editor_settings';
 const LEGACY_FONT_STORAGE_KEY = 'editor_font_size';
@@ -66,7 +66,7 @@ function saveAppSettings(settings) {
     return normalized;
 }
 
-// ==================== LOGGER ====================
+// Custom logger with colored console output.
 const Logger = {
     prefix: '[Graphics.h Compiler]',
 
@@ -113,7 +113,7 @@ const Logger = {
     }
 };
 
-// ==================== METRICS ====================
+// Editor and runtime metrics tracking.
 const metrics = {
     editor: {
         changeCount: 0,
@@ -126,7 +126,7 @@ const metrics = {
     }
 };
 
-// ==================== GLOBAL STATE ====================
+// Global runtime state variables.
 let dosInstance = null;
 let terminalFocused = false;
 let editor = null;
@@ -135,7 +135,7 @@ let scriptsLoaded = {
     codemirror: false
 };
 
-// ==================== CLOUD STORAGE STATE ====================
+// Cloud storage and project synchronization state.
 const CLOUD_STATE = {
     files: new Map(),
     folders: new Set(['root']),
@@ -149,7 +149,7 @@ const CLOUD_STATE = {
     lastSavedAt: null
 };
 
-// ==================== AUTOSAVE CONFIG ====================
+// Configurations for the autosave system.
 // Global mobile detection
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
@@ -238,7 +238,7 @@ async function loadDemoBundle() {
     return demoBundlePromise;
 }
 
-// ==================== CACHING SYSTEM ====================
+// Service worker/caching API configuration.
 const CACHE_CONFIG = {
     DEMO_CACHE_PREFIX: 'demo_cache_',
     CACHE_TTL: 7 * 24 * 60 * 60 * 1000, // 7 days in ms
@@ -390,7 +390,7 @@ const DemoCache = {
     }
 };
 
-// ==================== JS-DOS WARMUP SYSTEM ====================
+// Warmup and caching verification for JS-DOS runner.
 let tcZipPromise = null; // Shared promise to prevent duplicate downloads
 
 // Shared function to get TC ZIP - prevents race condition between warmup and run
@@ -521,7 +521,7 @@ function ensureDosRunnerFrame() {
     return dosRunnerFramePromise;
 }
 
-// ==================== OUTPUT PANEL HANDLERS ====================
+// UI handlers for the compilation errors output panel.
 
 // Output Panel Elements
 const outputPanel = document.getElementById("output-panel");
@@ -612,7 +612,7 @@ expandOutputBtn.addEventListener('click', () => {
     Logger.info(`Output panel ${isOutputExpanded ? 'expanded' : 'collapsed'}`);
 });
 
-// ==================== PANEL SPLITTERS ====================
+// Drag-to-resize splitters for editor and output panes.
 (function initSplitters() {
     const sidebar = document.getElementById('sidebar');
     const editorWrapper = document.getElementById('editor-wrapper');

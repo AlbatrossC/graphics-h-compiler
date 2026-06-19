@@ -1,6 +1,4 @@
-/* ============================================================
-   MOBILE TAB BAR — hidden on desktop, shown ≤768px
-   ============================================================ */
+/* Mobile Tab Bar (hidden on desktop, shown <= 768px) */
 .mobile-tab-bar {
     display: none;
     /* hidden on desktop */
@@ -10,9 +8,7 @@
     display: none;
 }
 
-/* ============================================================
-   TABLET ( ≤1024px )
-   ============================================================ */
+/* Tablet Styles (<= 1024px) */
 @media (max-width: 1024px) {
     .header-content {
         padding: 0.6rem 1rem;
@@ -45,38 +41,42 @@
     }
 }
 
-/* ============================================================
-   MOBILE ( ≤768px ) — Full-screen tabbed layout
-   ============================================================ */
+/* Mobile Styles (<= 768px) */
 @media (max-width: 768px) {
 
-    /* ---- CSS Variables ---- */
+    /* Mobile CSS Variables */
     :root {
         --header-height: 56px;
         --tab-bar-height: 50px;
     }
 
-    /* ---- Header ---- */
+    /* Mobile Header Layout */
     header {
         border-bottom: none;
         box-shadow: none;
     }
 
     .header-content {
-        display: grid;
-        grid-template-columns: auto auto minmax(96px, 1fr);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         padding: 8px 10px;
-        gap: 8px;
         min-height: var(--header-height);
         background: var(--vscode-sidebar);
     }
 
     .header-left {
-        display: contents;
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
     }
 
     .header-center {
-        display: contents;
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        justify-content: flex-end;
     }
 
     .header-brand-logo {
@@ -84,7 +84,7 @@
     }
 
     .header-right {
-        display: contents;
+        display: none !important;
     }
 
     /* Hide header dividers on mobile */
@@ -99,7 +99,7 @@
         width: 100%;
         height: 38px;
         font-size: 0.875rem;
-        border-radius: 8px;
+        border-radius: 6px;
         letter-spacing: 0.01em;
         justify-content: center;
         min-width: 0;
@@ -162,15 +162,15 @@
 
     #back-btn {
         display: inline-flex !important;
-        width: 40px !important;
+        width: 38px !important;
         height: 38px;
         padding: 0 !important;
         justify-content: center;
         align-items: center;
         border-radius: 6px;
-        border: 1px solid var(--border-color) !important;
-        background: transparent !important;
-        color: var(--text-secondary) !important;
+        border: none !important;
+        background: var(--primary) !important;
+        color: var(--primary-text) !important;
     }
 
     #run-btn .btn-text-mobile {
@@ -205,11 +205,15 @@
         height: 18px;
     }
 
-    #files-header-btn:hover,
-    #back-btn:hover {
+    #files-header-btn:hover {
         background: var(--vscode-line-bg) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color-hover) !important;
+    }
+
+    #back-btn:hover {
+        background: var(--primary-hover) !important;
+        color: var(--primary-text) !important;
     }
 
 
@@ -237,7 +241,7 @@
         height: 36px;
         background: var(--vscode-line-bg);
         border: 1px solid transparent;
-        border-radius: 0px;
+        border-radius: 6px;
         color: var(--text-muted);
         font-size: 0.78rem;
         font-weight: 600;
@@ -267,7 +271,7 @@
         color: var(--text-secondary);
     }
 
-    /* ---- Workspace — stack panels vertically ---- */
+    /* Workspace Panel Stacking */
     #workspace {
         flex-direction: column;
         height: auto;
@@ -299,7 +303,7 @@
         height: 100vh !important;
     }
 
-    /* ---- Tab Panels: each takes full available viewport height ---- */
+    /* Tab Panels */
     #editor-wrapper,
     #terminal-wrapper {
         border-radius: 0;
@@ -366,7 +370,7 @@
         box-shadow: none !important;
     }
 
-    /* ---- Sidebar (off-canvas drawer) ---- */
+    /* Sidebar Layout on Mobile */
     .sidebar-container {
         display: none;
         min-height: calc(100dvh - var(--header-height) - var(--tab-bar-height));
@@ -426,11 +430,6 @@
         height: 14px;
     }
 
-    .mobile-menu-btn .gemini-logo {
-        width: 14px;
-        height: 14px;
-    }
-
     .mobile-menu-btn:hover,
     .mobile-menu-btn.active {
         color: var(--primary);
@@ -448,37 +447,6 @@
         flex-shrink: 0;
     }
 
-    .ai-panel-hero {
-        padding: 14px 14px 10px;
-    }
-
-    .ai-messages,
-    .ai-empty-state {
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-
-    .ai-actions {
-        padding: 0 12px 10px;
-    }
-
-    .ai-composer {
-        padding: 12px;
-    }
-
-    .ai-input {
-        min-height: 80px;
-    }
-
-    .ai-composer-footer {
-        align-items: flex-end;
-    }
-
-    .ai-hint {
-        max-width: 120px;
-        line-height: 1.4;
-    }
-
     .google-btn {
         padding: 12px 14px;
         font-size: 0.8125rem;
@@ -488,7 +456,7 @@
         padding: 10px 12px;
     }
 
-    /* ---- Panel headers / actions ---- */
+    /* Panel Headers and Actions */
     .panel-header {
         padding: 8px 10px;
     }
@@ -598,16 +566,6 @@
         font-size: 0.75rem;
     }
 
-    .fix-with-ai-btn {
-        height: 28px;
-        padding: 0 10px;
-        font-size: 0.75rem;
-    }
-
-    #fix-ai-btn-text {
-        display: none;
-    }
-
     .copy-error-btn {
         height: 28px;
         padding: 0 10px;
@@ -627,15 +585,6 @@
         padding: 10px 12px;
         font-size: 0.75rem;
         line-height: 1.6;
-    }
-
-    .fix-ai-explanation {
-        padding: 10px 12px 12px;
-    }
-
-    .fix-ai-explanation-header,
-    .fix-ai-explanation-body {
-        font-size: 0.75rem;
     }
 
     /* Tooltip Mobile Overrides */
@@ -661,12 +610,9 @@
     }
 }
 
-/* ============================================================
-   VERY SMALL SCREENS ( ≤480px )
-   ============================================================ */
+/* Very Small Screens (<= 480px) */
 @media (max-width: 480px) {
     .header-content {
-        grid-template-columns: auto auto minmax(88px, 1fr);
         padding: 7px 8px;
         gap: 7px;
     }
@@ -713,9 +659,7 @@
     }
 }
 
-/* ============================================================
-   LANDSCAPE ON MOBILE
-   ============================================================ */
+/* Landscape Mode on Mobile */
 @media (max-width: 768px) and (orientation: landscape) {
     :root {
         --header-height: 50px;
@@ -748,9 +692,7 @@
     }
 }
 
-/* ============================================================
-   PERFORMANCE / REDUCED MOTION
-   ============================================================ */
+/* Performance and Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
 
     *,
@@ -762,9 +704,7 @@
     }
 }
 
-/* ============================================================
-   PRINT
-   ============================================================ */
+/* Print Settings */
 @media print {
 
     header,

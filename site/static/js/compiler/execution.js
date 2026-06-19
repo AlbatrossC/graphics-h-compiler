@@ -361,7 +361,7 @@ PAUSE
     }
 }
 
-// ==================== KEYBOARD SHORTCUTS ====================
+// Global keyboard shortcuts (e.g. Ctrl+Enter to run, Ctrl+S to save).
 
 window.addEventListener('keydown', (e) => {
     // Ctrl/Cmd + Enter to run
@@ -410,7 +410,7 @@ async function prefetchDemoFiles() {
     }
 }
 
-// ==================== INITIALIZATION ====================
+// Self-initializing entry point for dependencies and startup caching.
 
 (async function init() {
     Logger.info('Initializing compiler...');

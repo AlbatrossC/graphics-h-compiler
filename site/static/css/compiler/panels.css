@@ -35,12 +35,12 @@
 
 #editor-wrapper.active {
     border-color: var(--primary) !important;
-    box-shadow: 0 0 12px rgba(var(--color-rgb-primary), 0.15) !important;
+    box-shadow: none !important;
 }
 
 #terminal-wrapper.terminal-active {
     border-color: var(--success) !important;
-    box-shadow: 0 0 12px rgba(var(--color-rgb-primary), 0.15) !important;
+    box-shadow: none !important;
 }
 
 /* Fullscreen */
@@ -75,7 +75,7 @@ body.panel-fullscreen > #sidebar-overlay {
     justify-content: space-between;
     background: var(--vscode-sidebar);
     border-bottom: 1px solid var(--border-color);
-    min-height: 44px;
+    height: 44px;
     flex-shrink: 0;
     transition:
         background-color var(--transition-slow),
@@ -88,7 +88,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 .panel-header:not(:has(.file-tabs)) {
-    padding: 8px 14px;
+    padding: 0 14px;
 }
 
 .panel-title {
@@ -190,7 +190,7 @@ body.panel-fullscreen > #sidebar-overlay {
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-primary);
-    min-width: 32px;
+    min-width: 38px;
     text-align: center;
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
@@ -204,7 +204,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .font-controls .panel-action-btn {
     border-radius: 0;
     padding: 0 8px;
-    width: 28px;
+    width: 32px;
     height: 32px;
     /* Match container height */
     border: none;
@@ -732,77 +732,6 @@ body.panel-fullscreen > #sidebar-overlay {
     gap: 6px;
 }
 
-/* Fix with AI Button — inherits .btn base, styled like Ask AI */
-.fix-with-ai-btn {
-    height: 32px;
-    padding: 0 14px;
-    font-size: 0.8125rem;
-    background: #121924;
-    border-color: #2d425f;
-    color: #f5f7ff;
-    gap: 6px;
-    white-space: nowrap;
-}
-
-.fix-with-ai-btn:hover:not(:disabled) {
-    background: #182233;
-    border-color: #48668d;
-}
-
-.fix-with-ai-btn:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-    transform: none !important;
-}
-
-.fix-with-ai-btn.is-fixing {
-    position: relative;
-    overflow: hidden;
-}
-
-.fix-with-ai-btn.is-fixing::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        110deg,
-        transparent 0%,
-        rgba(var(--color-rgb-white), 0.06) 35%,
-        rgba(var(--color-rgb-white), 0.2) 50%,
-        rgba(var(--color-rgb-white), 0.06) 65%,
-        transparent 100%
-    );
-    transform: translateX(-100%);
-    animation: fix-ai-shimmer 1.2s linear infinite;
-    pointer-events: none;
-}
-
-.fix-with-ai-btn.is-fixing .gemini-logo {
-    animation: fix-ai-pulse 1s ease-in-out infinite;
-}
-
-@keyframes fix-ai-shimmer {
-    from {
-        transform: translateX(-100%);
-    }
-
-    to {
-        transform: translateX(100%);
-    }
-}
-
-@keyframes fix-ai-pulse {
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.75;
-    }
-
-    50% {
-        transform: scale(1.12);
-        opacity: 1;
-    }
-}
 
 /* Copy Error Button - Styled with clean red borders and text, filling solid red on hover, and turning green when copied. No glows or gradients. */
 .copy-error-btn {
@@ -1219,9 +1148,7 @@ body.panel-fullscreen > #sidebar-overlay {
     justify-content: center;
     gap: 10px;
     padding: 24px;
-    background:
-        radial-gradient(circle at top, rgba(0, 255, 136, 0.08), transparent 42%),
-        var(--vscode-bg);
+    background: var(--vscode-bg);
     color: var(--text-secondary);
     text-align: center;
     z-index: 1;
@@ -1263,7 +1190,7 @@ body.panel-fullscreen > #sidebar-overlay {
     width: min(400px, 100%);
     background: var(--vscode-sidebar);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: 6px;
     box-shadow: none;
     display: flex;
     flex-direction: column;
@@ -1362,9 +1289,7 @@ body.panel-fullscreen > #sidebar-overlay {
     justify-content: flex-end;
 }
 
-/* ============================================================
-   FLOATING RUN BUTTON (desktop only — hidden on mobile via responsive.css)
-   ============================================================ */
+/* Floating Run Button */
 #floating-run-btn {
     position: fixed;
     z-index: 900;
@@ -1439,7 +1364,7 @@ body.panel-fullscreen > #sidebar-overlay {
     transform: translateX(-50%) translateY(0);
 }
 
-/* ── One-time info tooltip — dark, attached to button with arrow ── */
+/* Zoom info tooltip styles */
 #floating-run-btn-tooltip {
     position: fixed;
     background: #1a1f2e;
@@ -1450,7 +1375,7 @@ body.panel-fullscreen > #sidebar-overlay {
     font-family: inherit;
     line-height: 1.55;
     padding: 10px 13px;
-    border-radius: 9px;
+    border-radius: 6px;
     white-space: normal;
     z-index: 901;
     pointer-events: none;
@@ -1525,7 +1450,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .vertical-splitter:hover::before,
 .vertical-splitter.dragging::before {
     background-color: var(--primary);
-    box-shadow: 0 0 8px rgba(var(--color-rgb-primary), 0.4);
+    box-shadow: none;
 }
 
 .splitter-handle {
@@ -1537,7 +1462,7 @@ body.panel-fullscreen > #sidebar-overlay {
     display: none !important;
 }
 
-/* ── Error Ad Slot (shown only on compilation errors) ── */
+/* Error Ad Slot (shown only on compilation errors) */
 .error-ad-slot {
     display: none;
     padding: 8px 0;

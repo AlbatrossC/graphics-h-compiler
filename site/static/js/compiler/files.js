@@ -61,7 +61,7 @@ async function computeSha256(content) {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
     return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
-// ==================== INDEXEDDB FILE STORAGE ====================
+// IndexedDB file database setup for offline caching.
 // Guest mode: primary storage. Logged-in: local cache mirror of cloud.
 // Replaces localStorage for all file content persistence.
 
@@ -176,7 +176,7 @@ const FileDB = {
     }
 };
 
-// ==================== DRAFT STORAGE (IndexedDB) ====================
+// Draft persistence and recovery using IndexedDB.
 // All file drafts go through FileDB (IndexedDB).
 // Guest mode: this IS the primary storage.
 // Logged-in: this is a local cache/draft mirror of cloud state.
@@ -489,7 +489,7 @@ async function saveGuestCodeWithName(snapshot, content, fileName) {
     return { fileName, folderId: mainFolderId };
 }
 
-// ==================== SIGN-IN HELPER FUNCTIONS ====================
+// Helper functions for user authentication and authorization.
 
 // Resolves which cloud file to open by default (last opened → main.cpp → first file).
 function resolveDefaultOpenTarget(snapshot) {
@@ -553,7 +553,7 @@ function validateGuestFilename(raw) {
 // Returns a Promise<{ action: 'save', filename: string } | { action: 'discard' }>.
 function showSaveGuestDraftModal(snapshot) {
     return new Promise((resolve) => {
-        // --- Pre-compute suggested filename ---
+        // Pre-compute default filename suggestions.
         // We don't have mainFolderId yet here (that requires an API call), so we use root-level count.
         const existingFiles = Array.isArray(snapshot?.files) ? snapshot.files : [];
         let maxN = 0;
@@ -564,7 +564,7 @@ function showSaveGuestDraftModal(snapshot) {
         }
         const suggestedBaseName = `untitled-${maxN + 1}`;
 
-        // --- Build overlay ---
+        // Construct draft save prompt overlay dynamically.
         const overlay = document.createElement('div');
         overlay.id = 'goc-draft-modal-overlay';
         overlay.style.cssText = [
@@ -717,7 +717,7 @@ function showSaveGuestDraftModal(snapshot) {
 
         document.body.appendChild(overlay);
 
-        // --- Wire up interactions ---
+        // Bind event listeners for input validation, save, and discard actions.
         const input = overlay.querySelector('#goc-draft-filename');
         const extSelect = overlay.querySelector('#goc-draft-extension');
         const errorEl = overlay.querySelector('#goc-filename-error');

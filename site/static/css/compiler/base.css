@@ -194,6 +194,8 @@ header {
     gap: 0.5rem;
     white-space: nowrap;
     line-height: 1;
+    font-size: 1.1rem;
+    margin: 0;
 }
 
 .header-logo-image {
@@ -360,41 +362,6 @@ header {
     color: var(--text-primary);
 }
 
-.btn-gemini {
-    background: #121924;
-    border-color: #2d425f;
-    color: #f5f7ff;
-}
-
-.btn-gemini:hover {
-    background: #182233;
-    border-color: #48668d;
-}
-
-.btn-gemini-solid {
-    background: #1d4ed8;
-    color: #ffffff;
-    border-color: #1d4ed8;
-    font-weight: 700;
-}
-
-.btn-gemini-solid:hover {
-    background: #1b45bf;
-    border-color: #1b45bf;
-}
-
-.btn-ai-secondary {
-    background: transparent;
-    border-color: rgba(var(--color-rgb-white), 0.12);
-    color: var(--text-secondary);
-}
-
-.btn-ai-secondary:hover {
-    background: rgba(var(--color-rgb-white), 0.05);
-    border-color: rgba(var(--color-rgb-white), 0.22);
-    color: var(--text-primary);
-}
-
 /* Icon Buttons */
 .icon-btn {
     width: 38px;
@@ -412,23 +379,6 @@ header {
     color: var(--text-primary);
 }
 
-.gemini-logo {
-    width: 18px;
-    height: 18px;
-    display: block;
-    flex-shrink: 0;
-}
-
-.activity-gemini-logo {
-    width: 26px;
-    height: 26px;
-}
-
-.mobile-gemini-logo {
-    width: 16px;
-    height: 16px;
-}
-
 /* Toast notification used by file and sign-in flows. */
 .fix-toast {
     position: fixed;
@@ -442,7 +392,7 @@ header {
     padding: 14px 18px;
     background: var(--vscode-sidebar);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 6px;
     color: var(--text-primary);
     font-size: 0.875rem;
     font-weight: 500;
@@ -593,7 +543,7 @@ header {
     opacity: 0.7;
 }
 
-/* ── Header Button System ─────────────────────────────────────────── */
+/* Header Button System */
 
 /* Base shared shape for all header icon-only buttons */
 .header-btn-ghost {
@@ -727,6 +677,36 @@ header {
 }
 
 .btn-run-primary svg {
+    width: 17px;
+    height: 17px;
+}
+
+/* Home button — solid green CTA */
+.btn-home-primary {
+    background: var(--primary);
+    color: var(--primary-text);
+    border: none;
+    height: 36px;
+    width: 36px;
+    padding: 0;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background var(--transition-fast), transform 0.1s ease;
+}
+
+.btn-home-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+    color: var(--primary-text);
+}
+
+.btn-home-primary:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.btn-home-primary svg {
     width: 17px;
     height: 17px;
 }

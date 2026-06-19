@@ -1,7 +1,7 @@
-// ==================== CODEMIRROR 6 EDITOR ====================
-// Lightweight code editor with basic C++ syntax highlighting. No heavy IDE features.
+// Lightweight code editor wrapper around CodeMirror 6.
+// No heavy IDE features.
 
-// ==================== CODEMIRROR LOCAL BUNDLE LOADING ====================
+// Dynamic import and bundle loading for CodeMirror modules.
 
 let cmModules = null;
 const editorPromise = import('/static/js/compiler/codemirror.bundle.v1.js');
@@ -95,7 +95,7 @@ function updateLoadingProgress(percent) {
     }
 }
 
-// ==================== DEMO FILE MANAGEMENT ====================
+// Event handlers and loaders for C++ graphics demo files.
 
 demoSelect.addEventListener('change', async (e) => {
     const selectedDemo = e.target.value;
@@ -173,7 +173,7 @@ let bracketMatchCompartment = null;
 let activeLineCompartment = null;
 let cmView = null; // Store the EditorView instance
 
-// ==================== EDITOR WRAPPER API ====================
+// CodeMirror 6 editor API adapter for execution and file systems.
 // Provides the editor API expected by files.js, execution.js, etc.
 
 function createEditorWrapper(view) {
@@ -447,7 +447,7 @@ function createBracketClosingExtension() {
 }
 
 
-// ==================== EDITOR INITIALIZATION ====================
+// Initialize CodeMirror instance with custom configuration, extensions, and themes.
 
 async function initializeEditor() {
     if (!scriptsLoaded.codemirror || !cmModules) {

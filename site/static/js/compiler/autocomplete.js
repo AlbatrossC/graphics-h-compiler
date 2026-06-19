@@ -1,4 +1,4 @@
-// ==================== AUTOCOMPLETE SYSTEM ====================
+// Autocomplete system for CodeMirror 6.
 // Provides smart context-aware autocomplete and tooltips for CodeMirror 6
 
 let functionsMap = {};
@@ -207,7 +207,7 @@ function getAutocompleteDocCache(state) {
     return buildAutocompleteDocCache(state.doc);
 }
 
-// --- STEP 2: DATA LOADING ---
+// Step 2: Load autocomplete functions and constants JSON data.
 async function loadData() {
     if (dataLoaded) return;
     try {
@@ -498,7 +498,7 @@ function buildFunctionOptions() {
     return cachedFunctionOptions;
 }
 
-// --- STEP 3: CONTEXT DETECTION ---
+// Step 3: Detect token context at cursor (e.g. comments, strings, preprocessor, include).
 function detectContext(state, pos, source) {
     const line = state.doc.lineAt(pos);
     const textUpToCursor = line.text.slice(0, pos - line.from);
@@ -533,7 +533,7 @@ function detectContext(state, pos, source) {
     return detectParenContext(textUpToCursor, pos);
 }
 
-// --- STEP 4 & 5: COMPLETIONS ---
+// Steps 4 & 5: Gather candidate completion options based on detected context.
 function getCompletions(context) {
     const state = context.state;
     const pos = context.pos;
@@ -710,7 +710,7 @@ function getCompletions(context) {
     return null;
 }
 
-// --- STEP 6: TOOLTIP DESIGN ---
+// Step 6: Render documentation hover tooltips.
 function buildTooltipHTML(info, activeParamIndex, state) {
     const dom = document.createElement('div');
     dom.className = 'cm-func-tooltip';
@@ -755,7 +755,7 @@ function buildTooltipHTML(info, activeParamIndex, state) {
 let showSelectionTooltip;
 let hideSelectionTooltip;
 
-// --- EXPORT ---
+// Setup CodeMirror autocomplete extensions and state fields.
 window.setupAutocomplete = function (editorView) {
     const { hoverTooltip, showTooltip } = cmModules.view;
     const { StateField, StateEffect } = cmModules.state;

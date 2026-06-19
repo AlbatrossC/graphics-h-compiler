@@ -13,56 +13,6 @@
       font-style: normal;
       font-display: swap;
     }
-
-    .compiler-site-footer {
-      border-top: 1px solid rgba(120, 142, 166, 0.22);
-      padding: 14px 18px 18px;
-      background: rgba(9, 15, 24, 0.82);
-      color: #d5deea;
-    }
-
-    .compiler-site-footer-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .compiler-site-footer-copy {
-      font-size: 0.9rem;
-      color: #c0cad7;
-    }
-
-    .compiler-site-footer-links {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .compiler-site-footer-links a {
-      color: #f1f5fb;
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-
-    .compiler-site-footer-links a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 700px) {
-      .compiler-site-footer {
-        padding: 14px;
-      }
-
-      .compiler-site-footer-inner {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
   </style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -142,7 +92,7 @@
 
     <div class="header-content">
       <div class="header-left">
-        <button id="back-btn" class="icon-btn header-btn-ghost" title="Home" aria-label="Home" onclick="window.location.href = '/'">
+        <button id="back-btn" class="btn btn-home-primary" title="Home" aria-label="Home" onclick="window.location.href = '/'">
           <svg viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
@@ -150,7 +100,7 @@
 
         <span class="header-divider"></span>
 
-        <h1 class="logo header-brand-logo" style="font-size: 1.1rem; margin: 0;" onclick="window.location.reload()">
+        <h1 class="logo header-brand-logo" onclick="window.location.reload()">
           <picture>
             <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
             <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="lazy" decoding="async">
