@@ -102,15 +102,12 @@
             <div class="hero-copy">
                 <p class="eyebrow">Function reference</p>
                 <h1>graphics.h documentation for C graphics programming</h1>
-                <p>Use these standalone references when you need syntax, parameter behavior, runnable examples, and practical mistakes for classic BGI functions. The first documentation batch focuses on shape drawing functions because they are the functions students usually meet before color, fill, text, and image handling.</p>
+                <p>Use these standalone references when you need syntax, parameter behavior, runnable examples, and practical mistakes for classic BGI functions. Our reference pages cover shapes, colors, and fill styles to help you learn C graphics programming.</p>
             </div>
             <div class="syntax-card">
-                <p class="section-label">Phase 1</p>
-                <pre><code>circle()
-rectangle()
-line()
-arc()
-ellipse()</code></pre>
+                <p class="section-label">Active Batches</p>
+                <pre><code>Phase 1: Shape primitives
+Phase 2: Colors and Fills</code></pre>
             </div>
         </section>
 
@@ -147,14 +144,41 @@ ellipse()</code></pre>
         </section>
 
         <section class="content-card">
+            <p class="section-label">Colors & Fills</p>
+            <h2>Texturing and palettes</h2>
+            <div class="docs-grid">
+                <a class="doc-card" href="/bar-docs">
+                    <span>Fill Shape</span>
+                    <h2>bar()</h2>
+                    <p>Draw solid or patterned rectangular blocks without outline borders, best for UI panels and charts.</p>
+                </a>
+                <a class="doc-card" href="/setcolor-docs">
+                    <span>Color Settings</span>
+                    <h2>setcolor()</h2>
+                    <p>Configure the active foreground color index for outline vector shapes and outtextxy text rendering.</p>
+                </a>
+                <a class="doc-card" href="/setbkcolor-docs">
+                    <span>Color Settings</span>
+                    <h2>setbkcolor()</h2>
+                    <p>Change the background canvas color dynamically using BGI hardware palette index configuration.</p>
+                </a>
+                <a class="doc-card" href="/setfillstyle-docs">
+                    <span>Fill Settings</span>
+                    <h2>setfillstyle()</h2>
+                    <p>Set active tiling bitmaps and colors for solid shape fills like bar and floodfill.</p>
+                </a>
+                <a class="doc-card" href="/floodfill-docs">
+                    <span>Fill Operation</span>
+                    <h2>floodfill()</h2>
+                    <p>Use paint bucket boundary fills starting from a seed point inside enclosed coordinate spaces.</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="content-card">
             <p class="section-label">Upcoming batches</p>
             <h2>More documentation pages planned</h2>
             <div class="docs-grid">
-                <div class="doc-card disabled"><span>Fill</span><h2>bar()</h2><p>Filled rectangles and chart blocks.</p></div>
-                <div class="doc-card disabled"><span>Color</span><h2>setcolor()</h2><p>Foreground drawing color.</p></div>
-                <div class="doc-card disabled"><span>Color</span><h2>setbkcolor()</h2><p>Screen background color.</p></div>
-                <div class="doc-card disabled"><span>Fill</span><h2>setfillstyle()</h2><p>Fill pattern and fill color.</p></div>
-                <div class="doc-card disabled"><span>Fill</span><h2>floodfill()</h2><p>Boundary-based area filling.</p></div>
                 <div class="doc-card disabled"><span>Text</span><h2>outtextxy()</h2><p>Text at a precise coordinate.</p></div>
                 <div class="doc-card disabled"><span>Pixel</span><h2>putpixel()</h2><p>Single-pixel plotting.</p></div>
                 <div class="doc-card disabled"><span>Setup</span><h2>initgraph()</h2><p>Graphics mode startup.</p></div>
@@ -184,7 +208,12 @@ ellipse()</code></pre>
             {"@type": "TechArticle", "name": "rectangle() documentation", "url": "https://graphicsh.online/rectangle-docs"},
             {"@type": "TechArticle", "name": "line() documentation", "url": "https://graphicsh.online/line-docs"},
             {"@type": "TechArticle", "name": "arc() documentation", "url": "https://graphicsh.online/arc-docs"},
-            {"@type": "TechArticle", "name": "ellipse() documentation", "url": "https://graphicsh.online/ellipse-docs"}
+            {"@type": "TechArticle", "name": "ellipse() documentation", "url": "https://graphicsh.online/ellipse-docs"},
+            {"@type": "TechArticle", "name": "bar() documentation", "url": "https://graphicsh.online/bar-docs"},
+            {"@type": "TechArticle", "name": "setcolor() documentation", "url": "https://graphicsh.online/setcolor-docs"},
+            {"@type": "TechArticle", "name": "setbkcolor() documentation", "url": "https://graphicsh.online/setbkcolor-docs"},
+            {"@type": "TechArticle", "name": "setfillstyle() documentation", "url": "https://graphicsh.online/setfillstyle-docs"},
+            {"@type": "TechArticle", "name": "floodfill() documentation", "url": "https://graphicsh.online/floodfill-docs"}
         ]
     }
     </script>

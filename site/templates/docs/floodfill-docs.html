@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>floodfill() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h floodfill() with syntax, parameters, return value, runnable C programs, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="floodfill graphics.h, floodfill function in C graphics, graphics.h floodfill example, BGI flood fill, paint bucket C graphics">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/floodfill-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/floodfill-docs">
+    <meta property="og:title" content="floodfill() in graphics.h">
+    <meta property="og:description" content="A practical reference for using the floodfill paint bucket function in C BGI graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="floodfill() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and leaks debugging tips for floodfill().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Fill operation function</p>
+                <h1>floodfill() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far floodfill(int x, int y, int border);</code></pre>
+                </div>
+                <p>The <code>floodfill()</code> function fills an enclosed, bounded region of the graphics screen. This behaves like the "paint bucket" tool found in digital drawing software. Starting at a coordinate known as the "seed point" <code>(x, y)</code>, the algorithm spreads outwards in all directions, painting pixels with the active fill pattern and fill color configured by <code>setfillstyle()</code>. The fill expansion stops only when it encounters pixels matching the specified <code>border</code> color parameter.</p>
+                <p>To use <code>floodfill()</code> successfully, a boundaries shape must already exist on the screen. For example, you can draw a circle outline using the color <code>RED</code>, and then call <code>floodfill()</code> with seed coordinates inside that circle and set the <code>border</code> argument to <code>RED</code>. If the outline is fully closed, the fill engine stays trapped within the circle. However, if the border has even a single pixel gap, the fill pattern will "leak" out and color the entire active viewport or screen, which is one of the most common debugging challenges for graphics.h programmers.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The x-coordinate of the seed point. Must be located inside the boundary you wish to paint.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The y-coordinate of the seed point. Must be located inside the boundary you wish to paint.</td></tr>
+                            <tr><td><code>border</code></td><td><code>int</code></td><td>The color index (from the BGI color table, 0-15) of the boundary outline where the fill should stop.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The seed point coordinates `(x, y)` must be integers and represent a coordinate inside the target shape. If the seed point falls directly on the boundary outline color (matching `border`), or if the region is already filled with the target fill color, `floodfill()` exits immediately without making changes. The `border` argument is an integer color index corresponding to standard BGI colors like `WHITE`, `RED`, or `YELLOW`.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>floodfill()</code> returns <code>void</code>. It modifies the frame buffer in place and returns control. Note that if BGI's internal fill stack overflows (which can happen when filling extremely large or complex fractal shapes on old 16-bit systems), the function may fail to complete. You can query <code>graphresult()</code> to check for errors, though standard shapes are handled without memory issues.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Basic Filled Circle</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // 1. Draw a white circle outline
+    setcolor(WHITE);
+    circle(320, 240, 80);
+
+    // 2. Set fill style to Solid and color to Red
+    setfillstyle(SOLID_FILL, RED);
+
+    // 3. Flood fill starting from center of the circle (320, 240)
+    //    stopping at the WHITE outline border
+    floodfill(320, 240, WHITE);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program renders a circle outline in white. It then sets the fill color to red and triggers `floodfill()` starting from the circle's center point `(320, 240)`. The red fill spreads outward and halts at the white border, leaving a red circle outlined in white.</p>
+
+                    <h3>Compartmentalized Fill Grid</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Draw outline grid using yellow lines
+    setcolor(YELLOW);
+    rectangle(100, 100, 400, 250);
+    line(250, 100, 250, 250); // Vertical divider
+
+    // Fill left compartment with green hatch
+    setfillstyle(HATCH_FILL, GREEN);
+    floodfill(150, 150, YELLOW);
+
+    // Fill right compartment with blue dots
+    setfillstyle(CLOSE_DOT_FILL, BLUE);
+    floodfill(300, 150, YELLOW);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>Here, a yellow boundary is split into two panels by a vertical divider line. By calling `floodfill()` twice with different seed points and fill styles, the program fills both panels independently because the yellow border blocks the fill from crossing between sections.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Mismatching border colors</h3>
+                    <p>The most common mistake is passing a different color for the `border` argument than the one used to draw the boundary. For example, if you draw a circle with <code>setcolor(RED)</code> and call <code>floodfill(x, y, WHITE)</code>, BGI will search for a white outline. Since it doesn't find one, it will leak through the red outline and fill the entire screen. Ensure the border color argument matches the outline drawing color exactly.</p>
+                    <h3>Gaps in outlines (Paint Leaks)</h3>
+                    <p>If you construct a boundary out of multiple lines (like drawing a triangle manually) and leave even a single-pixel gap between lines, the paint will leak through the gap and fill the background. Double-check your coordinate math to ensure all endpoints connect perfectly.</p>
+                    <h3>Seed point on the border</h3>
+                    <p>If your seed point coordinate <code>(x, y)</code> lands directly on the boundary outline pixel itself, `floodfill()` will immediately stop, resulting in no fill being drawn. Ensure that your seed coordinates are strictly inside the shape interior.</p>
+                    <h3>Using floodfill on non-closed curves</h3>
+                    <p>Applying flood fill to shapes drawn with <code>arc()</code> or <code>ellipse()</code> without closed endpoints is guaranteed to leak. If you want to draw and fill ellipses or curves directly, use <code>fillellipse()</code>, <code>fillpoly()</code>, or <code>sector()</code> which draw and fill shapes in a single step without relying on boundary checks.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/setfillstyle-docs">setfillstyle()</a>
+                        <a href="/bar-docs">bar()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run these paint examples instantly. Copy and paste them into the compiler editor window to execute graphics code directly in the browser.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Fill shape</p>
+                    <p><strong>Input:</strong> Seed point coordinate, border color</p>
+                    <p><strong>Best for:</strong> custom enclosed shapes, color buckets, complex geometries</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer >
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/floodfill-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "floodfill()", "item": "https://graphicsh.online/floodfill-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/floodfill-docs#article",
+                "headline": "floodfill() in graphics.h",
+                "description": "Syntax, parameters, examples, boundary paint bucket logic, and mistakes debugging tips for BGI floodfill function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/floodfill-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

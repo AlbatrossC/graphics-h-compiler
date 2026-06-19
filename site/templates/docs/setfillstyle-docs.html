@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>setfillstyle() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h setfillstyle() with syntax, parameters, return value, runnable C programs, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="setfillstyle graphics.h, setfillstyle function in C graphics, graphics.h setfillstyle example, BGI fill patterns, C graphics fill style">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/setfillstyle-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/setfillstyle-docs">
+    <meta property="og:title" content="setfillstyle() in graphics.h">
+    <meta property="og:description" content="A practical reference for configuring the active fill pattern and fill color in C graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="setfillstyle() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and BGI fill pattern tables for setfillstyle().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Fill settings function</p>
+                <h1>setfillstyle() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far setfillstyle(int pattern, int color);</code></pre>
+                </div>
+                <p>The <code>setfillstyle()</code> function configures the active fill pattern and fill color for all subsequent filled BGI drawing operations. When you call solid shape functions—such as <code>bar()</code>, <code>bar3d()</code>, <code>fillellipse()</code>, <code>fillpoly()</code>, <code>sector()</code>, <code>pieslice()</code>, or <code>floodfill()</code>—the BGI rendering engine checks the state configured by <code>setfillstyle()</code> to determine how to texture and paint the internal pixels of the shape boundaries.</p>
+                <p>BGI manages fills by tiling an 8x8 pixel bitmap pattern across the target viewport. The library provides 12 built-in fill patterns, ranging from simple solid fills and hatch grids to dotted textures and slash patterns. The color argument determines the foreground color of the pattern, while pixels mapped as background in the pattern draw using the active background color (or remain transparent depending on transparency modes). By combining different patterns and colors, programmers can simulate textures like brick walls, crosshatching, shading, and gradients within retro graphics constraints.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>pattern</code></td><td><code>int</code></td><td>An integer color pattern index or one of the pre-defined BGI fill pattern constants. Valid ranges are <code>0</code> through <code>12</code>.</td></tr>
+                            <tr><td><code>color</code></td><td><code>int</code></td><td>The fill color index (typically <code>0</code> to <code>15</code>) or a standard BGI color name constant (e.g. <code>RED</code>, <code>YELLOW</code>).</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Both parameters are integer values. The pattern constants are defined in <code>graphics.h</code> as enumerations. Below is the complete catalog of BGI fill patterns available for use.</p>
+
+                    <h3>BGI Fill Pattern Table</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Index</th><th>Constant Name</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>0</code></td><td><code>EMPTY_FILL</code></td><td>Fills with the current background color (solid erase).</td></tr>
+                            <tr><td><code>1</code></td><td><code>SOLID_FILL</code></td><td>Fills with a solid, uniform color (most commonly used).</td></tr>
+                            <tr><td><code>2</code></td><td><code>LINE_FILL</code></td><td>Fills with horizontal parallel lines.</td></tr>
+                            <tr><td><code>3</code></td><td><code>LTSLASH_FILL</code></td><td>Fills with light slanted lines (slanted top-left to bottom-right).</td></tr>
+                            <tr><td><code>4</code></td><td><code>SLASH_FILL</code></td><td>Fills with thick slanted lines (slanted top-left to bottom-right).</td></tr>
+                            <tr><td><code>5</code></td><td><code>BKSLASH_FILL</code></td><td>Fills with thick back-slanted lines (top-right to bottom-left).</td></tr>
+                            <tr><td><code>6</code></td><td><code>LTBKSLASH_FILL</code></td><td>Fills with light back-slanted lines (top-right to bottom-left).</td></tr>
+                            <tr><td><code>7</code></td><td><code>HATCH_FILL</code></td><td>Fills with a horizontal/vertical grid crosshatch pattern.</td></tr>
+                            <tr><td><code>8</code></td><td><code>XHATCH_FILL</code></td><td>Fills with a diagonal crosshatch pattern.</td></tr>
+                            <tr><td><code>9</code></td><td><code>INTERLEAVE_FILL</code></td><td>Fills with interleaved parallel line segments.</td></tr>
+                            <tr><td><code>10</code></td><td><code>WIDE_DOT_FILL</code></td><td>Fills with widely spaced sparse dots.</td></tr>
+                            <tr><td><code>11</code></td><td><code>CLOSE_DOT_FILL</code></td><td>Fills with closely spaced dense dots.</td></tr>
+                            <tr><td><code>12</code></td><td><code>USER_FILL</code></td><td>Fills with a custom 8x8 pattern defined using <code>setfillpattern()</code>.</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>setfillstyle()</code> returns <code>void</code>. If you need to retrieve the current fill settings, call the function <code>getfillsettings()</code>, which populates a structure with the active pattern index and color value.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>All 12 Fill Patterns Demo</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int i, x = 30, y = 50;
+    char text[15];
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for(i = 1; i &lt;= 11; i++) {
+        // Apply fill pattern i with color light blue (9)
+        setfillstyle(i, 9);
+        
+        // Draw a filled bar
+        bar(x, y, x + 80, y + 80);
+        
+        // Outline the bar in white
+        setcolor(WHITE);
+        rectangle(x, y, x + 80, y + 80);
+
+        // Label the pattern index
+        sprintf(text, "Pattern: %d", i);
+        outtextxy(x, y + 90, text);
+
+        x += 120;
+        if(x &gt; 500) {
+            x = 30;
+            y += 150;
+        }
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program loops from index 1 (<code>SOLID_FILL</code>) through index 11 (<code>CLOSE_DOT_FILL</code>). For each index, it configures `setfillstyle()`, draws a filled bar, and outlines it with a white rectangle. This visual grid acts as a useful reference index sheet for fill styles.</p>
+
+                    <h3>A simple textured house sketch</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int points[] = {150, 200, 250, 100, 350, 200, 150, 200};
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // 1. Draw solid yellow sky background
+    setfillstyle(SOLID_FILL, DARKGRAY);
+    bar(0, 0, 640, 480);
+
+    // 2. Draw hatch house walls
+    setfillstyle(HATCH_FILL, CYAN);
+    bar(170, 200, 330, 380);
+
+    // 3. Draw roof using slash fill
+    setfillstyle(SLASH_FILL, RED);
+    fillpoly(4, points);
+
+    // 4. Draw door using solid fill
+    setfillstyle(SOLID_FILL, BROWN);
+    bar(230, 280, 270, 380);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This code shows how you can combine different pattern and color configurations to create a basic textured shape composite. By changing the fill style before each call, each segment gets painted with a distinct texture.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Confusing argument order</h3>
+                    <p>The syntax requires <code>(pattern, color)</code>. A common mistake is reversing the arguments to <code>setfillstyle(color, pattern)</code>. Reversing these values will lead to invalid configuration codes or apply the wrong colors and textures (for example, setting the pattern to color index 14 and the color to pattern index 1).</p>
+                    <h3>Forgetting that USER_FILL requires setup</h3>
+                    <p>If you call <code>setfillstyle(USER_FILL, RED)</code> without first defining a custom pattern bitmap using <code>setfillpattern()</code>, BGI will execute undefined behavior, which often renders as a messy garbled pattern or crashes the graphics driver. Always set the custom pattern first before referencing <code>USER_FILL</code>.</p>
+                    <h3>Expecting outline colors to change</h3>
+                    <p><code>setfillstyle()</code> determines how the *interior* pixels of shape boundaries are painted. It does not change the outline border drawing color, which is governed by <code>setcolor()</code>. For functions like <code>floodfill(x, y, border_color)</code>, make sure you configure <code>setcolor()</code> for the boundary and <code>setfillstyle()</code> for the fill itself.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/bar-docs">bar()</a>
+                        <a href="/floodfill-docs">floodfill()</a>
+                        <a href="/setcolor-docs">setcolor()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Test patterns instantly. Copy-paste these codes into the browser-based editor panel to execute C BGI graphics programs directly in the browser.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Fill settings</p>
+                    <p><strong>Input:</strong> Pattern index, Color index</p>
+                    <p><strong>Best for:</strong> texturing filled shapes, bar charts, custom grids</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer >
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/setfillstyle-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "setfillstyle()", "item": "https://graphicsh.online/setfillstyle-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/setfillstyle-docs#article",
+                "headline": "setfillstyle() in graphics.h",
+                "description": "Syntax, parameters, examples, patterns lists, and mistakes for the graphics.h setfillstyle configuration function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/setfillstyle-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

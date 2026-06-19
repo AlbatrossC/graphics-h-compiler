@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bar() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h bar() with syntax, parameters, return value, runnable C programs, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="bar graphics.h, bar function in C graphics, graphics.h bar example, BGI bar function, filled rectangle C">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/bar-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/bar-docs">
+    <meta property="og:title" content="bar() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing filled rectangles in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="bar() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and mistakes for graphics.h bar().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Shape drawing function</p>
+                <h1>bar() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far bar(int left, int top, int right, int bottom);</code></pre>
+                </div>
+                <p>The <code>bar()</code> function draws a filled rectangle (a "bar") on the active graphics screen. Unlike <code>rectangle()</code>, which only renders the outline frame of a box using the current drawing color, <code>bar()</code> fills the entire rectangular region. It utilizes the pattern and color configured via the <code>setfillstyle()</code> function. Crucially, the <code>bar()</code> function does not draw any border outline around the box. The boundary of the bar is defined solely by the limits of the fill pattern itself.</p>
+                <p>In classical Borland Graphics Interface (BGI) program design, <code>bar()</code> is a primary tool for constructing user interface panels, custom buttons, bar charts, loading indicators, and solid background boxes. Since BGI does not feature built-in GUI components, developers rely on combinations of <code>bar()</code> and <code>outtextxy()</code> to create menu bars and buttons. When designing charts, multiple vertical or horizontal bars are plotted sequentially to visually represent data vectors. Because it draws without an outline, it is also frequently used to clear specific rectangular segments of the screen by drawing a bar filled with the background color.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>left</code></td><td><code>int</code></td><td>The x-coordinate of the top-left corner of the bar. Higher values shift the left edge toward the right.</td></tr>
+                            <tr><td><code>top</code></td><td><code>int</code></td><td>The y-coordinate of the top-left corner of the bar. Higher values shift the top edge downward.</td></tr>
+                            <tr><td><code>right</code></td><td><code>int</code></td><td>The x-coordinate of the bottom-right corner of the bar. Must be greater than <code>left</code> for normal visibility.</td></tr>
+                            <tr><td><code>bottom</code></td><td><code>int</code></td><td>The y-coordinate of the bottom-right corner of the bar. Must be greater than <code>top</code> for normal visibility.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>All coordinate parameters are specified as integer pixel distances from the viewport origin, which defaults to the top-left corner <code>(0, 0)</code> of the screen. For standard VGA mode (which provides a 640 by 480 grid), the horizontal bounds range from 0 to 639 and vertical bounds from 0 to 479. The values passed must satisfy <code>left &lt; right</code> and <code>top &lt; bottom</code>. If these conditions are violated, BGI behavior can vary; in some versions of BGI, the coordinates are swapped to draw correctly, while in others, the function quietly exits or fails to draw anything. It is best practice to always ensure your logic calculates coordinates in the correct spatial order.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>bar()</code> returns <code>void</code>. It executes the drawing command in the graphics frame buffer and returns control immediately. If the coordinates are fully outside the active viewport, BGI's clipping engine handles it transparently, preventing memory corruption. There are no status indicators returned, so verifying coordinates before drawing is the developer's responsibility.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Basic solid bar</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Set fill color to Green and style to Solid
+    setfillstyle(SOLID_FILL, GREEN);
+
+    // Draw a green filled bar
+    bar(150, 100, 450, 380);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program initializes BGI graphics, applies a solid green fill pattern using <code>setfillstyle()</code>, and draws a green rectangle. Since <code>bar()</code> has no outline, the edges are defined cleanly by the green filled pixels against the black background.</p>
+
+                    <h3>Bar chart demonstration</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int data[] = {150, 280, 200, 350};
+    int i, x = 100;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Draw a baseline
+    line(80, 400, 500, 400);
+
+    for(i = 0; i &lt; 4; i++) {
+        // Change color for each bar
+        setfillstyle(SOLID_FILL, RED + i);
+        // Draw vertical bar extending upwards from baseline (400)
+        bar(x, 400 - data[i], x + 50, 399);
+        x += 80;
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This code loops over an array of heights to render a series of colored bars. The top edge is calculated by subtracting the data value from the baseline y-coordinate (400), creating a standard vertical bar chart.</p>
+
+                    <h3>Bordered bar</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // 1. Fill style and draw the interior
+    setfillstyle(HATCH_FILL, CYAN);
+    bar(100, 100, 300, 250);
+
+    // 2. Set outline color and draw the boundary frame
+    setcolor(WHITE);
+    rectangle(100, 100, 300, 250);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>Since <code>bar()</code> does not draw a border outline, this example combines <code>bar()</code> with <code>rectangle()</code> using the same coordinates. This produces a cyan hatch-patterned bar outlined in white.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Confusing bar() with rectangle()</h3>
+                    <p>A common pitfall is expecting <code>bar()</code> to draw a border. If you want a box with a different border color and fill color, you must call both <code>bar()</code> (for the fill) and <code>rectangle()</code> (for the border), or use <code>bar3d()</code> with a depth of 0.</p>
+                    <h3>Incorrect coordinate order</h3>
+                    <p>Passing a <code>left</code> value greater than <code>right</code> or a <code>top</code> value greater than <code>bottom</code> is a common mathematical error in dynamic coordinate calculations. Ensure that <code>(left, top)</code> is always the top-left coordinate, and <code>(right, bottom)</code> is the bottom-right coordinate.</p>
+                    <h3>Forgetting setfillstyle()</h3>
+                    <p>If you call <code>bar()</code> without setting the fill style first, it will default to the standard fill (usually solid white). Always set the fill style before drawing your filled shapes to ensure visual correctness.</p>
+                    <h3>Drawing sequence issues</h3>
+                    <p>Because BGI has no layers, shapes are drawn directly onto the screen buffer in sequential order. If you draw text with <code>outtextxy()</code> and then draw a <code>bar()</code> over the same coordinates, the bar will overwrite and hide the text. Always render backgrounds and bars first, then render outlines and text on top.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/rectangle-docs">rectangle()</a>
+                        <a href="/setfillstyle-docs">setfillstyle()</a>
+                        <a href="/floodfill-docs">floodfill()</a>
+                        <a href="/circle-docs">circle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Paste any of the example codes into our browser-based compiler panel to run C graphics code immediately without installing Turbo C++ or configuring paths.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Fill shape</p>
+                    <p><strong>Input:</strong> bounding coordinates</p>
+                    <p><strong>Best for:</strong> bar charts, buttons, UI panels, backgrounds</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer >
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/bar-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "bar()", "item": "https://graphicsh.online/bar-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/bar-docs#article",
+                "headline": "bar() in graphics.h",
+                "description": "Syntax, parameters, examples, output notes, and mistakes for the graphics.h bar function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/bar-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

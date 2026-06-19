@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>setbkcolor() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h setbkcolor() with syntax, parameters, return value, runnable C programs, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="setbkcolor graphics.h, setbkcolor function in C graphics, graphics.h setbkcolor example, change background color BGI, C graphics background">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/setbkcolor-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/setbkcolor-docs">
+    <meta property="og:title" content="setbkcolor() in graphics.h">
+    <meta property="og:description" content="A practical reference for setting the active background color in C BGI graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="setbkcolor() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and BGI background behavior for setbkcolor().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Color settings function</p>
+                <h1>setbkcolor() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far setbkcolor(int color);</code></pre>
+                </div>
+                <p>The <code>setbkcolor()</code> function configures the active background color for the BGI graphics screen. By default, when graphics mode is initialized, the background is set to <code>BLACK</code> (index <code>0</code>). Calling <code>setbkcolor()</code> updates the background register index. In classic IBM PC hardware implementations, this function updates the physical palette register mapped to index 0, meaning that all pixels currently set to the background index instantly change to the new color on the hardware monitor without redrawing.</p>
+                <p>Understanding this hardware behavior is critical: calling <code>setbkcolor()</code> doesn't execute a slow pixel-by-pixel redraw; it updates the DAC (Digital-to-Analog Converter) color palette. Thus, if you draw a white circle on a black screen and then call <code>setbkcolor(BLUE)</code>, the black background instantly becomes solid blue, while the circle remains white. In modern emulated environments (such as our online compiler or DOSBox), the same behavior is reproduced. However, to guarantee cross-compiler compatibility and avoid screen artifacts, developers often call <code>cleardevice()</code> immediately after setting the background color to clear the display memory and start fresh.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>color</code></td><td><code>int</code></td><td>The index or constant name representing the background color. Valid choices are the integers <code>0</code> through <code>getmaxcolor()</code>.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The color index maps directly to the standard 16 BGI colors (constants are defined as capital letters in <code>graphics.h</code>). On typical VGA screens, these constants range from <code>BLACK</code> (0) to <code>WHITE</code> (15). Using named constants like <code>BLUE</code>, <code>DARKGRAY</code>, or <code>LIGHTGREEN</code> is highly recommended over raw integer values to ensure readability.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>setbkcolor()</code> returns <code>void</code>. To verify the current background color index setting at any point in your code, call the complementary function <code>getbkcolor()</code>, which returns the current active integer color index.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Basic background change</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    // Set background to dark blue
+    setbkcolor(BLUE);
+
+    // Set drawing color to yellow and draw a circle
+    setcolor(YELLOW);
+    circle(320, 240, 100);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program sets the background color of the screen to solid blue and draws a centered yellow circle. The result is a crisp yellow circle on a blue background, illustrating basic color contrast configurations.</p>
+
+                    <h3>Interactive background cycler</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int col = 0;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    outtextxy(50, 50, "Press any key to cycle background colors...");
+
+    while(!kbhit()) {
+        // Change background color index
+        setbkcolor(col);
+        col = (col + 1) % 16;
+        
+        delay(500); // Wait 500 milliseconds
+    }
+
+    getch(); // Clear key from buffer
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This example demonstrates BGI's palette behavior. Every half-second, the background color index cycles from 0 to 15. Notice that the text remains visible and the background color updates dynamically under it without erasing the text itself.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Forgetting drawing color contrast</h3>
+                    <p>If you call <code>setbkcolor(BLUE)</code> and then call <code>setcolor(BLUE)</code>, any subsequent lines or circles will be drawn in blue on a blue background, rendering them completely invisible. Always ensure high contrast between your drawing color (foreground) and background color (e.g., yellow lines on a blue background, or white lines on a dark gray background).</p>
+                    <h3>Assuming setbkcolor() clears the screen</h3>
+                    <p>In some compiler/emulation setups, changing the background color register might only affect newly rendered pixels if immediate palette-swapping is not supported. To write robust, portable code that works across Turbo C++, DOSBox, and Web emulators, always call <code>cleardevice()</code> right after <code>setbkcolor()</code>. This forces the entire buffer to refresh with the new background color.</p>
+                    <h3>Using RGB values instead of palette indices</h3>
+                    <p>Like <code>setcolor()</code>, <code>setbkcolor()</code> takes an index between 0 and 15 (in VGA mode). Passing a hex color code (like <code>0x0000FF</code> for blue) will not work and will likely result in the background reverting to black or light gray due to integer truncation.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/setcolor-docs">setcolor()</a>
+                        <a href="/setfillstyle-docs">setfillstyle()</a>
+                        <a href="/circle-docs">circle()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run these snippets online. Copy-paste them into the interactive compiler editor panel to run C graphics programs directly in the browser.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Color settings</p>
+                    <p><strong>Input:</strong> Color index or constant name</p>
+                    <p><strong>Best for:</strong> background setup, palette swapping</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer >
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/setbkcolor-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "setbkcolor()", "item": "https://graphicsh.online/setbkcolor-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/setbkcolor-docs#article",
+                "headline": "setbkcolor() in graphics.h",
+                "description": "Syntax, parameters, examples, and hardware palette behavior details for graphics.h setbkcolor function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/setbkcolor-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

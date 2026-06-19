@@ -155,6 +155,26 @@
   Cache-Control: public, max-age=0, must-revalidate
 /ellipse-docs.html
   Cache-Control: public, max-age=0, must-revalidate
+/bar-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/bar-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/setcolor-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/setcolor-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/setbkcolor-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/setbkcolor-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/setfillstyle-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/setfillstyle-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/floodfill-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/floodfill-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate
 /embed.html

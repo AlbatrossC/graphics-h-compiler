@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>setcolor() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h setcolor() with syntax, parameters, return value, runnable C programs, output explanation, common mistakes, and related functions.">
+    <meta name="keywords" content="setcolor graphics.h, setcolor function in C graphics, graphics.h setcolor example, BGI color constants, C graphics colors">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/setcolor-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/setcolor-docs">
+    <meta property="og:title" content="setcolor() in graphics.h">
+    <meta property="og:description" content="A practical reference for setting the active drawing color in C BGI graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="setcolor() in graphics.h">
+    <meta name="twitter:description" content="Syntax, parameters, examples, and BGI color tables for setcolor().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Color settings function</p>
+                <h1>setcolor() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far setcolor(int color);</code></pre>
+                </div>
+                <p>The <code>setcolor()</code> function sets the current drawing color for BGI graphics operations. When you call a shape outline function (like <code>line()</code>, <code>rectangle()</code>, <code>circle()</code>, <code>ellipse()</code>, or <code>arc()</code>) or render text (using <code>outtextxy()</code> or <code>outtext()</code>), BGI queries the active drawing color register and draws pixels accordingly. Changing the color with <code>setcolor()</code> does not alter graphics already drawn on screen; it only determines the color of vector coordinates drawn after the function call.</p>
+                <p>Foreground color management is highly dependent on the active graphics driver and mode configured during <code>initgraph()</code>. In the default VGA mode (e.g. <code>VGAHI</code>), BGI provides a palette of 16 distinct colors, numbered 0 through 15. These indices map to specific pre-defined hardware colors, and standard named constants are provided in <code>graphics.h</code> so developers do not need to memorize numeric codes. If you are writing portable graphics code, using named constants such as <code>YELLOW</code> or <code>LIGHTBLUE</code> makes code significantly easier to read and maintain across compilers.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>color</code></td><td><code>int</code></td><td>An integer representing the color index or a pre-defined BGI color name constant. Valid values range from <code>0</code> to <code>getmaxcolor()</code>.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The color index argument typically corresponds to one of the 16 BGI color constants listed in the table below. Note that <code>BLACK</code> is index <code>0</code> and <code>WHITE</code> is index <code>15</code>. If you specify an index larger than the value returned by <code>getmaxcolor()</code>, the behavior is driver-dependent (usually wrapped around using modulo arithmetic or ignored).</p>
+
+                    <h3>Standard BGI Color Table</h3>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Index</th><th>Constant Name</th><th>Typical Color Representation</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>0</code></td><td><code>BLACK</code></td><td>Black (matches default background)</td></tr>
+                            <tr><td><code>1</code></td><td><code>BLUE</code></td><td>Dark Blue</td></tr>
+                            <tr><td><code>2</code></td><td><code>GREEN</code></td><td>Dark Green</td></tr>
+                            <tr><td><code>3</code></td><td><code>CYAN</code></td><td>Cyan / Aqua</td></tr>
+                            <tr><td><code>4</code></td><td><code>RED</code></td><td>Dark Red</td></tr>
+                            <tr><td><code>5</code></td><td><code>MAGENTA</code></td><td>Dark Magenta / Purple</td></tr>
+                            <tr><td><code>6</code></td><td><code>BROWN</code></td><td>Brown / Dark Yellow</td></tr>
+                            <tr><td><code>7</code></td><td><code>LIGHTGRAY</code></td><td>Light Gray</td></tr>
+                            <tr><td><code>8</code></td><td><code>DARKGRAY</code></td><td>Dark Gray</td></tr>
+                            <tr><td><code>9</code></td><td><code>LIGHTBLUE</code></td><td>Bright Blue</td></tr>
+                            <tr><td><code>10</code></td><td><code>LIGHTGREEN</code></td><td>Bright Green</td></tr>
+                            <tr><td><code>11</code></td><td><code>LIGHTCYAN</code></td><td>Bright Cyan</td></tr>
+                            <tr><td><code>12</code></td><td><code>LIGHTRED</code></td><td>Bright Red</td></tr>
+                            <tr><td><code>13</code></td><td><code>LIGHTMAGENTA</code></td><td>Bright Pink / Magenta</td></tr>
+                            <tr><td><code>14</code></td><td><code>YELLOW</code></td><td>Yellow</td></tr>
+                            <tr><td><code>15</code></td><td><code>WHITE</code></td><td>White</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>setcolor()</code> returns <code>void</code>. To query what the current active foreground color index is, you can call the complementary function <code>getcolor()</code>, which returns an integer value corresponding to the current state.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>All 16 Colors Demo</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int i, y = 30;
+    char text[20];
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for(i = 0; i &lt; 16; i++) {
+        // Change the active drawing color
+        setcolor(i);
+        // Draw a line across the screen in this color
+        line(50, y, 200, y);
+
+        // Print the color index number next to it
+        sprintf(text, "Color Index: %d", i);
+        outtextxy(220, y - 4, text);
+
+        y += 25;
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This program loops through all 16 standard indices, using <code>setcolor()</code> to apply each color sequentially. For each index, it draws a matching line and outputs a descriptive text label. This is a great way to verify how the colors look in your current compiler environment.</p>
+
+                    <h3>Colorful geometric pattern</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int r;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (r = 20; r &lt;= 200; r += 15) {
+        // Cycle colors based on radius to alternate outlines
+        setcolor((r / 15) % 15 + 1); // Avoid 0 (Black) so outlines are visible
+        circle(320, 240, r);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This code draws a set of concentric circles, changing the drawing color index in each iteration. By avoiding index 0 (which is black), all shapes remain highly visible against the black background, creating an eye-catching nested pattern.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Using RGB hex codes</h3>
+                    <p>Modern graphics libraries use 24-bit RGB hex values like <code>0xFF0000</code> for colors. However, standard <code>graphics.h</code> BGI functions operate on a indexed color palette (0 to 15). Passing a high value like <code>0xFF0000</code> to <code>setcolor()</code> will be clipped or interpreted as black, rendering your drawings invisible.</p>
+                    <h3>Writing constant names in lowercase</h3>
+                    <p>C is a case-sensitive language. The constants defined in <code>graphics.h</code> are capitalized (e.g., <code>RED</code>, <code>YELLOW</code>, <code>BLUE</code>). Writing <code>setcolor(red);</code> in your code will result in a compiler syntax error indicating that <code>red</code> is an undefined identifier.</p>
+                    <h3>Expecting setcolor() to change fills</h3>
+                    <p>Fills created by <code>bar()</code>, <code>fillellipse()</code>, and <code>fillpoly()</code> are controlled by the fill settings from <code>setfillstyle()</code>, not <code>setcolor()</code>. If you draw a bar using <code>bar()</code>, calling <code>setcolor(RED)</code> will have no effect on the bar's internal color. Fills require <code>setfillstyle()</code>.</p>
+                    <h3>Invisible drawing (matching background)</h3>
+                    <p>If you call <code>setcolor(BLACK)</code> or set the color index to match the current background color (which defaults to index 0, black), your outlines and text will be invisible. If shapes seem to disappear or fail to draw, verify that you did not accidentally configure the drawing color to match the background.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/setbkcolor-docs">setbkcolor()</a>
+                        <a href="/setfillstyle-docs">setfillstyle()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/circle-docs">circle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Test colors instantly. Paste our code snippets into the browser-based editor panel to execute C graphics online without setting up Turbo C++.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Color settings</p>
+                    <p><strong>Input:</strong> Color index or constant name</p>
+                    <p><strong>Best for:</strong> outline color, lines, frames, text</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer >
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/setcolor-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "setcolor()", "item": "https://graphicsh.online/setcolor-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/setcolor-docs#article",
+                "headline": "setcolor() in graphics.h",
+                "description": "Syntax, parameters, examples, color lists, and common errors for graphics.h setcolor foreground color function.",
+                "datePublished": "2026-06-19",
+                "dateModified": "2026-06-19",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/setcolor-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

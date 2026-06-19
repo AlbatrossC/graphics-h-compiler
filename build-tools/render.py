@@ -44,22 +44,31 @@ SIMPLE_PAGES = {
     'maintenance.html': 'maintenance.html',
 }
 
-BLOG_PAGES = {
-    'clipping-algorithm-in-computer-graphics-blog.html': 'blog/clipping-algorithm-in-computer-graphics-blog.html',
-    'cohen-sutherland-line-clipping-blog.html': 'blog/cohen-sutherland-line-clipping-blog.html',
-    'transformations-in-computer-graphics-blog.html': 'blog/transformations-in-computer-graphics-blog.html',
-    'midpoint-circle-algorithm-blog.html': 'blog/midpoint-circle-algorithm-blog.html',
-    'bresenham-line-drawing-algorithm-blog.html': 'blog/bresenham-line-drawing-algorithm-blog.html',
-    'dda-line-drawing-algorithm-blog.html': 'blog/dda-line-drawing-algorithm-blog.html',
-}
+def discover_blog_pages() -> dict[str, str]:
+    blog_dir = TEMPLATES_DIR / 'blog'
+    pages = {}
+    if blog_dir.exists():
+        for path in blog_dir.rglob('*.html'):
+            if path.name.startswith('_'):
+                continue
+            pages[path.name] = path.relative_to(TEMPLATES_DIR).as_posix()
+    return pages
 
-DOCS_PAGES = {
-    'circle-docs.html': 'docs/circle-docs.html',
-    'rectangle-docs.html': 'docs/rectangle-docs.html',
-    'line-docs.html': 'docs/line-docs.html',
-    'arc-docs.html': 'docs/arc-docs.html',
-    'ellipse-docs.html': 'docs/ellipse-docs.html',
-}
+
+def discover_docs_pages() -> dict[str, str]:
+    docs_dir = TEMPLATES_DIR / 'docs'
+    pages = {}
+    if docs_dir.exists():
+        for path in docs_dir.rglob('*.html'):
+            if path.name.startswith('_'):
+                continue
+            pages[path.name] = path.relative_to(TEMPLATES_DIR).as_posix()
+    return pages
+
+
+BLOG_PAGES = discover_blog_pages()
+DOCS_PAGES = discover_docs_pages()
+
 
 COMPILER_SOURCE_JS = {
     'app.js',
@@ -167,22 +176,22 @@ def generate_sitemap() -> str:
         url('/', '0.95', 'weekly'),
         url('/blog', '0.7', 'weekly'),
         url('/docs', '0.75', 'weekly'),
-        url('/clipping-algorithm-in-computer-graphics-blog', '0.65', 'monthly'),
-        url('/cohen-sutherland-line-clipping-blog', '0.65', 'monthly'),
-        url('/transformations-in-computer-graphics-blog', '0.65', 'monthly'),
-        url('/midpoint-circle-algorithm-blog', '0.65', 'monthly'),
-        url('/bresenham-line-drawing-algorithm-blog', '0.65', 'monthly'),
-        url('/dda-line-drawing-algorithm-blog', '0.65', 'monthly'),
-        url('/circle-docs', '0.7', 'monthly'),
-        url('/rectangle-docs', '0.7', 'monthly'),
-        url('/line-docs', '0.7', 'monthly'),
-        url('/arc-docs', '0.7', 'monthly'),
-        url('/ellipse-docs', '0.7', 'monthly'),
+    ]
+
+    for filename in sorted(BLOG_PAGES.keys()):
+        slug = filename.removesuffix('.html')
+        entries.append(url(f'/{slug}', '0.65', 'monthly'))
+
+    for filename in sorted(DOCS_PAGES.keys()):
+        slug = filename.removesuffix('.html')
+        entries.append(url(f'/{slug}', '0.7', 'monthly'))
+
+    entries.extend([
         url('/about', '0.5', 'monthly'),
         url('/contact', '0.5', 'monthly'),
         url('/privacy-policy', '0.4', 'yearly'),
         url('/terms', '0.4', 'yearly'),
-    ]
+    ])
 
     xml_body = '\n'.join(entries)
     return (
