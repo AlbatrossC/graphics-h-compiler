@@ -26,7 +26,7 @@
     <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
 
-    <link rel="stylesheet" href="/static/css/fonts.css">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
 
     <style>
         * {
@@ -37,12 +37,17 @@
 
         :root {
             --bg-dark: #0a0a0a;
-            --bg-light: #fafafa;
-            --text-dark: #0a0a0a;
+            --bg-light: #f4f5f7; /* Soft, cool off-white background */
+            --text-dark: #111827; /* Charcoal text for legibility */
             --text-light: #fafafa;
             --accent: #00ff88;
             --accent-dark: #00cc6a;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Theme-adaptive accent colors */
+            --accent-color: #00ff88;
+            --accent-bg: rgba(0, 255, 136, 0.08);
+            --accent-border: rgba(0, 255, 136, 0.2);
         }
 
         html {
@@ -63,6 +68,11 @@
         body.light {
             background: var(--bg-light);
             color: var(--text-dark);
+            --accent: #00733b; /* Readable dark forest green for light theme */
+            --accent-dark: #005a2e;
+            --accent-color: #00733b;
+            --accent-bg: rgba(0, 115, 59, 0.06);
+            --accent-border: rgba(0, 115, 59, 0.25);
         }
 
         /* Header */
@@ -78,7 +88,7 @@
         }
 
         body.light .contact-header {
-            background: rgba(250, 250, 250, 0.75);
+            background: rgba(244, 245, 247, 0.8);
             border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
@@ -103,24 +113,33 @@
             font-weight: 600;
             color: inherit;
             text-decoration: none;
-            opacity: 0.7;
+            opacity: 0.8;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
             padding: 0.35rem 0.7rem;
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
         }
 
         body.light .contact-home-btn {
-            border-color: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.02);
         }
 
         .contact-home-btn:hover {
             opacity: 1;
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            color: inherit;
+        }
+
+        body.light .contact-home-btn:hover {
+            border-color: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
         }
 
         .contact-home-btn svg {
@@ -130,20 +149,34 @@
         }
 
         .contact-logo {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
             display: flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.6rem;
             text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        .contact-logo:hover {
+            opacity: 0.9;
+        }
+
+        .contact-logo-image {
+            height: 28px;
+            width: auto;
+            display: block;
+        }
+
+        .contact-logo-text {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             color: inherit;
         }
 
-        .contact-logo .bracket {
-            color: var(--accent);
-            font-size: 1.05rem;
+        .contact-logo-primary {
+            color: var(--accent-color);
         }
 
         .theme-toggle-btn {
@@ -230,15 +263,15 @@
         }
 
         .contact-channel:hover {
-            border-color: rgba(0, 255, 136, 0.2);
-            background: rgba(0, 255, 136, 0.03);
+            border-color: var(--accent-border);
+            background: var(--accent-bg);
         }
 
         .channel-icon {
             width: 36px;
             height: 36px;
             border-radius: 8px;
-            background: rgba(0, 255, 136, 0.08);
+            background: var(--accent-bg);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -386,7 +419,7 @@
         .form-group input:focus,
         .form-group textarea:focus {
             border-bottom-color: var(--accent);
-            background: rgba(0, 255, 136, 0.02);
+            background: var(--accent-bg);
         }
 
         .form-group input::placeholder,
@@ -408,8 +441,8 @@
             gap: 0.5rem;
             font-family: 'IBM Plex Sans', sans-serif;
             font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--bg-dark);
+            font-weight: 650;
+            color: #0a0a0a; /* Dark text for light/neon button in dark mode */
             background: var(--accent);
             border: none;
             padding: 0.75rem 2rem;
@@ -417,6 +450,10 @@
             cursor: pointer;
             transition: var(--transition);
             margin-top: 0.5rem;
+        }
+
+        body.light .form-submit {
+            color: #ffffff; /* White text for forest green button in light mode */
         }
 
         .form-submit:hover {
@@ -527,6 +564,10 @@
                 padding: 0.7rem 1.5rem;
             }
 
+            .contact-logo-text {
+                display: none;
+            }
+
             .contact-logo span:not(.bracket) {
                 display: none;
             }
@@ -558,10 +599,12 @@
                     </svg>
                     Home
                 </a>
-                <a href="/" class="contact-logo">
-                    <span class="bracket">&lt;</span>
-                    <span>graphics.h</span>
-                    <span class="bracket">/&gt;</span>
+                <a href="/" class="contact-logo" aria-label="graphics.h compiler">
+                    <picture>
+                        <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="contact-logo-image" width="547" height="282" decoding="async">
+                    </picture>
+                    <span class="contact-logo-text"><span class="contact-logo-primary">graphics.h</span> compiler</span>
                 </a>
             </div>
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☾</button>

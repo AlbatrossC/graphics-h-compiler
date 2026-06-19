@@ -150,7 +150,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 .panel-action-btn:hover {
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(var(--color-rgb-primary), 0.1);
     border-color: var(--primary);
     color: var(--primary);
 }
@@ -240,7 +240,7 @@ body.panel-fullscreen > #sidebar-overlay {
 
 #fullscreen-editor-btn:hover,
 #fullscreen-terminal-btn:hover {
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(var(--color-rgb-primary), 0.1);
     border-color: var(--primary);
     color: var(--primary);
 }
@@ -295,7 +295,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .cm-editor .cm-selectionBackground,
 .cm-editor.cm-focused .cm-selectionBackground,
 ::selection {
-    background: rgba(0, 255, 136, 0.15) !important;
+    background: rgba(var(--color-rgb-primary), 0.15) !important;
 }
 
 /* Selection matches */
@@ -309,8 +309,8 @@ body.panel-fullscreen > #sidebar-overlay {
 
 /* Matching Brackets */
 .cm-editor .cm-matchingBracket {
-    background: rgba(0, 255, 136, 0.25);
-    outline: 1px solid rgba(0, 255, 136, 0.4);
+    background: rgba(var(--color-rgb-primary), 0.25);
+    outline: 1px solid rgba(var(--color-rgb-primary), 0.4);
 }
 
 /* CodeMirror focused state */
@@ -625,7 +625,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .spinner {
     width: 38px;
     height: 38px;
-    border: 3px solid rgba(0, 255, 136, 0.2);
+    border: 3px solid rgba(var(--color-rgb-primary), 0.2);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
@@ -851,7 +851,7 @@ body.panel-fullscreen > #sidebar-overlay {
 
 .fix-ai-explanation {
     border-top: 1px solid var(--border-color);
-    background: rgba(0, 255, 136, 0.05);
+    background: rgba(var(--color-rgb-primary), 0.05);
     padding: 12px 16px 14px;
 }
 
@@ -1118,7 +1118,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .editor-loading-spinner {
     width: 42px;
     height: 42px;
-    border: 3px solid rgba(0, 255, 136, 0.2);
+    border: 3px solid rgba(var(--color-rgb-primary), 0.2);
     border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
@@ -1272,8 +1272,8 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 .modal-status.success {
-    background: rgba(0, 255, 136, 0.1);
-    border: 1px solid rgba(0, 255, 136, 0.25);
+    background: rgba(var(--color-rgb-primary), 0.1);
+    border: 1px solid rgba(var(--color-rgb-primary), 0.25);
     color: var(--success);
 }
 
@@ -1309,7 +1309,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 #floating-run-btn:hover {
-    background: #00e87a;
+    background: var(--primary-hover, #00e87a);
     transform: scale(1.07);
 }
 
@@ -1368,7 +1368,7 @@ body.panel-fullscreen > #sidebar-overlay {
 #floating-run-btn-tooltip {
     position: fixed;
     background: #1a1f2e;
-    border: 1px solid rgba(0, 255, 136, 0.25);
+    border: 1px solid rgba(var(--color-rgb-primary), 0.25);
     color: #d8e6f3;
     font-size: 0.78rem;
     font-weight: 500;
@@ -1395,7 +1395,7 @@ body.panel-fullscreen > #sidebar-overlay {
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: rgba(0, 255, 136, 0.25);
+    border-top-color: rgba(var(--color-rgb-primary), 0.25);
     filter: drop-shadow(0 1px 0 #1a1f2e);
 }
 
@@ -1411,7 +1411,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 #floating-run-btn-tooltip strong {
-    color: #00ff88;
+    color: var(--primary, #00ff88);
     font-weight: 700;
 }
 

@@ -55,10 +55,10 @@
 [data-theme="light"] {
     --color-rgb-white: 0, 0, 0;
     /* Light Theme Palette */
-    --vscode-bg: #f6f8fa;
-    --vscode-sidebar: #f6f8fa;
+    --vscode-bg: #f4f5f7; /* Softer neutral off-white grey background */
+    --vscode-sidebar: #f4f5f7;
     --vscode-editor: #ffffff;
-    --vscode-line-bg: #f0f3f6;
+    --vscode-line-bg: #eef0f3;
     --vscode-border: #d0d7de;
     --border-color: #d0d7de;
 
@@ -72,20 +72,20 @@
     --syn-property: #6f42c1;
     --syn-meta: #d73a49;
 
-    --color-rgb-primary: 0, 168, 89;
-    --primary: #00a859;
-    --primary-hover: #008f4c;
+    --color-rgb-primary: 0, 115, 59; /* Forest green RGB */
+    --primary: #00733b; /* Highly readable forest green */
+    --primary-hover: #005a2e;
     --primary-text: #ffffff;
-    --success: #00a859;
-    --success-hover: #008f4c;
+    --success: #00733b;
+    --success-hover: #005a2e;
     --danger: #d32f2f;
     --warning: #f57c00;
-    --accent: #00a859;
-    --accent-dark: #008f4c;
+    --accent: #00733b;
+    --accent-dark: #005a2e;
 
-    --text-primary: #1a1a1a;
-    --text-secondary: #5e5e5e;
-    --text-muted: #808080;
+    --text-primary: #111827; /* Soft charcoal text */
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
 
     --border-color-hover: #99aab5;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);

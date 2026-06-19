@@ -27,7 +27,7 @@
     <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
 
-    <link rel="stylesheet" href="/static/css/fonts.css">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
 
     <style>
         * {
@@ -38,14 +38,19 @@
 
         :root {
             --bg-dark: #0a0a0a;
-            --bg-light: #fafafa;
-            --text-dark: #0a0a0a;
+            --bg-light: #f4f5f7; /* Soft, cool off-white background */
+            --text-dark: #111827; /* Soft charcoal black for premium contrast */
             --text-light: #fafafa;
             --accent: #00ff88;
             --accent-dark: #00cc6a;
             --border-light: #e5e5e5;
             --border-dark: #1a1a1a;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Theme-adaptive accent colors */
+            --accent-color: #00ff88;
+            --accent-bg: rgba(0, 255, 136, 0.08);
+            --accent-border: rgba(0, 255, 136, 0.2);
         }
 
         html {
@@ -63,6 +68,11 @@
         body.light {
             background: var(--bg-light);
             color: var(--text-dark);
+            --accent: #00733b; /* Readable dark forest green for light theme */
+            --accent-dark: #005a2e;
+            --accent-color: #00733b;
+            --accent-bg: rgba(0, 115, 59, 0.06);
+            --accent-border: rgba(0, 115, 59, 0.25);
         }
 
         /* Header */
@@ -78,7 +88,7 @@
         }
 
         body.light .about-header {
-            background: rgba(250, 250, 250, 0.75);
+            background: rgba(244, 245, 247, 0.8);
             border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         }
 
@@ -94,56 +104,83 @@
         .about-header-left {
             display: flex;
             align-items: center;
-            gap: 1.2rem;
+            gap: 1.5rem;
         }
 
         .about-home-btn {
             font-family: 'IBM Plex Sans', sans-serif;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             font-weight: 600;
             color: inherit;
             text-decoration: none;
-            opacity: 0.7;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.35rem 0.7rem;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            gap: 0.5rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: none; /* No shadow or glow */
         }
 
         body.light .about-home-btn {
-            border-color: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.02);
+            box-shadow: none;
         }
 
         .about-home-btn:hover {
-            opacity: 1;
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            color: inherit;
+            box-shadow: none;
+            transform: none;
+        }
+
+        body.light .about-home-btn:hover {
+            border-color: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.06);
+            color: inherit;
+            box-shadow: none;
+            transform: none;
         }
 
         .about-home-btn svg {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
             fill: currentColor;
         }
 
         .about-logo {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.9rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
             display: flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.6rem;
             text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        .about-logo:hover {
+            opacity: 0.9;
+        }
+
+        .about-logo-image {
+            height: 28px;
+            width: auto;
+            display: block;
+        }
+
+        .about-logo-text {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
             color: inherit;
         }
 
-        .about-logo .bracket {
-            color: var(--accent);
-            font-size: 1.05rem;
+        .about-logo-primary {
+            color: var(--accent-color);
         }
 
         .theme-toggle-btn {
@@ -166,8 +203,8 @@
         }
 
         .theme-toggle-btn:hover {
-            border-color: var(--accent);
-            color: var(--accent);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
         }
 
         /* Layout */
@@ -193,7 +230,7 @@
             font-weight: 700;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            color: var(--accent);
+            color: var(--accent-color);
             margin-bottom: 1rem;
         }
 
@@ -217,9 +254,9 @@
         .about-sidebar nav a:hover,
         .about-sidebar nav a.active {
             opacity: 1;
-            color: var(--accent);
-            border-left-color: var(--accent);
-            background: rgba(0, 255, 136, 0.04);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+            background: var(--accent-bg);
         }
 
         .about-sidebar-divider {
@@ -251,7 +288,7 @@
 
         .about-sidebar-links a:hover {
             opacity: 0.8;
-            color: var(--accent);
+            color: var(--accent-color);
         }
 
         /* Content */
@@ -325,10 +362,10 @@
         .about-section code {
             font-family: 'Space Mono', monospace;
             font-size: 0.85em;
-            background: rgba(0, 255, 136, 0.08);
+            background: var(--accent-bg);
             padding: 0.15em 0.4em;
             border-radius: 4px;
-            color: var(--accent);
+            color: var(--accent-color);
         }
 
         .about-divider {
@@ -343,16 +380,11 @@
 
         /* Highlight box */
         .about-highlight {
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            background: rgba(0, 255, 136, 0.03);
+            border: 1px solid var(--accent-border);
+            background: var(--accent-bg);
             padding: 1.4rem 1.6rem;
             border-radius: 10px;
             margin: 1.2rem 0;
-        }
-
-        body.light .about-highlight {
-            background: rgba(0, 255, 136, 0.05);
-            border-color: rgba(0, 255, 136, 0.25);
         }
 
         .about-highlight p {
@@ -382,7 +414,7 @@
         }
 
         .about-feature-card:hover {
-            border-color: rgba(0, 255, 136, 0.25);
+            border-color: var(--accent-border);
         }
 
         .about-feature-card h3 {
@@ -427,6 +459,101 @@
         body.light .tech-list li {
             border-color: rgba(0, 0, 0, 0.08);
             background: rgba(0, 0, 0, 0.02);
+        }
+
+        /* CTA Buttons */
+        .about-section .cta-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.9rem;
+            justify-content: flex-start;
+            margin: 2rem 0 1rem;
+        }
+
+        .about-section .cta-btn {
+            min-width: 220px;
+            min-height: 52px;
+            padding: 0.82rem 1.45rem;
+            font-size: 0.9rem;
+            font-weight: 650;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.7rem;
+            text-transform: none;
+            letter-spacing: 0;
+            white-space: nowrap;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .about-section .cta-btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: var(--bg-dark);
+            border-color: transparent;
+            box-shadow: 0 2px 8px rgba(0, 255, 136, 0.15), inset 0 1px 1px rgba(255,255,255,0.2);
+        }
+
+        .about-section .cta-btn-primary:hover {
+            background: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.2);
+            transform: translateY(-2px);
+        }
+
+        body.light .about-section .cta-btn-primary {
+            background: var(--accent-dark);
+            color: #ffffff;
+            border-color: var(--accent-dark);
+        }
+
+        body.light .about-section .cta-btn-primary:hover {
+            background: transparent;
+            color: var(--accent-dark);
+            box-shadow: 0 4px 12px rgba(0, 204, 106, 0.15);
+        }
+
+        .about-section .cta-btn-vscode {
+            background: linear-gradient(135deg, #0084DE 0%, #005a9e 100%);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 122, 204, 0.15), inset 0 1px 1px rgba(255,255,255,0.15);
+        }
+
+        .about-section .cta-btn-vscode:hover {
+            background: transparent;
+            border-color: #007ACC;
+            color: #007ACC;
+            box-shadow: 0 4px 12px rgba(0, 122, 204, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        body.light .about-section .cta-btn-vscode:hover {
+            background: transparent;
+            border-color: #005a9e;
+            color: #005a9e;
+        }
+
+        .about-section .vscode-icon {
+            width: 18px;
+            height: 18px;
+            filter: brightness(0) invert(1);
+            display: block;
+        }
+
+        .about-section .cta-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         /* Footer */
@@ -513,7 +640,7 @@
                 padding: 0.7rem 1.5rem;
             }
 
-            .about-logo span:not(.bracket) {
+            .about-logo-text {
                 display: none;
             }
 
@@ -534,10 +661,12 @@
                     </svg>
                     Home
                 </a>
-                <a href="/" class="about-logo">
-                    <span class="bracket">&lt;</span>
-                    <span>graphics.h</span>
-                    <span class="bracket">/&gt;</span>
+                <a href="/" class="about-logo" aria-label="graphics.h compiler">
+                    <picture>
+                        <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                        <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="about-logo-image" width="547" height="282" decoding="async">
+                    </picture>
+                    <span class="about-logo-text"><span class="about-logo-primary">graphics.h</span> compiler</span>
                 </a>
             </div>
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle theme" id="theme-toggle">☾</button>
@@ -571,32 +700,35 @@
             <p class="about-tagline">
                 A modern, zero-setup way to run legacy C graphics programs — directly in your browser or VS Code.
             </p>
+            <p style="font-size: 0.82rem; opacity: 0.5; margin-bottom: 2.2rem; font-family: 'Space Mono', monospace;">
+                Last updated: June 19, 2026
+            </p>
+
+            <div class="about-highlight" style="margin-top: 0; margin-bottom: 2.5rem;">
+                <p style="font-weight: 500; font-size: 0.98rem; line-height: 1.8; opacity: 0.9; margin: 0;">
+                    <strong>graphics.h Compiler</strong> is an educational platform dedicated to helping students learn computer graphics programming without the complexity of legacy software installation and configuration. The website is intended for educational and learning purposes and is used by students studying computer graphics concepts and laboratory coursework.
+                </p>
+            </div>
 
             <div class="about-section" id="the-problem">
-                <h2>The Problem</h2>
+                <h2>What is graphics.h & The Problem</h2>
                 <p>
-                    <strong>graphics.h</strong> is a legacy BGI (Borland Graphics Interface) library that's still
-                    widely taught in Computer Graphics courses across Indian universities — especially under the
-                    <a href="https://www.unipune.ac.in/" target="_blank" rel="noopener noreferrer">SPPU (Savitribai
-                        Phule Pune University)</a> curriculum. It was originally built for Borland's Turbo C compiler,
-                    which ran on MS-DOS in the early 1990s. If you're unfamiliar with it, check out the
-                    <a href="/docs">What is graphics.h?</a> guide.
+                    <strong>What is graphics.h?</strong> It is a classic C/C++ graphics library (the Borland Graphics Interface, or BGI) used to draw shapes, lines, and text in a console environment. Originally introduced in the late 1980s and early 1990s, it was designed for DOS-based compilers like Turbo C.
                 </p>
                 <p>
-                    The problem? Running graphics.h programs in 2026 is genuinely painful. Students are forced through a
-                    maze of outdated setup steps:
+                    Despite being decades old, this legacy library is still widely taught in Computer Graphics lab courses at universities all over the world, including my own university, <strong>SPPU (Savitribai Phule Pune University)</strong>. It remains a standard introduction to fundamental graphics concepts and algorithms, such as DDA, Bresenham's line drawing, circle generation, and polygon filling.
+                </p>
+                <p>
+                    <strong>The Problem?</strong> Running graphics.h programs on modern systems is a painful experience. Because the library is a 16-bit legacy component, it cannot run natively on modern 64-bit operating systems like Windows 10/11, macOS, or Linux. Students face frustrating problems depending on their setup:
                 </p>
                 <ul>
-                    <li>Installing Turbo C (a compiler from the 1990s)</li>
-                    <li>Configuring DOSBox to emulate a DOS environment</li>
-                    <li>Dealing with resolution scaling, path issues, and crashes</li>
-                    <li>Fighting compatibility issues on modern 64-bit Windows, macOS, and Linux</li>
-                    <li>Losing work because Turbo C has no autosave or modern editor features</li>
+                    <li><strong>Turbo C / DOSBox Problems:</strong> Dealing with resolution scaling glitches, mounting errors, emulator crashes, and losing work due to a lack of autosave or tab completion.</li>
+                    <li><strong>Dev-C++ & Code::Blocks Problems:</strong> Manual folder structures, downloading external files, configuring cryptic linker parameters (like <code>-lbgi -lgdi32</code>), and constant linker errors.</li>
+                    <li><strong>VS Code Problems:</strong> Configuring paths, tasks, and compiler settings for C/C++ projects, which is highly frustrating for beginners.</li>
+                    <li><strong>Modern Operating System Crashing:</strong> Emulator scaling issues and compatibility failures on modern systems.</li>
                 </ul>
                 <p>
-                    The result? Students spend more time debugging their environment than actually learning
-                    <a href="/docs">graphics programming concepts</a>. Many give up or copy assignments without
-                    understanding the code.
+                    Consequently, students spend hours debugging environment setups and configuration issues rather than actually learning graphics programming. Many get frustrated or copy lab assignments without understanding how the code works.
                 </p>
             </div>
 
@@ -605,34 +737,40 @@
             <div class="about-section" id="the-solution">
                 <h2>The Solution</h2>
                 <p>
-                    <strong>This project eliminates that entire friction.</strong> It provides two modern ways to write
-                    and run graphics.h programs instantly — no installation, no configuration, no legacy software.
+                    <strong>This website makes it incredibly easy to write, compile, and run graphics.h code.</strong> I created this compiler to remove all configuration friction, providing two modern paths to get programs running instantly with zero setup:
                 </p>
+
+                <div class="cta-group">
+                    <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
+                        target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
+                        <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon" width="100" height="100" loading="lazy" decoding="async">
+                        <span>VS Code Extension</span>
+                    </a>
+                    <a href="/compiler" class="cta-btn cta-btn-primary">
+                        <svg class="lucide lucide-terminal" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="4 17 10 11 4 5"></polyline>
+                            <line x1="12" y1="19" x2="20" y2="19"></line>
+                        </svg>
+                        <span>Online Compiler</span>
+                    </a>
+                </div>
 
                 <div class="about-features">
                     <div class="about-feature-card">
                         <span class="card-icon">🌐</span>
-                        <h3>Online Compiler</h3>
-                        <p>Write and run graphics.h programs directly in your browser. Zero setup — just
-                            <a href="/compiler">open the compiler</a> and start coding. Features include a built-in
-                            code editor, file manager, demo programs, and cloud save with Google Sign-In.</p>
+                        <h3>Online Web Compiler</h3>
+                        <p>Write and execute graphics.h code directly in your web browser. Zero setup — features a modern code editor, built-in templates, and optional cloud saving with Google Sign-In.</p>
                     </div>
                     <div class="about-feature-card">
                         <span class="card-icon">💻</span>
                         <h3>VS Code Extension</h3>
-                        <p>Prefer coding locally? Install the
-                            <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler" target="_blank" rel="noopener noreferrer">VS Code extension</a>
-                            to compile and run graphics.h programs right inside your editor with syntax highlighting.</p>
+                        <p>Prefer working locally? Install the VS Code extension to get one-click compiling, run capabilities, syntax highlighting, and auto-complete right inside your editor.</p>
                     </div>
                 </div>
 
                 <div class="about-highlight">
                     <p>
-                        Both approaches give the same result: your graphics.h programs run instantly, producing the
-                        correct DOS-style graphical output — <a href="/docs">circles</a>,
-                        <a href="/docs">lines</a>, <a href="/docs">rectangles</a>,
-                        <a href="/docs">text</a>, and everything else the library supports.
-                        See the full <a href="/docs">function reference</a>.
+                        Both tools enable your graphics.h programs to run instantly, producing the classic DOS-style graphical window output. You can render <a href="/docs">circles</a>, <a href="/docs">lines</a>, <a href="/docs">rectangles</a>, and text without any software setups. See the full <a href="/docs">function reference</a>.
                     </p>
                 </div>
             </div>
@@ -642,46 +780,25 @@
             <div class="about-section" id="how-it-works">
                 <h2>How It Works</h2>
                 <p>
-                    The online compiler runs <strong>entirely in your browser</strong> — there is no server-side
-                    compilation. It uses <a href="https://js-dos.com/" target="_blank" rel="noopener noreferrer">JS-DOS</a>,
-                    a WebAssembly port of DOSBox, to emulate a full DOS environment right inside your browser tab.
-                    Turbo C++ 3.0 runs natively inside this emulated DOS, with <code>graphics.h</code> and
-                    <code>graphics.lib</code> fully intact.
+                    The online compiler runs <strong>entirely inside your browser</strong>. To keep your work secure, no code is ever uploaded to or compiled on a server. Instead, the entire compilation pipeline runs client-side using WebAssembly:
                 </p>
                 <p>
-                    When you click Run, your code is written into the emulated DOS filesystem, compiled by the real
-                    <code>TCC.EXE</code> (Turbo C compiler), and the resulting program executes immediately. The
-                    graphical output is rendered from DOSBox's emulated VGA video memory onto an HTML
-                    <code>&lt;canvas&gt;</code> element — giving you the exact DOS-style graphics output.
+                    When you click **Compile & Run**, the site initializes <a href="https://js-dos.com/" target="_blank" rel="noopener noreferrer">JS-DOS</a> (a WebAssembly port of the DOSBox emulator). Inside this sandboxed WebAssembly container, it mounts a virtual filesystem containing a complete Turbo C 3.0 installation.
                 </p>
                 <p>
-                    This means you get <strong>100% compatibility</strong> with the original graphics.h library. Every
-                    function behaves exactly as it would in Turbo C — <code>initgraph()</code>,
-                    <a href="/docs"><code>circle()</code></a>,
-                    <a href="/docs"><code>line()</code></a>,
-                    <a href="/docs"><code>setcolor()</code></a>,
-                    <a href="/docs"><code>outtextxy()</code></a>, and
-                    <a href="/docs">all 40+ documented functions</a>.
+                    The compiler writes your C++ code into the virtual drive and compiles it using the real Turbo C command-line compiler (<code>TCC.EXE</code>). If compilation succeeds, the executable runs, and the emulator draws the DOS VGA video memory directly onto a standard HTML5 <code>&lt;canvas&gt;</code> element.
                 </p>
                 <p>
-                    Key features of the <a href="/compiler">online compiler</a> include:
+                    Because this client-side compiler uses the actual Turbo C compiler (<code>TCC.EXE</code>) and BGI graphics library under the hood, all standard functions — including <code>initgraph()</code>, <a href="/docs"><code>circle()</code></a>, <a href="/docs"><code>line()</code></a>, <a href="/docs"><code>setcolor()</code></a>, and <a href="/docs">all 40+ functions</a> — work natively because it is compiled by Turbo C itself.
                 </p>
-                <ul>
-                    <li>Built-in <strong>code editor</strong> powered by CodeMirror with C syntax highlighting</li>
-                    <li><strong>Client-side compilation</strong> — your code never leaves your browser</li>
-                    <li><strong>Cloud file storage</strong> — save your files with Google Sign-In and access from any device</li>
-                    <li><strong>Demo programs</strong> — start from pre-built examples to learn faster</li>
-                    <li><strong>Embed API</strong> — <a href="/embed-docs">embed the compiler</a> into your own website or blog</li>
-                </ul>
             </div>
 
             <hr class="about-divider">
 
             <div class="about-section" id="tech-stack">
                 <h2>Tech Stack</h2>
-                <p>The project is built with a modern web stack while preserving full legacy Turbo C compatibility:</p>
+                <p>The project is built with a modern web stack while preserving legacy Turbo C compatibility:</p>
                 <ul class="tech-list">
-                    <li>Python (Flask)</li>
                     <li>JavaScript</li>
                     <li>HTML / CSS</li>
                     <li>Turbo C 3.0</li>
@@ -707,15 +824,13 @@
             <div class="about-section" id="who-made-this">
                 <h2>Who Made This</h2>
                 <p>
-                    This project was built by <a href="https://github.com/AlbatrossC" target="_blank"
-                        rel="noopener noreferrer"><strong>AlbatrossC</strong></a> — an SPPU student who experienced the
-                    graphics.h setup pain firsthand. Instead of accepting the status quo, I built a solution that
-                    works for everyone.
+                    This project was built by <strong>Soham Jadhav</strong> (<a href="https://github.com/AlbatrossC" target="_blank" rel="noopener noreferrer">AlbatrossC on GitHub</a>).
                 </p>
                 <p>
-                    My goal is simple: <strong>let students focus on learning graphics programming, not wrestling with
-                        1990s software.</strong> Whether you're working on your Computer Graphics lab assignments or
-                    exploring C graphics for fun, this tool is designed to make your life easier.
+                    I am a student of SPPU (Savitribai Phule Pune University) who was facing this exact setup issue firsthand during my own computer graphics lab coursework, which drove me to create a seamless tool that eliminates the environment setup struggle for fellow students.
+                </p>
+                <p>
+                    My goal is simple: <strong>let students focus on learning graphics programming concepts, not dealing with 1990s software setups.</strong> Whether you are working on your college lab assignments or exploring graphics for fun, this tool is designed to make the process completely friction-free.
                 </p>
             </div>
 
@@ -750,17 +865,7 @@
                     are both free and open source under the MIT license.
                 </p>
 
-                <h3>Does it support all graphics.h functions?</h3>
-                <p>
-                    Yes. Since I use the actual Turbo C 3.0 compiler under the hood, every graphics.h function is
-                    supported — including <a href="/docs"><code>circle()</code></a>,
-                    <a href="/docs"><code>line()</code></a>,
-                    <a href="/docs"><code>rectangle()</code></a>,
-                    <a href="/docs"><code>bar()</code></a>,
-                    <a href="/docs"><code>arc()</code></a>,
-                    <a href="/docs"><code>outtextxy()</code></a>,
-                    and more. See the full <a href="/docs">function reference</a>.
-                </p>
+
 
                 <h3>Do I need to install anything?</h3>
                 <p>
@@ -774,12 +879,7 @@
                     cloud and access them from any device.
                 </p>
 
-                <h3>Is it compatible with SPPU lab assignments?</h3>
-                <p>
-                    Yes. The output is identical to what you'd get from Turbo C with DOSBox. Your assignments will produce
-                    the exact same graphical results. Check the <a href="/docs">getting
-                    started guide</a> for more details.
-                </p>
+
 
                 <h3>Can I embed the compiler on my website?</h3>
                 <p>
@@ -857,14 +957,7 @@
                     "text": "Yes, completely free. The online compiler and VS Code extension are both free and open source under the MIT license."
                 }
             },
-            {
-                "@type": "Question",
-                "name": "Does it support all graphics.h functions?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Yes. Since I use the actual Turbo C 3.0 compiler under the hood, every graphics.h function is supported — including circle(), line(), rectangle(), bar(), arc(), outtextxy(), and more."
-                }
-            },
+
             {
                 "@type": "Question",
                 "name": "Do I need to install anything to use the online compiler?",
@@ -881,14 +974,7 @@
                     "text": "Yes. Sign in with Google to save your files to the cloud and access them from any device."
                 }
             },
-            {
-                "@type": "Question",
-                "name": "Is it compatible with SPPU lab assignments?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Yes. The output is identical to what you'd get from Turbo C with DOSBox. Your assignments will produce the exact same graphical results."
-                }
-            },
+
             {
                 "@type": "Question",
                 "name": "Can I embed the compiler on my website?",

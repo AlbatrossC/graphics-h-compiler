@@ -163,14 +163,7 @@
     #back-btn {
         display: inline-flex !important;
         width: 38px !important;
-        height: 38px;
-        padding: 0 !important;
-        justify-content: center;
-        align-items: center;
-        border-radius: 6px;
-        border: none !important;
-        background: var(--primary) !important;
-        color: var(--primary-text) !important;
+        height: 38px !important;
     }
 
     #run-btn .btn-text-mobile {
@@ -209,11 +202,6 @@
         background: var(--vscode-line-bg) !important;
         color: var(--text-primary) !important;
         border-color: var(--border-color-hover) !important;
-    }
-
-    #back-btn:hover {
-        background: var(--primary-hover) !important;
-        color: var(--primary-text) !important;
     }
 
 
@@ -257,9 +245,9 @@
     }
 
     .mobile-tab.active {
-        background: rgba(0, 255, 136, 0.16);
-        border-color: rgba(0, 255, 136, 0.45);
-        color: #d4ffe9;
+        background: rgba(var(--color-rgb-primary), 0.16);
+        border-color: rgba(var(--color-rgb-primary), 0.45);
+        color: var(--primary);
     }
 
     .mobile-tab.active::after {
@@ -433,7 +421,7 @@
     .mobile-menu-btn:hover,
     .mobile-menu-btn.active {
         color: var(--primary);
-        background: rgba(0, 255, 136, 0.08);
+        background: rgba(var(--color-rgb-primary), 0.08);
     }
 
     /* Sidebar overlay */

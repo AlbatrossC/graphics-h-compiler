@@ -146,13 +146,13 @@
 /* New File - Green Tint */
 #new-file-btn {
     color: var(--primary);
-    background: rgba(0, 255, 136, 0.08);
-    border: 1px solid rgba(0, 255, 136, 0.15);
+    background: rgba(var(--color-rgb-primary), 0.08);
+    border: 1px solid rgba(var(--color-rgb-primary), 0.15);
 }
 
 #new-file-btn:hover {
-    background: rgba(0, 255, 136, 0.15);
-    border-color: rgba(0, 255, 136, 0.3);
+    background: rgba(var(--color-rgb-primary), 0.15);
+    border-color: rgba(var(--color-rgb-primary), 0.3);
 }
 
 .explorer-action-btn svg {
@@ -386,7 +386,7 @@
 }
 
 .file-item.active {
-    background: rgba(0, 255, 136, 0.1);
+    background: rgba(var(--color-rgb-primary), 0.1);
     color: var(--primary);
 }
 
@@ -567,7 +567,7 @@
 }
 
 .file-download-btn:hover {
-    background: rgba(0, 255, 136, 0.12);
+    background: rgba(var(--color-rgb-primary), 0.12);
     color: var(--primary);
 }
 
