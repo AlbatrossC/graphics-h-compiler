@@ -4,16 +4,42 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, follow">
-    <title>Graphics.h Embed Docs</title>
+    <title>Embed Graphics.h Online Compiler | JavaScript SDK & Iframe API</title>
+    <meta name="description" content="Detailed guide on embedding the graphics.h online compiler using our JavaScript SDK or direct Iframe API. Complete options, parameters, and code examples.">
+    <meta name="keywords" content="embed graphics.h, graphics.h online compiler embed, embed DOSBox, BGI graphics script, JavaScript BGI SDK, embed C++ compiler website">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://graphicsh.online/embed-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <!-- Open Graph Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://graphicsh.online/embed-docs">
+    <meta property="og:title" content="Embed Graphics.h Online Compiler | JavaScript SDK & Iframe API">
+    <meta property="og:description" content="Integrate interactive BGI graphics compilation directly into your coding tutorials, blog, or computer graphics course sites.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+
+    <!-- Twitter Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Embed Graphics.h Compiler | JavaScript SDK & Iframe API">
+    <meta name="twitter:description" content="Add interactive graphics.h DOS compilation & output natively inside your blog or coding site.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
     <style>
         :root {
-            --bg: #f6f8fb;
-            --panel: #ffffff;
-            --text: #111827;
-            --muted: #4b5563;
-            --line: #e5e7eb;
-            --accent: #0f766e;
+            --bg: #0b0d0c;
+            --surface: #111412;
+            --panel: #151917;
+            --text: #f5f5f5;
+            --muted: rgba(245, 245, 245, 0.72);
+            --soft: rgba(245, 245, 245, 0.54);
+            --line: rgba(255, 255, 255, 0.11);
+            --accent: #00ff88;
+            --accent-2: #0084de;
+            --warm: #f5b942;
         }
 
         * {
@@ -22,122 +48,650 @@
 
         body {
             margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
+            background:
+                linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+                linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+                var(--bg);
             color: var(--text);
-            line-height: 1.6;
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
         }
 
-        main {
-            max-width: 980px;
-            margin: 24px auto;
-            padding: 0 16px 24px;
+        a {
+            color: inherit;
         }
 
-        h1,
-        h2 {
-            margin: 0 0 10px;
-            line-height: 1.25;
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(11, 13, 12, 0.88);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .header-inner,
+        .article,
+        .footer-inner {
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .header-inner {
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand,
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .brand img {
+            width: 42px;
+            height: auto;
+            display: block;
+        }
+
+        .accent {
+            color: var(--accent);
+        }
+
+        .nav a {
+            color: var(--muted);
+            font-size: 0.92rem;
+            text-decoration: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .nav a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .article {
+            padding: 44px 0 76px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 28px;
+            align-items: end;
+            margin-bottom: 34px;
+        }
+
+        .eyebrow,
+        .meta {
+            color: var(--accent);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.84rem;
+            text-transform: uppercase;
         }
 
         h1 {
-            font-size: 30px;
+            margin: 10px 0 16px;
+            font-size: clamp(2.2rem, 5vw, 4.7rem);
+            line-height: 1.04;
+            letter-spacing: 0;
         }
 
-        h2 {
-            font-size: 20px;
-            margin-top: 28px;
+        .dek {
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1.08rem;
         }
 
-        p {
-            margin: 0 0 12px;
+        .quick-card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+            padding: 18px;
+        }
+
+        .quick-card h2,
+        .quick-card p {
+            margin: 0;
+        }
+
+        .quick-card h2 {
+            font-size: 1rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .quick-card p {
+            margin-top: 8px;
             color: var(--muted);
         }
 
-        .card {
-            background: var(--panel);
+        .content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .post-body {
+            min-width: 0;
+        }
+
+        .toc {
+            position: sticky;
+            top: 84px;
             border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 16px;
-            margin-top: 12px;
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.8);
+            padding: 18px;
+        }
+
+        .toc h2 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        .toc a {
+            display: block;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.94rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            margin: 0 0 44px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.45rem, 3vw, 2rem);
+            line-height: 1.18;
+            letter-spacing: 0;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 8px;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 1.2rem;
+            color: var(--warm);
+            letter-spacing: 0;
+        }
+
+        p,
+        li {
+            color: var(--muted);
+        }
+
+        strong {
+            color: var(--text);
         }
 
         pre {
             margin: 0;
-            padding: 12px;
+            padding: 18px;
+            color: #dfffea;
+            font-size: 0.92rem;
+            line-height: 1.62;
+            overflow-x: auto;
+            border: 0;
+            background: transparent;
+            font-family: 'JetBrains Mono', 'Space Mono', monospace;
+        }
+
+        .code-block {
+            margin: 14px 0;
+            overflow: hidden;
+            border: 1px solid var(--line);
             border-radius: 8px;
-            background: #0b1020;
-            color: #dbeafe;
-            overflow: auto;
-            font-size: 13px;
+            background: #080a09;
         }
 
-        code {
-            font-family: Consolas, "Courier New", monospace;
+        .code-toolbar {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px 8px 16px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.035);
         }
 
-        #embed-host {
-            margin-top: 10px;
+        .code-language {
+            color: var(--soft);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            text-transform: uppercase;
         }
 
-        button {
+        .copy-code-btn {
+            min-height: 30px;
+            border: 1px solid rgba(0, 255, 136, 0.34);
+            border-radius: 6px;
+            background: rgba(0, 255, 136, 0.08);
+            color: var(--accent);
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.78rem;
+            padding: 0 10px;
+        }
+
+        .copy-code-btn:hover {
+            background: rgba(0, 255, 136, 0.14);
+        }
+
+        .code-token-keyword {
+            color: #7dd3fc;
+        }
+
+        .code-token-type {
+            color: #fbbf24;
+        }
+
+        .code-token-function {
+            color: #86efac;
+        }
+
+        .code-token-number {
+            color: #fca5a5;
+        }
+
+        .code-token-string {
+            color: #fde68a;
+        }
+
+        .code-token-preprocessor {
+            color: #c4b5fd;
+        }
+
+        .code-token-comment {
+            color: #8ca39a;
+        }
+
+        .btn-run {
             border: 0;
             border-radius: 8px;
             background: var(--accent);
-            color: #fff;
-            padding: 10px 14px;
+            color: #0b0d0c;
+            padding: 12px 18px;
             cursor: pointer;
             font-weight: 600;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .btn-run:hover {
+            background: #00dd77;
+        }
+
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(21, 25, 23, 0.86);
+            padding: 18px;
+            margin-top: 12px;
+        }
+
+        #embed-host {
+            margin-top: 16px;
+            min-height: 480px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #080a09;
+        }
+
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            margin: 18px 0;
+        }
+
+        .api-table th,
+        .api-table td {
+            border-bottom: 1px solid var(--line);
+            padding: 12px 14px;
+            text-align: left;
+        }
+
+        .api-table th {
+            color: var(--warm);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.90rem;
+            text-transform: uppercase;
+            font-family: 'Space Mono', monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .api-table td {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .api-table td code {
+            color: var(--accent);
+            background: rgba(0, 255, 136, 0.08);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.84rem;
+        }
+
+        .footer {
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            margin-top: 80px;
+        }
+
+        .footer-inner {
+            min-height: 84px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+            .hero,
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .toc {
+                position: static;
+                margin-bottom: 30px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 14px 0;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
         }
     </style>
 </head>
 
 <body>
-    <main>
-        <h1>Embed Graphics.h Anywhere</h1>
-        <p>The embed endpoint now accepts messages from any direct parent frame, so you can integrate this on any website.
-        </p>
-
-        <h2>1) Load SDK</h2>
-        <div class="card">
-            <pre><code>&lt;script src="https://graphicsh.online/static/js/sdk.js"&gt;&lt;/script&gt;</code></pre>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
         </div>
+    </header>
 
-        <h2>2) Add Host Element</h2>
-        <div class="card">
-            <pre><code>&lt;div id="graphicsh-embed"&gt;&lt;/div&gt;</code></pre>
-        </div>
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Developer Integration Guide</p>
+                    <h1>Embed Graphics.h Anywhere</h1>
+                    <p class="dek">Learn how to easily integrate our BGI DOS compiler directly into your own website, blog, or virtual classroom sandbox using the custom JavaScript SDK or direct Iframe endpoint query parameters.</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>Quick Info</h2>
+                    <p><strong>SDK URL:</strong> <code>https://graphicsh.online/static/js/sdk.js</code></p>
+                    <p><strong>Default Output Size:</strong> 640 x 480 pixels</p>
+                    <p><strong>Compatibility:</strong> works inside any direct container layout</p>
+                </aside>
+            </header>
 
-        <h2>3) Initialize And Run</h2>
-        <div class="card">
-            <pre><code>&lt;script&gt;
-const embed = new GraphicsHEmbed('#graphicsh-embed', {
+            <div class="content">
+                <div class="post-body">
+                    <section id="overview">
+                        <h2>Overview</h2>
+                        <p>Our embedding architecture allows safe, sandbox-contained execution of legacy BGI graphics programs on modern pages. By loading the Javascript SDK, parent window environments can programmatically pass code strings into WebAssembly-powered DOSBox emulator frames, compiling and running on-demand entirely client-side.</p>
+                    </section>
+
+                    <section id="quick-start">
+                        <h2>Quick Start</h2>
+                        
+                        <h3>Step 1: Include the SDK Script</h3>
+                        <p>Include the client-side JavaScript SDK on your web page. This loads the <code>GraphicsHEmbed</code> global class onto the window scope.</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">HTML</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="code-step1">Copy</button>
+                            </div>
+                            <pre><code id="code-step1" class="language-html">&lt;script src="https://graphicsh.online/static/js/sdk.js"&gt;&lt;/script&gt;</code></pre>
+                        </div>
+
+                        <h3>Step 2: Add Host Element</h3>
+                        <p>Establish a mount container placeholder in your DOM where the interactive runner element will render.</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">HTML</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="code-step2">Copy</button>
+                            </div>
+                            <pre><code id="code-step2" class="language-html">&lt;div id="graphicsh-embed"&gt;&lt;/div&gt;</code></pre>
+                        </div>
+
+                        <h3>Step 3: Instantiate and Run Snippets</h3>
+                        <p>Construct the embed handler, specifying option arguments (e.g. target origin URL), and call <code>runSnippet()</code>.</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">JavaScript</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="code-step3">Copy</button>
+                            </div>
+                            <pre><code id="code-step3" class="language-js">const embed = new GraphicsHEmbed('#graphicsh-embed', {
   baseUrl: 'https://graphicsh.online',
   scale: 1
 });
 
+// Run raw instructions inside graphics.h boilerplate
 embed.runSnippet(`
-setbkcolor(BLACK);
-cleardevice();
-setcolor(WHITE);
-circle(320, 240, 110);
-outtextxy(250, 240, "Hello from embedded graphics.h");
-`);
-&lt;/script&gt;</code></pre>
-        </div>
+setcolor(LIGHTRED);
+circle(320, 240, 150);
+outtextxy(230, 240, "Interactive SDK Embed Output");
+`);</code></pre>
+                        </div>
+                    </section>
 
-        <h2>Live Demo</h2>
-        <div class="card">
-            <button id="run-demo" type="button">Run Demo Snippet</button>
-            <div id="embed-host"></div>
-        </div>
+                    <section id="sdk-reference">
+                        <h2>JavaScript SDK API Reference</h2>
+                        <p>Detailed specification parameters for custom developer overrides and configurations in the <code>GraphicsHEmbed</code> JavaScript constructor.</p>
+
+                        <h3>Constructor Options</h3>
+                        <p>Passing an options configuration object to <code>new GraphicsHEmbed(targetSelector, options)</code> overrides default layout and target parameters:</p>
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>baseUrl</code></td>
+                                    <td><code>String</code></td>
+                                    <td><code>""</code></td>
+                                    <td>The domain pointing to the compiler platform (e.g. <code>"https://graphicsh.online"</code>). Defaults to relative paths if omitted.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>scale</code></td>
+                                    <td><code>Number</code></td>
+                                    <td><code>1</code></td>
+                                    <td>A scaling factor adjusting the output resolution. Iframe dimensions scale dynamically: <code>(640 * scale)</code> by <code>(480 * scale)</code>.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>title</code></td>
+                                    <td><code>String</code></td>
+                                    <td><code>"graphics.h compiler output"</code></td>
+                                    <td>The descriptive accessibility <code>title</code> attribute applied to the generated layout <code>iframe</code>.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Methods</h3>
+                        <p>Use the SDK reference handles to trigger updates dynamically:</p>
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Arguments</th>
+                                    <th>Return Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>runSnippet(code, options)</code></td>
+                                    <td><code>code: String, options: Object</code></td>
+                                    <td><code>void</code></td>
+                                    <td>Instructs the compiler workspace to build and launch code content immediately inside the emulated environment. See method options below.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Snippet Methods Options</h3>
+                        <p>Options parameters passed to <code>runSnippet(code, { ... })</code> control compilation layout wrappers:</p>
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Option</th>
+                                    <th>Type</th>
+                                    <th>Default</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>boilerplate</code></td>
+                                    <td><code>Boolean</code></td>
+                                    <td><code>true</code></td>
+                                    <td>Wraps the script automatically inside standard BGI includes (<code>#include &lt;graphics.h&gt;</code>, <code>initgraph()</code>, <code>getch()</code>, <code>closegraph()</code>) and <code>main()</code> block logic. Set to <code>false</code> if passing complete files.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>focus</code></td>
+                                    <td><code>Boolean</code></td>
+                                    <td><code>false</code></td>
+                                    <td>When set to <code>true</code>, keyboard input focus shifts automatically to the compiled output window after execution completes.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="iframe-parameters">
+                        <h2>Direct Iframe Query Parameters</h2>
+                        <p>For platforms where executing external JavaScript is blocked, you can embed the iframe directly and pass snippet attributes directly through query variables:</p>
+                        <div class="code-block">
+                            <div class="code-toolbar">
+                                <span class="code-language">HTML</span>
+                                <button class="copy-code-btn" type="button" data-copy-code="code-iframe">Copy</button>
+                            </div>
+                            <pre><code id="code-iframe" class="language-html">&lt;iframe src="https://graphicsh.online/embed?code=circle(320%2C240%2C100)%3B&amp;boilerplate=true&amp;scale=1" 
+        style="width: 640px; height: 480px; border: 0;"&gt;&lt;/iframe&gt;</code></pre>
+                        </div>
+                        
+                        <h3>Query Variables</h3>
+                        <table class="api-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>code</code></td>
+                                    <td><code>String</code></td>
+                                    <td>URL-encoded C++ graphics snippet code. The workspace compiles and runs this on frame load.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>boilerplate</code></td>
+                                    <td><code>String</code></td>
+                                    <td>Set to <code>"false"</code> to disable the standard template wrapper if the code parameter is already a complete C++ application.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>scale</code></td>
+                                    <td><code>String</code></td>
+                                    <td>Numeric string scale factor (e.g. <code>1.5</code>, <code>0.8</code>) adjusting iframe styling layout properties.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="interactive-demo">
+                        <h2>Live SDK Demo Sandbox</h2>
+                        <p>Mount and execute BGI scripts programmatically using the console box below. Click the run button to see the SDK build the frame and compile.</p>
+                        <div class="card">
+                            <button id="run-demo" class="btn-run" type="button">Run Sandbox Code</button>
+                            <div id="embed-host"></div>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this guide</h2>
+                    <a href="#overview">Overview</a>
+                    <a href="#quick-start">Quick Start</a>
+                    <a href="#sdk-reference">SDK Reference</a>
+                    <a href="#iframe-parameters">Iframe API</a>
+                    <a href="#interactive-demo">Live Demo Sandbox</a>
+                </aside>
+            </div>
+        </article>
     </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical BGI sandboxes.</span>
+        </div>
+    </footer>
 
     <script src="/static/js/sdk.js"></script>
     <script>
-        const demo = new GraphicsHEmbed('#embed-host', { scale: 1 });
-        document.getElementById('run-demo').addEventListener('click', () => {
-            demo.runSnippet(`
+        (function () {
+            // Embed instantiation
+            const demo = new GraphicsHEmbed('#embed-host', { scale: 1 });
+            document.getElementById('run-demo').addEventListener('click', () => {
+                demo.runSnippet(`
 setbkcolor(BLACK);
 cleardevice();
 setcolor(LIGHTGREEN);
@@ -148,7 +702,145 @@ line(480, 120, 160, 360);
 setcolor(WHITE);
 outtextxy(195, 390, "graphics.h-online-compiler embed demo");
 `);
-        });
+            });
+
+            // Highlighter functions
+            function escapeHtml(value) {
+                return value
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
+
+            function highlightJS(raw) {
+                var escaped = escapeHtml(raw);
+                var placeholders = [];
+
+                function hold(className, value) {
+                    var key = '___JS_TOKEN_' + placeholders.length + '___';
+                    placeholders.push('<span class="' + className + '">' + value + '</span>');
+                    return key;
+                }
+
+                // Hold single-quoted strings
+                escaped = escaped.replace(/'(?:\\.|[^'\\])*'/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                // Hold double-quoted strings
+                escaped = escaped.replace(/"(?:\\.|[^"\\])*"/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                // Hold template literals
+                escaped = escaped.replace(/`[\s\S]*?`/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                // Hold comments
+                escaped = escaped.replace(/\/\/.*$/gm, function (match) {
+                    return hold('code-token-comment', match);
+                });
+
+                // Highlight keywords, types, functions
+                escaped = escaped
+                    .replace(/\b(const|let|var|new|class|function|return|true|false)\b/g, '<span class="code-token-keyword">$1</span>')
+                    .replace(/\b(GraphicsHEmbed|document|window)\b/g, '<span class="code-token-type">$1</span>')
+                    .replace(/\b(runSnippet|querySelector|addEventListener|getElementById)\b(?=\s*\()/g, '<span class="code-token-function">$1</span>');
+
+                // Restore placeholders
+                placeholders.forEach(function (value, index) {
+                    escaped = escaped.replace('___JS_TOKEN_' + index + '___', value);
+                });
+
+                return escaped;
+            }
+
+            function highlightHTML(raw) {
+                var escaped = escapeHtml(raw);
+                var placeholders = [];
+
+                function hold(className, value) {
+                    var key = '___HTML_TOKEN_' + placeholders.length + '___';
+                    placeholders.push('<span class="' + className + '">' + value + '</span>');
+                    return key;
+                }
+
+                // Hold attribute values in double quotes
+                escaped = escaped.replace(/"[^"]*"/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                // Hold attribute values in single quotes
+                escaped = escaped.replace(/'[^']*'/g, function (match) {
+                    return hold('code-token-string', match);
+                });
+
+                // Match tags and tag names
+                escaped = escaped.replace(/&lt;(\/?\w+)/g, function (match, tagName) {
+                    return '&lt;<span class="code-token-function">' + tagName + '</span>';
+                });
+
+                // Highlight attribute names (word followed by =___HTML_TOKEN_)
+                escaped = escaped.replace(/\b(\w+)(?=\s*=)/g, '<span class="code-token-keyword">$1</span>');
+
+                // Restore placeholders
+                placeholders.forEach(function (value, index) {
+                    escaped = escaped.replace('___HTML_TOKEN_' + index + '___', value);
+                });
+
+                return escaped;
+            }
+
+            // Apply highlighting based on language
+            document.querySelectorAll('code').forEach(function (block) {
+                var raw = block.textContent;
+                if (block.classList.contains('language-js')) {
+                    block.innerHTML = highlightJS(raw);
+                } else if (block.classList.contains('language-html')) {
+                    block.innerHTML = highlightHTML(raw);
+                }
+            });
+
+            // Copy buttons logic
+            document.querySelectorAll('[data-copy-code]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var code = document.getElementById(button.getAttribute('data-copy-code'));
+                    var text = code ? code.textContent : '';
+                    var original = button.textContent;
+
+                    function markCopied() {
+                        button.textContent = 'Copied';
+                        window.setTimeout(function () {
+                            button.textContent = original;
+                        }, 1400);
+                    }
+
+                    function fallbackCopy() {
+                        var textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        var copied = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        if (copied) {
+                            markCopied();
+                            return;
+                        }
+                        button.textContent = 'Select code';
+                    }
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(markCopied).catch(fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                });
+            });
+        }());
     </script>
 </body>
 

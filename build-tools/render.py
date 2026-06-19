@@ -45,12 +45,12 @@ SIMPLE_PAGES = {
 }
 
 BLOG_PAGES = {
-    'clipping-algorithm-in-computer-graphics-blog.html': 'clipping-algorithm-in-computer-graphics-blog.html',
-    'cohen-sutherland-line-clipping-blog.html': 'cohen-sutherland-line-clipping-blog.html',
-    'transformations-in-computer-graphics-blog.html': 'transformations-in-computer-graphics-blog.html',
-    'midpoint-circle-algorithm-blog.html': 'midpoint-circle-algorithm-blog.html',
-    'bresenham-line-drawing-algorithm-blog.html': 'bresenham-line-drawing-algorithm-blog.html',
-    'dda-line-drawing-algorithm-blog.html': 'dda-line-drawing-algorithm-blog.html',
+    'clipping-algorithm-in-computer-graphics-blog.html': 'blog/clipping-algorithm-in-computer-graphics-blog.html',
+    'cohen-sutherland-line-clipping-blog.html': 'blog/cohen-sutherland-line-clipping-blog.html',
+    'transformations-in-computer-graphics-blog.html': 'blog/transformations-in-computer-graphics-blog.html',
+    'midpoint-circle-algorithm-blog.html': 'blog/midpoint-circle-algorithm-blog.html',
+    'bresenham-line-drawing-algorithm-blog.html': 'blog/bresenham-line-drawing-algorithm-blog.html',
+    'dda-line-drawing-algorithm-blog.html': 'blog/dda-line-drawing-algorithm-blog.html',
 }
 
 DOCS_PAGES = {
