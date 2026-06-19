@@ -293,10 +293,10 @@
         display: none;
     }
 
-    /* Keep header visible when panels go fullscreen so Run button is accessible */
+    /* Fullscreen on mobile — header and tab bar are hidden by body.panel-fullscreen */
     .fullscreen {
-        top: calc(var(--header-height) + var(--tab-bar-height)) !important;
-        height: calc(100vh - var(--header-height) - var(--tab-bar-height)) !important;
+        top: 0 !important;
+        height: 100vh !important;
     }
 
     /* ---- Tab Panels: each takes full available viewport height ---- */

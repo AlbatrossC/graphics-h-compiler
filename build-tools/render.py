@@ -122,7 +122,7 @@ def load_compiler_assets() -> dict:
 
 
 def _build_detail_url(page_slug: str | None, anchor: str | None = None) -> str:
-    return '/compiler#docs-reference'
+    return '/docs'
 
 
 def _build_docs_reference_categories(raw_categories: list) -> list:

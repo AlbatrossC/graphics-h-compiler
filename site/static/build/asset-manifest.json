@@ -1,13 +1,12 @@
 {
   "compiler": {
-    "css": "/static/build/compiler.0b950704b39a.css",
-    "js": "/static/build/compiler.13f3ff3e47b7.js",
+    "css": "/static/build/compiler.19a5f2243297.css",
+    "js": "/static/build/compiler.00fc520a7e76.js",
     "css_sources": [
       "site/static/css/compiler/base.css",
       "site/static/css/compiler/panels.css",
       "site/static/css/compiler/sidebar.css",
       "site/static/css/compiler/preferences.css",
-      "site/static/css/compiler/docs-reference.css",
       "site/static/css/compiler/responsive.css"
     ],
     "js_sources": [

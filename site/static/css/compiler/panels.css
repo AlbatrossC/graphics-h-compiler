@@ -50,10 +50,18 @@
     left: 0;
     width: 100vw !important;
     height: 100vh !important;
-    z-index: 1000;
+    z-index: 2147483647;
     flex: none !important;
     border: none !important;
     border-radius: 0 !important;
+}
+
+/* Hide header, mobile tab bar, and sidebar when a panel is fullscreen */
+body.panel-fullscreen > header,
+body.panel-fullscreen > #mobile-tab-bar,
+body.panel-fullscreen > .sidebar-container,
+body.panel-fullscreen > #sidebar-overlay {
+    display: none !important;
 }
 
 .hidden {

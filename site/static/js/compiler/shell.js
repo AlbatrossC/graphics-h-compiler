@@ -160,6 +160,7 @@ var isTerminalFullscreen = false;
 
         localEditorWrapper?.classList.toggle('fullscreen', isEditorFullscreen);
         localTerminalWrapper?.classList.toggle('hidden', isEditorFullscreen);
+        document.body.classList.toggle('panel-fullscreen', isEditorFullscreen);
 
         if (svgIcon) {
             svgIcon.innerHTML = isEditorFullscreen
@@ -183,6 +184,7 @@ var isTerminalFullscreen = false;
 
         localTerminalWrapper?.classList.toggle('fullscreen', isTerminalFullscreen);
         localEditorWrapper?.classList.toggle('hidden', isTerminalFullscreen);
+        document.body.classList.toggle('panel-fullscreen', isTerminalFullscreen);
 
         if (svgIcon) {
             svgIcon.innerHTML = isTerminalFullscreen

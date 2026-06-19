@@ -36,7 +36,6 @@ CSS_PRIORITY = [
     "panels.css",
     "sidebar.css",
     "preferences.css",
-    "docs-reference.css",
     "responsive.css",
 ]
 
