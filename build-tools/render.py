@@ -391,6 +391,12 @@ def render_site(compiler_assets: dict) -> None:
         shutil.copy2(ads_src, DIST_DIR / 'ads.txt')
         print('  [ok] ads.txt (root)')
 
+    # 565e878f197c4724801806808502c6f9.txt (served from root)
+    verification_txt = STATIC_DIR / '565e878f197c4724801806808502c6f9.txt'
+    if verification_txt.exists():
+        shutil.copy2(verification_txt, DIST_DIR / '565e878f197c4724801806808502c6f9.txt')
+        print('  [ok] 565e878f197c4724801806808502c6f9.txt (root)')
+
     # Static hosting configs
     for cfg_file in ['_headers', '_redirects', 'serve.json']:
         src = SITE_DIR / cfg_file
