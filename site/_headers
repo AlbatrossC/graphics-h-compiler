@@ -195,6 +195,26 @@
   Cache-Control: public, max-age=0, must-revalidate
 /delay-docs.html
   Cache-Control: public, max-age=0, must-revalidate
+/cleardevice-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/cleardevice-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/clearviewport-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/clearviewport-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/moveto-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/moveto-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/lineto-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/lineto-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
+/linerel-docs
+  Cache-Control: public, max-age=0, must-revalidate
+/linerel-docs.html
+  Cache-Control: public, max-age=0, must-revalidate
 /embed
   Cache-Control: public, max-age=0, must-revalidate
 /embed.html

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clearviewport() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h clearviewport() with syntax, viewport-only clearing behavior, runnable C examples, return value, common mistakes, and related functions.">
+    <meta name="keywords" content="clearviewport graphics.h, viewport clear graphics.h, graphics.h clearviewport example, BGI viewport clearing">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/clearviewport-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/clearviewport-docs">
+    <meta property="og:title" content="clearviewport() in graphics.h">
+    <meta property="og:description" content="A practical reference for clearing only the active viewport in C graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="clearviewport() in graphics.h">
+    <meta name="twitter:description" content="Syntax, examples, and mistakes for clearing only the active viewport with clearviewport().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Viewport control function</p>
+                <h1>clearviewport() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far clearviewport(void);</code></pre>
+                </div>
+                <p>The <code>clearviewport()</code> function clears only the currently active viewport instead of wiping the full graphics screen. It is useful when a program divides the display into panels or when you want to refresh one drawing region while preserving headers, sidebars, or other content elsewhere on the screen.</p>
+                <p>This makes it more targeted than <code>cleardevice()</code>. In BGI programs that use <code>setviewport()</code>, the viewport acts like a local drawing window inside the larger screen. Clearing just that region helps reduce clutter and supports simple dashboard layouts, chart areas, and animation boxes.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>none</code></td><td><code>void</code></td><td><code>clearviewport()</code> takes no arguments and clears the active viewport region only.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>If no custom viewport was created, the default viewport usually spans the normal drawing area, so the behavior can appear similar to <code>cleardevice()</code>. The important distinction shows up when a program intentionally limits drawing to a smaller box or panel.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>clearviewport()</code> returns <code>void</code>. It does not report how much was cleared or whether the viewport had content before the call. It simply resets the active viewport area to the background color.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Clear only a boxed drawing region</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    rectangle(60, 60, 580, 380);
+    setviewport(80, 80, 560, 360, 1);
+
+    setcolor(YELLOW);
+    circle(120, 90, 50);
+    getch();
+
+    clearviewport();
+    setcolor(LIGHTCYAN);
+    rectangle(140, 100, 280, 220);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The outer frame remains visible because only the viewport interior is cleared. This is the main benefit of viewport-local clearing.</p>
+
+                    <h3>Refresh a chart panel without touching the title</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    outtextxy(210, 30, "Status Dashboard");
+    rectangle(90, 80, 550, 340);
+    setviewport(100, 90, 540, 330, 1);
+
+    setcolor(LIGHTGREEN);
+    line(20, 180, 400, 180);
+    getch();
+
+    clearviewport();
+    setcolor(LIGHTRED);
+    bar(40, 120, 120, 180);
+    bar(160, 90, 240, 180);
+    bar(280, 60, 360, 180);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The title stays in place because it was drawn outside the viewport. Only the graph panel is refreshed.</p>
+
+                    <h3>Use it as a local animation area</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    rectangle(100, 120, 540, 300);
+    setviewport(110, 130, 530, 290, 1);
+
+    for (x = 30; x &lt;= 360; x += 10) {
+        clearviewport();
+        setcolor(WHITE);
+        circle(x, 80, 20);
+        delay(30);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The moving circle is limited to a specific animation box while the outer border stays stable.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Expecting the whole screen to clear</h3>
+                    <p>If a viewport is active, only that viewport is affected. This is useful when intentional, but confusing when you expected a full-screen reset.</p>
+                    <h3>Forgetting that viewport coordinates are local</h3>
+                    <p>Inside a viewport, many coordinates become relative to that viewport origin. A line drawn at <code>(20, 20)</code> is no longer near the full-screen top-left corner.</p>
+                    <h3>Not defining the viewport before using it</h3>
+                    <p>If you never called <code>setviewport()</code>, the behavior may look like a normal screen clear and hide the real difference between the two clear functions.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/cleardevice-docs">cleardevice()</a>
+                        <a href="/moveto-docs">moveto()</a>
+                        <a href="/lineto-docs">lineto()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples and comment out the <code>setviewport()</code> line once to see how the clearing behavior changes.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Viewport control</p>
+                    <p><strong>Input:</strong> none</p>
+                    <p><strong>Best for:</strong> refreshing one drawing panel</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/clearviewport-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "clearviewport()", "item": "https://graphicsh.online/clearviewport-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/clearviewport-docs#article",
+                "headline": "clearviewport() in graphics.h",
+                "description": "Syntax, viewport-clearing behavior, examples, and mistakes for the graphics.h clearviewport function.",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/clearviewport-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

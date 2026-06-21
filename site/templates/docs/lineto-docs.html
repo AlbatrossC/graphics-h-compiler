@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lineto() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h lineto() with syntax, cursor-based line drawing behavior, runnable C examples, return value, common mistakes, and related functions.">
+    <meta name="keywords" content="lineto graphics.h, graphics cursor line drawing, graphics.h lineto example, BGI lineto function">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/lineto-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/lineto-docs">
+    <meta property="og:title" content="lineto() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing from the current cursor position to a new point in C graphics.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="lineto() in graphics.h">
+    <meta name="twitter:description" content="Syntax, examples, and mistakes for cursor-based line drawing with lineto().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Connected line function</p>
+                <h1>lineto() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far lineto(int x, int y);</code></pre>
+                </div>
+                <p>The <code>lineto()</code> function draws a line from the current graphics cursor position to a new absolute point. After drawing that segment, the current position moves to the new endpoint. This makes <code>lineto()</code> useful for connected path drawing where each new segment should continue from the previous one.</p>
+                <p>It is different from <code>line()</code>, which takes two full endpoints every time. With <code>lineto()</code>, the start point is implicit and comes from the current cursor state. In practice, you often call <code>moveto()</code> first, then one or more <code>lineto()</code> calls to build a polyline or outline.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The x-coordinate of the endpoint.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The y-coordinate of the endpoint.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The starting point is not passed as an argument because it comes from the current graphics position. That position may have been created by <code>moveto()</code>, by a previous <code>lineto()</code>, or by another cursor-aware function. This is why <code>lineto()</code> behaves like a path continuation tool.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>lineto()</code> returns <code>void</code>. It does not return the old position, the new position, or the line length. Its visible effect is the drawn segment, and its internal effect is updating the current cursor point to the endpoint you supplied.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Single segment from a chosen start point</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    moveto(140, 160);
+    lineto(420, 160);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The line begins at the point set by <code>moveto()</code> and ends at the coordinates passed to <code>lineto()</code>.</p>
+
+                    <h3>Draw a zigzag path</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTCYAN);
+    moveto(100, 120);
+    lineto(180, 200);
+    lineto(260, 120);
+    lineto(340, 200);
+    lineto(420, 120);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>Each segment starts exactly where the previous one ended. That is the key advantage of cursor-based connected drawing.</p>
+
+                    <h3>Outline a rectangle with path drawing</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    moveto(180, 140);
+    lineto(420, 140);
+    lineto(420, 300);
+    lineto(180, 300);
+    lineto(180, 140);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This example shows how a closed outline can be created by continuing from one edge to the next without repeatedly writing the starting point for every segment.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Forgetting to set the starting position first</h3>
+                    <p>If you do not know where the current cursor already is, the line may start somewhere unexpected. A clear <code>moveto()</code> call often makes the code easier to reason about.</p>
+                    <h3>Confusing absolute coordinates with relative offsets</h3>
+                    <p><code>lineto()</code> expects a full endpoint. If you want to draw by offset, use <code>linerel()</code> instead.</p>
+                    <h3>Expecting it to behave like line()</h3>
+                    <p><code>line()</code> works well when every segment should be independent. <code>lineto()</code> is better when you want continuity from one segment to the next.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/moveto-docs">moveto()</a>
+                        <a href="/linerel-docs">linerel()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/rectangle-docs">rectangle()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples and replace one of the <code>lineto()</code> calls with <code>line()</code> to feel the difference between cursor-based and independent segments.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Connected line drawing</p>
+                    <p><strong>Input:</strong> endpoint x and y</p>
+                    <p><strong>Best for:</strong> path outlines and chained segments</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/lineto-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "lineto()", "item": "https://graphicsh.online/lineto-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/lineto-docs#article",
+                "headline": "lineto() in graphics.h",
+                "description": "Syntax, cursor-based line behavior, examples, and mistakes for the graphics.h lineto function.",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/lineto-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

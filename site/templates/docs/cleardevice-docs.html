@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cleardevice() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h cleardevice() with syntax, screen clearing behavior, runnable C examples, return value, common mistakes, and related functions.">
+    <meta name="keywords" content="cleardevice graphics.h, clear screen graphics.h, graphics.h cleardevice example, BGI clear device">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/cleardevice-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/cleardevice-docs">
+    <meta property="og:title" content="cleardevice() in graphics.h">
+    <meta property="og:description" content="A practical reference for clearing the full graphics screen in C with graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="cleardevice() in graphics.h">
+    <meta name="twitter:description" content="Syntax, examples, and mistakes for clearing the full graphics screen with cleardevice().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Screen control function</p>
+                <h1>cleardevice() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far cleardevice(void);</code></pre>
+                </div>
+                <p>The <code>cleardevice()</code> function clears the entire active graphics screen and repaints it using the current background color. In classic BGI programs, it is one of the simplest ways to remove all existing drawings before starting a fresh frame, a new scene, or a different menu state.</p>
+                <p>This function is especially useful in redraw loops. Many beginners first use it during moving-object demos because the screen needs to be wiped before the object is drawn at its next position. It is different from <code>clearviewport()</code>, which only clears the current viewport region. If you want to reset the full graphics area, <code>cleardevice()</code> is the broader tool.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>none</code></td><td><code>void</code></td><td><code>cleardevice()</code> does not accept any arguments. It clears the entire active graphics device.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>Because there are no parameters, the main thing to understand is scope. The function clears all visible graphics content in the active drawing area. If your background color is black, the screen becomes black. If you changed it with <code>setbkcolor()</code>, the cleared screen uses that new background color instead.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>cleardevice()</code> returns <code>void</code>. It does not report how many pixels were cleared or whether anything was previously drawn. Its role is purely state-changing: remove the current screen contents and give the program a clean surface to draw on again.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Clear the screen between two drawings</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    circle(200, 180, 70);
+    getch();
+
+    cleardevice();
+    setcolor(LIGHTCYAN);
+    rectangle(160, 120, 420, 320);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The user first sees a circle. After a key press, the full screen is cleared, and a rectangle is drawn instead. This makes it easy to stage drawings one after another.</p>
+
+                    <h3>Simple animation loop</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+#include &lt;dos.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    for (x = 60; x &lt;= 540; x += 8) {
+        cleardevice();
+        setcolor(LIGHTGREEN);
+        circle(x, 220, 25);
+        delay(35);
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This loop clears the previous frame before drawing the ball again. Without the clear step, every old position would remain visible and create a trail.</p>
+
+                    <h3>Reset before drawing a labeled chart</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    cleardevice();
+    setcolor(WHITE);
+    rectangle(80, 80, 560, 360);
+    outtextxy(220, 50, "Fresh chart canvas");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This example shows how some programs call <code>cleardevice()</code> immediately before building the next screen state, especially after returning from another menu or drawing mode.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Expecting it to clear only one area</h3>
+                    <p><code>cleardevice()</code> clears the full graphics device. If you only want to wipe a viewport subregion, use <code>clearviewport()</code> instead.</p>
+                    <h3>Forgetting the background color affects the result</h3>
+                    <p>The cleared screen uses the active background color. If you changed that color earlier, the screen may not return to black unless you set it back explicitly.</p>
+                    <h3>Using it in every loop without considering redraw cost</h3>
+                    <p>For small classroom demos this is fine, but constant full-screen clears can cause visible flicker in simple animation programs. Sometimes a smaller redraw area is enough.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/clearviewport-docs">clearviewport()</a>
+                        <a href="/setbkcolor-docs">setbkcolor()</a>
+                        <a href="/moveto-docs">moveto()</a>
+                        <a href="/closegraph-docs">closegraph()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples in the browser compiler and compare what happens when you remove the clear step from the animation loop.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Screen control</p>
+                    <p><strong>Input:</strong> none</p>
+                    <p><strong>Best for:</strong> resetting the full drawing area</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/cleardevice-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "cleardevice()", "item": "https://graphicsh.online/cleardevice-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/cleardevice-docs#article",
+                "headline": "cleardevice() in graphics.h",
+                "description": "Syntax, screen-clearing behavior, examples, and mistakes for the graphics.h cleardevice function.",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/cleardevice-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

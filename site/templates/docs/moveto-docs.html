@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>moveto() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h moveto() with syntax, cursor-position behavior, runnable C examples, return value, common mistakes, and related functions.">
+    <meta name="keywords" content="moveto graphics.h, graphics cursor position, graphics.h moveto example, BGI moveto function">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/moveto-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/moveto-docs">
+    <meta property="og:title" content="moveto() in graphics.h">
+    <meta property="og:description" content="A practical reference for repositioning the current graphics cursor without drawing.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="moveto() in graphics.h">
+    <meta name="twitter:description" content="Syntax, examples, and mistakes for moving the graphics cursor with moveto().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Cursor movement function</p>
+                <h1>moveto() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far moveto(int x, int y);</code></pre>
+                </div>
+                <p>The <code>moveto()</code> function changes the current graphics cursor position without drawing any visible line. It is useful when you want the next connected drawing operation to start from a new point, especially before calling <code>lineto()</code> or <code>linerel()</code>.</p>
+                <p>This makes <code>moveto()</code> a state-setting function rather than a shape function. Nothing appears on the screen just because you called it. Its value comes from preparing the internal drawing position for the next command in a connected path.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>x</code></td><td><code>int</code></td><td>The new x-coordinate for the current graphics position.</td></tr>
+                            <tr><td><code>y</code></td><td><code>int</code></td><td>The new y-coordinate for the current graphics position.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The coordinates use the current graphics coordinate system or the current viewport coordinate space if a viewport is active. After the move, connected cursor-based functions treat this new point as the current starting position.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>moveto()</code> returns <code>void</code>. It does not return the previous position or confirm whether a pixel was drawn, because no drawing happens here. If you later need the current cursor point, BGI provides <code>getx()</code> and <code>gety()</code>.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Prepare a starting point for lineto()</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    moveto(120, 120);
+    lineto(360, 120);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The visible part is the line drawn by <code>lineto()</code>. The <code>moveto()</code> call only establishes where that line should begin.</p>
+
+                    <h3>Start separated shape paths cleanly</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTCYAN);
+    moveto(140, 260);
+    lineto(240, 180);
+    lineto(340, 260);
+
+    moveto(420, 150);
+    lineto(520, 150);
+    lineto(520, 250);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The second <code>moveto()</code> prevents the next connected segment from continuing the first shape. This is a clean way to begin a new path elsewhere on the screen.</p>
+
+                    <h3>Mix absolute and relative path drawing</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    moveto(200, 200);
+    linerel(80, 0);
+    linerel(0, 80);
+    linerel(-80, 0);
+    linerel(0, -80);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This example shows how <code>moveto()</code> can place the cursor exactly once, after which relative segments build the rest of the shape.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Expecting visible output from moveto()</h3>
+                    <p><code>moveto()</code> changes state only. It does not draw a point, line, or marker on the screen.</p>
+                    <h3>Confusing it with line()</h3>
+                    <p><code>line()</code> draws between two explicit endpoints. <code>moveto()</code> only changes the internal current position used by later path functions.</p>
+                    <h3>Forgetting coordinate context in viewports</h3>
+                    <p>Inside a viewport, the apparent origin can shift. A move to <code>(10, 10)</code> may refer to a local corner inside that viewport, not the full screen origin.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/lineto-docs">lineto()</a>
+                        <a href="/linerel-docs">linerel()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/clearviewport-docs">clearviewport()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the examples and temporarily remove the <code>moveto()</code> calls to see how connected drawing paths behave differently.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Cursor movement</p>
+                    <p><strong>Input:</strong> new absolute x and y coordinates</p>
+                    <p><strong>Best for:</strong> starting connected path drawing</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/moveto-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "moveto()", "item": "https://graphicsh.online/moveto-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/moveto-docs#article",
+                "headline": "moveto() in graphics.h",
+                "description": "Syntax, cursor-position behavior, examples, and mistakes for the graphics.h moveto function.",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/moveto-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

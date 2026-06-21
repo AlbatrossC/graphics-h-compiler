@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>graphics.h Color Constants Explained | graphics.h Compiler</title>
+    <meta name="description" content="Learn graphics.h color constants, their palette indices, where setcolor() and setbkcolor() apply, and how to use them in practical examples.">
+    <meta name="keywords" content="graphics.h colors, graphics.h color constants, setcolor graphics.h, setbkcolor graphics.h, BGI colors">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/graphics-h-color-constants-explained-blog">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/graphics-h-color-constants-explained-blog">
+    <meta property="og:title" content="graphics.h Color Constants Explained">
+    <meta property="og:description" content="A student-friendly guide to the classic graphics.h color constants and how to use them well.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-06-21">
+    <meta property="article:modified_time" content="2026-06-21">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Practical Graphics.h">
+    <meta property="article:tag" content="colors">
+    <meta property="article:tag" content="setcolor">
+    <meta property="article:tag" content="graphics.h">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="graphics.h Color Constants Explained">
+    <meta name="twitter:description" content="Understand the classic graphics.h palette, foreground and background colors, and common beginner mistakes.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "blog/_shared_article_styles.html" %}
+</head>
+
+<body>
+    {% include "blog/_shared_article_header.html" %}
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Practical guide</p>
+                    <h1>graphics.h color constants explained</h1>
+                    <p class="dek">One of the nicest parts of graphics.h is that colors are easy to use. Instead of writing long color codes, you work with simple names such as <code>WHITE</code>, <code>RED</code>, <code>YELLOW</code>, and <code>LIGHTCYAN</code>. That simplicity is great for students, but it also causes confusion when people mix up drawing color, background color, and fill color.</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>Three color roles</h2>
+                    <p><a class="inline-link" href="/setcolor-docs">setcolor()</a> controls outlines and text, <a class="inline-link" href="/setbkcolor-docs">setbkcolor()</a> controls the screen background, and <a class="inline-link" href="/setfillstyle-docs">setfillstyle()</a> controls filled areas.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="what-constants-are">
+                        <h2>What color constants are in graphics.h</h2>
+                        <p>Classic graphics.h programs typically use named constants from the BGI palette. These names map to fixed color indices, which means you can write readable programs without remembering raw numbers all the time.</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Index</th>
+                                    <th>Constant</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>0</td><td><code>BLACK</code></td></tr>
+                                <tr><td>1</td><td><code>BLUE</code></td></tr>
+                                <tr><td>2</td><td><code>GREEN</code></td></tr>
+                                <tr><td>3</td><td><code>CYAN</code></td></tr>
+                                <tr><td>4</td><td><code>RED</code></td></tr>
+                                <tr><td>5</td><td><code>MAGENTA</code></td></tr>
+                                <tr><td>6</td><td><code>BROWN</code></td></tr>
+                                <tr><td>7</td><td><code>LIGHTGRAY</code></td></tr>
+                                <tr><td>8</td><td><code>DARKGRAY</code></td></tr>
+                                <tr><td>9</td><td><code>LIGHTBLUE</code></td></tr>
+                                <tr><td>10</td><td><code>LIGHTGREEN</code></td></tr>
+                                <tr><td>11</td><td><code>LIGHTCYAN</code></td></tr>
+                                <tr><td>12</td><td><code>LIGHTRED</code></td></tr>
+                                <tr><td>13</td><td><code>LIGHTMAGENTA</code></td></tr>
+                                <tr><td>14</td><td><code>YELLOW</code></td></tr>
+                                <tr><td>15</td><td><code>WHITE</code></td></tr>
+                            </tbody>
+                        </table>
+                        <p>Even if your lab sheet focuses on the names rather than the indices, knowing the mapping helps during viva questions and when reading older examples.</p>
+                    </section>
+
+                    <section id="where-used">
+                        <h2>Where each color-setting function applies</h2>
+                        <h3>setcolor()</h3>
+                        <p><code>setcolor()</code> changes the active drawing color. That affects outlines, lines, points, arcs, circles, and text drawn with <code>outtextxy()</code>.</p>
+
+                        <h3>setbkcolor()</h3>
+                        <p><code>setbkcolor()</code> changes the graphics background. This matters when you want a dark canvas, a colored screen, or better contrast for text.</p>
+
+                        <h3>setfillstyle()</h3>
+                        <p><code>setfillstyle()</code> controls how closed regions are filled. The color passed here is separate from the outline color. That is why a region can have a white border but a green fill.</p>
+                    </section>
+
+                    <section id="example">
+                        <h2>Example: one screen, multiple color roles</h2>
+<pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setbkcolor(BLACK);
+
+    setcolor(WHITE);
+    rectangle(80, 60, 560, 380);
+
+    setcolor(YELLOW);
+    circle(180, 180, 60);
+
+    setcolor(LIGHTCYAN);
+    outtextxy(120, 280, "Foreground text");
+
+    setfillstyle(SOLID_FILL, LIGHTGREEN);
+    bar(320, 120, 480, 240);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        <p>In this example, the background is black, the outer frame is white, the circle is yellow, the label is light cyan, and the filled rectangle is light green. That separation makes the different color roles much easier to see.</p>
+                    </section>
+
+                    <section id="good-combinations">
+                        <h2>Good beginner color combinations</h2>
+                        <ul>
+                            <li><strong>BLACK background + WHITE text:</strong> easy to read.</li>
+                            <li><strong>BLACK background + YELLOW shapes:</strong> strong contrast for diagrams.</li>
+                            <li><strong>BLACK background + LIGHTCYAN labels:</strong> nice for captions and coordinates.</li>
+                            <li><strong>WHITE outline + LIGHTGREEN fill:</strong> useful for bars and blocks.</li>
+                        </ul>
+                        <p>These combinations are practical because they keep the screen readable on classroom projectors and low-resolution displays.</p>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common color mistakes in graphics.h</h2>
+                        <ul>
+                            <li><strong>Drawing text in the same color as the background.</strong> The text exists, but it appears invisible.</li>
+                            <li><strong>Assuming setcolor() changes fill color too.</strong> It does not.</li>
+                            <li><strong>Using floodfill() with the wrong boundary color.</strong> The fill can leak or fail if the border color does not match.</li>
+                            <li><strong>Choosing two low-contrast colors.</strong> The shape may be technically correct but visually weak.</li>
+                        </ul>
+                    </section>
+
+                    <section id="study-tip">
+                        <h2>Best way to remember the palette</h2>
+                        <p>Do not memorize the table in one sitting. Write a small program that draws 16 labels, one for each constant, and use the name as the displayed text. Seeing the colors on screen turns the list into something visual instead of abstract.</p>
+                    </section>
+
+                    <section class="cta" id="practice">
+                        <h2>Practice this live</h2>
+                        <p>Open the <a href="/compiler">online compiler</a> and change only one line at a time: first <code>setcolor()</code>, then <code>setbkcolor()</code>, then <code>setfillstyle()</code>. That makes the role of each function very clear. For deeper syntax details, keep the <a href="/setcolor-docs">setcolor()</a>, <a href="/setbkcolor-docs">setbkcolor()</a>, and <a href="/setfillstyle-docs">setfillstyle()</a> docs open beside it.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/graphics-h-functions-list-with-examples-blog">graphics.h Functions List With Examples</a></p>
+                        <p><a href="/animation-in-graphics-h-using-delay-blog">How to Animate in graphics.h Using delay()</a></p>
+                        <p><a href="/setcolor-docs">setcolor() docs</a></p>
+                        <p><a href="/setbkcolor-docs">setbkcolor() docs</a></p>
+                        <p><a href="/setfillstyle-docs">setfillstyle() docs</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this guide</h2>
+                    <a href="#what-constants-are">Palette constants</a>
+                    <a href="#where-used">Where colors apply</a>
+                    <a href="#example">Example program</a>
+                    <a href="#good-combinations">Good combinations</a>
+                    <a href="#mistakes">Common mistakes</a>
+                    <a href="#study-tip">How to remember them</a>
+                    <a href="#practice">Practice live</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    {% include "blog/_shared_article_footer.html" %}
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/graphics-h-color-constants-explained-blog#breadcrumb",
+                "itemListElement": [
+                    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/" },
+                    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://graphicsh.online/blog" },
+                    { "@type": "ListItem", "position": 3, "name": "graphics.h Color Constants Explained", "item": "https://graphicsh.online/graphics-h-color-constants-explained-blog" }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "https://graphicsh.online/graphics-h-color-constants-explained-blog#article",
+                "headline": "graphics.h Color Constants Explained",
+                "description": "A practical guide to graphics.h color constants, palette indices, and the difference between drawing, background, and fill color.",
+                "image": "https://graphicsh.online/static/images/og-image.webp",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://graphicsh.online/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "https://graphicsh.online/graphics-h-color-constants-explained-blog",
+                "articleSection": "Practical Graphics.h",
+                "keywords": "graphics.h color constants, setcolor, setbkcolor, BGI palette"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

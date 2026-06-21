@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>linerel() in graphics.h | Syntax, Parameters, and C Examples</title>
+    <meta name="description" content="Learn graphics.h linerel() with syntax, relative line drawing behavior, runnable C examples, return value, common mistakes, and related functions.">
+    <meta name="keywords" content="linerel graphics.h, relative line graphics.h, graphics.h linerel example, BGI linerel function">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/linerel-docs">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/linerel-docs">
+    <meta property="og:title" content="linerel() in graphics.h">
+    <meta property="og:description" content="A practical reference for drawing relative line segments from the current graphics cursor.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="linerel() in graphics.h">
+    <meta name="twitter:description" content="Syntax, examples, and mistakes for drawing by relative offset with linerel().">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "docs/_doc_page_styles.html" %}
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/">
+                <picture>
+                    <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
+                    <img src="/static/images/brand/graphics-h-turtle.png" alt="graphics.h compiler logo" width="42" height="22">
+                </picture>
+                <span><span class="accent">graphics.h</span> compiler</span>
+            </a>
+            <nav class="nav" aria-label="Main navigation">
+                <a href="/compiler">Compiler</a>
+                <a href="/blog">Blog</a>
+                <a href="/docs">Docs</a>
+                <a href="/about">About</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="doc">
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">Relative line function</p>
+                <h1>linerel() in graphics.h</h1>
+                <div class="syntax-card">
+                    <p class="section-label">Syntax</p>
+                    <pre><code>void far linerel(int dx, int dy);</code></pre>
+                </div>
+                <p>The <code>linerel()</code> function draws a line from the current graphics cursor position using a relative x and y offset. Instead of giving the full destination point, you tell graphics.h how far to move horizontally and vertically from the current position. After drawing, the cursor moves to the new endpoint.</p>
+                <p>This is useful when your shape is naturally described by steps rather than by fixed absolute coordinates. Relative drawing can make repeated box edges, zigzags, staircases, and small symbol outlines easier to write and easier to update later.</p>
+            </div>
+        </section>
+
+        <div class="layout">
+            <article>
+                <section class="content-card" id="parameters">
+                    <h2>Parameters</h2>
+                    <table class="param-table">
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>dx</code></td><td><code>int</code></td><td>The horizontal change from the current cursor position. Positive values move right, negative values move left.</td></tr>
+                            <tr><td><code>dy</code></td><td><code>int</code></td><td>The vertical change from the current cursor position. Positive values move downward, negative values move upward.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>The key idea is that the numbers are offsets, not final screen coordinates. If the current position is <code>(200, 150)</code> and you call <code>linerel(60, 0)</code>, the new endpoint becomes <code>(260, 150)</code>.</p>
+                </section>
+
+                <section class="content-card" id="return-value">
+                    <h2>Return Value</h2>
+                    <p><code>linerel()</code> returns <code>void</code>. It changes two things: it draws a visible segment, and it updates the current graphics position to the new relative endpoint. That updated position becomes the base for the next <code>linerel()</code> or <code>lineto()</code> call.</p>
+                </section>
+
+                <section class="content-card" id="examples">
+                    <h2>Code Examples</h2>
+                    <h3>Draw a box using relative edges</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    moveto(180, 140);
+    linerel(180, 0);
+    linerel(0, 120);
+    linerel(-180, 0);
+    linerel(0, -120);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This is a good beginner example because each side is described by how far it moves, not by recalculating every endpoint manually.</p>
+
+                    <h3>Simple staircase pattern</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(LIGHTCYAN);
+    moveto(100, 100);
+    linerel(60, 0);
+    linerel(0, 40);
+    linerel(60, 0);
+    linerel(0, 40);
+    linerel(60, 0);
+    linerel(0, 40);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>The output is a staircase-like polyline. Relative drawing is very natural for patterns built from repeated steps.</p>
+
+                    <h3>Arrow shape from one anchor point</h3>
+                    <pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(YELLOW);
+    moveto(180, 220);
+    linerel(160, 0);
+    linerel(-30, -25);
+    moveto(340, 220);
+    linerel(-30, 25);
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                    <p>This uses relative offsets to build a directional symbol from one base position. Small changes to the offsets reshape the arrow quickly.</p>
+                </section>
+
+                <section class="content-card" id="mistakes">
+                    <h2>Common Mistakes</h2>
+                    <h3>Treating dx and dy like absolute coordinates</h3>
+                    <p><code>linerel(300, 200)</code> does not mean "go to 300,200". It means "move 300 pixels right and 200 pixels down from wherever the current position already is."</p>
+                    <h3>Forgetting that negative values are useful</h3>
+                    <p>To draw leftward or upward, negative offsets are required. This is common when closing a box or returning along a shape edge.</p>
+                    <h3>Not keeping track of the updated cursor</h3>
+                    <p>Every relative line changes the current graphics position. If you lose track of that state, later segments can go in surprising directions.</p>
+                </section>
+
+                <section class="related-card" id="related">
+                    <h2>Related Functions</h2>
+                    <div class="related-links">
+                        <a href="/moveto-docs">moveto()</a>
+                        <a href="/lineto-docs">lineto()</a>
+                        <a href="/line-docs">line()</a>
+                        <a href="/cleardevice-docs">cleardevice()</a>
+                    </div>
+                </section>
+
+                <section class="content-card" id="try">
+                    <h2>Try it online</h2>
+                    <p>Run the box example and replace one positive offset with a negative one to see how quickly the path direction changes.</p>
+                    <div class="cta-row">
+                        <a class="button-link primary" href="/compiler">Open Compiler</a>
+                        <a class="button-link" href="/docs">Back to Docs</a>
+                    </div>
+                </section>
+            </article>
+
+            <aside class="toc" aria-label="Table of contents">
+                <h2>On this page</h2>
+                <a href="#parameters">Parameters</a>
+                <a href="#return-value">Return value</a>
+                <a href="#examples">Examples</a>
+                <a href="#mistakes">Common mistakes</a>
+                <a href="#related">Related functions</a>
+                <a href="#try">Try it online</a>
+                <div class="rail-card">
+                    <h2>Function summary</h2>
+                    <p><strong>Category:</strong> Relative line drawing</p>
+                    <p><strong>Input:</strong> horizontal and vertical offsets</p>
+                    <p><strong>Best for:</strong> stepwise path construction</p>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 graphics.h Compiler.</span>
+            <span>Learn C graphics with practical examples.</span>
+        </div>
+    </footer>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/linerel-docs#breadcrumb",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/"},
+                    {"@type": "ListItem", "position": 2, "name": "Docs", "item": "https://graphicsh.online/docs"},
+                    {"@type": "ListItem", "position": 3, "name": "linerel()", "item": "https://graphicsh.online/linerel-docs"}
+                ]
+            },
+            {
+                "@type": "TechArticle",
+                "@id": "https://graphicsh.online/linerel-docs#article",
+                "headline": "linerel() in graphics.h",
+                "description": "Syntax, relative line behavior, examples, and mistakes for the graphics.h linerel function.",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {"@type": "Person", "name": "AlbatrossC"},
+                "publisher": {"@type": "Organization", "name": "graphics.h Compiler"},
+                "mainEntityOfPage": "https://graphicsh.online/linerel-docs",
+                "proficiencyLevel": "Beginner",
+                "programmingLanguage": "C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

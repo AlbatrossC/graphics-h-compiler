@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>graphics.h Function Documentation | C Graphics Reference</title>
-    <meta name="description" content="Standalone graphics.h documentation pages for C graphics functions including circle, rectangle, line, arc, ellipse, colors, fills, text, pixels, and setup.">
-    <meta name="keywords" content="graphics.h documentation, graphics.h functions, C graphics reference, circle docs, line docs, rectangle docs">
+    <meta name="description" content="Standalone graphics.h documentation pages for C graphics functions including shapes, screen clearing, cursor movement, colors, fills, text, pixels, and setup.">
+    <meta name="keywords" content="graphics.h documentation, graphics.h functions, C graphics reference, moveto docs, line docs, rectangle docs">
     <meta name="author" content="AlbatrossC">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://graphicsh.online/docs">
@@ -108,7 +108,8 @@
                 <p class="section-label">Active Batches</p>
                 <pre><code>Phase 1: Shape primitives
 Phase 2: Colors and Fills
-Phase 3: Text, Pixels, Setup, Timing</code></pre>
+Phase 3: Text, Pixels, Setup, Timing
+Phase 4: Screen clearing and cursor movement</code></pre>
             </div>
         </section>
 
@@ -207,6 +208,38 @@ Phase 3: Text, Pixels, Setup, Timing</code></pre>
                 </a>
             </div>
         </section>
+
+        <section class="content-card">
+            <p class="section-label">Screen Control & Cursor Movement</p>
+            <h2>Viewport refresh and connected path tools</h2>
+            <div class="docs-grid">
+                <a class="doc-card" href="/cleardevice-docs">
+                    <span>Screen Control</span>
+                    <h2>cleardevice()</h2>
+                    <p>Clear the full active graphics screen before redrawing a new scene, chart, or animation frame.</p>
+                </a>
+                <a class="doc-card" href="/clearviewport-docs">
+                    <span>Viewport Control</span>
+                    <h2>clearviewport()</h2>
+                    <p>Clear only the active viewport so panel borders, titles, or outside content can stay visible.</p>
+                </a>
+                <a class="doc-card" href="/moveto-docs">
+                    <span>Cursor Movement</span>
+                    <h2>moveto()</h2>
+                    <p>Reposition the graphics cursor without drawing, so the next connected segment starts exactly where you want.</p>
+                </a>
+                <a class="doc-card" href="/lineto-docs">
+                    <span>Connected Line</span>
+                    <h2>lineto()</h2>
+                    <p>Draw from the current cursor point to a new absolute endpoint and continue a connected path.</p>
+                </a>
+                <a class="doc-card" href="/linerel-docs">
+                    <span>Relative Line</span>
+                    <h2>linerel()</h2>
+                    <p>Draw a segment using relative offsets, which is perfect for stepwise patterns and path construction.</p>
+                </a>
+            </div>
+        </section>
     </main>
 
     <footer class="footer">
@@ -239,7 +272,12 @@ Phase 3: Text, Pixels, Setup, Timing</code></pre>
             {"@type": "TechArticle", "name": "putpixel() documentation", "url": "https://graphicsh.online/putpixel-docs"},
             {"@type": "TechArticle", "name": "initgraph() documentation", "url": "https://graphicsh.online/initgraph-docs"},
             {"@type": "TechArticle", "name": "closegraph() documentation", "url": "https://graphicsh.online/closegraph-docs"},
-            {"@type": "TechArticle", "name": "delay() documentation", "url": "https://graphicsh.online/delay-docs"}
+            {"@type": "TechArticle", "name": "delay() documentation", "url": "https://graphicsh.online/delay-docs"},
+            {"@type": "TechArticle", "name": "cleardevice() documentation", "url": "https://graphicsh.online/cleardevice-docs"},
+            {"@type": "TechArticle", "name": "clearviewport() documentation", "url": "https://graphicsh.online/clearviewport-docs"},
+            {"@type": "TechArticle", "name": "moveto() documentation", "url": "https://graphicsh.online/moveto-docs"},
+            {"@type": "TechArticle", "name": "lineto() documentation", "url": "https://graphicsh.online/lineto-docs"},
+            {"@type": "TechArticle", "name": "linerel() documentation", "url": "https://graphicsh.online/linerel-docs"}
         ]
     }
     </script>

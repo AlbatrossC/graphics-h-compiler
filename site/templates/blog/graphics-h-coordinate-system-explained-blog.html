@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>graphics.h Coordinate System Explained | graphics.h Compiler</title>
+    <meta name="description" content="Understand the graphics.h coordinate system with origin, x and y directions, screen limits, shape coordinates, and a runnable example for students.">
+    <meta name="keywords" content="graphics.h coordinate system, graphics.h x y axis, origin in graphics.h, computer graphics coordinates, graphics.h examples">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/graphics-h-coordinate-system-explained-blog">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/graphics-h-coordinate-system-explained-blog">
+    <meta property="og:title" content="graphics.h Coordinate System Explained">
+    <meta property="og:description" content="A student-friendly explanation of how coordinates work in graphics.h programs.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-06-21">
+    <meta property="article:modified_time" content="2026-06-21">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Practical Graphics.h">
+    <meta property="article:tag" content="coordinates">
+    <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="beginner guide">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="graphics.h Coordinate System Explained">
+    <meta name="twitter:description" content="Learn where the origin is, how x and y move, and how shapes use coordinates in graphics.h.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "blog/_shared_article_styles.html" %}
+</head>
+
+<body>
+    {% include "blog/_shared_article_header.html" %}
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Practical guide</p>
+                    <h1>graphics.h coordinate system explained</h1>
+                    <p class="dek">A lot of beginner graphics.h bugs are not algorithm bugs at all. They come from using the wrong mental model for coordinates. If you expect the screen to behave like a math graph with the origin at the bottom-left, your circle, text, and lines will seem to appear in the wrong places. graphics.h uses a different system, and once you see it clearly, many practical files become much easier.</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>Rule to remember</h2>
+                    <p>In graphics.h, the origin <strong>(0, 0)</strong> is at the <strong>top-left corner</strong>. X increases to the right. Y increases downward.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="origin">
+                        <h2>Where the origin is</h2>
+                        <p>The first coordinate on the graphics screen is <code>(0, 0)</code>, and it sits at the top-left corner of the drawing area. That is different from a standard Cartesian graph, where the origin usually appears at the bottom-left or center depending on the diagram.</p>
+                        <p>Because of this, a point like <code>(50, 50)</code> is near the top-left. A point like <code>(500, 400)</code> is farther to the right and lower on the screen.</p>
+                    </section>
+
+                    <section id="direction">
+                        <h2>How x and y move on the screen</h2>
+                        <ul>
+                            <li><strong>X-coordinate:</strong> moves left to right.</li>
+                            <li><strong>Y-coordinate:</strong> moves top to bottom.</li>
+                        </ul>
+                        <p>This is the single biggest source of confusion. If you increase y, the object goes down, not up. That means if a rectangle or circle appears lower than expected, the y values are often the reason.</p>
+                    </section>
+
+                    <section id="screen-size">
+                        <h2>How to know the screen limits</h2>
+                        <p>You do not have to guess the last usable coordinate. graphics.h provides helper functions such as <code>getmaxx()</code> and <code>getmaxy()</code>. They return the largest visible x and y values for the current graphics mode.</p>
+<pre><code>int maxX = getmaxx();
+int maxY = getmaxy();</code></pre>
+                        <p>This matters when you want to center a shape or place text near the bottom edge without hardcoding numbers that only work on one mode.</p>
+                    </section>
+
+                    <section id="shape-meaning">
+                        <h2>How common shape functions interpret coordinates</h2>
+                        <h3>line(x1, y1, x2, y2)</h3>
+                        <p><a class="inline-link" href="/line-docs">line()</a> draws between two absolute points. If you swap the endpoints, the same segment is drawn, but understanding each point still matters when you annotate a diagram.</p>
+
+                        <h3>rectangle(left, top, right, bottom)</h3>
+                        <p><a class="inline-link" href="/rectangle-docs">rectangle()</a> needs the left edge, top edge, right edge, and bottom edge. The words themselves tell you the intended order. If <code>top</code> is larger than <code>bottom</code>, your reasoning is already inconsistent.</p>
+
+                        <h3>circle(x, y, radius)</h3>
+                        <p><a class="inline-link" href="/circle-docs">circle()</a> uses the center point first, then the radius. So <code>circle(320, 240, 60)</code> means a circle centered at <code>(320, 240)</code> with radius 60.</p>
+
+                        <h3>outtextxy(x, y, text)</h3>
+                        <p><a class="inline-link" href="/outtextxy-docs">outtextxy()</a> places the start of the text at the given coordinate. If labels look shifted, it is often because the coordinate marks the start point of the string, not the visual center of the sentence.</p>
+                    </section>
+
+                    <section id="example">
+                        <h2>A simple coordinate demo program</h2>
+                        <p>This short example helps you visualize the screen directions immediately.</p>
+<pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setcolor(WHITE);
+    line(0, 0, 200, 0);
+    line(0, 0, 0, 150);
+
+    outtextxy(205, 0, "positive x");
+    outtextxy(0, 155, "positive y");
+
+    setcolor(YELLOW);
+    circle(120, 90, 30);
+    outtextxy(150, 90, "(120, 90)");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        <p>The white lines show the positive directions. The yellow circle then makes it easy to see how a real object sits inside the coordinate space.</p>
+                    </section>
+
+                    <section id="centering">
+                        <h2>How to think about center points</h2>
+                        <p>If you want to place an object in the center of the screen, divide the maximum coordinates by two. That gives you the approximate center point:</p>
+<pre><code>int centerX = getmaxx() / 2;
+int centerY = getmaxy() / 2;</code></pre>
+                        <p>Then use those values as the center for a circle or the reference point for text and animation. This is safer than memorizing one fixed coordinate from an old lab machine.</p>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common coordinate mistakes students make</h2>
+                        <ul>
+                            <li><strong>Thinking positive y goes upward.</strong> It does not.</li>
+                            <li><strong>Using rectangle arguments as width and height.</strong> graphics.h wants corner coordinates, not size values.</li>
+                            <li><strong>Assuming text is centered automatically.</strong> The x and y position marks where the text begins.</li>
+                            <li><strong>Ignoring screen limits.</strong> A shape may exist, but part of it can fall outside the visible area.</li>
+                        </ul>
+                    </section>
+
+                    <section class="cta" id="practice">
+                        <h2>Best way to practice this fast</h2>
+                        <p>Open the <a href="/compiler">online compiler</a> and draw the same object at three different coordinates. Move it right by increasing x. Move it down by increasing y. That hands-on repetition locks the system into memory much faster than memorizing a definition.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/graphics-h-functions-list-with-examples-blog">graphics.h Functions List With Examples</a></p>
+                        <p><a href="/midpoint-circle-algorithm-blog">Midpoint Circle Algorithm</a></p>
+                        <p><a href="/line-docs">line() docs</a></p>
+                        <p><a href="/circle-docs">circle() docs</a></p>
+                        <p><a href="/outtextxy-docs">outtextxy() docs</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this guide</h2>
+                    <a href="#origin">Origin point</a>
+                    <a href="#direction">X and Y directions</a>
+                    <a href="#screen-size">Screen limits</a>
+                    <a href="#shape-meaning">How shapes use coordinates</a>
+                    <a href="#example">Demo program</a>
+                    <a href="#centering">Centering objects</a>
+                    <a href="#mistakes">Common mistakes</a>
+                    <a href="#practice">How to practice</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    {% include "blog/_shared_article_footer.html" %}
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/graphics-h-coordinate-system-explained-blog#breadcrumb",
+                "itemListElement": [
+                    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/" },
+                    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://graphicsh.online/blog" },
+                    { "@type": "ListItem", "position": 3, "name": "graphics.h Coordinate System Explained", "item": "https://graphicsh.online/graphics-h-coordinate-system-explained-blog" }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "https://graphicsh.online/graphics-h-coordinate-system-explained-blog#article",
+                "headline": "graphics.h Coordinate System Explained",
+                "description": "A beginner-friendly explanation of how coordinates, origin, and screen limits work in graphics.h.",
+                "image": "https://graphicsh.online/static/images/og-image.webp",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://graphicsh.online/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "https://graphicsh.online/graphics-h-coordinate-system-explained-blog",
+                "articleSection": "Practical Graphics.h",
+                "keywords": "graphics.h coordinate system, x y axis, origin, graphics programming"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

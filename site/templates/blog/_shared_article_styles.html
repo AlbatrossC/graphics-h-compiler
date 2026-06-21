@@ -1,0 +1,343 @@
+<style>
+    :root {
+        --bg: #0b0d0c;
+        --surface: #111412;
+        --panel: #151917;
+        --text: #f5f5f5;
+        --muted: rgba(245, 245, 245, 0.72);
+        --soft: rgba(245, 245, 245, 0.54);
+        --line: rgba(255, 255, 255, 0.11);
+        --accent: #00ff88;
+        --accent-2: #0084de;
+        --warm: #f5b942;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        background:
+            linear-gradient(180deg, rgba(0, 255, 136, 0.035), transparent 360px),
+            linear-gradient(90deg, rgba(0, 132, 222, 0.035), transparent 40%),
+            var(--bg);
+        color: var(--text);
+        font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.7;
+    }
+
+    a {
+        color: inherit;
+    }
+
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(11, 13, 12, 0.88);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(18px);
+    }
+
+    .header-inner,
+    .article,
+    .footer-inner {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+    }
+
+    .header-inner {
+        min-height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .brand,
+    .nav {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .brand {
+        text-decoration: none;
+        font-family: "Space Mono", monospace;
+        font-weight: 700;
+    }
+
+    .brand img {
+        width: 42px;
+        height: auto;
+        display: block;
+    }
+
+    .accent {
+        color: var(--accent);
+    }
+
+    .nav a {
+        color: var(--muted);
+        font-size: 0.92rem;
+        text-decoration: none;
+        border-radius: 6px;
+        padding: 0.35rem 0.5rem;
+    }
+
+    .nav a:hover {
+        color: var(--accent);
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .article {
+        padding: 44px 0 76px;
+    }
+
+    .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 28px;
+        align-items: end;
+        margin-bottom: 34px;
+    }
+
+    .eyebrow,
+    .meta {
+        color: var(--accent);
+        font-family: "Space Mono", monospace;
+        font-size: 0.84rem;
+        text-transform: uppercase;
+    }
+
+    h1 {
+        margin: 10px 0 16px;
+        font-size: clamp(2.2rem, 5vw, 4.5rem);
+        line-height: 1.04;
+        letter-spacing: 0;
+    }
+
+    .dek {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 1.08rem;
+    }
+
+    .quick-card,
+    .callout,
+    .related,
+    table {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(21, 25, 23, 0.86);
+    }
+
+    .quick-card {
+        padding: 18px;
+    }
+
+    .quick-card h2,
+    .quick-card p {
+        margin: 0;
+    }
+
+    .quick-card h2 {
+        font-size: 1rem;
+        color: var(--warm);
+        letter-spacing: 0;
+    }
+
+    .quick-card p {
+        margin-top: 8px;
+        color: var(--muted);
+    }
+
+    .content {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 32px;
+        align-items: start;
+    }
+
+    .post-body {
+        min-width: 0;
+    }
+
+    .toc {
+        position: sticky;
+        top: 84px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(21, 25, 23, 0.8);
+        padding: 18px;
+    }
+
+    .toc h2 {
+        margin: 0 0 10px;
+        font-size: 0.95rem;
+        color: var(--warm);
+        letter-spacing: 0;
+    }
+
+    .toc a {
+        display: block;
+        color: var(--muted);
+        text-decoration: none;
+        padding: 6px 0;
+        font-size: 0.94rem;
+    }
+
+    .toc a:hover {
+        color: var(--accent);
+    }
+
+    section {
+        margin: 0 0 34px;
+    }
+
+    h2 {
+        margin: 0 0 12px;
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        line-height: 1.18;
+        letter-spacing: 0;
+    }
+
+    h3 {
+        margin: 22px 0 8px;
+        font-size: 1.2rem;
+        letter-spacing: 0;
+    }
+
+    p,
+    li {
+        color: var(--muted);
+    }
+
+    strong {
+        color: var(--text);
+    }
+
+    code {
+        font-family: "JetBrains Mono", "Space Mono", monospace;
+    }
+
+    pre {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #080a09;
+        margin: 14px 0;
+        padding: 18px;
+        color: #dfffea;
+        font-size: 0.92rem;
+        line-height: 1.62;
+    }
+
+    ul,
+    ol {
+        padding-left: 1.15rem;
+    }
+
+    .callout,
+    .related {
+        padding: 20px;
+    }
+
+    .callout {
+        border-color: rgba(0, 132, 222, 0.3);
+        background: rgba(0, 132, 222, 0.08);
+    }
+
+    .related {
+        border-color: rgba(0, 255, 136, 0.28);
+        background: rgba(0, 255, 136, 0.06);
+    }
+
+    .related a,
+    .cta a,
+    .inline-link {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .related a:hover,
+    .cta a:hover,
+    .inline-link:hover {
+        text-decoration: underline;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        margin: 16px 0;
+    }
+
+    th,
+    td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    th {
+        color: var(--warm);
+        font-size: 0.9rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+
+    tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .cta {
+        border: 1px solid rgba(245, 185, 66, 0.3);
+        border-radius: 8px;
+        background: rgba(245, 185, 66, 0.08);
+        padding: 20px;
+    }
+
+    .footer {
+        border-top: 1px solid var(--line);
+        padding: 20px 0 32px;
+        color: var(--soft);
+        font-size: 0.92rem;
+    }
+
+    .footer-inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 22px;
+    }
+
+    @media (max-width: 920px) {
+        .hero,
+        .content {
+            grid-template-columns: 1fr;
+        }
+
+        .toc {
+            position: static;
+        }
+    }
+
+    @media (max-width: 720px) {
+        .header-inner {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 14px 0;
+        }
+
+        .nav {
+            flex-wrap: wrap;
+        }
+
+        .article {
+            padding-top: 32px;
+        }
+    }
+</style>

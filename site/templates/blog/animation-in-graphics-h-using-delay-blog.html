@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Animate graphics.h Programs Using delay() | graphics.h Compiler</title>
+    <meta name="description" content="Learn simple animation in graphics.h programs using delay(), a Turbo C timing helper from DOS.H, plus redraw loops, screen clearing, and coordinate updates.">
+    <meta name="keywords" content="graphics.h animation, delay function in DOS.H, moving object graphics.h, simple animation in C, graphics.h examples">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/animation-in-graphics-h-using-delay-blog">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/animation-in-graphics-h-using-delay-blog">
+    <meta property="og:title" content="How to Animate graphics.h Programs Using delay()">
+    <meta property="og:description" content="A beginner-friendly guide to frame-by-frame animation in graphics.h.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-06-21">
+    <meta property="article:modified_time" content="2026-06-21">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Practical Graphics.h">
+    <meta property="article:tag" content="animation">
+    <meta property="article:tag" content="delay">
+    <meta property="article:tag" content="graphics.h">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="How to Animate graphics.h Programs Using delay()">
+    <meta name="twitter:description" content="Use delay() from DOS.H, plus clear, redraw, and coordinate updates, to build simple graphics.h animations.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "blog/_shared_article_styles.html" %}
+</head>
+
+<body>
+    {% include "blog/_shared_article_header.html" %}
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Practical guide</p>
+                    <h1>how to animate graphics.h programs using delay()</h1>
+                    <p class="dek">Animation in graphics.h is not magic. It is just a repeated cycle: draw a frame, pause briefly, erase or redraw, update coordinates, and repeat. Once that loop makes sense, students can build moving balls, cars, text banners, and other classroom demos without needing a complicated engine.</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>Core idea</h2>
+                    <p>Most simple animations use four pieces together: <code>delay()</code> from <code>DOS.H</code>, a loop, coordinate updates, and screen redraw logic.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="delay-role">
+                        <h2>What delay() actually does</h2>
+                        <p><code>delay()</code> pauses the program for a given number of milliseconds. In the classic Borland headers, it is declared in <code>DOS.H</code>, not <code>GRAPHICS.H</code>, but it is commonly used alongside graphics.h drawing loops. By itself, it does not create animation. Its job is to slow a loop down so the screen updates become visible as separate frames instead of finishing instantly.</p>
+                        <p>If you remove the delay from an animation loop, the program often runs too fast to watch. If you make the delay too large, motion looks jerky and slow. That is why timing values like 20, 40, 60, or 100 milliseconds are common starting points.</p>
+                    </section>
+
+                    <section id="frame-logic">
+                        <h2>The basic frame-by-frame animation pattern</h2>
+                        <ol>
+                            <li>Start graphics mode.</li>
+                            <li>Draw the object at its current position.</li>
+                            <li>Pause briefly with <code>delay()</code>.</li>
+                            <li>Clear the old frame or redraw the background.</li>
+                            <li>Change the coordinates.</li>
+                            <li>Draw again.</li>
+                        </ol>
+                        <p>That cycle repeats until you decide to stop. Once you understand this pattern, many animation questions become simple coordinate questions instead of mysterious graphics problems.</p>
+                    </section>
+
+                    <section id="example">
+                        <h2>Simple moving ball example</h2>
+<pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    int x = 60;
+
+    initgraph(&amp;gd, &amp;gm, "");
+
+    while (x &lt; 560) {
+        cleardevice();
+
+        setcolor(YELLOW);
+        circle(x, 220, 30);
+
+        setcolor(WHITE);
+        outtextxy(20, 20, "Simple animation using delay()");
+
+        delay(40);
+        x += 5;
+    }
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        <p>This program works because each loop creates a fresh frame. The circle is drawn, the program pauses for 40 milliseconds, the screen clears, and then the x-coordinate moves to the right.</p>
+                    </section>
+
+                    <section id="why-clear">
+                        <h2>Why clearing or redrawing matters</h2>
+                        <p>If you keep drawing a moving object without clearing the old frame, you do not get animation. You get a trail of old positions. Sometimes that trail is useful for special effects, but most beginner animation tasks want a single moving object.</p>
+                        <p>That is why functions such as <code>cleardevice()</code> or a full redraw of the background are so common in animation loops. The screen must reflect the <strong>current</strong> frame, not every past frame at once.</p>
+                    </section>
+
+                    <section id="speed">
+                        <h2>How to control speed</h2>
+                        <p>Speed depends on two things:</p>
+                        <ul>
+                            <li><strong>Delay amount:</strong> lower delay means faster updates.</li>
+                            <li><strong>Coordinate change:</strong> bigger jumps per frame mean faster movement.</li>
+                        </ul>
+                        <p>For example, changing <code>x += 5</code> to <code>x += 10</code> makes the ball move faster across the screen even if the delay stays the same. Changing <code>delay(40)</code> to <code>delay(80)</code> slows the visible motion down.</p>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common animation mistakes in graphics.h</h2>
+                        <ul>
+                            <li><strong>No delay at all.</strong> The loop finishes before the eye can follow the motion.</li>
+                            <li><strong>No clear or redraw.</strong> The object leaves a trail.</li>
+                            <li><strong>Updating the wrong coordinate.</strong> Horizontal movement changes x. Vertical movement changes y.</li>
+                            <li><strong>Forgetting screen limits.</strong> The object disappears because it moves outside the visible range.</li>
+                        </ul>
+                    </section>
+
+                    <section id="better-animations">
+                        <h2>How to grow this into better animations</h2>
+                        <p>After you understand one moving object, the next steps are natural:</p>
+                        <ul>
+                            <li>Bounce a ball by reversing direction when it hits the screen edge.</li>
+                            <li>Move text using <a class="inline-link" href="/outtextxy-docs">outtextxy()</a>.</li>
+                            <li>Animate multiple objects with separate x and y variables.</li>
+                            <li>Use <code>setcolor()</code> and <code>setfillstyle()</code> for more visual clarity.</li>
+                        </ul>
+                        <p>At that point, animation becomes a coordination problem between timing, screen clearing, and state updates.</p>
+                    </section>
+
+                    <section class="cta" id="try-it">
+                        <h2>Best way to learn this quickly</h2>
+                        <p>Paste the example into the <a href="/compiler">online compiler</a>. First change only the delay value. Then change only the x increment. Watching how each change affects the movement is the fastest way to understand animation fundamentals.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/graphics-h-coordinate-system-explained-blog">graphics.h Coordinate System Explained</a></p>
+                        <p><a href="/graphics-h-color-constants-explained-blog">graphics.h Color Constants Explained</a></p>
+                        <p><a href="/graphics-h-functions-list-with-examples-blog">graphics.h Functions List With Examples</a></p>
+                        <p><a href="/circle-docs">circle() docs</a></p>
+                        <p><a href="/outtextxy-docs">outtextxy() docs</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this guide</h2>
+                    <a href="#delay-role">What delay() does</a>
+                    <a href="#frame-logic">Animation pattern</a>
+                    <a href="#example">Moving ball example</a>
+                    <a href="#why-clear">Why clearing matters</a>
+                    <a href="#speed">How speed works</a>
+                    <a href="#mistakes">Common mistakes</a>
+                    <a href="#better-animations">Next improvements</a>
+                    <a href="#try-it">Try it yourself</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    {% include "blog/_shared_article_footer.html" %}
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/animation-in-graphics-h-using-delay-blog#breadcrumb",
+                "itemListElement": [
+                    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/" },
+                    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://graphicsh.online/blog" },
+                    { "@type": "ListItem", "position": 3, "name": "How to Animate graphics.h Programs Using delay()", "item": "https://graphicsh.online/animation-in-graphics-h-using-delay-blog" }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "https://graphicsh.online/animation-in-graphics-h-using-delay-blog#article",
+                "headline": "How to Animate graphics.h Programs Using delay()",
+                "description": "A practical beginner guide to animation loops, frame timing, and screen redraws in graphics.h.",
+                "image": "https://graphicsh.online/static/images/og-image.webp",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://graphicsh.online/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "https://graphicsh.online/animation-in-graphics-h-using-delay-blog",
+                "articleSection": "Practical Graphics.h",
+                "keywords": "graphics.h animation, delay, moving object, simple animation in C"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>

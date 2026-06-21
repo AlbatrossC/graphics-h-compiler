@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>graphics.h Functions List With Examples for Students | graphics.h Compiler</title>
+    <meta name="description" content="A practical graphics.h functions list for students with grouped categories, when-to-use notes, beginner study order, and a runnable C example.">
+    <meta name="keywords" content="graphics.h functions list, graphics.h functions with examples, graphics.h reference for students, C graphics functions, graphics.h viva questions">
+    <meta name="author" content="AlbatrossC">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://graphicsh.online/graphics-h-functions-list-with-examples-blog">
+    <link rel="icon" href="/static/images/icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/css/fonts.css?v=4.2">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005" crossorigin="anonymous"></script>
+
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://graphicsh.online/graphics-h-functions-list-with-examples-blog">
+    <meta property="og:title" content="graphics.h Functions List With Examples for Students">
+    <meta property="og:description" content="Learn the most important graphics.h functions by category, purpose, and beginner-friendly examples.">
+    <meta property="og:image" content="https://graphicsh.online/static/images/og-image.webp">
+    <meta property="og:site_name" content="graphics.h Compiler">
+    <meta property="article:published_time" content="2026-06-21">
+    <meta property="article:modified_time" content="2026-06-21">
+    <meta property="article:author" content="AlbatrossC">
+    <meta property="article:section" content="Reference Guides">
+    <meta property="article:tag" content="graphics.h">
+    <meta property="article:tag" content="functions list">
+    <meta property="article:tag" content="examples">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="graphics.h Functions List With Examples">
+    <meta name="twitter:description" content="A study-friendly graphics.h function list with categories, common uses, and a runnable sample program.">
+    <meta name="twitter:image" content="https://graphicsh.online/static/images/og-image.webp">
+
+    {% include "blog/_shared_article_styles.html" %}
+</head>
+
+<body>
+    {% include "blog/_shared_article_header.html" %}
+
+    <main class="article">
+        <article>
+            <header class="hero">
+                <div>
+                    <p class="eyebrow">Reference guide</p>
+                    <h1>graphics.h functions list with examples for students</h1>
+                    <p class="dek">If you only remember scattered function names before a lab, viva, or practical exam, this guide is the missing map. It groups the most important <code>graphics.h</code> functions by purpose, explains when you use each one, and ends with a small program that combines the basics into one runnable example.</p>
+                </div>
+                <aside class="quick-card">
+                    <h2>Fast study tip</h2>
+                    <p>Start with <a class="inline-link" href="/initgraph-docs">initgraph()</a>, <a class="inline-link" href="/line-docs">line()</a>, <a class="inline-link" href="/circle-docs">circle()</a>, <a class="inline-link" href="/rectangle-docs">rectangle()</a>, <a class="inline-link" href="/setcolor-docs">setcolor()</a>, <a class="inline-link" href="/outtextxy-docs">outtextxy()</a>, and <a class="inline-link" href="/closegraph-docs">closegraph()</a> first. Those cover most beginner graphics.h tasks.</p>
+                </aside>
+            </header>
+
+            <div class="content">
+                <div class="post-body">
+                    <section id="overview">
+                        <h2>Why students need a function list, not just a syntax sheet</h2>
+                        <p>Many students first meet <code>graphics.h</code> as a collection of disconnected programs: one file for a line, one for a circle, another for flood fill, and another for text. That approach works for passing one lab, but it becomes confusing when you try to remember which function changes color, which function draws the shape, and which function actually starts graphics mode.</p>
+                        <p>A function list is more useful when it is <strong>organized by job</strong>. Instead of memorizing 40 names in random order, think in steps: start graphics mode, choose a color, draw shapes, place text, fill regions, and then exit. Once you understand that workflow, most beginner programs become easier to read and write.</p>
+                    </section>
+
+                    <section id="categories">
+                        <h2>graphics.h functions grouped by purpose</h2>
+                        <h3>1. Setup and screen control</h3>
+                        <ul>
+                            <li><code>initgraph()</code> starts graphics mode.</li>
+                            <li><code>closegraph()</code> returns to text mode and cleans up.</li>
+                            <li><code>cleardevice()</code> clears the full graphics screen.</li>
+                            <li><code>getmaxx()</code> and <code>getmaxy()</code> tell you the current screen boundaries.</li>
+                        </ul>
+                        <p>These functions control the environment around your drawing. If a program will not even open a graphics window, start debugging from <a class="inline-link" href="/initgraph-errors-and-how-to-fix-them-blog">initgraph() errors</a>.</p>
+
+                        <h3>2. Basic drawing and movement</h3>
+                        <ul>
+                            <li><code>line()</code> draws a straight line between two points.</li>
+                            <li><code>moveto()</code> changes the current drawing position without drawing.</li>
+                            <li><code>lineto()</code> draws from the current position to a new point.</li>
+                            <li><code>putpixel()</code> plots exactly one pixel.</li>
+                        </ul>
+                        <p>These functions matter when you want precise control over coordinates or when you are implementing algorithms such as DDA or Bresenham from scratch.</p>
+
+                        <h3>3. Shape functions</h3>
+                        <ul>
+                            <li><code>circle()</code> draws a circle from center and radius.</li>
+                            <li><code>arc()</code> draws part of a circle between two angles.</li>
+                            <li><code>ellipse()</code> draws an oval or elliptical arc.</li>
+                            <li><code>rectangle()</code> draws a rectangular outline.</li>
+                            <li><code>bar()</code> draws a filled rectangle.</li>
+                        </ul>
+                        <p>These are the functions most students use in introductory graphics labs because they produce visible output quickly and make coordinate practice easier.</p>
+
+                        <h3>4. Color and fill functions</h3>
+                        <ul>
+                            <li><code>setcolor()</code> changes the active drawing color.</li>
+                            <li><code>setbkcolor()</code> changes the screen background color.</li>
+                            <li><code>setfillstyle()</code> chooses how filled areas should look.</li>
+                            <li><code>floodfill()</code> fills a closed region from a seed point.</li>
+                        </ul>
+                        <p>These functions are where many students make mistakes, especially when boundary colors and fill colors do not match their expectations.</p>
+
+                        <h3>5. Text, image buffers, and common timing helpers</h3>
+                        <ul>
+                            <li><code>outtextxy()</code> prints text at an exact coordinate.</li>
+                            <li><code>getimage()</code> and <code>putimage()</code> copy image data to and from memory.</li>
+                        </ul>
+                        <p>These functions become useful when you start creating labels, dashboards, and reusable screen content instead of static diagrams. One common non-graphics helper paired with these programs is <code>delay()</code> from <code>DOS.H</code>, which pauses execution during simple animations but is not declared in <code>GRAPHICS.H</code>.</p>
+                    </section>
+
+                    <section id="must-know">
+                        <h2>15 must-know graphics.h functions for beginners</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Function</th>
+                                    <th>When you use it</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>initgraph()</code></td><td>Start every graphics program.</td></tr>
+                                <tr><td><code>closegraph()</code></td><td>End the program cleanly after graphics output.</td></tr>
+                                <tr><td><code>line()</code></td><td>Draw a direct line between two points.</td></tr>
+                                <tr><td><code>circle()</code></td><td>Draw circular shapes like wheels, targets, and faces.</td></tr>
+                                <tr><td><code>rectangle()</code></td><td>Draw boxes, frames, windows, and charts.</td></tr>
+                                <tr><td><code>bar()</code></td><td>Create filled bars, blocks, and panels.</td></tr>
+                                <tr><td><code>setcolor()</code></td><td>Change line, outline, and text color.</td></tr>
+                                <tr><td><code>setbkcolor()</code></td><td>Change the screen background color.</td></tr>
+                                <tr><td><code>setfillstyle()</code></td><td>Select fill pattern and fill color.</td></tr>
+                                <tr><td><code>floodfill()</code></td><td>Fill a closed boundary from inside.</td></tr>
+                                <tr><td><code>outtextxy()</code></td><td>Place labels, titles, and captions.</td></tr>
+                                <tr><td><code>putpixel()</code></td><td>Plot individual pixels for custom algorithms.</td></tr>
+                                <tr><td><code>cleardevice()</code></td><td>Clear the full screen before drawing the next frame or scene.</td></tr>
+                                <tr><td><code>getmaxx()</code></td><td>Know the maximum x-coordinate available.</td></tr>
+                                <tr><td><code>getmaxy()</code></td><td>Know the maximum y-coordinate available.</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="example">
+                        <h2>One compact example that uses the basics together</h2>
+                        <p>This program is useful because it combines setup, color, shapes, and text in one place. If you can explain each line in this example, you already understand the flow of many graphics.h lab programs.</p>
+<pre><code>#include &lt;graphics.h&gt;
+#include &lt;conio.h&gt;
+
+int main() {
+    int gd = DETECT, gm;
+    initgraph(&amp;gd, &amp;gm, "");
+
+    setbkcolor(BLACK);
+
+    setcolor(WHITE);
+    rectangle(140, 80, 500, 360);
+
+    setcolor(YELLOW);
+    circle(320, 180, 70);
+
+    setcolor(LIGHTCYAN);
+    line(140, 360, 500, 80);
+
+    setcolor(LIGHTGREEN);
+    outtextxy(220, 390, "graphics.h basics");
+
+    getch();
+    closegraph();
+    return 0;
+}</code></pre>
+                        <p>The flow is deliberate: initialize graphics, set background, draw outlines and shapes, place a label, wait for a key press, then close graphics mode. That order will repeat in many college practical files.</p>
+                    </section>
+
+                    <section id="study-order">
+                        <h2>A better study order for labs and vivas</h2>
+                        <p>Do not begin with the rarest functions. First learn the core lifecycle of a program. After that, branch into the special categories your syllabus uses most often.</p>
+                        <ol>
+                            <li>Program lifecycle: <code>initgraph()</code>, <code>closegraph()</code>, <code>getmaxx()</code>, <code>getmaxy()</code>.</li>
+                            <li>Drawing basics: <code>line()</code>, <code>rectangle()</code>, <code>circle()</code>, <code>arc()</code>.</li>
+                            <li>Appearance control: <code>setcolor()</code>, <code>setbkcolor()</code>, <code>setfillstyle()</code>, <code>bar()</code>, <code>floodfill()</code>.</li>
+                            <li>Annotation: <code>outtextxy()</code>.</li>
+                            <li>Common animation helper outside <code>GRAPHICS.H</code>: <code>delay()</code> from <code>DOS.H</code>.</li>
+                            <li>Low-level and advanced topics: <code>putpixel()</code>, <code>getimage()</code>, <code>putimage()</code>, palette functions, and polygon functions.</li>
+                        </ol>
+                        <p>If you study in this order, your memory stays connected to actual use cases instead of isolated definitions.</p>
+                    </section>
+
+                    <section id="mistakes">
+                        <h2>Common mistakes when learning the function list</h2>
+                        <ul>
+                            <li><strong>Memorizing names without purpose.</strong> Know what problem each function solves.</li>
+                            <li><strong>Confusing color-setting and shape-drawing functions.</strong> <code>setcolor()</code> only changes the current drawing color. It does not draw anything by itself.</li>
+                            <li><strong>Treating the graphics screen like a Cartesian graph.</strong> The origin is at the top-left, and positive y goes downward. Read the <a class="inline-link" href="/graphics-h-coordinate-system-explained-blog">coordinate system guide</a> once and a lot of shape bugs disappear.</li>
+                            <li><strong>Skipping cleanup.</strong> Even simple programs should exit with <code>closegraph()</code>.</li>
+                        </ul>
+                    </section>
+
+                    <section class="cta" id="next-steps">
+                        <h2>Where to go next</h2>
+                        <p>If you want the broadest public reference, open the <a href="/docs">graphics.h docs index</a>. If you want to practice immediately, use the <a href="/compiler">online compiler</a> and try the example program above. If your next lab is failing at startup, read the <a href="/initgraph-errors-and-how-to-fix-them-blog">initgraph troubleshooting guide</a> next.</p>
+                    </section>
+
+                    <section class="related" aria-label="Related tutorials">
+                        <h2>Related tutorials</h2>
+                        <p><a href="/how-to-run-graphics-h-blog">How to Run graphics.h Programs</a></p>
+                        <p><a href="/graphics-h-coordinate-system-explained-blog">graphics.h Coordinate System Explained</a></p>
+                        <p><a href="/initgraph-docs">initgraph() docs</a></p>
+                        <p><a href="/setcolor-docs">setcolor() docs</a></p>
+                        <p><a href="/docs">View all docs pages</a></p>
+                    </section>
+                </div>
+
+                <aside class="toc" aria-label="Table of contents">
+                    <h2>In this guide</h2>
+                    <a href="#overview">Why this list helps</a>
+                    <a href="#categories">Functions by category</a>
+                    <a href="#must-know">15 must-know functions</a>
+                    <a href="#example">Combined example</a>
+                    <a href="#study-order">Study order</a>
+                    <a href="#mistakes">Common mistakes</a>
+                    <a href="#next-steps">What to read next</a>
+                </aside>
+            </div>
+        </article>
+    </main>
+
+    {% include "blog/_shared_article_footer.html" %}
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "BreadcrumbList",
+                "@id": "https://graphicsh.online/graphics-h-functions-list-with-examples-blog#breadcrumb",
+                "itemListElement": [
+                    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://graphicsh.online/" },
+                    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://graphicsh.online/blog" },
+                    { "@type": "ListItem", "position": 3, "name": "graphics.h Functions List With Examples", "item": "https://graphicsh.online/graphics-h-functions-list-with-examples-blog" }
+                ]
+            },
+            {
+                "@type": "Article",
+                "@id": "https://graphicsh.online/graphics-h-functions-list-with-examples-blog#article",
+                "headline": "graphics.h Functions List With Examples for Students",
+                "description": "A practical graphics.h functions list with grouped categories, use cases, and a runnable beginner example.",
+                "image": "https://graphicsh.online/static/images/og-image.webp",
+                "datePublished": "2026-06-21",
+                "dateModified": "2026-06-21",
+                "author": {
+                    "@type": "Person",
+                    "name": "AlbatrossC",
+                    "url": "https://github.com/AlbatrossC"
+                },
+                "publisher": {
+                    "@type": "Organization",
+                    "name": "graphics.h Compiler",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://graphicsh.online/static/images/brand/graphics-h-turtle.webp"
+                    }
+                },
+                "mainEntityOfPage": "https://graphicsh.online/graphics-h-functions-list-with-examples-blog",
+                "articleSection": "Reference Guides",
+                "keywords": "graphics.h functions list, graphics.h reference, graphics.h examples, C graphics"
+            }
+        ]
+    }
+    </script>
+</body>
+
+</html>
