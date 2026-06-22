@@ -379,19 +379,6 @@
             opacity: 0.5;
         }
 
-        .hero-watermark {
-            position: absolute;
-            top: 9rem;
-            left: 50%;
-            width: min(56vw, 547px);
-            aspect-ratio: 547 / 282;
-            transform: translateX(-50%);
-            opacity: 0.035;
-            z-index: -1;
-            pointer-events: none;
-            background: url("/static/images/brand/graphics-h-turtle.webp") center / contain no-repeat;
-        }
-
         .hero-section .section-inner {
             display: flex;
             flex-direction: column;
@@ -430,9 +417,14 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            background: url("/static/images/brand/graphics-h-turtle.webp") center / contain no-repeat;
-            filter: drop-shadow(0 18px 30px rgba(var(--color-rgb-primary), 0.25));
             user-select: none;
+        }
+
+        .hero-brand-mark img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
         .hero-brand-mark::after {
@@ -1109,17 +1101,6 @@
                 repeating-linear-gradient(0deg, transparent, transparent 2px, currentColor 2px, currentColor 3px),
                 repeating-linear-gradient(90deg, transparent, transparent 2px, currentColor 2px, currentColor 3px);
             background-size: 60px 60px;
-            animation: gridMove 25s linear infinite;
-        }
-
-        @keyframes gridMove {
-            0% {
-                transform: translate(0, 0);
-            }
-
-            100% {
-                transform: translate(60px, 60px);
-            }
         }
 
         .noise-overlay {
@@ -1131,7 +1112,11 @@
             pointer-events: none;
             z-index: -1;
             opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            background-image: repeating-linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.16) 0,
+                    rgba(255, 255, 255, 0.16) 1px,
+                    transparent 1px,
+                    transparent 4px);
         }
 
         body.light .noise-overlay {
@@ -1142,16 +1127,14 @@
             position: fixed;
             width: 400px;
             height: 400px;
-            background: var(--accent);
-            opacity: 0.08;
+            background: radial-gradient(circle, rgba(var(--color-rgb-primary), 0.12), transparent 68%);
+            opacity: 1;
             z-index: -1;
-            filter: blur(120px);
             pointer-events: none;
-            animation: float 10s ease-in-out infinite;
         }
 
         body.light .accent-corner {
-            opacity: 0.04;
+            opacity: 0.5;
         }
 
         .accent-corner.top-right {
@@ -1162,54 +1145,6 @@
         .accent-corner.bottom-left {
             bottom: -100px;
             left: -100px;
-            animation-delay: -5s;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1);
-            }
-
-            50% {
-                transform: translate(30px, -30px) scale(1.1);
-            }
-        }
-
-        /* ==================== ANIMATIONS ==================== */
-        @keyframes fadeInUp {
-            from {
-                transform: translateY(30px);
-            }
-
-            to {
-                transform: translateY(0);
-            }
-        }
-
-        .animate-in {
-            animation: fadeInUp 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-
-        .delay-1 {
-            animation-delay: 0.1s;
-        }
-
-        .delay-2 {
-            animation-delay: 0.2s;
-        }
-
-        .delay-3 {
-            animation-delay: 0.3s;
-        }
-
-        .delay-4 {
-            animation-delay: 0.4s;
-        }
-
-        .delay-5 {
-            animation-delay: 0.5s;
         }
 
         /* ==================== SCROLL-TRIGGERED ANIMATIONS ==================== */
@@ -1418,12 +1353,6 @@
             .headline {
                 font-size: clamp(2.45rem, 10vw, 3.6rem);
                 line-height: 1.02;
-            }
-
-            .hero-watermark {
-                width: min(88vw, 547px);
-                top: 8rem;
-                opacity: 0.028;
             }
 
             .hero-kicker {

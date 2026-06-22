@@ -296,6 +296,7 @@ def render_site(compiler_assets: dict) -> None:
     global_ctx = {
         'PUBLIC_ASSETS_URL': public_assets_url,
         'PUBLIC_API_URL': public_api_url,
+        'landing_css': compiler_assets.get('landing_css', ''),
     }
 
     # ── Simple pages (no dynamic data beyond globals) ────────────────────

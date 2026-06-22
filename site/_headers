@@ -85,12 +85,14 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 # ---------------------------------------------------------------------------
-# HTML/pages: let the CDN/browser revalidate so deployments show up quickly.
+# Cache the homepage briefly in browsers and at the edge. Cloudflare Pages
+# purges deployed assets, while stale-while-revalidate avoids origin latency.
+# Other pages stay revalidated until their route policies are reviewed.
 # ---------------------------------------------------------------------------
 /
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, max-age=300, s-maxage=86400, stale-while-revalidate=604800
 /index.html
-  Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, max-age=300, s-maxage=86400, stale-while-revalidate=604800
 /compiler
   Cache-Control: public, max-age=0, must-revalidate
 /compiler.html

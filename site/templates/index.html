@@ -16,8 +16,13 @@
     <meta name="language" content="en">
     <meta name="google-site-verification" content="L-sZKjAraXrBLXZKwxwGelPOj335sF14HJXfngCoekU" />
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005"
-        crossorigin="anonymous"></script>
+    <!-- Warm only the origins used by the first wave of third-party scripts. -->
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
+    <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="dns-prefetch" href="//googleads.g.doubleclick.net">
+    <link rel="dns-prefetch" href="//www.google-analytics.com">
+    <link rel="dns-prefetch" href="//www.clarity.ms">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -48,7 +53,6 @@
 
     <link rel="preload" as="image" href="/static/images/brand/graphics-h-turtle.webp" fetchpriority="high">
     <link rel="preload" href="/static/fonts/IBMPlexSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="/static/fonts/SpaceMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face {
             font-family: "IBM Plex Sans";
@@ -65,8 +69,9 @@
             font-style: normal;
             font-display: optional;
         }
+
+        {{ landing_css }}
     </style>
-    <link rel="stylesheet" href="/static/css/index.min.css?v=4.2">
     <script src="/static/vendor/lite-youtube-embed/lite-yt-embed.min.js" defer></script>
 </head>
 
@@ -190,26 +195,28 @@
 
         <!-- ==================== SECTION 1: HERO ==================== -->
         <section class="page-section hero-section" id="hero">
-            <div class="hero-watermark" aria-hidden="true"></div>
             <div class="section-inner">
-                <div class="hero-kicker animate-in delay-1">
+                <div class="hero-kicker">
                     <span class="hero-kicker-line"></span>
                     <span>graphics.h compiler</span>
                     <span class="hero-kicker-line"></span>
                 </div>
 
-                <div class="hero-brand-mark animate-in delay-1" aria-hidden="true"></div>
+                <div class="hero-brand-mark" aria-hidden="true">
+                    <img src="/static/images/brand/graphics-h-turtle.webp" alt="" width="547" height="282"
+                        fetchpriority="high">
+                </div>
 
-                <h1 class="headline animate-in delay-2">
+                <h1 class="headline">
                     Run <span class="highlight">graphics.h</span> anywhere
                 </h1>
 
-                <p class="subheadline animate-in delay-3">
+                <p class="subheadline">
                     A focused graphics.h workspace for writing, compiling, and previewing classic BGI programs in the
                     browser or directly inside VS Code.
                 </p>
 
-                <div class="cta-group animate-in delay-4">
+                <div class="cta-group">
                     <a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"
                         target="_blank" rel="noopener noreferrer" class="cta-btn cta-btn-vscode">
                         <img src="/static/images/icons/vscode.svg" alt="VS Code" class="vscode-icon" width="100"
@@ -222,7 +229,7 @@
                     </a>
                 </div>
 
-                <div class="features-list animate-in delay-5">
+                <div class="features-list">
                     <div class="feature-item">Zero setup</div>
                     <div class="feature-item">Live graphics output</div>
                     <div class="feature-item">VS Code ready</div>
@@ -507,7 +514,44 @@
 
     </main>
 
-    <script src="/static/js/analytics.js" async></script>
+    <script>
+        (function () {
+            let loaded = false;
+
+            function loadAds() {
+                if (loaded) return;
+                loaded = true;
+
+                const script = document.createElement('script');
+                script.async = true;
+                script.crossOrigin = 'anonymous';
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005';
+                document.head.appendChild(script);
+            }
+
+            function scheduleAds() {
+                const startWhenIdle = () => {
+                    if ('requestIdleCallback' in window) {
+                        requestIdleCallback(loadAds, { timeout: 2000 });
+                    } else {
+                        setTimeout(loadAds, 0);
+                    }
+                };
+                setTimeout(startWhenIdle, 1500);
+            }
+
+            if (document.readyState === 'complete') {
+                scheduleAds();
+            } else {
+                window.addEventListener('load', scheduleAds, { once: true });
+            }
+
+            ['pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
+                window.addEventListener(eventName, loadAds, { once: true, passive: true });
+            });
+        })();
+    </script>
+    <script src="/static/js/analytics.js" defer></script>
 
     <script>
         const iconPaths = {
@@ -551,8 +595,6 @@
             // In case DOMContentLoaded already fired, wait a tick for deferred scripts
             setTimeout(initIcons, 0);
         }
-        window.addEventListener('load', initIcons);
-
         // Mobile Menu Toggle
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
@@ -583,10 +625,6 @@
             document.querySelectorAll('.theme-icon-light').forEach(icon => icon.style.display = 'block');
             document.querySelectorAll('.theme-icon-dark').forEach(icon => icon.style.display = 'none');
         }
-
-        window.addEventListener('load', () => {
-            initIcons();
-        });
 
         // Scroll-triggered reveal animations
         const revealObserver = new IntersectionObserver((entries) => {

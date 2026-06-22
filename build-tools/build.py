@@ -214,6 +214,7 @@ def render_dist(manifest: dict[str, object]) -> None:
     render.render_site({
         "css_urls": [compiler["css"]],
         "js_urls": [compiler["js"]],
+        "landing_css": LANDING_CSS_MIN.read_text(encoding="utf-8"),
     })
 
 
