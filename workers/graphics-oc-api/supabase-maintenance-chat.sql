@@ -11,10 +11,18 @@ create table if not exists public.maintenance_messages (
   id uuid primary key,
   session_id uuid not null references public.maintenance_sessions(id) on delete cascade,
   generated_name text not null,
+  country_code text,
+  country_name text,
   message text not null,
   created_at timestamptz not null default now(),
   status text not null default 'visible'
 );
+
+alter table public.maintenance_messages
+  add column if not exists country_code text;
+
+alter table public.maintenance_messages
+  add column if not exists country_name text;
 
 create index if not exists maintenance_messages_session_created_idx
   on public.maintenance_messages (session_id, created_at desc);

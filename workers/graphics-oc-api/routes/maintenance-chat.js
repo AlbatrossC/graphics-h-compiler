@@ -10,6 +10,187 @@ const MAX_NAME_LENGTH = 40;
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 const NAME_PATTERN = /^[A-Za-z][A-Za-z-]{1,38}[a-z]$/;
+const COUNTRY_NAMES = {
+  AD: 'Andorra',
+  AE: 'United Arab Emirates',
+  AF: 'Afghanistan',
+  AG: 'Antigua and Barbuda',
+  AI: 'Anguilla',
+  AL: 'Albania',
+  AM: 'Armenia',
+  AO: 'Angola',
+  AR: 'Argentina',
+  AT: 'Austria',
+  AU: 'Australia',
+  AW: 'Aruba',
+  AZ: 'Azerbaijan',
+  BA: 'Bosnia and Herzegovina',
+  BB: 'Barbados',
+  BD: 'Bangladesh',
+  BE: 'Belgium',
+  BF: 'Burkina Faso',
+  BG: 'Bulgaria',
+  BH: 'Bahrain',
+  BI: 'Burundi',
+  BJ: 'Benin',
+  BM: 'Bermuda',
+  BN: 'Brunei',
+  BO: 'Bolivia',
+  BR: 'Brazil',
+  BS: 'Bahamas',
+  BT: 'Bhutan',
+  BW: 'Botswana',
+  BY: 'Belarus',
+  BZ: 'Belize',
+  CA: 'Canada',
+  CD: 'Democratic Republic of the Congo',
+  CF: 'Central African Republic',
+  CG: 'Republic of the Congo',
+  CH: 'Switzerland',
+  CI: 'Cote d Ivoire',
+  CL: 'Chile',
+  CM: 'Cameroon',
+  CN: 'China',
+  CO: 'Colombia',
+  CR: 'Costa Rica',
+  CU: 'Cuba',
+  CV: 'Cape Verde',
+  CY: 'Cyprus',
+  CZ: 'Czechia',
+  DE: 'Germany',
+  DJ: 'Djibouti',
+  DK: 'Denmark',
+  DM: 'Dominica',
+  DO: 'Dominican Republic',
+  DZ: 'Algeria',
+  EC: 'Ecuador',
+  EE: 'Estonia',
+  EG: 'Egypt',
+  ES: 'Spain',
+  ET: 'Ethiopia',
+  FI: 'Finland',
+  FJ: 'Fiji',
+  FR: 'France',
+  GA: 'Gabon',
+  GB: 'United Kingdom',
+  GD: 'Grenada',
+  GE: 'Georgia',
+  GH: 'Ghana',
+  GM: 'Gambia',
+  GN: 'Guinea',
+  GQ: 'Equatorial Guinea',
+  GR: 'Greece',
+  GT: 'Guatemala',
+  GY: 'Guyana',
+  HK: 'Hong Kong',
+  HN: 'Honduras',
+  HR: 'Croatia',
+  HT: 'Haiti',
+  HU: 'Hungary',
+  ID: 'Indonesia',
+  IE: 'Ireland',
+  IL: 'Israel',
+  IN: 'India',
+  IQ: 'Iraq',
+  IR: 'Iran',
+  IS: 'Iceland',
+  IT: 'Italy',
+  JM: 'Jamaica',
+  JO: 'Jordan',
+  JP: 'Japan',
+  KE: 'Kenya',
+  KG: 'Kyrgyzstan',
+  KH: 'Cambodia',
+  KR: 'South Korea',
+  KW: 'Kuwait',
+  KZ: 'Kazakhstan',
+  LA: 'Laos',
+  LB: 'Lebanon',
+  LC: 'Saint Lucia',
+  LK: 'Sri Lanka',
+  LR: 'Liberia',
+  LS: 'Lesotho',
+  LT: 'Lithuania',
+  LU: 'Luxembourg',
+  LV: 'Latvia',
+  LY: 'Libya',
+  MA: 'Morocco',
+  MC: 'Monaco',
+  MD: 'Moldova',
+  ME: 'Montenegro',
+  MG: 'Madagascar',
+  MK: 'North Macedonia',
+  ML: 'Mali',
+  MM: 'Myanmar',
+  MN: 'Mongolia',
+  MO: 'Macao',
+  MR: 'Mauritania',
+  MT: 'Malta',
+  MU: 'Mauritius',
+  MV: 'Maldives',
+  MW: 'Malawi',
+  MX: 'Mexico',
+  MY: 'Malaysia',
+  MZ: 'Mozambique',
+  NA: 'Namibia',
+  NE: 'Niger',
+  NG: 'Nigeria',
+  NI: 'Nicaragua',
+  NL: 'Netherlands',
+  NO: 'Norway',
+  NP: 'Nepal',
+  NZ: 'New Zealand',
+  OM: 'Oman',
+  PA: 'Panama',
+  PE: 'Peru',
+  PG: 'Papua New Guinea',
+  PH: 'Philippines',
+  PK: 'Pakistan',
+  PL: 'Poland',
+  PR: 'Puerto Rico',
+  PS: 'Palestine',
+  PT: 'Portugal',
+  PY: 'Paraguay',
+  QA: 'Qatar',
+  RO: 'Romania',
+  RS: 'Serbia',
+  RU: 'Russia',
+  RW: 'Rwanda',
+  SA: 'Saudi Arabia',
+  SC: 'Seychelles',
+  SD: 'Sudan',
+  SE: 'Sweden',
+  SG: 'Singapore',
+  SI: 'Slovenia',
+  SK: 'Slovakia',
+  SL: 'Sierra Leone',
+  SN: 'Senegal',
+  SO: 'Somalia',
+  SR: 'Suriname',
+  SV: 'El Salvador',
+  SY: 'Syria',
+  SZ: 'Eswatini',
+  TD: 'Chad',
+  TG: 'Togo',
+  TH: 'Thailand',
+  TJ: 'Tajikistan',
+  TN: 'Tunisia',
+  TR: 'Turkey',
+  TT: 'Trinidad and Tobago',
+  TW: 'Taiwan',
+  TZ: 'Tanzania',
+  UA: 'Ukraine',
+  UG: 'Uganda',
+  US: 'United States',
+  UY: 'Uruguay',
+  UZ: 'Uzbekistan',
+  VE: 'Venezuela',
+  VN: 'Vietnam',
+  YE: 'Yemen',
+  ZA: 'South Africa',
+  ZM: 'Zambia',
+  ZW: 'Zimbabwe',
+};
 
 function json(data, status, headers) {
   return Response.json(data, { status, headers });
@@ -70,13 +251,34 @@ function normalizeSession(row) {
 }
 
 function normalizeMessage(row) {
+  const countryCode = row.country_code || '';
+  const countryName = row.country_name || '';
   return {
     id: row.id,
     sessionId: row.session_id,
     generatedName: row.generated_name,
+    countryCode,
+    countryName,
+    countryFlag: flagForCountryCode(countryCode),
     message: row.message,
     createdAt: row.created_at,
   };
+}
+
+function flagForCountryCode(countryCode) {
+  const code = String(countryCode || '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code)) return '';
+  return [...code].map((char) => String.fromCodePoint(127397 + char.charCodeAt(0))).join('');
+}
+
+function getCountry(request) {
+  const cfCountry = request.cf && typeof request.cf.country === 'string' ? request.cf.country : '';
+  const headerCountry = request.headers.get('CF-IPCountry') || '';
+  const code = (cfCountry || headerCountry).trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(code) || code === 'XX' || code === 'T1') {
+    return { code: '', name: '' };
+  }
+  return { code, name: COUNTRY_NAMES[code] || code };
 }
 
 async function getOrCreateSession(env) {
@@ -168,11 +370,21 @@ async function handleMessages(request, env, headers) {
     MAX_LIMIT,
   );
 
-  const select = 'id,session_id,generated_name,message,created_at';
-  const rows = await supabaseRequest(
-    env,
-    `maintenance_messages?session_id=eq.${encodeFilter(sessionId)}&status=eq.visible&select=${select}&order=created_at.desc&limit=${limit}`,
-  );
+  let rows;
+  try {
+    const select = 'id,session_id,generated_name,country_code,country_name,message,created_at';
+    rows = await supabaseRequest(
+      env,
+      `maintenance_messages?session_id=eq.${encodeFilter(sessionId)}&status=eq.visible&select=${select}&order=created_at.desc&limit=${limit}`,
+    );
+  } catch (error) {
+    if (!(error instanceof SupabaseRestError)) throw error;
+    const select = 'id,session_id,generated_name,message,created_at';
+    rows = await supabaseRequest(
+      env,
+      `maintenance_messages?session_id=eq.${encodeFilter(sessionId)}&status=eq.visible&select=${select}&order=created_at.desc&limit=${limit}`,
+    );
+  }
 
   const messages = (Array.isArray(rows) ? rows : []).map(normalizeMessage).reverse();
   return json({ success: true, messages }, 200, headers);
@@ -208,21 +420,38 @@ async function handlePostMessage(request, env, ctx, headers) {
     return json({ error: 'rate_limited' }, 429, headers);
   }
 
-  const inserted = await supabaseRequest(env, 'maintenance_messages', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: [
-      {
-        id: crypto.randomUUID(),
-        session_id: sessionId,
-        generated_name: generatedName,
-        message: messageText,
-        status: 'visible',
-      },
-    ],
-  });
+  const country = getCountry(request);
+  const row = {
+    id: crypto.randomUUID(),
+    session_id: sessionId,
+    generated_name: generatedName,
+    country_code: country.code,
+    country_name: country.name,
+    message: messageText,
+    status: 'visible',
+  };
+
+  let inserted;
+  try {
+    inserted = await supabaseRequest(env, 'maintenance_messages', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: [row],
+    });
+  } catch (error) {
+    if (!(error instanceof SupabaseRestError)) throw error;
+    const { country_code: countryCode, country_name: countryName, ...fallbackRow } = row;
+    inserted = await supabaseRequest(env, 'maintenance_messages', {
+      method: 'POST',
+      headers: { Prefer: 'return=representation' },
+      body: [fallbackRow],
+    });
+  }
 
   const message = normalizeMessage(inserted[0]);
+  message.countryCode = message.countryCode || country.code;
+  message.countryName = message.countryName || country.name;
+  message.countryFlag = message.countryFlag || flagForCountryCode(country.code);
   const room = getRoomStub(env, sessionId);
   if (room) {
     ctx.waitUntil(
