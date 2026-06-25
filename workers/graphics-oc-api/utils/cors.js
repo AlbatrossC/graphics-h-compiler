@@ -21,7 +21,7 @@ export function corsHeaders(request) {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie, Upgrade',
     'Access-Control-Allow-Credentials': allowCredentials,
     Vary: 'Origin',
   };

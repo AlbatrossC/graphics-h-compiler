@@ -16,14 +16,14 @@
         html,
         body {
             height: 100%;
-            overflow: hidden;
+            min-height: 100%;
             background: #1a1a1a;
             color: #c8c8c8;
             font-family: 'Segoe UI', Arial, sans-serif;
         }
 
         .page {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -86,11 +86,83 @@
             color: #c8c8c8;
         }
 
+        .chat-panel {
+            width: 700px;
+            max-width: 100%;
+            border: 1px solid #2e4d2e;
+            background: #141414;
+        }
+
+        .chat-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            border-bottom: 1px solid #263c26;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .chat-name {
+            color: #4caf50;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            font-size: 11px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .messages {
+            height: 210px;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #101010;
+        }
+
+        .message {
+            display: grid;
+            gap: 3px;
+            font-size: 12px;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        .message-meta {
+            display: flex;
+            gap: 7px;
+            align-items: center;
+            color: #666;
+            font-size: 11px;
+        }
+
+        .message-name {
+            color: #9bd89b;
+            font-weight: 600;
+        }
+
+        .message-text {
+            color: #c8c8c8;
+        }
+
+        .empty-chat {
+            margin: auto;
+            color: #555;
+            font-size: 12px;
+        }
+
         .contact-row {
             display: flex;
             gap: 7px;
             width: 700px;
             max-width: 100%;
+            padding: 8px;
+            border-top: 1px solid #263c26;
         }
 
         input[type="text"] {
@@ -128,6 +200,12 @@
             background: #3a8a3a;
         }
 
+        button:disabled {
+            background: #345034;
+            color: #88a088;
+            cursor: wait;
+        }
+
         .toast {
             font-size: 11px;
             color: #4caf50;
@@ -158,9 +236,18 @@
             <strong>If it is needed urgently</strong> then please contact me and I will postpone the maintenance.
         </p>
 
-        <div class="contact-row">
-            <input type="text" id="msg" placeholder="Your name / reason / contact info …" autocomplete="off" />
-            <button onclick="send()">Send Message</button>
+        <div class="chat-panel">
+            <div class="chat-head">
+                <span id="chatName">Send a message to join the maintenance chat.</span>
+                <span class="chat-status" id="chatStatus">Connecting...</span>
+            </div>
+            <div class="messages" id="messages">
+                <div class="empty-chat" id="emptyChat">No messages yet.</div>
+            </div>
+            <div class="contact-row">
+                <input type="text" id="msg" placeholder="Type your message..." maxlength="500" autocomplete="off" />
+                <button id="sendBtn" onclick="send()">Send</button>
+            </div>
         </div>
 
         <div class="toast" id="toast"></div>
@@ -169,43 +256,223 @@
 
     </div>
     <script>
+        const API_BASE = '{{ PUBLIC_API_URL }}'.replace(/\/+$/, '');
+        const NAME_KEY = 'maintenanceChatName';
+        const animals = [
+            'Foxy', 'Cow', 'Tiger', 'Panda', 'Eagle', 'Koala', 'Otter', 'Falcon',
+            'Lion', 'Mongoose', 'Rabbit', 'Wolf', 'Dolphin', 'Bear', 'Deer', 'Sparrow'
+        ];
+        const colors = [
+            'red', 'blue', 'green', 'yellow', 'purple', 'orange', 'teal', 'pink',
+            'silver', 'gold', 'cyan', 'lime', 'coral', 'violet', 'white', 'black'
+        ];
+
+        let session = null;
+        let socket = null;
+        let reconnectTimer = null;
+        let reconnectDelay = 1000;
+        const renderedIds = new Set();
+
+        function apiUrl(path) {
+            return `${API_BASE}${path}`;
+        }
+
+        function wsUrl(path) {
+            const url = new URL(apiUrl(path));
+            url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+            return url.toString();
+        }
+
+        function generateName() {
+            const animal = animals[Math.floor(Math.random() * animals.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            return `${animal}-${color}`;
+        }
+
+        function getStoredName() {
+            return localStorage.getItem(NAME_KEY) || '';
+        }
+
+        function ensureName() {
+            const existing = getStoredName();
+            if (existing) return existing;
+            const generated = generateName();
+            localStorage.setItem(NAME_KEY, generated);
+            updateName();
+            return generated;
+        }
+
+        function updateName() {
+            const name = getStoredName();
+            const el = document.getElementById('chatName');
+            if (name) {
+                el.innerHTML = `You are <span class="chat-name">${escapeHtml(name)}</span>`;
+            } else {
+                el.textContent = 'Send a message to join the maintenance chat.';
+            }
+        }
+
+        function setStatus(text, color) {
+            const el = document.getElementById('chatStatus');
+            el.textContent = text;
+            el.style.color = color || '#666';
+        }
+
+        function setToast(text, color) {
+            const toast = document.getElementById('toast');
+            toast.style.color = color || '#4caf50';
+            toast.textContent = text;
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, ch => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[ch]));
+        }
+
+        function formatTime(value) {
+            try {
+                return new Intl.DateTimeFormat('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(new Date(value));
+            } catch {
+                return '';
+            }
+        }
+
+        function renderMessage(message) {
+            if (!message || renderedIds.has(message.id)) return;
+            renderedIds.add(message.id);
+
+            const empty = document.getElementById('emptyChat');
+            if (empty) empty.remove();
+
+            const wrap = document.createElement('div');
+            wrap.className = 'message';
+            wrap.innerHTML = `
+                <div class="message-meta">
+                    <span class="message-name">${escapeHtml(message.generatedName)}</span>
+                    <span>${escapeHtml(formatTime(message.createdAt))}</span>
+                </div>
+                <div class="message-text">${escapeHtml(message.message)}</div>
+            `;
+
+            const list = document.getElementById('messages');
+            list.appendChild(wrap);
+            list.scrollTop = list.scrollHeight;
+        }
+
+        async function loadSession() {
+            const res = await fetch(apiUrl('/api/maintenance/chat/session'));
+            if (!res.ok) throw new Error('session failed');
+            const data = await res.json();
+            session = data.session;
+        }
+
+        async function loadMessages() {
+            const res = await fetch(apiUrl(`/api/maintenance/chat/messages?session=${encodeURIComponent(session.id)}&limit=50`));
+            if (!res.ok) throw new Error('messages failed');
+            const data = await res.json();
+            (data.messages || []).forEach(renderMessage);
+        }
+
+        function connectSocket() {
+            if (!session) return;
+            clearTimeout(reconnectTimer);
+            setStatus('Connecting...', '#888');
+
+            socket = new WebSocket(wsUrl(`/api/maintenance/chat/ws?session=${encodeURIComponent(session.id)}`));
+            socket.addEventListener('open', () => {
+                reconnectDelay = 1000;
+                setStatus('Live', '#4caf50');
+            });
+            socket.addEventListener('message', event => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'message') {
+                        renderMessage(data.message);
+                    }
+                } catch {}
+            });
+            socket.addEventListener('close', () => {
+                setStatus('Reconnecting...', '#e0a860');
+                reconnectTimer = setTimeout(connectSocket, reconnectDelay);
+                reconnectDelay = Math.min(reconnectDelay * 2, 10000);
+            });
+            socket.addEventListener('error', () => {
+                setStatus('Offline', '#e07070');
+                socket.close();
+            });
+        }
+
         async function send() {
             const inp = document.getElementById('msg');
-            const toast = document.getElementById('toast');
+            const btn = document.getElementById('sendBtn');
             const message = inp.value.trim();
             if (!message) {
-                toast.style.color = '#e07070';
-                toast.textContent = 'Please enter a message.';
+                setToast('Please enter a message.', '#e07070');
+                return;
+            }
+            if (!session) {
+                setToast('Chat is still loading. Try again.', '#e07070');
                 return;
             }
 
-            toast.style.color = '#888';
-            toast.textContent = 'Sending...';
+            const generatedName = ensureName();
+            btn.disabled = true;
+            setToast('Sending...', '#888');
 
             try {
-                const res = await fetch('/api/maintenance/message', {
+                const res = await fetch(apiUrl('/api/maintenance/chat/messages'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message })
+                    body: JSON.stringify({
+                        sessionId: session.id,
+                        generatedName,
+                        message
+                    })
                 });
 
                 if (res.ok) {
-                    toast.style.color = '#4caf50';
-                    toast.textContent = '✔ Message received! I\'ll get back to you shortly.';
+                    const data = await res.json();
+                    if (!socket || socket.readyState !== WebSocket.OPEN) {
+                        renderMessage(data.message);
+                    }
+                    setToast('Message sent.', '#4caf50');
                     inp.value = '';
                 } else {
                     throw new Error('Failed');
                 }
             } catch (e) {
-                toast.style.color = '#e07070';
-                toast.textContent = 'Could not send message. Try again.';
+                setToast('Could not send message. Try again.', '#e07070');
+            } finally {
+                btn.disabled = false;
             }
 
-            setTimeout(() => toast.textContent = '', 5000);
+            setTimeout(() => setToast('', '#4caf50'), 5000);
         }
+
+        async function initChat() {
+            updateName();
+            try {
+                await loadSession();
+                await loadMessages();
+                connectSocket();
+            } catch (error) {
+                setStatus('Unavailable', '#e07070');
+                setToast('Chat could not be loaded right now.', '#e07070');
+            }
+        }
+
         document.getElementById('msg').addEventListener('keydown', e => {
             if (e.key === 'Enter') send();
         });
+        initChat();
     </script>
 </body>
 

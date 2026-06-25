@@ -17,8 +17,28 @@
     }
   ],
 
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MAINTENANCE_CHAT_ROOM",
+        "class_name": "MaintenanceChatRoom"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["MaintenanceChatRoom"]
+    }
+  ],
+
   // Secrets — set via CLI, never in this file:
   //   npx wrangler secret put DISCORD_WEBHOOK_URL
   //   npx wrangler secret put GOOGLE_CLIENT_ID
+  //   npx wrangler secret put SUPABASE_REST_CONFIG
+  //
+  // Optional vars:
+  //   MAINTENANCE_SESSION_SLUG: e.g. "2026-06-25-thursday"
   "vars": {}
 }

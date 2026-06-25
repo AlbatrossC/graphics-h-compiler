@@ -6,16 +6,19 @@
  *  - /api/files, /api/file/*, /api/folder/* → proxy to graphics-oc-files worker
  *  - /api/contact, /api/feedback, /api/maintenance/message → Discord webhook
  *  - /api/maintenance/status → KV-based maintenance toggle
+ *  - /api/maintenance/chat/* → Supabase-backed maintenance chat
  */
 
 import { handleAuthRoutes } from './routes/auth.js';
 import { handleFilesRoutes } from './routes/files.js';
 import { handleContactRoutes } from './routes/contact.js';
 import { handleMaintenanceRoutes } from './routes/maintenance.js';
+import { handleMaintenanceChatRoutes } from './routes/maintenance-chat.js';
+export { MaintenanceChatRoom } from './routes/maintenance-chat-room.js';
 import { corsHeaders, corsPreflightResponse } from './utils/cors.js';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const method = request.method.toUpperCase();
     const pathname = url.pathname;
@@ -58,6 +61,11 @@ export default {
       // ── Maintenance status ──────────────────────────────────────────
       if (pathname === '/api/maintenance/status') {
         return await handleMaintenanceRoutes(request, env, method, headers);
+      }
+
+      // ── Maintenance chat ───────────────────────────────────────────
+      if (pathname.startsWith('/api/maintenance/chat/')) {
+        return await handleMaintenanceChatRoutes(request, env, ctx, method, pathname, headers);
       }
 
       return Response.json(
