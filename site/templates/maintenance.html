@@ -530,7 +530,7 @@
             const fallbackFlag = message.countryFlag || flagForCountryCode(message.countryCode);
             const countryName = message.countryName || message.countryCode || '';
             const flagHtml = flagSrc
-                ? `<img class="message-flag" src="${flagSrc}" alt="${escapeHtml(countryName)}" title="${escapeHtml(countryName)}" loading="lazy" referrerpolicy="no-referrer">`
+                ? `<img class="message-flag" src="${flagSrc}" alt="${escapeHtml(countryName)}" title="${escapeHtml(countryName)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
                 : fallbackFlag
                     ? `<span title="${escapeHtml(countryName)}" aria-label="${escapeHtml(countryName)}">${fallbackFlag}</span>`
                 : '';
@@ -548,17 +548,11 @@
             list.scrollTop = list.scrollHeight;
         }
 
-        async function loadSession() {
-            const res = await fetch(apiUrl('/api/maintenance/chat/session'));
-            if (!res.ok) throw new Error('session failed');
+        async function loadBootstrap() {
+            const res = await fetch(apiUrl('/api/maintenance/chat/bootstrap?limit=30'));
+            if (!res.ok) throw new Error('bootstrap failed');
             const data = await res.json();
             session = data.session;
-        }
-
-        async function loadMessages() {
-            const res = await fetch(apiUrl(`/api/maintenance/chat/messages?session=${encodeURIComponent(session.id)}&limit=50`));
-            if (!res.ok) throw new Error('messages failed');
-            const data = await res.json();
             (data.messages || []).forEach(renderMessage);
         }
 
@@ -641,8 +635,7 @@
         async function initChat() {
             updateName();
             try {
-                await loadSession();
-                await loadMessages();
+                await loadBootstrap();
                 connectSocket();
             } catch (error) {
                 setStatus('Unavailable', '#e07070');

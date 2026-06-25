@@ -7,7 +7,7 @@ import { SupabaseRestError, supabaseRequest } from '../utils/supabase-rest.js';
 
 const MAX_MESSAGE_LENGTH = 500;
 const MAX_NAME_LENGTH = 40;
-const DEFAULT_LIMIT = 50;
+const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
 const NAME_PATTERN = /^[A-Za-z][A-Za-z-]{1,38}[a-z]$/;
 const COUNTRY_NAMES = {
@@ -211,16 +211,20 @@ function getConfiguredSessionSlug(env) {
     .replace(/^-+|-+$/g, '');
 }
 
+function cleanSessionSlug(value) {
+  return cleanString(value || '', 80)
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 async function getSessionSlug(env) {
   const configured = getConfiguredSessionSlug(env);
   if (configured) return configured;
 
   if (env.MAINTENANCE_KV) {
     const kvSlug = await env.MAINTENANCE_KV.get('maintenance_session_slug');
-    const cleaned = cleanString(kvSlug || '', 80)
-      .toLowerCase()
-      .replace(/[^a-z0-9-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const cleaned = cleanSessionSlug(kvSlug);
     if (cleaned) return cleaned;
   }
 
@@ -283,6 +287,18 @@ function getCountry(request) {
 
 async function getOrCreateSession(env) {
   const slug = await getSessionSlug(env);
+  return await getOrCreateSessionBySlug(env, slug);
+}
+
+async function getOrCreateSessionBySlug(env, slug) {
+  const cacheKey = `maintenance_session:${slug}`;
+  if (env.MAINTENANCE_KV) {
+    const cached = await env.MAINTENANCE_KV.get(cacheKey, 'json');
+    if (cached && cached.id && cached.slug === slug) {
+      return cached;
+    }
+  }
+
   const select = 'id,slug,label,started_at,ended_at,is_active';
   const rows = await supabaseRequest(
     env,
@@ -290,7 +306,11 @@ async function getOrCreateSession(env) {
   );
 
   if (Array.isArray(rows) && rows.length > 0) {
-    return normalizeSession(rows[0]);
+    const session = normalizeSession(rows[0]);
+    if (env.MAINTENANCE_KV) {
+      await env.MAINTENANCE_KV.put(cacheKey, JSON.stringify(session));
+    }
+    return session;
   }
 
   const id = crypto.randomUUID();
@@ -307,7 +327,11 @@ async function getOrCreateSession(env) {
     ],
   });
 
-  return normalizeSession(inserted[0]);
+  const session = normalizeSession(inserted[0]);
+  if (env.MAINTENANCE_KV) {
+    await env.MAINTENANCE_KV.put(cacheKey, JSON.stringify(session));
+  }
+  return session;
 }
 
 function getRoomStub(env, sessionId) {
@@ -358,18 +382,14 @@ async function handleSession(env, headers) {
   return json({ success: true, session }, 200, headers);
 }
 
-async function handleMessages(request, env, headers) {
-  const url = new URL(request.url);
-  const sessionId = cleanString(url.searchParams.get('session') || '', 80);
-  if (!sessionId) {
-    return json({ error: 'session_required' }, 400, headers);
-  }
-
-  const limit = Math.min(
+function getLimitFromUrl(url) {
+  return Math.min(
     Math.max(Number(url.searchParams.get('limit')) || DEFAULT_LIMIT, 1),
     MAX_LIMIT,
   );
+}
 
+async function getMessagesForSession(env, sessionId, limit) {
   let rows;
   try {
     const select = 'id,session_id,generated_name,country_code,country_name,message,created_at';
@@ -386,8 +406,54 @@ async function handleMessages(request, env, headers) {
     );
   }
 
-  const messages = (Array.isArray(rows) ? rows : []).map(normalizeMessage).reverse();
+  return (Array.isArray(rows) ? rows : []).map(normalizeMessage).reverse();
+}
+
+async function handleBootstrap(request, env, headers) {
+  const url = new URL(request.url);
+  const session = await getOrCreateSession(env);
+  const messages = await getMessagesForSession(env, session.id, getLimitFromUrl(url));
+  return json({ success: true, session, messages }, 200, headers);
+}
+
+async function handleMessages(request, env, headers) {
+  const url = new URL(request.url);
+  const sessionId = cleanString(url.searchParams.get('session') || '', 80);
+  if (!sessionId) {
+    return json({ error: 'session_required' }, 400, headers);
+  }
+
+  const messages = await getMessagesForSession(env, sessionId, getLimitFromUrl(url));
   return json({ success: true, messages }, 200, headers);
+}
+
+async function handleNewSession(request, env, headers) {
+  if (!env.MAINTENANCE_ADMIN_TOKEN) {
+    return json({ error: 'admin_token_not_configured' }, 500, headers);
+  }
+
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (token !== env.MAINTENANCE_ADMIN_TOKEN) {
+    return json({ error: 'unauthorized' }, 401, headers);
+  }
+
+  let data = {};
+  try {
+    data = await request.json();
+  } catch {
+    data = {};
+  }
+
+  const requestedSlug = cleanSessionSlug(data.slug);
+  const slug = requestedSlug || `maintenance-${new Date().toISOString().replace(/[:.]/g, '-').toLowerCase()}`;
+  if (!env.MAINTENANCE_KV) {
+    return json({ error: 'maintenance_kv_not_configured' }, 500, headers);
+  }
+
+  await env.MAINTENANCE_KV.put('maintenance_session_slug', slug);
+  const session = await getOrCreateSessionBySlug(env, slug);
+  return json({ success: true, session }, 200, headers);
 }
 
 async function handlePostMessage(request, env, ctx, headers) {
@@ -487,6 +553,10 @@ async function handleWebSocket(request, env, headers) {
 
 export async function handleMaintenanceChatRoutes(request, env, ctx, method, pathname, headers) {
   try {
+    if (method === 'GET' && pathname === '/api/maintenance/chat/bootstrap') {
+      return await handleBootstrap(request, env, headers);
+    }
+
     if (method === 'GET' && pathname === '/api/maintenance/chat/session') {
       return await handleSession(env, headers);
     }
@@ -501,6 +571,10 @@ export async function handleMaintenanceChatRoutes(request, env, ctx, method, pat
 
     if (method === 'GET' && pathname === '/api/maintenance/chat/ws') {
       return await handleWebSocket(request, env, headers);
+    }
+
+    if (method === 'POST' && pathname === '/api/maintenance/chat/admin/session') {
+      return await handleNewSession(request, env, headers);
     }
 
     return json({ error: 'not_found' }, 404, headers);

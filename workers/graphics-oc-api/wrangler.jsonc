@@ -37,6 +37,7 @@
   //   npx wrangler secret put DISCORD_WEBHOOK_URL
   //   npx wrangler secret put GOOGLE_CLIENT_ID
   //   npx wrangler secret put SUPABASE_REST_CONFIG
+  //   npx wrangler secret put MAINTENANCE_ADMIN_TOKEN
   //
   // Optional vars:
   //   MAINTENANCE_SESSION_SLUG: e.g. "2026-06-25-thursday"
