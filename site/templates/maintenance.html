@@ -615,6 +615,13 @@
 
                 if (res.ok) {
                     const data = await res.json();
+                    if (data.message && data.message.sessionId && data.message.sessionId !== session.id) {
+                        session.id = data.message.sessionId;
+                        renderedIds.clear();
+                        document.getElementById('messages').innerHTML = '<div class="empty-chat" id="emptyChat">No messages yet.</div>';
+                        if (socket) socket.close();
+                        connectSocket();
+                    }
                     if (!socket || socket.readyState !== WebSocket.OPEN) {
                         renderMessage(data.message);
                     }

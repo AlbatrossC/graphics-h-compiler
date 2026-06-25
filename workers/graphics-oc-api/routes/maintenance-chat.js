@@ -285,14 +285,14 @@ function getCountry(request) {
   return { code, name: COUNTRY_NAMES[code] || code };
 }
 
-async function getOrCreateSession(env) {
+async function getOrCreateSession(env, options = {}) {
   const slug = await getSessionSlug(env);
-  return await getOrCreateSessionBySlug(env, slug);
+  return await getOrCreateSessionBySlug(env, slug, options);
 }
 
-async function getOrCreateSessionBySlug(env, slug) {
+async function getOrCreateSessionBySlug(env, slug, options = {}) {
   const cacheKey = `maintenance_session:${slug}`;
-  if (env.MAINTENANCE_KV) {
+  if (env.MAINTENANCE_KV && !options.forceRefresh) {
     const cached = await env.MAINTENANCE_KV.get(cacheKey, 'json');
     if (cached && cached.id && cached.slug === slug) {
       return cached;
@@ -308,7 +308,7 @@ async function getOrCreateSessionBySlug(env, slug) {
   if (Array.isArray(rows) && rows.length > 0) {
     const session = normalizeSession(rows[0]);
     if (env.MAINTENANCE_KV) {
-      await env.MAINTENANCE_KV.put(cacheKey, JSON.stringify(session));
+      await env.MAINTENANCE_KV.put(cacheKey, JSON.stringify(session), { expirationTtl: 300 });
     }
     return session;
   }
@@ -329,9 +329,14 @@ async function getOrCreateSessionBySlug(env, slug) {
 
   const session = normalizeSession(inserted[0]);
   if (env.MAINTENANCE_KV) {
-    await env.MAINTENANCE_KV.put(cacheKey, JSON.stringify(session));
+    await env.MAINTENANCE_KV.put(cacheKey, JSON.stringify(session), { expirationTtl: 300 });
   }
   return session;
+}
+
+async function refreshCurrentSession(env) {
+  const slug = await getSessionSlug(env);
+  return await getOrCreateSessionBySlug(env, slug, { forceRefresh: true });
 }
 
 function getRoomStub(env, sessionId) {
@@ -497,21 +502,38 @@ async function handlePostMessage(request, env, ctx, headers) {
     status: 'visible',
   };
 
-  let inserted;
-  try {
-    inserted = await supabaseRequest(env, 'maintenance_messages', {
+  async function insertMessage(messageRow) {
+    return await supabaseRequest(env, 'maintenance_messages', {
       method: 'POST',
       headers: { Prefer: 'return=representation' },
-      body: [row],
+      body: [messageRow],
     });
+  }
+
+  let inserted;
+  try {
+    inserted = await insertMessage(row);
   } catch (error) {
     if (!(error instanceof SupabaseRestError)) throw error;
     const { country_code: countryCode, country_name: countryName, ...fallbackRow } = row;
-    inserted = await supabaseRequest(env, 'maintenance_messages', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: [fallbackRow],
-    });
+    try {
+      inserted = await insertMessage(fallbackRow);
+    } catch (retryError) {
+      if (!(retryError instanceof SupabaseRestError)) throw retryError;
+      const refreshedSession = await refreshCurrentSession(env);
+      const repairedRow = {
+        ...row,
+        id: crypto.randomUUID(),
+        session_id: refreshedSession.id,
+      };
+      try {
+        inserted = await insertMessage(repairedRow);
+      } catch (countryRetryError) {
+        if (!(countryRetryError instanceof SupabaseRestError)) throw countryRetryError;
+        const { country_code: repairedCountryCode, country_name: repairedCountryName, ...repairedFallbackRow } = repairedRow;
+        inserted = await insertMessage(repairedFallbackRow);
+      }
+    }
   }
 
   const message = normalizeMessage(inserted[0]);
