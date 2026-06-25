@@ -261,17 +261,7 @@ def render_template_page(env: Environment, output_path: str, template_name: str,
         return message
 
 
-def render_site(compiler_assets: dict) -> None:
-    """Render all pages and copy all assets into dist/."""
-
-    public_assets_url = get_public_assets_url()
-    public_api_url = get_public_api_url()
-    docs_categories = load_docs_categories()
-
-    env = create_jinja_env()
-    failures: list[str] = []
-
-    # Clean dist
+def clean_dist() -> None:
     if DIST_DIR.exists():
         try:
             shutil.rmtree(DIST_DIR)
@@ -289,6 +279,59 @@ def render_site(compiler_assets: dict) -> None:
                     pass
     else:
         DIST_DIR.mkdir(parents=True)
+
+
+def render_maintenance_site() -> None:
+    """Render only the maintenance page into dist/ and route all traffic to it."""
+
+    clean_dist()
+
+    print('Rendering maintenance-only site...')
+
+    env = create_jinja_env()
+    ctx = {
+        'PUBLIC_ASSETS_URL': get_public_assets_url(),
+        'PUBLIC_API_URL': get_public_api_url(),
+        'landing_css': '',
+        'maintenance_date': get_env('MAINTENANCE_DATE', '25 Feb 2026 - 2:00 PM IST'),
+    }
+
+    failures = [
+        failure
+        for failure in (
+            render_template_page(env, 'maintenance.html', 'maintenance.html', ctx),
+            render_template_page(env, 'index.html', 'maintenance.html', ctx),
+        )
+        if failure
+    ]
+    if failures:
+        raise RenderError('Maintenance render failed:\n' + '\n'.join(f'  - {failure}' for failure in failures))
+
+    js_src = STATIC_DIR / 'js' / 'analytics.js'
+    if js_src.exists():
+        js_dest = DIST_DIR / 'static' / 'js'
+        js_dest.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(js_src, js_dest / 'analytics.js')
+        print('  [ok] static/js/analytics.js')
+
+    write_page('/* /maintenance.html 200\n', '_redirects')
+    print('  [ok] _redirects')
+
+    page_count = sum(1 for _ in DIST_DIR.rglob('*.html'))
+    print(f'\nDone! maintenance mode rendered {page_count} HTML pages to dist/')
+
+
+def render_site(compiler_assets: dict) -> None:
+    """Render all pages and copy all assets into dist/."""
+
+    public_assets_url = get_public_assets_url()
+    public_api_url = get_public_api_url()
+    docs_categories = load_docs_categories()
+
+    env = create_jinja_env()
+    failures: list[str] = []
+
+    clean_dist()
 
     print('Rendering static pages...')
 

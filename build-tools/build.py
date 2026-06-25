@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -29,6 +30,7 @@ LITE_YOUTUBE_DIR = STATIC_DIR / "vendor" / "lite-youtube-embed"
 LITE_YOUTUBE_CSS = LITE_YOUTUBE_DIR / "lite-yt-embed.css"
 LITE_YOUTUBE_JS = LITE_YOUTUBE_DIR / "lite-yt-embed.js"
 LITE_YOUTUBE_JS_MIN = LITE_YOUTUBE_DIR / "lite-yt-embed.min.js"
+ENV_PATH = ROOT / ".env"
 
 
 CSS_PRIORITY = [
@@ -101,6 +103,30 @@ def js_source_comment(relative_path: str) -> str:
 
 def content_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+
+
+def load_dotenv(path: Path = ENV_PATH) -> None:
+    if not path.exists():
+        return
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def maintenance_mode_enabled() -> bool:
+    return env_flag("MAINTENANCE_MODE") or env_flag("MAINTAINCE_MODE")
 
 
 def write_hashed_asset(prefix: str, extension: str, content: str) -> str:
@@ -219,6 +245,13 @@ def render_dist(manifest: dict[str, object]) -> None:
 
 
 def main() -> int:
+    load_dotenv()
+
+    if maintenance_mode_enabled():
+        print("MAINTENANCE_MODE=true")
+        render.render_maintenance_site()
+        return 0
+
     manifest = build_assets()
     compiler = manifest["compiler"]
 
