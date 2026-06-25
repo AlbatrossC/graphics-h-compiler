@@ -314,7 +314,7 @@ def render_maintenance_site() -> None:
         shutil.copy2(js_src, js_dest / 'analytics.js')
         print('  [ok] static/js/analytics.js')
 
-    write_page('/* /maintenance.html 200\n', '_redirects')
+    write_page('/* / 200\n', '_redirects')
     print('  [ok] _redirects')
 
     page_count = sum(1 for _ in DIST_DIR.rglob('*.html'))
