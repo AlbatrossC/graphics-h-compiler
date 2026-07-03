@@ -66,4 +66,64 @@ export const handleFolderRoutes = {
 
     return jsonResponse({ success: true, folder_id: folderId }, 200, corsHeaders);
   },
+
+  async renameFolder(request, env, user, corsHeaders) {
+    const db = env.graphicsh_oc_db;
+    const body = await readJsonBody(request);
+    const folderId = typeof body.folder_id === 'string' ? body.folder_id.trim() : '';
+    const newFolderName = validateFolderName(body.new_folder_name);
+
+    if (!folderId) {
+      return errorResponse('bad_request', 'folder_id is required', 400, corsHeaders);
+    }
+
+    await ensureFolderOwnership(db, user.user_id, folderId);
+
+    // Fetch the folder to see if the name actually changes
+    const folderRow = await db
+      .prepare('SELECT folder_name FROM folders WHERE id = ? AND user_id = ? LIMIT 1')
+      .bind(folderId, user.user_id)
+      .first();
+
+    if (!folderRow) {
+      return errorResponse('not_found', 'Folder not found', 404, corsHeaders);
+    }
+
+    if (folderRow.folder_name === newFolderName) {
+      return jsonResponse(
+        {
+          success: true,
+          folder_id: folderId,
+          old_folder_name: folderRow.folder_name,
+          new_folder_name: newFolderName,
+        },
+        200,
+        corsHeaders
+      );
+    }
+
+    try {
+      await db
+        .prepare('UPDATE folders SET folder_name = ? WHERE id = ? AND user_id = ?')
+        .bind(newFolderName, folderId, user.user_id)
+        .run();
+    } catch (error) {
+      const parsed = parseSqliteError(error);
+      if (parsed?.isUniqueConstraint) {
+        return errorResponse('conflict', 'Folder with this name already exists', 409, corsHeaders);
+      }
+      throw error;
+    }
+
+    return jsonResponse(
+      {
+        success: true,
+        folder_id: folderId,
+        old_folder_name: folderRow.folder_name,
+        new_folder_name: newFolderName,
+      },
+      200,
+      corsHeaders
+    );
+  },
 };

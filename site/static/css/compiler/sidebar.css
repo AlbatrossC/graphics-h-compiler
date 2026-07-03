@@ -355,6 +355,11 @@
     color: var(--danger);
 }
 
+.folder-action-btn.folder-rename-btn:hover {
+    background: rgba(var(--color-rgb-primary), 0.1);
+    color: var(--primary);
+}
+
 .folder-action-btn svg {
     width: 13px;
     height: 13px;
@@ -499,6 +504,10 @@
 .file-action-btn:hover {
     background: var(--vscode-line-bg);
     color: var(--text-primary);
+}
+
+.file-action-btn.file-rename-btn:hover {
+    color: var(--primary);
 }
 
 .file-list-empty {

@@ -228,6 +228,72 @@ export const handleFilesRoutes = {
 
     return jsonResponse({ success: true, file_id: fileId }, 200, corsHeaders);
   },
+
+  async renameFile(request, env, user, corsHeaders) {
+    const db = env.graphicsh_oc_db;
+    const body = await readJsonBody(request);
+    const fileId = typeof body.file_id === 'string' ? body.file_id.trim() : '';
+    const newFileName = validateFileName(body.new_file_name);
+
+    if (!fileId) {
+      return errorResponse('bad_request', 'file_id is required', 400, corsHeaders);
+    }
+
+    const fileRow = await db
+      .prepare('SELECT id, file_name, folder_id FROM files WHERE id = ? AND user_id = ? LIMIT 1')
+      .bind(fileId, user.user_id)
+      .first();
+
+    if (!fileRow) {
+      return errorResponse('not_found', 'File not found', 404, corsHeaders);
+    }
+
+    if (fileRow.file_name === 'main.cpp') {
+      return errorResponse('forbidden', 'main.cpp cannot be renamed', 403, corsHeaders);
+    }
+
+    if (fileRow.file_name === newFileName) {
+      return jsonResponse(
+        {
+          success: true,
+          file_id: fileId,
+          old_file_name: fileRow.file_name,
+          new_file_name: newFileName,
+        },
+        200,
+        corsHeaders
+      );
+    }
+
+    const existingFile = await getFileByName(db, user.user_id, fileRow.folder_id, newFileName);
+    if (existingFile) {
+      return errorResponse('conflict', 'File with this name already exists in the folder', 409, corsHeaders);
+    }
+
+    try {
+      await db
+        .prepare('UPDATE files SET file_name = ? WHERE id = ? AND user_id = ?')
+        .bind(newFileName, fileId, user.user_id)
+        .run();
+    } catch (error) {
+      const parsed = parseSqliteError(error);
+      if (parsed?.isUniqueConstraint) {
+        return errorResponse('conflict', 'File with this name already exists in the folder', 409, corsHeaders);
+      }
+      throw error;
+    }
+
+    return jsonResponse(
+      {
+        success: true,
+        file_id: fileId,
+        old_file_name: fileRow.file_name,
+        new_file_name: newFileName,
+      },
+      200,
+      corsHeaders
+    );
+  },
 };
 
 export async function listUserFilesOnly(env, userId) {

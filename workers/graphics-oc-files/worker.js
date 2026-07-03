@@ -14,10 +14,14 @@ const ROUTES = {
     handleFilesRoutes.createFile(request, env, user, headers),
   'POST /api/file/save': (request, env, user, headers) =>
     handleFilesRoutes.saveFile(request, env, user, headers),
+  'PATCH /api/file/rename': (request, env, user, headers) =>
+    handleFilesRoutes.renameFile(request, env, user, headers),
   'DELETE /api/file/delete': (request, env, user, headers) =>
     handleFilesRoutes.deleteFile(request, env, user, headers),
   'POST /api/folder/create': (request, env, user, headers) =>
     handleFolderRoutes.createFolder(request, env, user, headers),
+  'PATCH /api/folder/rename': (request, env, user, headers) =>
+    handleFolderRoutes.renameFolder(request, env, user, headers),
   'DELETE /api/folder/delete': (request, env, user, headers) =>
     handleFolderRoutes.deleteFolder(request, env, user, headers),
 };
@@ -57,7 +61,7 @@ export default {
 
       const auth = await authenticateRequest(request, env);
 
-      if (auth.user.write_blocked === 1 && ['POST', 'PUT', 'DELETE'].includes(method)) {
+      if (auth.user.write_blocked === 1 && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
         return errorResponse('write_blocked', 'Write operations are blocked for this user', 403, corsHeaders);
       }
 

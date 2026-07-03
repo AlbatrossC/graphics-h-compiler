@@ -1350,6 +1350,127 @@ async function deleteFile(folder, filename) {
         hideProgress();
     }
 }
+async function renameFile(folder, filename) {
+    if (filename === 'main.cpp') {
+        alert('main.cpp is the primary file and cannot be renamed.');
+        return;
+    }
+    if (!isUserLoggedIn) return alert('Sign in to rename cloud files.');
+
+    const baseName = filename.includes('.') ? filename.substring(0, filename.lastIndexOf('.')) : filename;
+    const newName = prompt('Enter a new file name:', baseName);
+    if (newName === null) return; // Cancelled
+
+    let cleanName = (newName || '').trim();
+    if (!cleanName) return;
+    if (!cleanName.includes('.')) cleanName += '.cpp';
+    cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
+    if (!cleanName || cleanName === '.cpp') return alert('Invalid file name');
+    if (cleanName === filename) return; // No change
+
+    const key = fileKey(folder, filename);
+    const file = CLOUD_STATE.files.get(key);
+    if (!file) return;
+
+    // Check duplicate locally
+    if (remoteFileByName(file.folder_id, cleanName)) {
+        alert(`File "${cleanName}" already exists in this folder.`);
+        return;
+    }
+
+    showProgress();
+    try {
+        const { response, payload } = await fetchJson('/api/file/rename', {
+            method: 'PATCH',
+            body: JSON.stringify({ file_id: file.id, new_file_name: cleanName })
+        });
+        if (!response.ok) throw new Error(payload?.error || 'Failed to rename file');
+
+        const newKey = fileKey(folder, cleanName);
+        const content = file.content;
+
+        // Delete old key and set new key in CLOUD_STATE
+        CLOUD_STATE.files.delete(key);
+        CLOUD_STATE.files.set(newKey, { ...file, filename: cleanName });
+
+        // Update IndexedDB cache
+        await clearLocalDraft(folder, filename);
+        if (content !== null && content !== undefined) {
+            await FileDB.put({
+                id: newKey,
+                name: cleanName,
+                content,
+                lastSavedHash: file.content_hash || SAVE_STATE.lastSavedHash || null,
+                lastModified: Date.now(),
+                dirty: false,
+                folderId: file.folder_id,
+                folderKey: file.folder_key
+            });
+        }
+
+        // Update active file key if needed
+        if (CLOUD_STATE.activeFileKey === key) {
+            CLOUD_STATE.activeFileKey = newKey;
+        }
+
+        renderFileExplorer();
+        highlightActiveFile();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        hideProgress();
+    }
+}
+async function renameFolder(folder, currentName) {
+    const id = folderId(folder);
+    if (!id) return;
+    if (!isUserLoggedIn) return alert('Sign in to rename cloud folders.');
+
+    const newName = prompt('Enter a new folder name:', currentName);
+    if (newName === null) return; // Cancelled
+
+    const cleanName = (newName || '').trim();
+    if (!cleanName) return;
+    if (cleanName.length > 100 || cleanName.includes('/') || cleanName.includes('\\')) {
+        alert('Invalid folder name');
+        return;
+    }
+    if (cleanName === currentName) return; // No change
+
+    // Check duplicate locally
+    const existingFolderId = findFolderIdByName(cleanName);
+    if (existingFolderId) {
+        alert(`Folder "${cleanName}" already exists.`);
+        return;
+    }
+
+    showProgress();
+    try {
+        const { response, payload } = await fetchJson('/api/folder/rename', {
+            method: 'PATCH',
+            body: JSON.stringify({ folder_id: id, new_folder_name: cleanName })
+        });
+        if (!response.ok) throw new Error(payload?.error || 'Failed to rename folder');
+
+        // Update local state maps
+        CLOUD_STATE.folderIdToName.set(id, cleanName);
+        CLOUD_STATE.folderNameToId.delete(currentName);
+        CLOUD_STATE.folderNameToId.set(cleanName, id);
+
+        // Update cached files folder name
+        for (const file of CLOUD_STATE.files.values()) {
+            if (file.folder_id === id) {
+                file.folder_name = cleanName;
+            }
+        }
+
+        renderFileExplorer();
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        hideProgress();
+    }
+}
 const LAST_OPENED_FILE_KEY = 'compiler_last_opened_v1';
 function saveLastOpenedFile(key) {
     if (key) localStorage.setItem(LAST_OPENED_FILE_KEY, key);
