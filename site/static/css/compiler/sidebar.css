@@ -710,9 +710,10 @@
  * renders a few px too narrow → the right edge clips.
  * Reset every element inside the render target back to content-box.
  */
-.google-btn-render *,
-.google-btn-render *::before,
-.google-btn-render *::after {
+.google-btn-render div,
+.google-btn-render iframe,
+.google-btn-render div::before,
+.google-btn-render div::after {
     box-sizing: content-box !important;
 }
 
