@@ -958,16 +958,14 @@ async function initGoogleIdentity(clientId) {
 
         const renderTarget = document.getElementById('google-btn-render');
         if (renderTarget) {
-            // Fixed 200px width (Google's guaranteed min) — no dynamic
-            // calculation, no chance of overflow. Pill shape for a
-            // clean, modern look centered in the sidebar.
+            // Fixed 230px width — enough for "Sign in" text without overflow.
+            // Pill shape for a clean, modern look centered in the sidebar.
             window.google.accounts.id.renderButton(renderTarget, {
                 theme: 'outline',
-                size: 'large',
+                size: 'medium',
                 shape: 'pill',
                 text: 'signin_with',
-                logo_alignment: 'left',
-                width: 200
+                width: 220
             });
         }
 

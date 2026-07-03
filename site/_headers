@@ -245,6 +245,7 @@
   X-Frame-Options: SAMEORIGIN
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: identity-credentials-get=(self "https://accounts.google.com")
 
 # ---------------------------------------------------------------------------
 # Compiler page: allow Google Sign-In popup.
