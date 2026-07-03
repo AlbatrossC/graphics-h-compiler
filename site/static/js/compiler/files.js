@@ -1363,9 +1363,12 @@ async function renameFile(folder, filename) {
 
     let cleanName = (newName || '').trim();
     if (!cleanName) return;
-    if (!cleanName.includes('.')) cleanName += '.cpp';
+    if (!cleanName.includes('.')) {
+        const oldExt = filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '.cpp';
+        cleanName += oldExt;
+    }
     cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
-    if (!cleanName || cleanName === '.cpp') return alert('Invalid file name');
+    if (!cleanName || cleanName === '.cpp' || cleanName === '.c') return alert('Invalid file name');
     if (cleanName === filename) return; // No change
 
     const key = fileKey(folder, filename);

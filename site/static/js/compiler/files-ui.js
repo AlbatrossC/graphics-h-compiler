@@ -69,7 +69,7 @@
         </div>
         <div class="file-actions">
             <button class="file-action-btn file-download-btn" title="Download file" onclick="event.stopPropagation(); downloadFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
-            <button class="file-action-btn file-rename-btn" title="Rename file" onclick="event.stopPropagation(); renameFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+            <button class="file-action-btn file-rename-btn" title="Rename file" onclick="event.stopPropagation(); renameFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3h6M11 21h6M14 3v18M10 7H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8M14 7h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1"></path></svg></button>
             <button class="file-action-btn file-delete-btn" title="Delete file" onclick="event.stopPropagation(); deleteFile('${folder}', '${filename}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"></path></svg></button>
         </div>`;
 
@@ -122,7 +122,7 @@
             const renameBtn = document.createElement('button');
             renameBtn.className = 'folder-action-btn';
             renameBtn.title = `Rename folder ${name}`;
-            renameBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
+            renameBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3h6M11 21h6M14 3v18M10 7H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8M14 7h4a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-1"></path></svg>`;
             renameBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 renameFolder(folder, name);
