@@ -719,13 +719,12 @@
 
 /* Google's internal wrapper div */
 .google-btn-render > div {
-    max-width: 100% !important;
+    /* max-width removed to prevent clipping */
 }
 
 /* Google iframe */
 .google-btn-render iframe {
     display: block !important;
-    max-width: 100% !important;
     border: none !important;
 }
 

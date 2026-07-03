@@ -961,11 +961,12 @@ async function initGoogleIdentity(clientId) {
             // Fixed 230px width — enough for "Sign in" text without overflow.
             // Pill shape for a clean, modern look centered in the sidebar.
             window.google.accounts.id.renderButton(renderTarget, {
+                type: 'standard',
                 theme: 'outline',
-                size: 'medium',
-                shape: 'pill',
+                size: 'large',
+                shape: 'rectangular',
                 text: 'signin_with',
-                width: 220
+                logo_alignment: 'left'
             });
         }
 
