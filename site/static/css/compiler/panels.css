@@ -18,7 +18,7 @@
     border: 1px solid var(--border-color);
     border-radius: 0;
     box-shadow: none;
-    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: background-color 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     position: relative;
     overflow: hidden;
     min-width: 0;
@@ -139,7 +139,7 @@ body.panel-fullscreen > #sidebar-overlay {
     font-weight: 600;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     white-space: nowrap;
 }
 
@@ -156,7 +156,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 #clear-btn:hover {
-    background: rgba(255, 68, 68, 0.1);
+    background: rgba(var(--color-rgb-danger), 0.1);
     border-color: var(--danger);
     color: var(--danger);
 }
@@ -320,8 +320,8 @@ body.panel-fullscreen > #sidebar-overlay {
 
 /* Scrollbar styling for CodeMirror */
 .cm-editor .cm-scroller::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 .cm-editor .cm-scroller::-webkit-scrollbar-track {
@@ -489,16 +489,6 @@ body.panel-fullscreen > #sidebar-overlay {
     transition:
         background-color var(--transition-slow),
         border-color var(--transition-slow);
-}
-
-.editor-mode {
-    padding: 4px 10px;
-    background: var(--primary);
-    color: #0a0a0a;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 0.7rem;
-    transition: background-color var(--transition-slow);
 }
 
 /* Terminal/Canvas */
@@ -748,7 +738,7 @@ body.panel-fullscreen > #sidebar-overlay {
     border: 1px solid var(--danger);
     border-radius: 6px;
     cursor: pointer;
-    transition: all var(--transition-fast), transform 0.1s ease;
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), transform 0.1s ease;
     white-space: nowrap;
 }
 
@@ -797,7 +787,7 @@ body.panel-fullscreen > #sidebar-overlay {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .expand-btn:hover {
@@ -874,7 +864,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 .output-content::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
 }
 
 .output-content::-webkit-scrollbar-track {
@@ -948,10 +938,10 @@ body.panel-fullscreen > #sidebar-overlay {
     gap: 6px;
     padding: 5px 12px;
     background: var(--primary);
-    color: #0a0a0a;
+    color: var(--primary-text);
     font-size: 0.75rem;
     font-weight: 600;
-    border-radius: 5px;
+    border-radius: 6px;
     animation: fade-in var(--transition-normal);
 }
 
@@ -1010,7 +1000,7 @@ body.panel-fullscreen > #sidebar-overlay {
     border: none;
     border-right: 1px solid var(--border-color);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     white-space: nowrap;
     position: relative;
     min-width: max-content;
@@ -1066,7 +1056,7 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 .file-tab-close:hover {
-    background: rgba(255, 68, 68, 0.15);
+    background: rgba(var(--color-rgb-danger), 0.15);
     color: var(--danger);
     opacity: 1 !important;
 }
@@ -1213,7 +1203,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .modal-body {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
 }
 
 .modal-body label {
@@ -1235,10 +1225,10 @@ body.panel-fullscreen > #sidebar-overlay {
     font-size: 0.875rem;
 }
 
-.modal-body input:focus {
+.modal-body input:focus-visible {
     outline: none;
     border-color: var(--primary);
-
+    box-shadow: 0 0 0 1px var(--primary);
 }
 
 .modal-body textarea {
@@ -1254,15 +1244,31 @@ body.panel-fullscreen > #sidebar-overlay {
     min-height: 120px;
 }
 
-.modal-body textarea:focus {
+.modal-body textarea:focus-visible {
     outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
 }
 
 .modal-hint {
     font-size: 0.85rem;
     color: var(--text-muted);
     line-height: 1.4;
+}
+
+.modal-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.modal-input-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-error-text {
+    color: var(--danger);
+    display: none;
 }
 
 .modal-status {
@@ -1279,24 +1285,24 @@ body.panel-fullscreen > #sidebar-overlay {
 }
 
 .modal-status.error {
-    background: rgba(255, 68, 68, 0.1);
-    border: 1px solid rgba(255, 68, 68, 0.25);
-    color: #ff8c8c;
+    background: rgba(var(--color-rgb-danger), 0.1);
+    border: 1px solid rgba(var(--color-rgb-danger), 0.25);
+    color: var(--danger);
 }
 
 .modal-actions {
     display: flex;
-    gap: 7px;
+    gap: 8px;
     justify-content: flex-end;
 }
 
 .modal-btn-cancel {
-    background: #ef4444;
+    background: var(--danger);
     color: #ffffff;
-    border: 1px solid #ef4444;
+    border: 1px solid var(--danger);
     border-radius: 6px;
     font-weight: 500;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     padding: 0 16px;
     height: 36px;
     cursor: pointer;
@@ -1304,32 +1310,30 @@ body.panel-fullscreen > #sidebar-overlay {
     font-size: 0.85rem;
 }
 .modal-btn-cancel:hover {
-    background: #dc2626;
-    border-color: #dc2626;
+    opacity: 0.85;
+    filter: brightness(0.9);
 }
 
 .modal-btn-submit {
-    background: #3b82f6;
-    color: #ffffff;
-    border: 1px solid #3b82f6;
+    background: var(--primary);
+    color: var(--primary-text);
+    border: 1px solid var(--primary);
     border-radius: 6px;
-    font-weight: 500;
-    transition: all var(--transition-fast);
+    font-weight: 600;
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     padding: 0 16px;
     height: 36px;
     cursor: pointer;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     font-family: inherit;
     font-size: 0.85rem;
 }
 .modal-btn-submit:hover:not(:disabled) {
-    background: #2563eb;
-    border-color: #2563eb;
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
 }
 .modal-btn-submit:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    box-shadow: none;
 }
 
 /* Floating Run Button */
@@ -1364,7 +1368,7 @@ body.panel-fullscreen > #sidebar-overlay {
 #floating-run-btn svg {
     width: 24px;
     height: 24px;
-    color: #0a0a0a;
+    color: var(--primary-text);
     flex-shrink: 0;
     pointer-events: none;
 }
@@ -1509,7 +1513,7 @@ body.panel-fullscreen > #sidebar-overlay {
 .error-ad-slot {
     display: none;
     padding: 8px 0;
-    border-top: 1px solid rgba(255, 68, 68, 0.12);
+    border-top: 1px solid rgba(var(--color-rgb-danger), 0.12);
     overflow: hidden;
     text-align: center;
 }

@@ -106,7 +106,7 @@
         <h1 class="logo header-brand-logo" onclick="window.location.reload()">
           <picture>
             <source srcset="/static/images/brand/graphics-h-turtle.webp" type="image/webp">
-            <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="lazy" decoding="async">
+            <img src="/static/images/brand/graphics-h-turtle.webp" alt="graphics.h compiler turtle logo" class="header-logo-image" width="547" height="282" loading="eager" decoding="async">
           </picture>
           <span class="header-brand-text"><span class="header-brand-primary">graphics.h</span> compiler</span>
         </h1>
@@ -635,8 +635,8 @@
       </div>
       <div class="modal-body">
         <label id="file-folder-modal-label" for="file-folder-modal-input">Name</label>
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="file-folder-modal-input" autocomplete="off" spellcheck="false" style="flex: 1; min-width: 0;" data-clarity-unmask="true" />
+        <div class="modal-input-row">
+          <input type="text" id="file-folder-modal-input" autocomplete="off" spellcheck="false" class="modal-input-field" data-clarity-unmask="true" />
           <div class="clean-dropdown" id="file-folder-modal-ext-wrapper">
             <select id="file-folder-modal-ext" aria-label="File extension">
               <option value=".c" selected>.c</option>
@@ -647,7 +647,7 @@
             </svg>
           </div>
         </div>
-        <span id="file-folder-modal-error" class="modal-hint" style="color: var(--danger); display: none;"></span>
+        <span id="file-folder-modal-error" class="modal-hint modal-error-text"></span>
       </div>
       <div class="modal-actions">
         <button type="button" id="file-folder-modal-cancel" class="modal-btn-cancel">Cancel</button>

@@ -555,7 +555,7 @@
     }
 
     .copy-error-btn {
-        height: 28px;
+        height: 36px;
         padding: 0 10px;
         font-size: 0.75rem;
     }
@@ -565,8 +565,8 @@
     }
 
     .expand-btn {
-        width: 28px;
-        height: 28px;
+        width: 36px;
+        height: 36px;
     }
 
     .output-content {
@@ -676,7 +676,7 @@
     }
 
     .mobile-tab {
-        height: 28px;
+        height: 32px;
     }
 }
 

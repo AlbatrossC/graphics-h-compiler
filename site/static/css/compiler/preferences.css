@@ -9,7 +9,7 @@
 }
 
 .settings-panel::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .settings-panel::-webkit-scrollbar-thumb {
@@ -64,7 +64,7 @@
     font-size: 0.8125rem;
     font-family: inherit;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     appearance: none;
     -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23a0a0a0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -77,7 +77,7 @@
     border-color: var(--text-muted);
 }
 
-.settings-select:focus {
+.settings-select:focus-visible {
     outline: none;
     border-color: var(--primary);
 }
@@ -108,7 +108,7 @@
     font-size: 1.1rem;
     line-height: 1;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
     flex-shrink: 0;
 }
 
@@ -261,14 +261,14 @@
     width: calc(100% - 32px);
     margin: 16px;
     padding: 10px 16px;
-    background: rgba(255, 68, 68, 0.05);
-    border: 1px solid rgba(255, 68, 68, 0.15);
+    background: rgba(var(--color-rgb-danger), 0.05);
+    border: 1px solid rgba(var(--color-rgb-danger), 0.15);
     border-radius: 6px;
     color: var(--danger);
     font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .settings-reset-btn svg {
@@ -277,8 +277,8 @@
 }
 
 .settings-reset-btn:hover {
-    background: rgba(255, 68, 68, 0.12);
-    border-color: rgba(255, 68, 68, 0.35);
+    background: rgba(var(--color-rgb-danger), 0.12);
+    border-color: rgba(var(--color-rgb-danger), 0.35);
     color: var(--danger);
 }
 
