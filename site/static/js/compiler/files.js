@@ -690,6 +690,7 @@ function showSaveGuestDraftModal(snapshot) {
                 spellcheck="false"
                 value="${suggestedBaseName}"
                 placeholder="my-project"
+                data-clarity-unmask="true"
             />
             <select id="goc-draft-extension" style="
                 background: var(--vscode-bg);

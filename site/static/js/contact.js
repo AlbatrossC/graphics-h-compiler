@@ -180,7 +180,7 @@
           </div>
           <div class="contact-form-group">
             <label for="contact-message">Message (Required)</label>
-            <textarea id="contact-message" required placeholder="Type your message here..."></textarea>
+            <textarea id="contact-message" required placeholder="Type your message here..." data-clarity-unmask="true"></textarea>
           </div>
           <button type="submit" class="contact-submit" id="contact-submit-btn">Send Message</button>
           <div class="contact-status" id="contact-status"></div>

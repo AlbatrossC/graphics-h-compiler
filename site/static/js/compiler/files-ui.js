@@ -178,10 +178,11 @@
             filesByFolder.get(key).push(file);
         });
 
-        filesByFolder.forEach((files) => files.sort((a, b) => a.filename.localeCompare(b.filename)));
+        const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+        filesByFolder.forEach((files) => files.sort((a, b) => collator.compare(a.filename, b.filename)));
 
         const orderedFolders = Array.from(CLOUD_STATE.folderIdToName.keys())
-            .sort((a, b) => getFolderName(a).localeCompare(getFolderName(b)));
+            .sort((a, b) => collator.compare(getFolderName(a), getFolderName(b)));
 
         fileList.innerHTML = '';
 
@@ -207,8 +208,11 @@
 
     function highlightActiveFile() {
         const [folder, filename] = (CLOUD_STATE.activeFileKey || DEFAULT_FILE_KEY).split('/');
+        let activeItem = null;
         document.querySelectorAll('.file-item').forEach((item) => {
-            item.classList.toggle('active', item.dataset.folder === folder && item.dataset.file === filename);
+            const isActive = item.dataset.folder === folder && item.dataset.file === filename;
+            item.classList.toggle('active', isActive);
+            if (isActive) activeItem = item;
         });
         document.querySelectorAll('.folder-group-header').forEach((header) => {
             header.classList.toggle('selected', header.parentElement?.dataset.folder === (CLOUD_STATE.selectedFolderKey || ROOT_FOLDER_KEY));
@@ -218,6 +222,12 @@
         const name = document.getElementById('current-file-name');
         if (tab) tab.dataset.file = filename;
         if (name) name.textContent = filename;
+
+        if (activeItem) {
+            setTimeout(() => {
+                activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 10);
+        }
     }
 
     window.showProgress = showProgress;

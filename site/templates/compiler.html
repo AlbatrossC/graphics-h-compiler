@@ -516,7 +516,7 @@
         </div>
       </div>
 
-      <div id="editor"></div>
+      <div id="editor" data-clarity-unmask="true"></div>
       <div class="editor-footer">
         <span class="editor-info" id="editor-info">Lines: 0 | Chars: 0</span>
       </div>
@@ -580,7 +580,7 @@
           <div class="terminal-idle-copy">We bring up the editor and demo first, then warm the compiler runtime in the background.</div>
         </div>
         <iframe id="dos-iframe" data-src="/static/html/dos-runner.html" title="DOS Terminal"
-          sandbox="allow-scripts allow-same-origin" tabindex="-1"></iframe>
+          sandbox="allow-scripts allow-same-origin" tabindex="-1" data-clarity-unmask="true"></iframe>
       </div>
 
       <div id="output-panel">
@@ -636,7 +636,7 @@
       <div class="modal-body">
         <label id="file-folder-modal-label" for="file-folder-modal-input">Name</label>
         <div style="display: flex; gap: 8px;">
-          <input type="text" id="file-folder-modal-input" autocomplete="off" spellcheck="false" style="flex: 1; min-width: 0;" />
+          <input type="text" id="file-folder-modal-input" autocomplete="off" spellcheck="false" style="flex: 1; min-width: 0;" data-clarity-unmask="true" />
           <div class="clean-dropdown" id="file-folder-modal-ext-wrapper">
             <select id="file-folder-modal-ext" aria-label="File extension">
               <option value=".c" selected>.c</option>

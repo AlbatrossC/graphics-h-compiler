@@ -122,10 +122,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: 7px;
+    padding: 7px 11px;
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     transition: all var(--transition-fast);
@@ -156,8 +156,8 @@
 }
 
 .explorer-action-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
 }
 
 /* File Explorer */
@@ -223,31 +223,32 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0 6px 12px;
-    gap: 4px;
+    padding: 0 6px 12px 6px;
+    gap: 2px;
 }
 
 .folder-group {
     display: flex;
     flex-direction: column;
+    gap: 2px;
 }
 
 .folder-group-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 28px;
-    height: auto;
-    padding: 4px 8px;
+    min-height: 32px;
+    height: 32px;
+    padding: 0 6px;
     margin: 0;
-    border-radius: 4px;
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--text-muted);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     background: transparent;
-    transition: background-color var(--transition-fast), color var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .folder-group-header:hover {
@@ -257,7 +258,17 @@
 
 .folder-group-header.selected {
     color: var(--primary);
-    font-weight: 600;
+    font-weight: 700;
+}
+
+.folder-group-header.selected .folder-group-title svg,
+.folder-group-header.selected .folder-chevron {
+    color: var(--primary);
+}
+
+.folder-group-header:focus-visible {
+    outline: 1px solid var(--primary);
+    outline-offset: -1px;
 }
 
 .folder-group-title {
@@ -269,11 +280,11 @@
 }
 
 .folder-group-title span:last-child {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
-    line-height: 1.3;
+    line-height: 32px;
     display: block;
 }
 
@@ -371,30 +382,35 @@
 .file-item {
     display: flex;
     align-items: center;
-    min-height: 28px;
-    height: auto;
-    gap: 8px;
-    padding: 4px 8px 4px 32px;
+    min-height: 32px;
+    height: 32px;
+    gap: 10px;
+    padding: 0 6px 0 32px;
     margin: 0;
     cursor: pointer;
     color: var(--text-secondary);
-    font-size: 0.88rem;
-    border: none;
-    border-radius: 4px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
     position: relative;
     background: transparent;
     user-select: none;
-    transition: background-color 0.12s ease, color 0.12s ease;
+    transition: all var(--transition-fast);
 }
 
 .file-item:hover {
-    background: rgba(var(--color-rgb-white), 0.06);
+    background: rgba(var(--color-rgb-white), 0.05);
     color: var(--text-primary);
 }
 
 .file-item.active {
     background: rgba(var(--color-rgb-primary), 0.1);
     color: var(--primary);
+}
+
+.file-item:focus-visible {
+    outline: 1px solid var(--primary);
+    outline-offset: -1px;
 }
 
 .file-item .file-icon {
@@ -426,7 +442,7 @@
 /* Scale transform removed to prevent scroll/hover lag */
 
 .file-item.active .file-icon {
-    color: var(--primary);
+    color: var(--primary) !important;
 }
 
 .file-main {
@@ -438,13 +454,13 @@
 }
 
 .file-item .file-name {
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-all;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-weight: 500;
     font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
-    font-size: 0.88rem;
-    line-height: 1.3;
+    font-size: 0.9rem;
+    line-height: 32px;
     letter-spacing: 0;
     min-width: 0;
     display: block;
