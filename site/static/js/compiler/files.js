@@ -1253,21 +1253,21 @@ async function createNewFolder(folderName) {
     }
 }
 async function createNewFile(filename) {
-    if (!isUserLoggedIn) return alert('Sign in to create cloud files.');
+    if (!isUserLoggedIn) throw new Error('Sign in to create cloud files.');
     showProgress();
     try {
         let cleanName = (filename || '').trim();
         if (!cleanName) return;
         if (!cleanName.includes('.')) cleanName += '.cpp';
         cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
-        if (!cleanName || cleanName === '.cpp') return alert('Invalid file name');
+        if (!cleanName || cleanName === '.cpp') throw new Error('Invalid file name');
         let targetFolderId = folderId(CLOUD_STATE.selectedFolderKey) || activeFileInfo().folderId;
         if (!targetFolderId) targetFolderId = Array.from(CLOUD_STATE.folderIdToName.keys())[0] || null;
         if (!targetFolderId) {
             targetFolderId = await ensureMainFolder();
             setSelectedFolder(folderKey(targetFolderId));
         }
-        if (remoteFileByName(targetFolderId, cleanName)) return alert(`File "${cleanName}" already exists`);
+        if (remoteFileByName(targetFolderId, cleanName)) throw new Error(`File "${cleanName}" already exists`);
         const starter = buildStarterSource(cleanName);
         const { response: saveResponse, payload: savePayload } = await fetchJson('/api/file/save', {
             method: 'POST',
@@ -1357,121 +1357,128 @@ async function renameFile(folder, filename) {
     if (!isUserLoggedIn) return alert('Sign in to rename cloud files.');
 
     const baseName = filename.includes('.') ? filename.substring(0, filename.lastIndexOf('.')) : filename;
-    const newName = prompt('Enter a new file name:', baseName);
-    if (newName === null) return; // Cancelled
+    await window.showInputModal({
+        type: 'file',
+        title: 'Rename File',
+        label: 'New File Name',
+        defaultValue: baseName,
+        submitText: 'Rename',
+        placeholder: 'e.g. utils',
+        validateCallback: async (newName) => {
+            let cleanName = (newName || '').trim();
+            if (!cleanName) return 'Invalid file name';
+            if (!cleanName.includes('.')) {
+                const oldExt = filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '.cpp';
+                cleanName += oldExt;
+            }
+            cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
+            if (!cleanName || cleanName === '.cpp' || cleanName === '.c') return 'Invalid file name';
+            if (cleanName === filename) return null; // No change
 
-    let cleanName = (newName || '').trim();
-    if (!cleanName) return;
-    if (!cleanName.includes('.')) {
-        const oldExt = filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '.cpp';
-        cleanName += oldExt;
-    }
-    cleanName = cleanName.replace(/[^a-zA-Z0-9._-]/g, '');
-    if (!cleanName || cleanName === '.cpp' || cleanName === '.c') return alert('Invalid file name');
-    if (cleanName === filename) return; // No change
+            const key = fileKey(folder, filename);
+            const file = CLOUD_STATE.files.get(key);
+            if (!file) return 'File not found';
 
-    const key = fileKey(folder, filename);
-    const file = CLOUD_STATE.files.get(key);
-    if (!file) return;
+            if (remoteFileByName(file.folder_id, cleanName)) {
+                return `File "${cleanName}" already exists in this folder.`;
+            }
 
-    // Check duplicate locally
-    if (remoteFileByName(file.folder_id, cleanName)) {
-        alert(`File "${cleanName}" already exists in this folder.`);
-        return;
-    }
+            showProgress();
+            try {
+                const { response, payload } = await fetchJson('/api/file/rename', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ file_id: file.id, new_file_name: cleanName })
+                });
+                if (!response.ok) throw new Error(payload?.error || 'Failed to rename file');
 
-    showProgress();
-    try {
-        const { response, payload } = await fetchJson('/api/file/rename', {
-            method: 'PATCH',
-            body: JSON.stringify({ file_id: file.id, new_file_name: cleanName })
-        });
-        if (!response.ok) throw new Error(payload?.error || 'Failed to rename file');
+                const newKey = fileKey(folder, cleanName);
+                const content = file.content;
 
-        const newKey = fileKey(folder, cleanName);
-        const content = file.content;
+                CLOUD_STATE.files.delete(key);
+                CLOUD_STATE.files.set(newKey, { ...file, filename: cleanName });
 
-        // Delete old key and set new key in CLOUD_STATE
-        CLOUD_STATE.files.delete(key);
-        CLOUD_STATE.files.set(newKey, { ...file, filename: cleanName });
+                await clearLocalDraft(folder, filename);
+                if (content !== null && content !== undefined) {
+                    await FileDB.put({
+                        id: newKey,
+                        name: cleanName,
+                        content,
+                        lastSavedHash: file.content_hash || SAVE_STATE.lastSavedHash || null,
+                        lastModified: Date.now(),
+                        dirty: false,
+                        folderId: file.folder_id,
+                        folderKey: file.folder_key
+                    });
+                }
 
-        // Update IndexedDB cache
-        await clearLocalDraft(folder, filename);
-        if (content !== null && content !== undefined) {
-            await FileDB.put({
-                id: newKey,
-                name: cleanName,
-                content,
-                lastSavedHash: file.content_hash || SAVE_STATE.lastSavedHash || null,
-                lastModified: Date.now(),
-                dirty: false,
-                folderId: file.folder_id,
-                folderKey: file.folder_key
-            });
+                if (CLOUD_STATE.activeFileKey === key) {
+                    CLOUD_STATE.activeFileKey = newKey;
+                    const tabName = document.getElementById('current-file-name');
+                    if (tabName) tabName.textContent = cleanName;
+                    const currentTab = document.getElementById('current-file-tab');
+                    if (currentTab) currentTab.dataset.file = cleanName;
+                }
+                renderFileExplorer();
+                return null;
+            } catch (error) {
+                Logger.warn(`[Rename] ${error.message}`);
+                return error.message;
+            } finally {
+                hideProgress();
+            }
         }
-
-        // Update active file key if needed
-        if (CLOUD_STATE.activeFileKey === key) {
-            CLOUD_STATE.activeFileKey = newKey;
-        }
-
-        renderFileExplorer();
-        highlightActiveFile();
-    } catch (error) {
-        alert(error.message);
-    } finally {
-        hideProgress();
-    }
+    });
 }
 async function renameFolder(folder, currentName) {
     const id = folderId(folder);
     if (!id) return;
     if (!isUserLoggedIn) return alert('Sign in to rename cloud folders.');
 
-    const newName = prompt('Enter a new folder name:', currentName);
-    if (newName === null) return; // Cancelled
+    await window.showInputModal({
+        type: 'folder',
+        title: 'Rename Folder',
+        label: 'New Folder Name',
+        defaultValue: currentName,
+        submitText: 'Rename',
+        placeholder: 'e.g. assets',
+        validateCallback: async (newName) => {
+            const cleanName = (newName || '').trim();
+            if (!cleanName) return 'Invalid folder name';
+            if (cleanName === currentName) return null; // No change
 
-    const cleanName = (newName || '').trim();
-    if (!cleanName) return;
-    if (cleanName.length > 100 || cleanName.includes('/') || cleanName.includes('\\')) {
-        alert('Invalid folder name');
-        return;
-    }
-    if (cleanName === currentName) return; // No change
+            if (Array.from(CLOUD_STATE.folderNameToId.keys()).map(k => k.toLowerCase()).includes(cleanName.toLowerCase())) {
+                return `Folder "${cleanName}" already exists.`;
+            }
 
-    // Check duplicate locally
-    const existingFolderId = findFolderIdByName(cleanName);
-    if (existingFolderId) {
-        alert(`Folder "${cleanName}" already exists.`);
-        return;
-    }
+            showProgress();
+            try {
+                const { response, payload } = await fetchJson('/api/folder/rename', {
+                    method: 'PATCH',
+                    body: JSON.stringify({ folder_id: id, new_folder_name: cleanName })
+                });
+                if (!response.ok) throw new Error(payload?.error || 'Failed to rename folder');
 
-    showProgress();
-    try {
-        const { response, payload } = await fetchJson('/api/folder/rename', {
-            method: 'PATCH',
-            body: JSON.stringify({ folder_id: id, new_folder_name: cleanName })
-        });
-        if (!response.ok) throw new Error(payload?.error || 'Failed to rename folder');
+                CLOUD_STATE.folderNameToId.delete(currentName);
+                CLOUD_STATE.folderIdToName.set(id, cleanName);
+                CLOUD_STATE.folderNameToId.set(cleanName, id);
 
-        // Update local state maps
-        CLOUD_STATE.folderIdToName.set(id, cleanName);
-        CLOUD_STATE.folderNameToId.delete(currentName);
-        CLOUD_STATE.folderNameToId.set(cleanName, id);
+                const folderKeyStr = folderKey(id);
+                for (const [fKey, fData] of CLOUD_STATE.files.entries()) {
+                    if (fData.folder_key === folderKeyStr) {
+                        fData.folder_name = cleanName;
+                    }
+                }
 
-        // Update cached files folder name
-        for (const file of CLOUD_STATE.files.values()) {
-            if (file.folder_id === id) {
-                file.folder_name = cleanName;
+                renderFileExplorer();
+                return null;
+            } catch (error) {
+                Logger.warn(`[Rename Folder] ${error.message}`);
+                return error.message;
+            } finally {
+                hideProgress();
             }
         }
-
-        renderFileExplorer();
-    } catch (error) {
-        alert(error.message);
-    } finally {
-        hideProgress();
-    }
+    });
 }
 const LAST_OPENED_FILE_KEY = 'compiler_last_opened_v1';
 function saveLastOpenedFile(key) {
@@ -1557,13 +1564,204 @@ async function initAuth() {
     }
 }
 
+window.showInputModal = function(options) {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('file-folder-modal-overlay');
+        const titleEl = document.getElementById('file-folder-modal-title');
+        const labelEl = document.getElementById('file-folder-modal-label');
+        const inputEl = document.getElementById('file-folder-modal-input');
+        const extWrapper = document.getElementById('file-folder-modal-ext-wrapper');
+        const extSelect = document.getElementById('file-folder-modal-ext');
+        const errorEl = document.getElementById('file-folder-modal-error');
+        const cancelBtn = document.getElementById('file-folder-modal-cancel');
+        const submitBtn = document.getElementById('file-folder-modal-submit');
+
+        if (!overlay) {
+            resolve(null);
+            return;
+        }
+
+        const isFolder = options.type === 'folder';
+        titleEl.textContent = options.title || (isFolder ? 'New Folder' : 'New File');
+        labelEl.textContent = options.label || 'Name';
+        inputEl.placeholder = options.placeholder || (isFolder ? 'e.g. src' : 'e.g. main');
+        submitBtn.textContent = options.submitText || 'Create';
+        
+        let baseValue = options.defaultValue || '';
+        if (!isFolder && baseValue.includes('.')) {
+            const lastDot = baseValue.lastIndexOf('.');
+            const ext = baseValue.substring(lastDot);
+            if (ext === '.c' || ext === '.cpp') {
+                baseValue = baseValue.substring(0, lastDot);
+                extSelect.value = ext;
+            } else if (options.defaultExt) {
+                extSelect.value = options.defaultExt;
+            }
+        } else if (!isFolder && options.defaultExt) {
+            extSelect.value = options.defaultExt;
+        }
+
+        inputEl.value = baseValue;
+        errorEl.style.display = 'none';
+        
+        if (isFolder) {
+            extWrapper.style.display = 'none';
+        } else {
+            extWrapper.style.display = 'inline-flex';
+        }
+
+        function getCleanedName() {
+            let name = inputEl.value.trim();
+            if (!name) return '';
+            
+            if (!isFolder) {
+                if (name.toLowerCase().endsWith('.cpp')) {
+                    name = name.slice(0, -4).trim();
+                } else if (name.toLowerCase().endsWith('.c')) {
+                    name = name.slice(0, -2).trim();
+                }
+                
+                name = name.replace(/[^a-zA-Z0-9._-]/g, '');
+                if (name && name !== '.' && name !== '..' && !name.startsWith('.')) {
+                    return name + extSelect.value;
+                }
+                return '';
+            } else {
+                return name;
+            }
+        }
+
+        function validateInput(showError = true) {
+            const name = inputEl.value.trim();
+            if (!name) {
+                if (showError) {
+                    errorEl.textContent = 'Name cannot be empty';
+                    errorEl.style.display = 'block';
+                    inputEl.style.borderColor = 'var(--danger)';
+                } else {
+                    errorEl.style.display = 'none';
+                    inputEl.style.borderColor = '';
+                }
+                submitBtn.disabled = true;
+                return false;
+            }
+            if (!isFolder) {
+                const cleaned = getCleanedName();
+                if (!cleaned) {
+                    if (showError) {
+                        errorEl.textContent = 'Invalid filename. Use letters, numbers, hyphens and underscores.';
+                        errorEl.style.display = 'block';
+                        inputEl.style.borderColor = 'var(--danger)';
+                    } else {
+                        errorEl.style.display = 'none';
+                        inputEl.style.borderColor = '';
+                    }
+                    submitBtn.disabled = true;
+                    return false;
+                }
+            }
+            errorEl.style.display = 'none';
+            inputEl.style.borderColor = '';
+            submitBtn.disabled = false;
+            return true;
+        }
+
+        function cleanup() {
+            overlay.classList.add('hidden');
+            inputEl.removeEventListener('input', onInput);
+            extSelect.removeEventListener('change', onInput);
+            cancelBtn.removeEventListener('click', onCancel);
+            submitBtn.removeEventListener('click', onSubmit);
+            document.removeEventListener('keydown', onKeyDown);
+            overlay.removeEventListener('click', onOverlayClick);
+        }
+
+        function onCancel() {
+            cleanup();
+            resolve(null);
+        }
+
+        async function onSubmit() {
+            if (!validateInput()) return;
+            const result = isFolder ? inputEl.value.trim() : getCleanedName();
+            if (options.validateCallback) {
+                submitBtn.disabled = true;
+                try {
+                    const errorMsg = await options.validateCallback(result);
+                    if (errorMsg) {
+                        errorEl.textContent = errorMsg;
+                        errorEl.style.display = 'block';
+                        inputEl.style.borderColor = 'var(--danger)';
+                        submitBtn.disabled = false;
+                        return; // Keep modal open
+                    }
+                } catch (e) {
+                    submitBtn.disabled = false;
+                    return;
+                }
+            }
+            cleanup();
+            resolve(result);
+        }
+
+        function onKeyDown(e) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onCancel();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                onSubmit();
+            }
+        }
+
+        function onOverlayClick(e) {
+            if (e.target === overlay) {
+                onCancel();
+            }
+        }
+
+        function onInput() {
+            validateInput(true);
+        }
+
+        inputEl.addEventListener('input', onInput);
+        extSelect.addEventListener('change', onInput);
+        cancelBtn.addEventListener('click', onCancel);
+        submitBtn.addEventListener('click', onSubmit);
+        document.addEventListener('keydown', onKeyDown);
+        overlay.addEventListener('click', onOverlayClick);
+
+        overlay.classList.remove('hidden');
+        
+        validateInput(false);
+
+        requestAnimationFrame(() => {
+            inputEl.focus();
+            inputEl.select();
+        });
+    });
+};
+
 const googleSigninBtn = document.getElementById('google-signin-btn');
 if (googleSigninBtn) googleSigninBtn.addEventListener('click', signInWithGoogle);
 const storageNewFolderBtn = document.getElementById('new-folder-btn');
 if (storageNewFolderBtn) storageNewFolderBtn.addEventListener('click', async () => {
-    const name = prompt('Enter a folder name:');
-    if (!name || !name.trim()) return;
-    try { await createNewFolder(name.trim()); } catch (error) { Logger.warn(`[Folder] ${error.message}`); alert(error.message); }
+    await window.showInputModal({
+        type: 'folder',
+        title: 'New Folder',
+        label: 'Folder Name',
+        submitText: 'Create Folder',
+        validateCallback: async (name) => {
+            if (!name || !name.trim()) return 'Invalid folder name';
+            try {
+                await createNewFolder(name.trim());
+                return null;
+            } catch (error) {
+                Logger.warn(`[Folder] ${error.message}`);
+                return error.message;
+            }
+        }
+    });
 });
 
 function startAuthInit() {

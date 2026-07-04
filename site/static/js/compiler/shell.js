@@ -475,12 +475,25 @@ var isTerminalFullscreen = false;
     refreshBtn?.addEventListener('click', () => refreshCloudFiles(true));
 
     if (newFileBtn) {
-        newFileBtn.addEventListener('click', () => {
+        newFileBtn.addEventListener('click', async () => {
             if (!isUserLoggedIn) return;
-            const filename = prompt('Enter a file name (e.g., mycode.cpp):\nOnly letters, numbers, dots, underscores, and dashes are allowed.');
-            if (filename && filename.trim()) {
-                createNewFile(filename.trim());
-            }
+            await window.showInputModal({
+                type: 'file',
+                title: 'New File',
+                label: 'File Name',
+                defaultExt: '.cpp',
+                submitText: 'Create File',
+                validateCallback: async (filename) => {
+                    try {
+                        if (filename && filename.trim()) {
+                            await createNewFile(filename.trim());
+                        }
+                        return null;
+                    } catch (error) {
+                        return error.message;
+                    }
+                }
+            });
         });
     }
 

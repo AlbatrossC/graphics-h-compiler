@@ -627,6 +627,35 @@
 
 
 
+  <!-- File/Folder Prompt Modal -->
+  <div id="file-folder-modal-overlay" class="modal-overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="file-folder-modal-title">
+      <div class="modal-header">
+        <h3 id="file-folder-modal-title">New File</h3>
+      </div>
+      <div class="modal-body">
+        <label id="file-folder-modal-label" for="file-folder-modal-input">Name</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="file-folder-modal-input" autocomplete="off" spellcheck="false" style="flex: 1; min-width: 0;" />
+          <div class="clean-dropdown" id="file-folder-modal-ext-wrapper">
+            <select id="file-folder-modal-ext" aria-label="File extension">
+              <option value=".c" selected>.c</option>
+              <option value=".cpp">.cpp</option>
+            </select>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+        </div>
+        <span id="file-folder-modal-error" class="modal-hint" style="color: var(--danger); display: none;"></span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="file-folder-modal-cancel" class="modal-btn-cancel">Cancel</button>
+        <button type="button" id="file-folder-modal-submit" class="modal-btn-submit">Create</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Floating Run Button (desktop only) -->
   <button id="floating-run-btn" title="Compile and Run" aria-label="Compile and Run">
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
