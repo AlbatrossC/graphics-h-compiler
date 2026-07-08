@@ -77,7 +77,9 @@ CREATE TABLE IF NOT EXISTS files (
   file_name TEXT NOT NULL,
   file_content TEXT,
   file_size INTEGER,
-  content_hash TEXT
+  content_hash TEXT,
+  created_at INTEGER,
+  updated_at INTEGER
 );
 
 
@@ -106,4 +108,24 @@ WHERE folder_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_root_file
 ON files(user_id, file_name)
 WHERE folder_id IS NULL;
+
+
+-- =====================================================
+-- LOGIN HISTORY TABLE
+-- Tracks user sign-in events
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS login_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT NOT NULL,
+  login_at INTEGER NOT NULL,
+  ip_address TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_history_user_id
+ON login_history(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_login_history_login_at
+ON login_history(login_at);
 

@@ -272,7 +272,7 @@ function buildLogoutCookie() {
   ].join('; ');
 }
 
-async function upsertUserFromIdentity(env, identity) {
+async function upsertUserFromIdentity(env, identity, request) {
   const now = Date.now();
   const db = env.graphicsh_oc_db;
 
@@ -319,6 +319,16 @@ async function upsertUserFromIdentity(env, identity) {
       avatar_url: identity.picture ?? user.avatar_url ?? null,
     };
   }
+
+  const ip = request ? (request.headers.get('CF-Connecting-IP') || null) : null;
+  await db.prepare('INSERT INTO login_history (user_id, login_at, ip_address) VALUES (?, ?, ?)')
+    .bind(user.user_id, now, ip)
+    .run();
+
+  const threeMonthsAgo = now - (90 * 24 * 60 * 60 * 1000);
+  await db.prepare('DELETE FROM login_history WHERE login_at < ?')
+    .bind(threeMonthsAgo)
+    .run();
 
   const normalizedUser = {
     user_id: user.user_id,
@@ -431,7 +441,7 @@ export async function handleGoogleLogin(request, env, corsHeaders) {
   }
 
   const identity = await verifyGoogleIdToken(idToken, env);
-  const user = await upsertUserFromIdentity(env, identity);
+  const user = await upsertUserFromIdentity(env, identity, request);
   return issueSessionLoginResponse(env, user, corsHeaders);
 }
 

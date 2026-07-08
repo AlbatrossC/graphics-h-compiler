@@ -73,6 +73,7 @@ export default {
 
       return errorResponse('not_found', 'Route not found', 404, corsHeaders);
     } catch (error) {
+      console.error('Unhandled worker error:', error?.message || error, error?.stack || '');
       if (error?.statusCode) {
         return errorResponse(error.code || 'error', error.message, error.statusCode, corsHeaders);
       }

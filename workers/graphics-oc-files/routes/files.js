@@ -68,13 +68,14 @@ export const handleFilesRoutes = {
       return errorResponse('conflict', 'File with this name already exists in the folder', 409, corsHeaders);
     }
 
+    const now = Date.now();
     try {
       await db
         .prepare(
-          `INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
-        .bind(fileId, user.user_id, folderId, fileName, emptyContent, 0, emptyHash)
+        .bind(fileId, user.user_id, folderId, fileName, emptyContent, 0, emptyHash, now, now)
         .run();
     } catch (error) {
       const parsed = parseSqliteError(error);
@@ -120,37 +121,45 @@ export const handleFilesRoutes = {
     const candidateFileId = crypto.randomUUID();
     const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
 
-    let conflictUpsertRow = null;
-    try {
-      conflictUpsertRow = await db
-        .prepare(
-          `INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash)
-           VALUES (?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(user_id, folder_id, file_name) WHERE folder_id IS NOT NULL
-           DO UPDATE SET
-             file_content = excluded.file_content,
-             file_size = excluded.file_size,
-             content_hash = excluded.content_hash
-           WHERE files.content_hash != excluded.content_hash
-           ON CONFLICT(user_id, file_name) WHERE folder_id IS NULL
-           DO UPDATE SET
-             file_content = excluded.file_content,
-             file_size = excluded.file_size,
-             content_hash = excluded.content_hash
-           WHERE files.content_hash != excluded.content_hash
-           RETURNING id`
-        )
-        .bind(candidateFileId, user.user_id, folderId, fileName, content, contentBytes, contentHash)
-        .first();
-    } catch (error) {
-      const parsed = parseSqliteError(error);
-      if (parsed?.isUniqueConstraint) {
-        return errorResponse('conflict', 'File with this name already exists in the folder', 409, corsHeaders);
+    const now = Date.now();
+    let savedFileId = null;
+    let isCreated = false;
+    let changed = false;
+
+    if (existingFile) {
+      if (existingFile.content_hash !== contentHash) {
+        await db
+          .prepare(
+            `UPDATE files
+             SET file_content = ?, file_size = ?, content_hash = ?, updated_at = ?
+             WHERE id = ? AND user_id = ?`
+          )
+          .bind(content, contentBytes, contentHash, now, existingFile.id, user.user_id)
+          .run();
+        changed = true;
       }
-      throw error;
+      savedFileId = existingFile.id;
+    } else {
+      savedFileId = crypto.randomUUID();
+      try {
+        await db
+          .prepare(
+            `INSERT INTO files (id, user_id, folder_id, file_name, file_content, file_size, content_hash, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          )
+          .bind(savedFileId, user.user_id, folderId, fileName, content, contentBytes, contentHash, now, now)
+          .run();
+        changed = true;
+        isCreated = true;
+      } catch (error) {
+        const parsed = parseSqliteError(error);
+        if (parsed?.isUniqueConstraint) {
+          return errorResponse('conflict', 'File with this name already exists in the folder', 409, corsHeaders);
+        }
+        throw error;
+      }
     }
 
-    const changed = Boolean(conflictUpsertRow?.id);
     if (!changed) {
       if (existingFile?.id) {
         await db
@@ -174,8 +183,6 @@ export const handleFilesRoutes = {
       );
     }
 
-    const savedFileId = conflictUpsertRow.id;
-
     await db
       .prepare(
         `UPDATE users
@@ -184,8 +191,6 @@ export const handleFilesRoutes = {
       )
       .bind(savedFileId, user.user_id)
       .run();
-
-    const isCreated = savedFileId === candidateFileId;
     const previousSize = Number(existingFile?.file_size || 0);
     const storageDelta = isCreated ? contentBytes : contentBytes - previousSize;
     await adjustUserStats(db, user.user_id, isCreated ? 1 : 0, storageDelta);
