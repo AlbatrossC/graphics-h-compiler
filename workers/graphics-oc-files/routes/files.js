@@ -118,7 +118,6 @@ export const handleFilesRoutes = {
     }
 
     const contentHash = await computeSha256Hex(content);
-    const candidateFileId = crypto.randomUUID();
     const existingFile = await getFileByName(db, user.user_id, folderId, fileName);
 
     const now = Date.now();

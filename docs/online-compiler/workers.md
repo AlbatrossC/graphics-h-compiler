@@ -115,12 +115,21 @@ This document covers the two Cloudflare Workers that power the backend: `graphic
 | `GET` | `/api/files` | `routes/files.js` | Proxied to files worker |
 | `POST` | `/api/file/create` | `routes/files.js` | Proxied to files worker |
 | `POST` | `/api/file/save` | `routes/files.js` | Proxied to files worker |
+| `PATCH` | `/api/file/rename` | `routes/files.js` | Proxied to files worker |
 | `DELETE` | `/api/file/delete` | `routes/files.js` | Proxied to files worker |
 | `POST` | `/api/folder/create` | `routes/files.js` | Proxied to files worker |
+| `PATCH` | `/api/folder/rename` | `routes/files.js` | Proxied to files worker |
 | `DELETE` | `/api/folder/delete` | `routes/files.js` | Proxied to files worker |
 | `POST` | `/api/contact` | `routes/contact.js` | Sends to Discord webhook |
-| `POST` | `/api/feedback` | `routes/contact.js` | Sends to Discord webhook |
-| `GET` | `/api/maintenance` | `routes/maintenance.js` | Reads from MAINTENANCE_KV |
+| `POST` | `/api/feedback` | `routes/contact.js` | Reserved feedback route; sends to Discord webhook |
+| `POST` | `/api/maintenance/message` | `routes/contact.js` | Reserved maintenance message route; sends to Discord webhook |
+| `GET` | `/api/maintenance/status` | `routes/maintenance.js` | Reserved maintenance toggle route; reads from MAINTENANCE_KV |
+| `GET` | `/api/maintenance/chat/bootstrap` | `routes/maintenance-chat.js` | Loads the active maintenance chat session and recent messages |
+| `GET` | `/api/maintenance/chat/session` | `routes/maintenance-chat.js` | Reserved helper route for the active maintenance chat session |
+| `GET` | `/api/maintenance/chat/messages` | `routes/maintenance-chat.js` | Reserved polling/history route for maintenance chat messages |
+| `POST` | `/api/maintenance/chat/messages` | `routes/maintenance-chat.js` | Stores and broadcasts a maintenance chat message |
+| `GET` | `/api/maintenance/chat/ws` | `routes/maintenance-chat.js` | Maintenance chat WebSocket route |
+| `POST` | `/api/maintenance/chat/admin/session` | `routes/maintenance-chat.js` | Protected admin route for starting a new maintenance chat session |
 | `OPTIONS` | `*` | Inline | CORS preflight (returns 204) |
 
 ### API Worker Bindings
@@ -178,8 +187,10 @@ const ROUTES = {
     'GET /api/files':           handleFilesRoutes.getFiles,
     'POST /api/file/create':    handleFilesRoutes.createFile,
     'POST /api/file/save':      handleFilesRoutes.saveFile,
+    'PATCH /api/file/rename':   handleFilesRoutes.renameFile,
     'DELETE /api/file/delete':   handleFilesRoutes.deleteFile,
     'POST /api/folder/create':  handleFolderRoutes.createFolder,
+    'PATCH /api/folder/rename': handleFolderRoutes.renameFolder,
     'DELETE /api/folder/delete': handleFolderRoutes.deleteFolder,
 };
 ```
@@ -398,12 +409,13 @@ function buildSessionCookie(token, maxAgeSec = SESSION_DURATION_SEC) {
         'Secure',               // HTTPS only
         'SameSite=None',        // Required for cross-origin (Pages → Workers)
         'Path=/',               // Available on all paths
-        `Max-Age=${maxAgeSec}`, // 7 days (604800 seconds)
+        `Max-Age=${maxAgeSec}`, // 3 days (259200 seconds)
     ].join('; ');
 }
 ```
 
 `SameSite=None` is required because the static site on Cloudflare Pages makes API calls to the workers on a different subdomain.
+Valid sessions are refreshed with a new 3-day cookie when they are within 24 hours of expiry. Expired or invalid sessions are not refreshed.
 
 ### Session Check
 
@@ -435,7 +447,7 @@ function buildLogoutCookie() {
 
 ### Request Authentication
 
-All `/api/*` routes in the files worker go through `authenticateRequest()` (line 365 of `auth.js`):
+All `/api/*` routes in the files worker go through `authenticateRequest()`:
 
 1. Read the `session` cookie from `Cookie` header
 2. Verify the JWT with `verifySessionJwt()`

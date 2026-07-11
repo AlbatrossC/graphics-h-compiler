@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS users (
   total_files INTEGER DEFAULT 0,
   total_storage INTEGER DEFAULT 0,
   write_blocked INTEGER DEFAULT 0,
+  last_active_at INTEGER,
   last_opened_file_id TEXT
 );
 

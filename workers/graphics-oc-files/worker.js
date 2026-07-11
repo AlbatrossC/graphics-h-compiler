@@ -1,10 +1,12 @@
 import { handleFilesRoutes } from './routes/files.js';
 import { handleFolderRoutes } from './routes/folders.js';
 import {
+  appendSessionRefreshCookie,
   authenticateRequest,
   handleGoogleLogin,
   handleLogout,
   handleSession,
+  touchUserActivity,
 } from './utils/auth.js';
 import { errorResponse, jsonResponse, withCors } from './utils/response.js';
 
@@ -68,7 +70,11 @@ export default {
       const routeKey = `${method} ${pathname}`;
       const handler = ROUTES[routeKey];
       if (handler) {
-        return await handler(request, env, auth.user, corsHeaders);
+        const response = await handler(request, env, auth.user, corsHeaders);
+        if (response.status >= 200 && response.status < 400) {
+          await touchUserActivity(env, auth.user.user_id);
+        }
+        return appendSessionRefreshCookie(response, auth);
       }
 
       return errorResponse('not_found', 'Route not found', 404, corsHeaders);

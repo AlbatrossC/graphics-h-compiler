@@ -7,7 +7,8 @@ const GOOGLE_TOKEN_CACHE = new Map();
 const GOOGLE_TOKEN_CACHE_TTL_MS = 300_000;
 
 const SESSION_COOKIE_NAME = 'session';
-const SESSION_DURATION_SEC = 7 * 24 * 60 * 60;
+const SESSION_DURATION_SEC = 3 * 24 * 60 * 60;
+const SESSION_REFRESH_THRESHOLD_SEC = 24 * 60 * 60;
 const SESSION_ISSUER = 'graphics-oc-files';
 const SESSION_AUDIENCE = 'graphics-oc-api';
 const SESSION_KEY_CACHE = new Map();
@@ -272,6 +273,56 @@ function buildLogoutCookie() {
   ].join('; ');
 }
 
+function shouldRefreshSession(session) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return Number(session?.exp || 0) - nowSec <= SESSION_REFRESH_THRESHOLD_SEC;
+}
+
+async function buildSessionToken(env, user) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  return await signSessionJwt(
+    {
+      user_id: user.user_id,
+      email: user.email,
+      iss: SESSION_ISSUER,
+      aud: SESSION_AUDIENCE,
+      iat: nowSec,
+      exp: nowSec + SESSION_DURATION_SEC,
+    },
+    env.SESSION_SECRET
+  );
+}
+
+async function buildRefreshCookie(env, session, user) {
+  if (!shouldRefreshSession(session)) return null;
+  const sessionToken = await buildSessionToken(env, user);
+  return buildSessionCookie(sessionToken);
+}
+
+function isMissingLastActiveColumnError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  return message.includes('last_active_at') && message.includes('no such column');
+}
+
+export async function touchUserActivity(env, userId) {
+  if (!userId) return;
+  try {
+    await env.graphicsh_oc_db
+      .prepare('UPDATE users SET last_active_at = ? WHERE user_id = ?')
+      .bind(Date.now(), userId)
+      .run();
+  } catch (error) {
+    if (!isMissingLastActiveColumnError(error)) throw error;
+  }
+}
+
+export function appendSessionRefreshCookie(response, auth) {
+  if (auth?.refreshCookie) {
+    response.headers.append('Set-Cookie', auth.refreshCookie);
+  }
+  return response;
+}
+
 async function upsertUserFromIdentity(env, identity, request) {
   const now = Date.now();
   const db = env.graphicsh_oc_db;
@@ -345,18 +396,7 @@ async function upsertUserFromIdentity(env, identity, request) {
 }
 
 async function issueSessionLoginResponse(env, user, corsHeaders) {
-  const nowSec = Math.floor(Date.now() / 1000);
-  const sessionToken = await signSessionJwt(
-    {
-      user_id: user.user_id,
-      email: user.email,
-      iss: SESSION_ISSUER,
-      aud: SESSION_AUDIENCE,
-      iat: nowSec,
-      exp: nowSec + SESSION_DURATION_SEC,
-    },
-    env.SESSION_SECRET
-  );
+  const sessionToken = await buildSessionToken(env, user);
 
   const response = jsonResponse(
     {
@@ -394,7 +434,8 @@ export async function authenticateRequest(request, env) {
   const session = await verifySessionJwt(sessionToken, env.SESSION_SECRET);
   const cachedUser = getCachedUser(session.user_id);
   if (cachedUser) {
-    return { session, user: cachedUser };
+    const refreshCookie = await buildRefreshCookie(env, session, cachedUser);
+    return { session, user: cachedUser, refreshCookie };
   }
 
   const user = await env.graphicsh_oc_db
@@ -426,7 +467,8 @@ export async function authenticateRequest(request, env) {
   };
 
   setCachedUser(normalizedUser.user_id, normalizedUser);
-  return { session, user: normalizedUser };
+  const refreshCookie = await buildRefreshCookie(env, session, normalizedUser);
+  return { session, user: normalizedUser, refreshCookie };
 }
 
 export async function handleGoogleLogin(request, env, corsHeaders) {
@@ -442,13 +484,15 @@ export async function handleGoogleLogin(request, env, corsHeaders) {
 
   const identity = await verifyGoogleIdToken(idToken, env);
   const user = await upsertUserFromIdentity(env, identity, request);
+  await touchUserActivity(env, user.user_id);
   return issueSessionLoginResponse(env, user, corsHeaders);
 }
 
 export async function handleSession(request, env, corsHeaders) {
   try {
     const auth = await authenticateRequest(request, env);
-    return jsonResponse(
+    await touchUserActivity(env, auth.user.user_id);
+    const response = jsonResponse(
       {
         authenticated: true,
         email: auth.user.email,
@@ -458,6 +502,7 @@ export async function handleSession(request, env, corsHeaders) {
       200,
       corsHeaders
     );
+    return appendSessionRefreshCookie(response, auth);
   } catch (error) {
     if (error?.statusCode === 401) {
       return jsonResponse({ authenticated: false }, 200, corsHeaders);
