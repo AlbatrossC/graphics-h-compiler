@@ -9,10 +9,10 @@ Maintenance mode is now a runtime switch, not only a build-time `.env` setting.
 The normal flow is:
 
 ```text
-Dashboard button
-  -> Cloudflare KV key: maintenance_mode
+Dashboard target button
+  -> Cloudflare KV key: maintenance_mode_test or maintenance_mode_prod
   -> graphics-oc-api /api/maintenance/status
-  -> Pages advanced _worker.js
+  -> Pages advanced _worker.js detects test/prod from hostname
   -> site/templates/maintenance.html
 ```
 
@@ -34,14 +34,15 @@ Do not delete or recreate Supabase tables to start a new chat session.
 | API status | `https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status` |
 | Test maintenance preview | `https://test.graphics-h-compiler.pages.dev/maintenance` |
 
-Use the test site first. Do not deploy maintenance routing to production until the user explicitly says to move it to main or production.
+Use the test site first. Production can have the maintenance routing code deployed while still serving normal pages, as long as `maintenance_mode_prod=false`.
 
 ## Key Files
 
 - `workers/dashboard/worker.js`
   - Serves the dashboard.
   - Exposes authenticated `GET /api/maintenance` and `POST /api/maintenance`.
-  - Writes `maintenance_mode`, `maintenance_session_slug`, `maintenance_updated_at`, and `maintenance_updated_by` to KV.
+  - Writes `maintenance_mode_test` or `maintenance_mode_prod`.
+  - Writes `maintenance_session_slug` when a fresh public chat room is requested.
 
 - `workers/dashboard/dashboard.html`
   - Contains the Site Maintenance control panel.
@@ -57,7 +58,8 @@ Use the test site first. Do not deploy maintenance routing to production until t
 
 - `workers/graphics-oc-api/routes/maintenance.js`
   - Public read-only status route.
-  - Reads `maintenance_mode` from KV and returns `{ "enabled": true | false }`.
+  - Reads `maintenance_mode_test` or `maintenance_mode_prod` when `?target=test` or `?target=prod` is provided.
+  - The legacy no-target route still reads `maintenance_mode`.
 
 - `site/_worker.js`
   - Cloudflare Pages advanced-mode Worker.
@@ -87,10 +89,14 @@ Use the test site first. Do not deploy maintenance routing to production until t
 
 | Key | Value | Notes |
 | --- | --- | --- |
-| `maintenance_mode` | `true` or `false` | Runtime switch used by the dashboard, API, and Pages Worker. |
+| `maintenance_mode_test` | `true` or `false` | Runtime switch for `test.graphics-h-compiler.pages.dev`. |
+| `maintenance_mode_prod` | `true` or `false` | Runtime switch for `graphicsh.online`. Keep this `false` unless production should enter maintenance. |
+| `maintenance_mode` | `true` or `false` | Legacy fallback key used only by no-target API callers. |
 | `maintenance_session_slug` | unique slug | Groups public chat messages into one maintenance window. |
-| `maintenance_updated_at` | ISO timestamp | Written by the dashboard. |
-| `maintenance_updated_by` | admin email or dashboard | Written by the dashboard. |
+| `maintenance_test_updated_at` | ISO timestamp | Last dashboard change for test. |
+| `maintenance_test_updated_by` | admin email or dashboard | Last dashboard actor for test. |
+| `maintenance_prod_updated_at` | ISO timestamp | Last dashboard change for production. |
+| `maintenance_prod_updated_by` | admin email or dashboard | Last dashboard actor for production. |
 | `maintenance_session:SLUG` | cached JSON | Short-lived cache created by the API Worker. |
 
 KV namespace id:
@@ -113,18 +119,22 @@ Always include `--remote` when changing KV from the CLI. Without `--remote`, Wra
 
 3. Use the `Site Maintenance` panel.
 
-4. To start maintenance:
+4. Select the target:
+   - `Test branch` controls `https://test.graphics-h-compiler.pages.dev/`.
+   - `Production` controls `https://graphicsh.online/`.
+
+5. To start maintenance:
    - Click `Enable maintenance`.
    - Confirm the prompt.
-   - The dashboard writes `maintenance_mode=true`.
-   - The dashboard also starts a fresh chat session.
+   - The dashboard writes the selected target flag to `true`.
+   - If enabling maintenance, the dashboard also starts a fresh chat session.
 
-5. To end maintenance:
+6. To end maintenance:
    - Click `Disable maintenance`.
    - Confirm the prompt.
-   - The dashboard writes `maintenance_mode=false`.
+   - The dashboard writes the selected target flag to `false`.
 
-6. To start a new chat room without changing site status:
+7. To start a new chat room without changing site status:
    - Click `Reset chat session`.
    - Confirm the prompt.
    - The dashboard writes a new `maintenance_session_slug`.
@@ -139,22 +149,35 @@ Check current status:
 Invoke-WebRequest -Uri https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status -UseBasicParsing
 ```
 
-Enable maintenance:
+Enable test maintenance:
 
 ```powershell
-wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode true
+wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode_test true
 ```
 
-Disable maintenance:
+Disable test maintenance:
 
 ```powershell
-wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode false
+wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode_test false
 ```
 
-Read the current flag:
+Enable production maintenance:
 
 ```powershell
-wrangler kv key get --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode
+wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode_prod true
+```
+
+Disable production maintenance:
+
+```powershell
+wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode_prod false
+```
+
+Read the target flags:
+
+```powershell
+wrangler kv key get --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode_test
+wrangler kv key get --remote --namespace-id 9c060181c3184231949421f4ed905d9b maintenance_mode_prod
 ```
 
 Reset chat session:
@@ -173,16 +196,22 @@ wrangler kv key put --remote --namespace-id 9c060181c3184231949421f4ed905d9b mai
 
 After enabling maintenance, allow a short delay for KV propagation.
 
-Check the API:
+Check the API for test:
 
 ```powershell
-Invoke-WebRequest -Uri https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status -UseBasicParsing
+Invoke-WebRequest -Uri "https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status?target=test" -UseBasicParsing
 ```
 
 Expected content:
 
 ```json
 {"enabled":true}
+```
+
+Check the API for production:
+
+```powershell
+Invoke-WebRequest -Uri "https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status?target=prod" -UseBasicParsing
 ```
 
 Check the test site with a browser-style HTML request:
@@ -267,9 +296,18 @@ for normal static assets.
 
 When maintenance is enabled, the Worker:
 
-1. Fetches `/maintenance` from Pages assets.
-2. Returns the body with status `503`.
-3. Sets clean headers:
+1. Chooses a target from the hostname:
+   - `graphicsh.online` and `www.graphicsh.online` use `prod`.
+   - Other hostnames, including the Pages test alias, use `test`.
+2. Calls:
+
+   ```text
+   /api/maintenance/status?target=TARGET
+   ```
+
+3. Fetches `/maintenance` from Pages assets.
+4. Returns the body with status `503`.
+5. Sets clean headers:
 
    ```text
    Content-Type: text/html; charset=utf-8
@@ -359,7 +397,14 @@ cd workers/dashboard
 wrangler deploy
 ```
 
-### API says enabled but test site still shows normal pages
+### API says enabled but a site still shows normal pages
+
+Make sure you checked the correct target:
+
+```powershell
+Invoke-WebRequest -Uri "https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status?target=test" -UseBasicParsing
+Invoke-WebRequest -Uri "https://graphics-oc-api.graphicshcompiler.workers.dev/api/maintenance/status?target=prod" -UseBasicParsing
+```
 
 Check that `dist/_worker.js` exists after build:
 

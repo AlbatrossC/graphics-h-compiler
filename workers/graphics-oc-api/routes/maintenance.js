@@ -1,9 +1,22 @@
 /**
  * Maintenance status route — KV-based toggle.
  *
- * Read the `maintenance_mode` key from KV to check if the site is in maintenance.
- * Toggle via Cloudflare Dashboard → KV → change value between "true" and "false".
+ * Read a KV-backed maintenance flag.
+ *
+ * Targets:
+ *  - /api/maintenance/status?target=test -> maintenance_mode_test
+ *  - /api/maintenance/status?target=prod -> maintenance_mode_prod
+ *  - /api/maintenance/status             -> legacy maintenance_mode
  */
+
+const TARGET_KEYS = {
+  test: 'maintenance_mode_test',
+  prod: 'maintenance_mode_prod',
+};
+
+function normalizeTarget(value) {
+  return value === 'prod' ? 'prod' : value === 'test' ? 'test' : '';
+}
 
 export async function handleMaintenanceRoutes(request, env, method, headers) {
   if (method !== 'GET') {
@@ -14,18 +27,19 @@ export async function handleMaintenanceRoutes(request, env, method, headers) {
   }
 
   try {
+    const url = new URL(request.url);
+    const target = normalizeTarget(url.searchParams.get('target'));
+    const key = target ? TARGET_KEYS[target] : 'maintenance_mode';
     let enabled = false;
 
-    // Read from KV if the binding exists
     if (env.MAINTENANCE_KV) {
-      const value = await env.MAINTENANCE_KV.get('maintenance_mode');
+      const value = await env.MAINTENANCE_KV.get(key);
       enabled = value === 'true';
     }
 
-    return Response.json({ enabled }, { headers });
+    return Response.json({ enabled, target: target || 'legacy' }, { headers });
   } catch (err) {
     console.error('Maintenance status error:', err);
-    // Default to NOT in maintenance if KV fails
     return Response.json({ enabled: false }, { headers });
   }
 }

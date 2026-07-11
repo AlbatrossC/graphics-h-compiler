@@ -25,9 +25,13 @@ function shouldBypass(pathname) {
   return BYPASS_PREFIXES.some(prefix => pathname.startsWith(prefix));
 }
 
-async function maintenanceEnabled(env) {
+function maintenanceTarget(hostname) {
+  return hostname === 'graphicsh.online' || hostname === 'www.graphicsh.online' ? 'prod' : 'test';
+}
+
+async function maintenanceEnabled(env, target) {
   const apiOrigin = String(env.PUBLIC_API_URL || DEFAULT_API_ORIGIN).replace(/\/+$/, '');
-  const response = await fetch(`${apiOrigin}/api/maintenance/status`, {
+  const response = await fetch(`${apiOrigin}/api/maintenance/status?target=${encodeURIComponent(target)}`, {
     headers: { Accept: 'application/json' },
     cf: { cacheTtl: 0, cacheEverything: false },
   });
@@ -43,6 +47,7 @@ function fetchAsset(env, request) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const target = maintenanceTarget(url.hostname);
 
     if (!['GET', 'HEAD'].includes(request.method) || shouldBypass(url.pathname) || !wantsHtml(request)) {
       return fetchAsset(env, request);
@@ -50,7 +55,7 @@ export default {
 
     let enabled = false;
     try {
-      enabled = await maintenanceEnabled(env);
+      enabled = await maintenanceEnabled(env, target);
     } catch (error) {
       console.error('Maintenance worker status check failed:', error);
     }
