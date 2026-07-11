@@ -442,7 +442,7 @@ def render_site(compiler_assets: dict) -> None:
         print('  [ok] 565e878f197c4724801806808502c6f9.txt (root)')
 
     # Static hosting configs
-    for cfg_file in ['_headers', '_redirects', 'serve.json']:
+    for cfg_file in ['_headers', '_redirects', '_routes.json', '_worker.js', 'serve.json']:
         src = SITE_DIR / cfg_file
         if src.exists():
             shutil.copy2(src, DIST_DIR / cfg_file)
