@@ -1,7 +1,7 @@
 {
   "compiler": {
     "css": "/static/build/compiler.74a53066a143.css",
-    "js": "/static/build/compiler.dc5073267f68.js",
+    "js": "/static/build/compiler.84ea1df2176b.js",
     "css_sources": [
       "site/static/css/compiler/base.css",
       "site/static/css/compiler/panels.css",

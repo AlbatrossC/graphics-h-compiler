@@ -1,0 +1,1475 @@
+{
+    "version": "1.2.0",
+    "functions": [
+        {
+            "name": "arc",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "arc(x, y, startAngle, endAngle, radius)",
+                "description": "Draws a circular arc from startAngle to endAngle around center (x, y).",
+                "params": [
+                    "x          \u2192 x coordinate of the center point",
+                    "y          \u2192 y coordinate of the center point",
+                    "startAngle \u2192 starting angle in degrees (0 = right)",
+                    "endAngle   \u2192 ending angle in degrees",
+                    "radius     \u2192 radius of the arc in pixels"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "bar",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "bar(left, top, right, bottom)",
+                "description": "Draws a filled rectangle using the current fill style and fill color. No border is drawn.",
+                "params": [
+                    "left   \u2192 x coordinate of the top-left corner",
+                    "top    \u2192 y coordinate of the top-left corner",
+                    "right  \u2192 x coordinate of the bottom-right corner",
+                    "bottom \u2192 y coordinate of the bottom-right corner"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "bar3d",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "bar3d(left, top, right, bottom, depth, topflag)",
+                "description": "Draws a 3D filled bar. Set topflag to 1 to draw the top face, 0 to skip it (useful for stacked bars).",
+                "params": [
+                    "left    \u2192 x coordinate of the top-left corner",
+                    "top     \u2192 y coordinate of the top-left corner",
+                    "right   \u2192 x coordinate of the bottom-right corner",
+                    "bottom  \u2192 y coordinate of the bottom-right corner",
+                    "depth   \u2192 depth of the 3D effect in pixels",
+                    "topflag \u2192 1 to draw the top face, 0 to skip"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "circle",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "circle(x, y, radius)",
+                "description": "Draws a circle outline using the current drawing color. No fill is applied.",
+                "params": [
+                    "x      \u2192 x coordinate of the center",
+                    "y      \u2192 y coordinate of the center",
+                    "radius \u2192 radius of the circle in pixels"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "drawpoly",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "drawpoly(numpoints, polypoints)",
+                "description": "Draws a polygon outline using the current drawing color.",
+                "params": [
+                    "numpoints  \u2192 number of points (vertices) in the polygon",
+                    "polypoints \u2192 array of x, y coordinate pairs \u2014 e.g. {x1,y1, x2,y2, ...}"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "ellipse",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "ellipse(x, y, startAngle, endAngle, xRadius, yRadius)",
+                "description": "Draws an elliptical arc using the current drawing color.",
+                "params": [
+                    "x          \u2192 x coordinate of the center",
+                    "y          \u2192 y coordinate of the center",
+                    "startAngle \u2192 starting angle in degrees",
+                    "endAngle   \u2192 ending angle in degrees",
+                    "xRadius    \u2192 horizontal radius",
+                    "yRadius    \u2192 vertical radius"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "fillellipse",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "fillellipse(x, y, xRadius, yRadius)",
+                "description": "Draws a filled ellipse using the current fill style and fill color.",
+                "params": [
+                    "x       \u2192 x coordinate of the center",
+                    "y       \u2192 y coordinate of the center",
+                    "xRadius \u2192 horizontal radius",
+                    "yRadius \u2192 vertical radius"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "fillpoly",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "fillpoly(numpoints, polypoints)",
+                "description": "Draws and fills a polygon using the current fill style and color.",
+                "params": [
+                    "numpoints  \u2192 number of points (vertices) in the polygon",
+                    "polypoints \u2192 array of x, y coordinate pairs \u2014 e.g. {x1,y1, x2,y2, ...}"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "floodfill",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "floodfill(x, y, border)",
+                "description": "Flood fills an enclosed area starting at (x, y), stopping when it hits the border color.",
+                "params": [
+                    "x      \u2192 x coordinate of a point inside the area to fill",
+                    "y      \u2192 y coordinate of a point inside the area to fill",
+                    "border \u2192 color value of the boundary line to stop at"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "line",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "line(x1, y1, x2, y2)",
+                "description": "Draws a straight line from (x1, y1) to (x2, y2) using the current drawing color.",
+                "params": [
+                    "x1 \u2192 x coordinate of the start point",
+                    "y1 \u2192 y coordinate of the start point",
+                    "x2 \u2192 x coordinate of the end point",
+                    "y2 \u2192 y coordinate of the end point"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "linerel",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "linerel(dx, dy)",
+                "description": "Draws a line from the current cursor position by a relative offset, then moves the cursor there.",
+                "params": [
+                    "dx \u2192 horizontal distance to move (can be negative)",
+                    "dy \u2192 vertical distance to move (can be negative)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "lineto",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "lineto(x, y)",
+                "description": "Draws a line from the current cursor position to (x, y) and moves the cursor there.",
+                "params": [
+                    "x \u2192 x coordinate of the destination",
+                    "y \u2192 y coordinate of the destination"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "moverel",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "moverel(dx, dy)",
+                "description": "Moves the current cursor position by a relative offset without drawing anything.",
+                "params": [
+                    "dx \u2192 horizontal distance to move (can be negative)",
+                    "dy \u2192 vertical distance to move (can be negative)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "moveto",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "moveto(x, y)",
+                "description": "Moves the current cursor position to (x, y) without drawing anything.",
+                "params": [
+                    "x \u2192 x coordinate to move to",
+                    "y \u2192 y coordinate to move to"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "pieslice",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "pieslice(x, y, startAngle, endAngle, radius)",
+                "description": "Draws and fills a circular pie slice using the current fill style and color.",
+                "params": [
+                    "x          \u2192 x coordinate of the center",
+                    "y          \u2192 y coordinate of the center",
+                    "startAngle \u2192 starting angle in degrees",
+                    "endAngle   \u2192 ending angle in degrees",
+                    "radius     \u2192 radius of the pie slice"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "putpixel",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {
+                "2": [
+                    "COLORS"
+                ]
+            },
+            "info": {
+                "signature": "putpixel(x, y, color)",
+                "description": "Draws a single pixel at (x, y) in the specified color.",
+                "params": [
+                    "x     \u2192 x coordinate of the pixel",
+                    "y     \u2192 y coordinate of the pixel",
+                    "color \u2192 color constant for the pixel (e.g. RED, WHITE)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "rectangle",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "rectangle(left, top, right, bottom)",
+                "description": "Draws a rectangle outline using the current drawing color. No fill is applied.",
+                "params": [
+                    "left   \u2192 x coordinate of the top-left corner",
+                    "top    \u2192 y coordinate of the top-left corner",
+                    "right  \u2192 x coordinate of the bottom-right corner",
+                    "bottom \u2192 y coordinate of the bottom-right corner"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "sector",
+            "category": "drawing",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "sector(x, y, startAngle, endAngle, xRadius, yRadius)",
+                "description": "Draws and fills an elliptical pie slice using the current fill style and color.",
+                "params": [
+                    "x          \u2192 x coordinate of the center",
+                    "y          \u2192 y coordinate of the center",
+                    "startAngle \u2192 starting angle in degrees",
+                    "endAngle   \u2192 ending angle in degrees",
+                    "xRadius    \u2192 horizontal radius",
+                    "yRadius    \u2192 vertical radius"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getimage",
+            "category": "image",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getimage(left, top, right, bottom, bitmap)",
+                "description": "Captures a rectangular area of the screen into a memory buffer for later use with putimage.",
+                "params": [
+                    "left   \u2192 x coordinate of the top-left corner of the area",
+                    "top    \u2192 y coordinate of the top-left corner of the area",
+                    "right  \u2192 x coordinate of the bottom-right corner",
+                    "bottom \u2192 y coordinate of the bottom-right corner",
+                    "bitmap \u2192 pointer to a memory buffer to store the image"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "imagesize",
+            "category": "image",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "imagesize(left, top, right, bottom)",
+                "description": "Returns the number of bytes needed to store a screen region. Use this to allocate memory before calling getimage.",
+                "params": [
+                    "left   \u2192 x coordinate of the top-left corner",
+                    "top    \u2192 y coordinate of the top-left corner",
+                    "right  \u2192 x coordinate of the bottom-right corner",
+                    "bottom \u2192 y coordinate of the bottom-right corner"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "putimage",
+            "category": "image",
+            "cursor": "inside",
+            "accepts": {
+                "2": [
+                    "PUTIMAGE_OPS"
+                ]
+            },
+            "info": {
+                "signature": "putimage(left, top, bitmap, op)",
+                "description": "Places a previously captured image (from getimage) onto the screen at (left, top).",
+                "params": [
+                    "left   \u2192 x coordinate of the top-left placement position",
+                    "top    \u2192 y coordinate of the top-left placement position",
+                    "bitmap \u2192 pointer to the image buffer captured by getimage",
+                    "op     \u2192 drawing operation constant (e.g. COPY_PUT, XOR_PUT)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "outtext",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "outtext(text)",
+                "description": "Outputs a string at the current cursor position using the current font, size, and color.",
+                "params": [
+                    "text \u2192 the string to display (e.g. \"Hello World\")"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "outtextxy",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "outtextxy(x, y, text)",
+                "description": "Outputs a string at a specific (x, y) position using the current font, size, and color.",
+                "params": [
+                    "x    \u2192 x coordinate where the text starts",
+                    "y    \u2192 y coordinate where the text starts",
+                    "text \u2192 the string to display (e.g. \"Hello World\")"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "settextjustify",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {
+                "0": [
+                    "TEXT_HORIZ_JUST"
+                ],
+                "1": [
+                    "TEXT_VERT_JUST"
+                ]
+            },
+            "info": {
+                "signature": "settextjustify(horiz, vert)",
+                "description": "Sets how text is aligned relative to the (x, y) point given to outtextxy.",
+                "params": [
+                    "horiz \u2192 horizontal alignment (LEFT_TEXT, CENTER_TEXT, RIGHT_TEXT)",
+                    "vert  \u2192 vertical alignment (BOTTOM_TEXT, CENTER_TEXT, TOP_TEXT)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "settextstyle",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {
+                "0": [
+                    "FONTS"
+                ],
+                "1": [
+                    "DIRECTIONS"
+                ],
+                "2": []
+            },
+            "info": {
+                "signature": "settextstyle(font, direction, charsize)",
+                "description": "Sets the font, direction, and size for all text output.",
+                "params": [
+                    "font      \u2192 font constant (e.g. DEFAULT_FONT, SANS_SERIF_FONT)",
+                    "direction \u2192 HORIZ_DIR for left-to-right, VERT_DIR for bottom-to-top",
+                    "charsize  \u2192 size multiplier \u2014 use a number like 1, 2, 3 (0 = user-defined)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setusercharsize",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setusercharsize(multx, divx, multy, divy)",
+                "description": "Sets a custom character size ratio when charsize is 0 in settextstyle. Width = multx/divx, Height = multy/divy.",
+                "params": [
+                    "multx \u2192 width numerator",
+                    "divx  \u2192 width denominator",
+                    "multy \u2192 height numerator",
+                    "divy  \u2192 height denominator"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "textheight",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "textheight(text)",
+                "description": "Returns the height in pixels of the given string using the current text settings.",
+                "params": [
+                    "text \u2192 the string to measure"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "textwidth",
+            "category": "text",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "textwidth(text)",
+                "description": "Returns the width in pixels of the given string using the current text settings.",
+                "params": [
+                    "text \u2192 the string to measure"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setbkcolor",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {
+                "0": [
+                    "COLORS"
+                ]
+            },
+            "info": {
+                "signature": "setbkcolor(color)",
+                "description": "Sets the background color of the graphics window.",
+                "params": [
+                    "color \u2192 a color constant (e.g. BLACK, WHITE, BLUE)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setcolor",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {
+                "0": [
+                    "COLORS"
+                ]
+            },
+            "info": {
+                "signature": "setcolor(color)",
+                "description": "Sets the current foreground drawing color for lines, shapes, and text.",
+                "params": [
+                    "color \u2192 a color constant (e.g. RED, GREEN, WHITE)"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setfillpattern",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {
+                "1": [
+                    "COLORS"
+                ]
+            },
+            "info": {
+                "signature": "setfillpattern(upattern, color)",
+                "description": "Sets a user-defined 8x8 fill pattern and the color to use when filling shapes.",
+                "params": [
+                    "upattern \u2192 pointer to an 8-byte array defining the custom fill pattern",
+                    "color    \u2192 a color constant for the fill (e.g. RED, BLUE)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setfillstyle",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {
+                "0": [
+                    "FILL_PATTERNS"
+                ],
+                "1": [
+                    "COLORS"
+                ]
+            },
+            "info": {
+                "signature": "setfillstyle(pattern, color)",
+                "description": "Sets the fill pattern and fill color used by bar, pieslice, fillellipse, and other filled shapes.",
+                "params": [
+                    "pattern \u2192 fill pattern constant (e.g. SOLID_FILL, HATCH_FILL, XHATCH_FILL)",
+                    "color   \u2192 a color constant for the fill (e.g. RED, BLUE)"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setpalette",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setpalette(colornum, color)",
+                "description": "Changes one entry in the current color palette.",
+                "params": [
+                    "colornum \u2192 palette index to change (0\u201315)",
+                    "color    \u2192 new color value to assign to that index"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setallpalette",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setallpalette(palette)",
+                "description": "Sets all palette colors at once using a palettetype structure.",
+                "params": [
+                    "palette \u2192 pointer to a palettetype structure with the new color values"
+                ]
+            },
+            "boost": -5,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setrgbpalette",
+            "category": "color",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setrgbpalette(colornum, red, green, blue)",
+                "description": "Sets a palette entry to a specific RGB color value (IBM 8514 driver only).",
+                "params": [
+                    "colornum \u2192 palette index to change",
+                    "red      \u2192 red component (0\u2013255)",
+                    "green    \u2192 green component (0\u2013255)",
+                    "blue     \u2192 blue component (0\u2013255)"
+                ]
+            },
+            "boost": -5,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setlinestyle",
+            "category": "style",
+            "cursor": "inside",
+            "accepts": {
+                "0": [
+                    "LINE_STYLES"
+                ],
+                "2": [
+                    "LINE_WIDTHS"
+                ]
+            },
+            "info": {
+                "signature": "setlinestyle(linestyle, upattern, thickness)",
+                "description": "Sets the style and thickness for lines drawn by line, rectangle, circle, etc.",
+                "params": [
+                    "linestyle  \u2192 line style constant (e.g. SOLID_LINE, DASHED_LINE, DOTTED_LINE)",
+                    "upattern   \u2192 custom 16-bit pattern \u2014 only used when linestyle is USERBIT_LINE, otherwise pass 0",
+                    "thickness  \u2192 NORM_WIDTH for normal, THICK_WIDTH for thick lines"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setwritemode",
+            "category": "style",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setwritemode(mode)",
+                "description": "Sets how lines are drawn onto the screen \u2014 normal copy or XOR mode.",
+                "params": [
+                    "mode \u2192 0 for COPY_PUT (normal drawing), 1 for XOR_PUT (inverts existing pixels)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getarccoords",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getarccoords(arccoords)",
+                "description": "Fills an arccoordstype structure with the start and end points of the last arc drawn.",
+                "params": [
+                    "arccoords \u2192 pointer to an arccoordstype struct to store the result"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getaspectratio",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getaspectratio(&xasp, &yasp)",
+                "description": "Returns the aspect ratio of the current graphics mode. Use this to draw true circles.",
+                "params": [
+                    "xasp \u2192 pointer to an int \u2014 receives the horizontal aspect value",
+                    "yasp \u2192 pointer to an int \u2014 receives the vertical aspect value"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getbkcolor",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getbkcolor()",
+                "description": "Returns the current background color as an integer.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getcolor",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getcolor()",
+                "description": "Returns the current foreground drawing color as an integer.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getdefaultpalette",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getdefaultpalette()",
+                "description": "Returns a pointer to the default palette for the current graphics driver.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getdrivername",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getdrivername()",
+                "description": "Returns the name of the current graphics driver as a string (e.g. \"EGA/VGA\").",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getfillpattern",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getfillpattern(pattern)",
+                "description": "Copies the current user-defined fill pattern into the given 8-byte buffer.",
+                "params": [
+                    "pattern \u2192 pointer to an 8-byte char array to receive the fill pattern"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getfillsettings",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getfillsettings(fillinfo)",
+                "description": "Fills a fillsettingstype struct with the current fill pattern and fill color.",
+                "params": [
+                    "fillinfo \u2192 pointer to a fillsettingstype struct to store the result"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getgraphmode",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getgraphmode()",
+                "description": "Returns the current graphics mode as an integer.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getlinesettings",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getlinesettings(lineinfo)",
+                "description": "Fills a linesettingstype struct with the current line style, pattern, and thickness.",
+                "params": [
+                    "lineinfo \u2192 pointer to a linesettingstype struct to store the result"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getmaxcolor",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getmaxcolor()",
+                "description": "Returns the highest valid color number in the current graphics mode (usually 15).",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getmaxmode",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getmaxmode()",
+                "description": "Returns the highest graphics mode number available for the current driver.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getmaxx",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getmaxx()",
+                "description": "Returns the maximum x coordinate (screen width minus 1) for the current graphics mode.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getmaxy",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getmaxy()",
+                "description": "Returns the maximum y coordinate (screen height minus 1) for the current graphics mode.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getmodename",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getmodename(modenumber)",
+                "description": "Returns the name of a graphics mode as a string (e.g. \"640 x 480 VGA\").",
+                "params": [
+                    "modenumber \u2192 the mode number to look up"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getmoderange",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getmoderange(graphdriver, &lomode, &himode)",
+                "description": "Returns the lowest and highest valid mode numbers for the given graphics driver.",
+                "params": [
+                    "graphdriver \u2192 the graphics driver number to query",
+                    "lomode      \u2192 pointer to an int \u2014 receives the lowest mode number",
+                    "himode      \u2192 pointer to an int \u2014 receives the highest mode number"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getpalette",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getpalette(palette)",
+                "description": "Fills a palettetype struct with the current palette colors.",
+                "params": [
+                    "palette \u2192 pointer to a palettetype struct to store the result"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getpalettesize",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getpalettesize()",
+                "description": "Returns the number of entries in the current color palette.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getpixel",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getpixel(x, y)",
+                "description": "Returns the color of the pixel at (x, y) as an integer.",
+                "params": [
+                    "x \u2192 x coordinate of the pixel",
+                    "y \u2192 y coordinate of the pixel"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "gettextsettings",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "gettextsettings(texttypeinfo)",
+                "description": "Fills a textsettingstype struct with the current font, direction, size, and justification settings.",
+                "params": [
+                    "texttypeinfo \u2192 pointer to a textsettingstype struct to store the result"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getviewsettings",
+            "category": "state",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "getviewsettings(viewport)",
+                "description": "Fills a viewporttype struct with the current viewport boundaries and clip flag.",
+                "params": [
+                    "viewport \u2192 pointer to a viewporttype struct to store the result"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "getx",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "getx()",
+                "description": "Returns the x coordinate of the current cursor position.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "gety",
+            "category": "state",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "gety()",
+                "description": "Returns the y coordinate of the current cursor position.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "cleardevice",
+            "category": "system",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "cleardevice()",
+                "description": "Clears the entire graphics screen and moves the cursor back to (0, 0).",
+                "params": []
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "clearviewport",
+            "category": "system",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "clearviewport()",
+                "description": "Clears only the current viewport area and moves the cursor to (0, 0) within it.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "closegraph",
+            "category": "system",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "closegraph()",
+                "description": "Shuts down the graphics system and restores the screen to its original text mode.",
+                "params": []
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "detectgraph",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "detectgraph(&graphdriver, &graphmode)",
+                "description": "Detects the best graphics driver and mode for your hardware without initializing graphics.",
+                "params": [
+                    "graphdriver \u2192 pointer to an int \u2014 receives the detected driver number",
+                    "graphmode   \u2192 pointer to an int \u2014 receives the recommended mode number"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "graphdefaults",
+            "category": "system",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "graphdefaults()",
+                "description": "Resets all graphics settings to their defaults \u2014 color, fill style, line style, viewport, and text style.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "grapherrormsg",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "grapherrormsg(errorcode)",
+                "description": "Returns a human-readable error message string for a given graphics error code.",
+                "params": [
+                    "errorcode \u2192 an error code \u2014 usually the result of calling graphresult()"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "graphresult",
+            "category": "system",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "graphresult()",
+                "description": "Returns the error code for the last graphics operation. Returns 0 (grOk) if everything is fine.",
+                "params": []
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "initgraph",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "initgraph(&graphdriver, &graphmode, pathtodriver)",
+                "description": "Initializes the graphics system. Pass DETECT as the driver to auto-detect your graphics card. Always call this before any drawing.",
+                "params": [
+                    "graphdriver  \u2192 pointer to an int \u2014 pass the address of a variable set to DETECT for auto-detection",
+                    "graphmode    \u2192 pointer to an int \u2014 receives the selected mode (or set to 0 with DETECT)",
+                    "pathtodriver \u2192 path to the folder containing .BGI driver files \u2014 use \"\" for the current folder"
+                ]
+            },
+            "boost": 10,
+            "header": "graphics.h"
+        },
+        {
+            "name": "installuserfont",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "installuserfont(name)",
+                "description": "Loads a stroked font from a .CHR file and returns a font number you can use with settextstyle.",
+                "params": [
+                    "name \u2192 path to the .CHR font file (e.g. \"myfont.chr\")"
+                ]
+            },
+            "boost": -5,
+            "header": "graphics.h"
+        },
+        {
+            "name": "installuserdriver",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "installuserdriver(name, detect)",
+                "description": "Installs a user-supplied graphics driver and returns a driver number.",
+                "params": [
+                    "name   \u2192 name of the driver to install",
+                    "detect \u2192 pointer to a detection function, or NULL to skip auto-detection"
+                ]
+            },
+            "boost": -5,
+            "header": "graphics.h"
+        },
+        {
+            "name": "restorecrtmode",
+            "category": "system",
+            "cursor": "end",
+            "accepts": {},
+            "info": {
+                "signature": "restorecrtmode()",
+                "description": "Temporarily restores the screen to text mode without closing the graphics system. Call setgraphmode to return.",
+                "params": []
+            },
+            "boost": -5,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setactivepage",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setactivepage(page)",
+                "description": "Sets which video page drawing commands write to (for double-buffered animation).",
+                "params": [
+                    "page \u2192 page number to draw to (0-based)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setaspectratio",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setaspectratio(xasp, yasp)",
+                "description": "Overrides the default aspect ratio. Used to correct distortion on some monitors.",
+                "params": [
+                    "xasp \u2192 horizontal aspect value",
+                    "yasp \u2192 vertical aspect value"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setgraphbufsize",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setgraphbufsize(bufsize)",
+                "description": "Sets the size of the internal scan buffer used by floodfill and fillpoly. Call before initgraph.",
+                "params": [
+                    "bufsize \u2192 buffer size in bytes (default is 4096)"
+                ]
+            },
+            "boost": -5,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setgraphmode",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setgraphmode(mode)",
+                "description": "Switches to a specific graphics mode and clears the screen. Also used to return from restorecrtmode.",
+                "params": [
+                    "mode \u2192 a valid graphics mode number for the current driver"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setviewport",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setviewport(left, top, right, bottom, clip)",
+                "description": "Defines a rectangular viewport as the active drawing area. All coordinates become relative to it.",
+                "params": [
+                    "left   \u2192 x coordinate of the top-left corner",
+                    "top    \u2192 y coordinate of the top-left corner",
+                    "right  \u2192 x coordinate of the bottom-right corner",
+                    "bottom \u2192 y coordinate of the bottom-right corner",
+                    "clip   \u2192 1 to clip drawing at the viewport edges, 0 to allow drawing outside"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        },
+        {
+            "name": "setvisualpage",
+            "category": "system",
+            "cursor": "inside",
+            "accepts": {},
+            "info": {
+                "signature": "setvisualpage(page)",
+                "description": "Sets which video page is displayed on screen (for double-buffered animation).",
+                "params": [
+                    "page \u2192 page number to display (0-based)"
+                ]
+            },
+            "boost": 0,
+            "header": "graphics.h"
+        }
+    ],
+    "headers": [
+        "_defs.h",
+        "_null.h",
+        "alloc.h",
+        "assert.h",
+        "bcd.h",
+        "bios.h",
+        "complex.h",
+        "conio.h",
+        "constrea.h",
+        "ctype.h",
+        "dir.h",
+        "direct.h",
+        "dirent.h",
+        "dos.h",
+        "errno.h",
+        "fcntl.h",
+        "float.h",
+        "fstream.h",
+        "generic.h",
+        "graphics.h",
+        "io.h",
+        "iomanip.h",
+        "iostream.h",
+        "limits.h",
+        "locale.h",
+        "locking.h",
+        "malloc.h",
+        "math.h",
+        "mem.h",
+        "memory.h",
+        "new.h",
+        "process.h",
+        "search.h",
+        "setjmp.h",
+        "share.h",
+        "signal.h",
+        "stdarg.h",
+        "stddef.h",
+        "stdio.h",
+        "stdiostr.h",
+        "stdlib.h",
+        "string.h",
+        "strstrea.h",
+        "sys/stat.h",
+        "sys/timeb.h",
+        "sys/types.h",
+        "time.h",
+        "utime.h",
+        "values.h",
+        "varargs.h"
+    ],
+    "constants": {
+        "COLORS": [
+            "BLACK",
+            "BLUE",
+            "GREEN",
+            "CYAN",
+            "RED",
+            "MAGENTA",
+            "BROWN",
+            "LIGHTGRAY",
+            "DARKGRAY",
+            "LIGHTBLUE",
+            "LIGHTGREEN",
+            "LIGHTCYAN",
+            "LIGHTRED",
+            "LIGHTMAGENTA",
+            "YELLOW",
+            "WHITE"
+        ],
+        "FONTS": [
+            "DEFAULT_FONT",
+            "TRIPLEX_FONT",
+            "SMALL_FONT",
+            "SANS_SERIF_FONT",
+            "GOTHIC_FONT",
+            "SCRIPT_FONT",
+            "SIMPLEX_FONT",
+            "TRIPLEX_SCR_FONT",
+            "COMPLEX_FONT",
+            "EUROPEAN_FONT",
+            "BOLD_FONT"
+        ],
+        "DIRECTIONS": [
+            "HORIZ_DIR",
+            "VERT_DIR"
+        ],
+        "FILL_PATTERNS": [
+            "EMPTY_FILL",
+            "SOLID_FILL",
+            "LINE_FILL",
+            "LTSLASH_FILL",
+            "SLASH_FILL",
+            "BKSLASH_FILL",
+            "LTBKSLASH_FILL",
+            "HATCH_FILL",
+            "XHATCH_FILL",
+            "INTERLEAVE_FILL",
+            "WIDE_DOT_FILL",
+            "CLOSE_DOT_FILL",
+            "USER_FILL"
+        ],
+        "LINE_STYLES": [
+            "SOLID_LINE",
+            "DOTTED_LINE",
+            "CENTER_LINE",
+            "DASHED_LINE",
+            "USERBIT_LINE"
+        ],
+        "LINE_WIDTHS": [
+            "NORM_WIDTH",
+            "THICK_WIDTH"
+        ],
+        "TEXT_HORIZ_JUST": [
+            "LEFT_TEXT",
+            "CENTER_TEXT",
+            "RIGHT_TEXT"
+        ],
+        "TEXT_VERT_JUST": [
+            "BOTTOM_TEXT",
+            "CENTER_TEXT",
+            "TOP_TEXT"
+        ],
+        "PUTIMAGE_OPS": [
+            "COPY_PUT",
+            "XOR_PUT",
+            "OR_PUT",
+            "AND_PUT",
+            "NOT_PUT"
+        ]
+    },
+    "constantMetadata": {
+        "COLORS": {
+            "BLACK": {
+                "index": 0,
+                "rgb": "rgb(0, 0, 0)",
+                "hex": "#000000"
+            },
+            "BLUE": {
+                "index": 1,
+                "rgb": "rgb(0, 0, 170)",
+                "hex": "#0000AA"
+            },
+            "GREEN": {
+                "index": 2,
+                "rgb": "rgb(0, 170, 0)",
+                "hex": "#00AA00"
+            },
+            "CYAN": {
+                "index": 3,
+                "rgb": "rgb(0, 170, 170)",
+                "hex": "#00AAAA"
+            },
+            "RED": {
+                "index": 4,
+                "rgb": "rgb(170, 0, 0)",
+                "hex": "#AA0000"
+            },
+            "MAGENTA": {
+                "index": 5,
+                "rgb": "rgb(170, 0, 170)",
+                "hex": "#AA00AA"
+            },
+            "BROWN": {
+                "index": 6,
+                "rgb": "rgb(170, 85, 0)",
+                "hex": "#AA5500"
+            },
+            "LIGHTGRAY": {
+                "index": 7,
+                "rgb": "rgb(170, 170, 170)",
+                "hex": "#AAAAAA"
+            },
+            "DARKGRAY": {
+                "index": 8,
+                "rgb": "rgb(85, 85, 85)",
+                "hex": "#555555"
+            },
+            "LIGHTBLUE": {
+                "index": 9,
+                "rgb": "rgb(85, 85, 255)",
+                "hex": "#5555FF"
+            },
+            "LIGHTGREEN": {
+                "index": 10,
+                "rgb": "rgb(85, 255, 85)",
+                "hex": "#55FF55"
+            },
+            "LIGHTCYAN": {
+                "index": 11,
+                "rgb": "rgb(85, 255, 255)",
+                "hex": "#55FFFF"
+            },
+            "LIGHTRED": {
+                "index": 12,
+                "rgb": "rgb(255, 85, 85)",
+                "hex": "#FF5555"
+            },
+            "LIGHTMAGENTA": {
+                "index": 13,
+                "rgb": "rgb(255, 85, 255)",
+                "hex": "#FF55FF"
+            },
+            "YELLOW": {
+                "index": 14,
+                "rgb": "rgb(255, 255, 85)",
+                "hex": "#FFFF55"
+            },
+            "WHITE": {
+                "index": 15,
+                "rgb": "rgb(255, 255, 255)",
+                "hex": "#FFFFFF"
+            }
+        }
+    }
+}

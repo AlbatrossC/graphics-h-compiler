@@ -3,6 +3,7 @@
 
 let functionsMap = {};
 let constantsMap = {};
+let constantMetadataMap = {};
 let headerFiles = [];
 let dataLoaded = false;
 let startAutocomplete = null;
@@ -211,12 +212,13 @@ function getAutocompleteDocCache(state) {
 async function loadData() {
     if (dataLoaded) return;
     try {
-        const response = await fetch('/static/assets/functions.2.json');
+        const response = await fetch('/static/assets/functions.3.json');
         if (!response.ok) throw new Error('Failed to load functions data');
         const data = await response.json();
 
         functionsMap = {};
         constantsMap = {};
+        constantMetadataMap = {};
         headerFiles = [];
         resetAutocompleteCaches();
 
@@ -227,6 +229,12 @@ async function loadData() {
         if (data.constants) {
             for (const [key, values] of Object.entries(data.constants)) {
                 constantsMap[key] = values;
+            }
+        }
+
+        if (data.constantMetadata) {
+            for (const [key, values] of Object.entries(data.constantMetadata)) {
+                constantMetadataMap[key] = values;
             }
         }
 
@@ -498,6 +506,28 @@ function buildFunctionOptions() {
     return cachedFunctionOptions;
 }
 
+function getConstantMetadata(group, constant) {
+    return constantMetadataMap[group]?.[constant] || null;
+}
+
+function renderColorCompletion(completion) {
+    const color = completion.color;
+    const dom = document.createElement('div');
+    dom.className = 'cm-color-completion';
+
+    const swatch = document.createElement('span');
+    swatch.className = 'cm-color-swatch';
+    swatch.style.backgroundColor = color.rgb;
+    swatch.title = `${completion.label}: ${color.rgb}`;
+
+    const label = document.createElement('span');
+    label.className = 'cm-color-label';
+    label.textContent = completion.label;
+
+    dom.append(swatch, label);
+    return dom;
+}
+
 // Step 3: Detect token context at cursor (e.g. comments, strings, preprocessor, include).
 function detectContext(state, pos, source) {
     const line = state.doc.lineAt(pos);
@@ -685,13 +715,19 @@ function getCompletions(context) {
             for (const constant of constants) {
                 if (seen.has(constant)) continue;
                 seen.add(constant);
+                const colorMetadata = group === 'COLORS'
+                    ? getConstantMetadata(group, constant)
+                    : null;
+
                 options.push({
                     label: constant,
-                    type: 'constant',
+                    type: colorMetadata ? null : 'constant',
+                    color: colorMetadata || undefined,
+                    render: colorMetadata ? renderColorCompletion : undefined,
                     apply: (view, completion, from, to) => {
                         view.dispatch({
-                            changes: { from, to, insert: constant },
-                            selection: { anchor: from + constant.length }
+                            changes: { from, to, insert: completion.label },
+                            selection: { anchor: from + completion.label.length }
                         });
                     }
                 });
@@ -928,6 +964,35 @@ window.setupAutocomplete = function (editorView) {
             fontSize: "11px",
             fontFamily: "'JetBrains Mono', monospace"
         },
+        ".cm-color-completion": {
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            width: "100%",
+            minWidth: "0"
+        },
+        ".cm-color-swatch": {
+            display: "inline-block",
+            width: "14px",
+            minWidth: "14px",
+            height: "14px",
+            minHeight: "14px",
+            borderRadius: "2px",
+            border: "1px solid rgba(255, 255, 255, 0.42)",
+            boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.45)",
+            flexShrink: "0"
+        },
+        ".cm-color-label": {
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            color: "#d8e0ea",
+            fontSize: "13px",
+            lineHeight: "1.25"
+        },
+        ".cm-completion-color-option .cm-completionIcon": {
+            display: "none"
+        },
         // Function tooltip card
         ".cm-func-tooltip": {
             backgroundColor: "#252526",
@@ -1028,7 +1093,27 @@ window.setupAutocomplete = function (editorView) {
     const initAc = appSettings?.editor?.autocomplete !== false;
     const initTt = appSettings?.editor?.hoverTooltips !== false;
 
-    const acExtension = autocompletion({ override: [getCompletions] });
+    const acExtension = autocompletion({
+        override: [getCompletions],
+        optionClass(completion) {
+            return completion.color ? 'cm-completion-color-option' : '';
+        },
+        addToOptions: [
+            {
+                position: 25,
+                render(completion, state, view) {
+                    if (completion.color) {
+                        const swatch = document.createElement('span');
+                        swatch.className = 'cm-color-swatch';
+                        swatch.style.backgroundColor = completion.color.rgb;
+                        swatch.title = `${completion.label}: ${completion.color.rgb}`;
+                        return swatch;
+                    }
+                    return null;
+                }
+            }
+        ]
+    });
     const ttExtension = [hoverTooltipSource, selectionTooltipField, tooltipHideListener];
 
     editorView.dispatch({
