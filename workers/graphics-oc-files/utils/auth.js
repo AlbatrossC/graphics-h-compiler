@@ -9,6 +9,8 @@ const GOOGLE_TOKEN_CACHE_TTL_MS = 300_000;
 const SESSION_COOKIE_NAME = 'session';
 const SESSION_DURATION_SEC = 3 * 24 * 60 * 60;
 const SESSION_REFRESH_THRESHOLD_SEC = 24 * 60 * 60;
+const TEST_SESSION_REFRESH_THRESHOLD_SEC = SESSION_DURATION_SEC - (24 * 60 * 60);
+const TEST_APP_ORIGIN = 'https://test.graphics-h-compiler.pages.dev';
 const SESSION_ISSUER = 'graphics-oc-files';
 const SESSION_AUDIENCE = 'graphics-oc-api';
 const SESSION_KEY_CACHE = new Map();
@@ -273,12 +275,17 @@ function buildLogoutCookie() {
   ].join('; ');
 }
 
-function shouldRefreshSession(session) {
-  const nowSec = Math.floor(Date.now() / 1000);
-  return Number(session?.exp || 0) - nowSec <= SESSION_REFRESH_THRESHOLD_SEC;
+function getSessionRefreshThresholdSec(request) {
+  return request?.headers?.get('Origin') === TEST_APP_ORIGIN
+    ? TEST_SESSION_REFRESH_THRESHOLD_SEC
+    : SESSION_REFRESH_THRESHOLD_SEC;
 }
 
-async function buildSessionToken(env, user) {
+export function shouldRefreshSession(session, request, nowSec = Math.floor(Date.now() / 1000)) {
+  return Number(session?.exp || 0) - nowSec <= getSessionRefreshThresholdSec(request);
+}
+
+export async function buildSessionToken(env, user) {
   const nowSec = Math.floor(Date.now() / 1000);
   return await signSessionJwt(
     {
@@ -293,8 +300,8 @@ async function buildSessionToken(env, user) {
   );
 }
 
-async function buildRefreshCookie(env, session, user) {
-  if (!shouldRefreshSession(session)) return null;
+async function buildRefreshCookie(env, session, user, request) {
+  if (!shouldRefreshSession(session, request)) return null;
   const sessionToken = await buildSessionToken(env, user);
   return buildSessionCookie(sessionToken);
 }
@@ -434,7 +441,7 @@ export async function authenticateRequest(request, env) {
   const session = await verifySessionJwt(sessionToken, env.SESSION_SECRET);
   const cachedUser = getCachedUser(session.user_id);
   if (cachedUser) {
-    const refreshCookie = await buildRefreshCookie(env, session, cachedUser);
+    const refreshCookie = await buildRefreshCookie(env, session, cachedUser, request);
     return { session, user: cachedUser, refreshCookie };
   }
 
@@ -467,7 +474,7 @@ export async function authenticateRequest(request, env) {
   };
 
   setCachedUser(normalizedUser.user_id, normalizedUser);
-  const refreshCookie = await buildRefreshCookie(env, session, normalizedUser);
+  const refreshCookie = await buildRefreshCookie(env, session, normalizedUser, request);
   return { session, user: normalizedUser, refreshCookie };
 }
 
