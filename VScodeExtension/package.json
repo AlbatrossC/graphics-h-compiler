@@ -2,7 +2,7 @@
   "name": "graphics-h-compiler",
   "displayName": "Graphics.h Compiler",
   "description": "Compile and run C++ graphics.h programs with one click. Includes automatic MinGW setup and WinBGIM library for Windows.",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "publisher": "AlbatrossC",
   "icon": "assets/icon.png",
   "repository": {
@@ -47,8 +47,7 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onLanguage:cpp",
-    "onLanguage:c++"
+    "onLanguage:cpp"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -97,30 +96,30 @@
     ],
     "keybindings": [
       {
-        "command": "graphics-h-compiler.compileAndRun",
+        "command": "graphics-h-compiler.compileAndRunWinBGI",
         "key": "ctrl+alt+n",
-        "when": "editorLangId == cpp || resourceExtname == .c++"
+        "when": "editorLangId == cpp && !isMac"
       },
       {
         "command": "graphics-h-compiler.compileOnly",
         "key": "ctrl+alt+b",
-        "when": "editorLangId == cpp || resourceExtname == .c++"
+        "when": "editorLangId == cpp && !isMac"
       },
       {
         "command": "graphics-h-compiler.stopProgram",
         "key": "ctrl+alt+k",
-        "when": "editorLangId == cpp || resourceExtname == .c++"
+        "when": "editorLangId == cpp && !isMac"
       }
     ],
     "menus": {
       "editor/title/run": [
         {
-          "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "when": "editorLangId == cpp",
           "command": "graphics-h-compiler.compileAndRunTurboC",
           "group": "navigation@1"
         },
         {
-          "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "when": "editorLangId == cpp && !isMac",
           "command": "graphics-h-compiler.compileAndRunWinBGI",
           "group": "navigation@2"
         },
@@ -132,12 +131,12 @@
       ],
       "editor/context": [
         {
-          "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "when": "editorLangId == cpp",
           "command": "graphics-h-compiler.compileAndRunTurboC",
           "group": "navigation@1"
         },
         {
-          "when": "resourceExtname == .cpp || resourceExtname == .c++",
+          "when": "editorLangId == cpp && !isMac",
           "command": "graphics-h-compiler.compileAndRunWinBGI",
           "group": "navigation@2"
         },
@@ -150,11 +149,11 @@
       "commandPalette": [
         {
           "command": "graphics-h-compiler.compileAndRunWinBGI",
-          "when": "editorLangId == cpp || resourceExtname == .c++"
+          "when": "editorLangId == cpp && !isMac"
         },
         {
           "command": "graphics-h-compiler.compileAndRunTurboC",
-          "when": "editorLangId == cpp || resourceExtname == .c++"
+          "when": "editorLangId == cpp"
         },
         {
           "command": "graphics-h-compiler.compileAndRun",
@@ -162,11 +161,11 @@
         },
         {
           "command": "graphics-h-compiler.compileOnly",
-          "when": "editorLangId == cpp || resourceExtname == .c++"
+          "when": "editorLangId == cpp && !isMac"
         },
         {
           "command": "graphics-h-compiler.stopProgram",
-          "when": "editorLangId == cpp || resourceExtname == .c++"
+          "when": "editorLangId == cpp && !isMac"
         }
       ]
     },
@@ -198,17 +197,20 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
+    "sync-assets": "node scripts/sync-assets.js",
+    "validate-assets": "node scripts/validate-assets.js",
     "compile": "npm run check-types && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && node esbuild.js --production",
+    "package": "npm run sync-assets && npm run validate-assets && npm run check-types && npm run lint && npm run test && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "npm run compile-tests",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "node out/test/diagnostics.test.js",
+    "test:integration": "vscode-test"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",

@@ -107,7 +107,9 @@ PAUSE
     }
 
     private sendToWebview(zipBase64: string) {
-        if (!this.panel) return;
+        if (!this.panel) {
+            return;
+        }
 
         // Base64 encoding for safe transfer to webview
         this.panel.webview.postMessage({

@@ -10,8 +10,7 @@ let windowsDownloader: WindowsDownloader | null = null;
 let ubuntuDownloader: UbuntuDownloader | null = null;
 let compiler: GraphicsCompiler;
 let turboCRunner: TurboCRunner;
-let statusBarItem: vscode.StatusBarItem;
-let statusBarInterval: ReturnType<typeof setInterval> | null = null;
+let statusBarItem: vscode.StatusBarItem | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Graphics.h Compiler extension activated');
@@ -22,7 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
     if (currentOS === OperatingSystem.Windows) {
         windowsDownloader = new WindowsDownloader();
     } else if (currentOS === OperatingSystem.Linux) {
-        ubuntuDownloader = new UbuntuDownloader();
+        ubuntuDownloader = new UbuntuDownloader(pathManager);
     }
 
     compiler = new GraphicsCompiler(pathManager);
@@ -31,9 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
     const osName = pathManager.getOSDisplayName();
     console.log(`Detected OS: ${osName}`);
 
-    if (currentOS !== OperatingSystem.Windows && currentOS !== OperatingSystem.Linux) {
+    if (currentOS === OperatingSystem.Unknown) {
         vscode.window.showErrorMessage(
-            'Graphics.h Compiler: This extension only works on Windows and Ubuntu/Linux.',
+            'Graphics.h Compiler could not identify this operating system.',
             'OK'
         );
         return;
@@ -41,30 +40,22 @@ export function activate(context: vscode.ExtensionContext) {
 
     const hasShownWelcome = context.globalState.get<boolean>('graphics-h.welcomeShown', false);
     if (!hasShownWelcome) {
-        showWelcomeMessage(context);
+        showWelcomeMessage();
         context.globalState.update('graphics-h.welcomeShown', true);
     }
 
-    // Status bar
-    statusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        100
-    );
-    context.subscriptions.push(statusBarItem);
-
-    // Update status bar on editor change
-    context.subscriptions.push(
-        vscode.window.onDidChangeActiveTextEditor(editor => updateStatusBar(editor))
-    );
-
-    // Poll only when a C++ file is active — still needed to reflect running state
-    // But register the interval so it can be cleaned up on deactivate
-    statusBarInterval = setInterval(() => {
+    if (pathManager.supportsNativeWinBGI()) {
+        statusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Right,
+            100
+        );
+        context.subscriptions.push(statusBarItem);
+        context.subscriptions.push(
+            vscode.window.onDidChangeActiveTextEditor(editor => updateStatusBar(editor)),
+            compiler.onDidChangeRunState(() => updateStatusBar(vscode.window.activeTextEditor))
+        );
         updateStatusBar(vscode.window.activeTextEditor);
-    }, 1000);
-
-    // Seed initial state
-    updateStatusBar(vscode.window.activeTextEditor);
+    }
 
     // Commands
     context.subscriptions.push(
@@ -116,21 +107,16 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    context.subscriptions.push({
-        dispose: () => {
-            if (compiler) {
-                compiler.dispose();
-            }
-        }
-    });
-
     checkDependenciesQuietly();
 }
 
-function showWelcomeMessage(context: vscode.ExtensionContext): void {
+function showWelcomeMessage(): void {
     const osName = pathManager.getOSDisplayName();
+    const message = pathManager.isMacOS()
+        ? 'Graphics.h Compiler activated on macOS. Turbo C mode is available, but macOS support is unverified. WinBGI native mode is unavailable.'
+        : `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`;
     vscode.window.showInformationMessage(
-        `Graphics.h Compiler activated on ${osName}! Ready to compile and run graphics programs.`,
+        message,
         'Check Dependencies',
         'Dismiss'
     ).then(choice => {
@@ -141,10 +127,11 @@ function showWelcomeMessage(context: vscode.ExtensionContext): void {
 }
 
 function updateStatusBar(editor: vscode.TextEditor | undefined): void {
-    const isCppFile = editor && (
-        editor.document.languageId === 'cpp' ||
-        editor.document.fileName.endsWith('.c++')
-    );
+    if (!statusBarItem) {
+        return;
+    }
+
+    const isCppFile = editor && isCppDocument(editor.document);
     if (isCppFile) {
         if (compiler && compiler.isProgramRunning()) {
             statusBarItem.text = '$(debug-stop) Stop Graphics';
@@ -153,7 +140,7 @@ function updateStatusBar(editor: vscode.TextEditor | undefined): void {
         } else {
             statusBarItem.text = '$(play) Run Graphics';
             statusBarItem.tooltip = 'Compile & Run Graphics Program (Ctrl+Alt+N)';
-            statusBarItem.command = 'graphics-h-compiler.compileAndRun';
+            statusBarItem.command = 'graphics-h-compiler.compileAndRunWinBGI';
         }
         statusBarItem.show();
     } else {
@@ -161,7 +148,11 @@ function updateStatusBar(editor: vscode.TextEditor | undefined): void {
     }
 }
 
-async function checkDependenciesQuietly(): Promise<void> {
+function checkDependenciesQuietly(): void {
+    if (!pathManager.supportsNativeWinBGI()) {
+        return;
+    }
+
     const missing = pathManager.getMissingDependencies();
     if (missing.length > 0) {
         console.log('Graphics.h dependencies not installed:', missing.join(', '));
@@ -171,6 +162,13 @@ async function checkDependenciesQuietly(): Promise<void> {
 }
 
 async function handleCheckDependencies(): Promise<void> {
+    if (!pathManager.supportsNativeWinBGI()) {
+        vscode.window.showInformationMessage(
+            'Turbo C mode is available on macOS. WinBGI native mode requires Windows or Ubuntu/Linux.'
+        );
+        return;
+    }
+
     const missing = pathManager.getMissingDependencies();
     const required = pathManager.getRequiredDependencies();
     const osName = pathManager.getOSDisplayName();
@@ -185,8 +183,7 @@ async function handleCheckDependencies(): Promise<void> {
     const choice = await vscode.window.showWarningMessage(
         `⚠️ Missing dependencies on ${osName}: ${missing.join(', ')}. Would you like to install them now?`,
         { modal: true },
-        'Install Now',
-        'Cancel'
+        'Install Now'
     );
 
     if (choice === 'Install Now') {
@@ -237,7 +234,37 @@ async function waitForToolchain(): Promise<boolean> {
     } else if (pathManager.isLinux()) {
         return waitForToolchainUbuntu();
     }
+    vscode.window.showErrorMessage('WinBGI native mode is available only on Windows and Ubuntu/Linux. Try Turbo C mode on macOS.');
     return false;
+}
+
+function isCppDocument(document: vscode.TextDocument): boolean {
+    return document.languageId === 'cpp' || ['.cpp', '.c++', '.cc', '.cxx'].some(extension =>
+        document.fileName.toLowerCase().endsWith(extension)
+    );
+}
+
+async function getActiveCppFile(): Promise<string | null> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        vscode.window.showErrorMessage('No file is currently open');
+        return null;
+    }
+
+    if (!isCppDocument(editor.document)) {
+        vscode.window.showErrorMessage('Current file is not a C++ file (.cpp, .c++, .cc, or .cxx)');
+        return null;
+    }
+
+    if (editor.document.isDirty) {
+        const saved = await editor.document.save();
+        if (!saved) {
+            vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
+            return null;
+        }
+    }
+
+    return editor.document.uri.fsPath;
 }
 
 async function handleCompileAndRun(): Promise<void> {
@@ -247,32 +274,16 @@ async function handleCompileAndRun(): Promise<void> {
             return;
         }
 
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No file is currently open');
+        const filePath = await getActiveCppFile();
+        if (!filePath) {
             return;
-        }
-
-        const filePath = editor.document.uri.fsPath;
-
-        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
-            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
-            return;
-        }
-
-        if (editor.document.isDirty) {
-            const saved = await editor.document.save();
-            if (!saved) {
-                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
-                return;
-            }
         }
 
         // Wire up cancellation via progress notification
         await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: `Compiling ${editor.document.fileName.split(/[\\/]/).pop()}...`,
+                title: `Compiling ${filePath.split(/[\\/]/).pop()}...`,
                 cancellable: true
             },
             async (_progress, token) => {
@@ -280,7 +291,7 @@ async function handleCompileAndRun(): Promise<void> {
             }
         );
 
-        updateStatusBar(editor);
+        updateStatusBar(vscode.window.activeTextEditor);
 
     } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -291,25 +302,9 @@ async function handleCompileAndRun(): Promise<void> {
 
 async function handleCompileAndRunTurboC(): Promise<void> {
     try {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No file is currently open');
+        const filePath = await getActiveCppFile();
+        if (!filePath) {
             return;
-        }
-
-        const filePath = editor.document.uri.fsPath;
-
-        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
-            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
-            return;
-        }
-
-        if (editor.document.isDirty) {
-            const saved = await editor.document.save();
-            if (!saved) {
-                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
-                return;
-            }
         }
 
         await turboCRunner.compileAndRun(filePath);
@@ -327,31 +322,15 @@ async function handleCompileOnly(): Promise<void> {
             return;
         }
 
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage('No file is currently open');
+        const filePath = await getActiveCppFile();
+        if (!filePath) {
             return;
-        }
-
-        const filePath = editor.document.uri.fsPath;
-
-        if (!filePath.endsWith('.cpp') && !filePath.endsWith('.c++')) {
-            vscode.window.showErrorMessage('Current file is not a C++ file (.cpp or .c++)');
-            return;
-        }
-
-        if (editor.document.isDirty) {
-            const saved = await editor.document.save();
-            if (!saved) {
-                vscode.window.showErrorMessage('Failed to save file. Please save manually and try again.');
-                return;
-            }
         }
 
         await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: `Compiling ${editor.document.fileName.split(/[\\/]/).pop()}...`,
+                title: `Compiling ${filePath.split(/[\\/]/).pop()}...`,
                 cancellable: true
             },
             async (_progress, token) => {
@@ -375,8 +354,7 @@ async function handleSetupToolchainWindows(): Promise<boolean> {
             const choice = await vscode.window.showWarningMessage(
                 `All dependencies are already installed on ${osName}. Do you want to reinstall?`,
                 { modal: true },
-                'Reinstall',
-                'Cancel'
+                'Reinstall'
             );
 
             if (choice !== 'Reinstall') {
@@ -426,6 +404,7 @@ async function handleSetupToolchain(): Promise<boolean> {
     } else if (pathManager.isLinux()) {
         return handleSetupToolchainUbuntu();
     }
+    vscode.window.showInformationMessage('Turbo C mode is available on macOS. WinBGI native mode requires Windows or Ubuntu/Linux.');
     return false;
 }
 
@@ -442,16 +421,6 @@ async function handleStopProgram(): Promise<void> {
 }
 
 export function deactivate() {
-    // Clean up the polling interval
-    if (statusBarInterval !== null) {
-        clearInterval(statusBarInterval);
-        statusBarInterval = null;
-    }
-
-    if (statusBarItem) {
-        statusBarItem.dispose();
-    }
-
     if (compiler) {
         compiler.dispose();
     }

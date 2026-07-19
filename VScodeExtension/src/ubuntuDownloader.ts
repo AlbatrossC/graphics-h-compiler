@@ -1,97 +1,151 @@
 import * as vscode from 'vscode';
-import { spawn } from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
+import { PathManager, ToolchainStatus } from './paths';
 
 export class UbuntuDownloader {
-    private isChecking = false;
-    private checkPromise: Promise<boolean> | null = null;
+    private readonly extensionPath: string;
 
-    private readonly INSTALL_COMMAND =
-        'curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/refs/heads/main/compiler-assets/Installers/ubuntu_install.sh | bash';
-
-    isInProgress(): boolean {
-        return this.isChecking;
+    constructor(private readonly pathManager: PathManager) {
+        this.extensionPath = pathManager.getExtensionPath();
     }
 
-    private async checkInstallation(): Promise<boolean> {
-        try {
-            const requiredFiles = [
-                '/usr/local/include/graphics_h/graphics.h',
-                '/usr/local/include/graphics_h/winbgim.h',
-                '/usr/local/lib/graphics_h/libbgi.a'
-            ];
+    private getInstallerPath(): string {
+        return path.join(this.extensionPath, 'resources', 'installers', 'ubuntu_install.sh');
+    }
 
-            for (const file of requiredFiles) {
-                if (!fs.existsSync(file)) {
-                    return false;
-                }
-            }
+    private getBundledGraphicsPath(): string {
+        return path.join(this.extensionPath, 'resources', 'graphics');
+    }
 
-            const compilerCheck = await this.runCommand('which i686-w64-mingw32-g++');
-            if (!compilerCheck.success) {
-                return false;
-            }
+    private shellQuote(value: string): string {
+        return `'${value.replace(/'/g, "'\\''")}'`;
+    }
 
-            const wineCheck = await this.runCommand('which wine');
-            if (!wineCheck.success) {
-                return false;
-            }
+    private getInstallCommand(): string {
+        return `bash ${this.shellQuote(this.getInstallerPath())}`;
+    }
 
-            return true;
+    private getMissingBundledFiles(): string[] {
+        const graphicsPath = this.getBundledGraphicsPath();
+        const requiredFiles = [
+            this.getInstallerPath(),
+            path.join(graphicsPath, 'graphics.h'),
+            path.join(graphicsPath, 'modified-graphics.h'),
+            path.join(graphicsPath, 'winbgim.h'),
+            path.join(graphicsPath, 'libbgi.a')
+        ];
 
-        } catch (error) {
-            console.error('Installation check failed:', error);
-            return false;
+        return requiredFiles.filter(file => !fs.existsSync(file));
+    }
+
+    private async showMissingBundledFilesError(missingFiles: string[]): Promise<void> {
+        const relativeFiles = missingFiles.map(file => path.relative(this.extensionPath, file));
+
+        const choice = await vscode.window.showErrorMessage(
+            'Graphics.h Compiler is missing bundled Ubuntu installer assets: ' +
+            `${relativeFiles.join(', ')}. Please reinstall the extension or rebuild the VSIX package.`,
+            'Report Issue'
+        );
+
+        if (choice === 'Report Issue') {
+            await vscode.env.openExternal(
+                vscode.Uri.parse('https://github.com/AlbatrossC/graphics-h-compiler/issues')
+            );
         }
     }
 
-    private runCommand(command: string): Promise<{ success: boolean; output: string; error: string }> {
-        return new Promise((resolve) => {
-            const proc = spawn('bash', ['-c', command]);
-            let stdout = '';
-            let stderr = '';
+    private getInstallationStatus(): ToolchainStatus {
+        return this.pathManager.getToolchainStatus();
+    }
 
-            proc.stdout.on('data', (data) => { stdout += data.toString(); });
-            proc.stderr.on('data', (data) => { stderr += data.toString(); });
+    private delay(milliseconds: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
+    }
 
-            proc.on('close', (code) => {
-                resolve({ success: code === 0, output: stdout.trim(), error: stderr.trim() });
-            });
+    private async monitorInstallation(): Promise<boolean> {
+        return vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: 'Graphics.h Ubuntu setup',
+                cancellable: true
+            },
+            async (progress, token) => {
+                const timeoutAt = Date.now() + 15 * 60 * 1000;
 
-            proc.on('error', (error) => {
-                resolve({ success: false, output: '', error: error.message });
-            });
-        });
+                while (!token.isCancellationRequested && Date.now() < timeoutAt) {
+                    const status = this.getInstallationStatus();
+                    if (status.installed) {
+                        progress.report({ message: 'Toolchain verified. Ready to compile.' });
+                        vscode.window.showInformationMessage('Graphics.h toolchain installed and verified successfully.');
+                        return true;
+                    }
+
+                    progress.report({
+                        message: `Installer is running. Waiting for: ${status.missing.join(', ')}`
+                    });
+                    await this.delay(2000);
+                }
+
+                if (token.isCancellationRequested) {
+                    vscode.window.showInformationMessage(
+                        'Setup monitoring stopped. The installer can continue in the terminal; use Check Dependencies when it finishes.'
+                    );
+                } else {
+                    vscode.window.showWarningMessage(
+                        'Setup is taking longer than expected. Check the Graphics.h Ubuntu Setup terminal for prompts or errors.'
+                    );
+                }
+
+                return false;
+            }
+        );
     }
 
     async promptForInstallation(): Promise<boolean> {
+        const missingBundledFiles = this.getMissingBundledFiles();
+        if (missingBundledFiles.length > 0) {
+            await this.showMissingBundledFilesError(missingBundledFiles);
+            return false;
+        }
+
+        const installCommand = this.getInstallCommand();
         const result = await vscode.window.showInformationMessage(
-            `⚙️ Graphics.h Compiler Setup Required\n\nRun this command in your terminal:\n\n${this.INSTALL_COMMAND}\n\nClick "Copy & Open Terminal" to copy the command and open a terminal.`,
+            'Graphics.h Compiler setup required\n\n' +
+            'The Ubuntu installer and graphics.h files are bundled with this extension.\n\n' +
+            `Run this command in your terminal:\n\n${installCommand}`,
             { modal: true },
-            'Copy & Open Terminal',
+            'Open Terminal & Run',
+            'Copy Command',
             'I Already Installed'
         );
 
-        if (result === 'Copy & Open Terminal') {
-            await vscode.env.clipboard.writeText(this.INSTALL_COMMAND);
+        if (result === 'Open Terminal & Run') {
+            const terminal = vscode.window.createTerminal('Graphics.h Ubuntu Setup');
+            terminal.show();
+            terminal.sendText(installCommand, true);
+            return this.monitorInstallation();
+
+        } else if (result === 'Copy Command') {
+            await vscode.env.clipboard.writeText(installCommand);
             await vscode.commands.executeCommand('workbench.action.terminal.new');
 
             vscode.window.showInformationMessage(
-                '✓ Command copied to clipboard! Paste it in the terminal (Ctrl+Shift+V) and press Enter.',
+                'Command copied to clipboard. Paste it in the terminal and press Enter.',
                 'Got it'
             );
 
             return false;
 
         } else if (result === 'I Already Installed') {
-            const installed = await this.checkInstallation();
+            const status = this.getInstallationStatus();
 
-            if (installed) {
-                vscode.window.showInformationMessage('✓ Graphics.h toolchain verified successfully!');
+            if (status.installed) {
+                vscode.window.showInformationMessage('Graphics.h toolchain verified successfully.');
                 return true;
             } else {
                 const retry = await vscode.window.showErrorMessage(
-                    'Graphics.h toolchain not found. Please run the installation command first.',
+                    `Graphics.h toolchain is incomplete. Missing: ${status.missing.join(', ')}.`,
                     'Show Command Again'
                 );
 
@@ -105,66 +159,23 @@ export class UbuntuDownloader {
         return false;
     }
 
-    async isToolchainReady(): Promise<boolean> {
-        if (this.checkPromise) {
-            return this.checkPromise;
-        }
-
-        this.isChecking = true;
-
-        this.checkPromise = this.checkInstallation().finally(() => {
-            this.isChecking = false;
-            this.checkPromise = null;
-        });
-
-        return this.checkPromise;
-    }
-
-    async getInstallationStatus(): Promise<{ installed: boolean; missing: string[] }> {
-        const missing: string[] = [];
-
-        const requiredFiles = [
-            { path: '/usr/local/include/graphics_h/graphics.h', name: 'graphics.h' },
-            { path: '/usr/local/include/graphics_h/winbgim.h', name: 'winbgim.h' },
-            { path: '/usr/local/lib/graphics_h/libbgi.a', name: 'libbgi.a' }
-        ];
-
-        for (const file of requiredFiles) {
-            if (!fs.existsSync(file.path)) {
-                missing.push(file.name);
-            }
-        }
-
-        const compilerCheck = await this.runCommand('which i686-w64-mingw32-g++');
-        if (!compilerCheck.success) {
-            missing.push('MinGW compiler (i686-w64-mingw32-g++)');
-        }
-
-        const wineCheck = await this.runCommand('which wine');
-        if (!wineCheck.success) {
-            missing.push('Wine');
-        }
-
-        return { installed: missing.length === 0, missing };
-    }
-
     async showDetailedStatus(): Promise<void> {
-        const status = await this.getInstallationStatus();
+        const status = this.getInstallationStatus();
 
         if (status.installed) {
             vscode.window.showInformationMessage(
-                '✓ Graphics.h toolchain is fully installed!\n\n' +
+                'Graphics.h toolchain is fully installed.\n\n' +
                 'Platform: Ubuntu/Linux | Compiler: i686-w64-mingw32-g++ | Runtime: Wine | Status: Ready'
             );
         } else {
             const missingList = status.missing.join(', ');
             const choice = await vscode.window.showWarningMessage(
-                `⚠️ Graphics.h toolchain is not fully installed. Missing: ${missingList}. Would you like to see the installation command?`,
+                `Graphics.h toolchain is not fully installed. Missing: ${missingList}. Would you like to run the installer?`,
                 { modal: true },
-                'Show Installation Command'
+                'Run Installer'
             );
 
-            if (choice === 'Show Installation Command') {
+            if (choice === 'Run Installer') {
                 await this.promptForInstallation();
             }
         }

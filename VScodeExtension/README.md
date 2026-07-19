@@ -1,6 +1,6 @@
 # Graphics.h Compiler for VS Code
 
-**Run `graphics.h` programs with one click — no manual setup needed.**
+**Run C++ `graphics.h` programs with Turbo C or WinBGI directly from VS Code.**
 
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Marketplace-007ACC?logo=visualstudiocode)](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/AlbatrossC/graphics-h-compiler)
@@ -19,7 +19,7 @@
 
 ## 🚀 How to Run
 
-1. Open any `.c` or `.cpp` file that uses `#include <graphics.h>`
+1. Open a C++ file (`.cpp`, `.c++`, `.cc`, or `.cxx`) that uses `#include <graphics.h>`
 2. Click the **dropdown arrow** (▾) next to the ▶ Run button in the top-right corner of the editor
 3. Two options will appear — pick the one that suits you
 
@@ -40,7 +40,8 @@ Runs your code inside an emulated **Turbo C 3.0** environment, rendered directly
 - **Nothing to install** — the Turbo C compiler, DOSBox runtime, and WASM binary are all bundled inside the extension
 - **Completely isolated** — a fresh copy of the DOS environment is created in memory on every run, so there's no stale state between executions
 - **Errors shown inline** — if compilation fails, an error panel appears below the DOS canvas without leaving the tab
-- **Works everywhere** — Windows, Linux, and macOS, since the entire environment runs inside VS Code's built-in browser engine
+- **Windows and Linux supported** — the DOSBox runtime is bundled with the extension
+- **macOS is experimental** — Turbo C mode is enabled, but it has not yet been tested on a physical macOS machine
 
 ![Turbo C running inside VS Code](https://raw.githubusercontent.com/AlbatrossC/graphics-h-compiler/main/docs/images/vscode_turboc_demo.png)
 
@@ -53,9 +54,9 @@ Compiles your code using **MinGW + WinBGI** and runs it as a real native Windows
 - **Proper error diagnostics** — compilation errors appear in VS Code's Problems panel (`Ctrl+Shift+M`) with exact file, line, and column info — just like any modern C++ project
 - **One-time toolchain setup** — the extension downloads and installs everything automatically on first use:
   - Downloads **~220 MB** from the internet
-  - Extracts to **~990 MB** on disk
-  - A detailed progress bar shows download %, extraction progress, and each install step in real time
-- **Linux ready** — on Ubuntu/Debian, Wine is used to run the compiled `.exe` without any extra configuration from you
+  - Extracts to up to **~1 GB** on disk
+  - A five-stage progress notification shows download, checksum verification, archive extraction, graphics-file copy, and installation verification in real time
+- **Ubuntu/Debian ready** — Wine uses the dedicated graphics.h prefix created by the installer
 
 ![WinBGI running natively on Windows](https://raw.githubusercontent.com/AlbatrossC/graphics-h-compiler/main/docs/images/vscode_windows_demo.png)
 
@@ -82,7 +83,7 @@ Open settings with `Ctrl+,` and search for `graphics-h-compiler`:
 | `autoRun` | `true` | Automatically run after a successful build |
 | `showOutputPanel` | `true` | Show the Output panel during compilation |
 | `clearOutputBeforeCompile` | `true` | Clear the Output panel before each new build |
-| `runInTerminal` | `true` | Run in the integrated terminal — **required** for programs that use `scanf` or `cin` |
+| `runInTerminal` | `true` | Run in the integrated terminal — recommended for programs that use `scanf` or `cin`; stop/status tracking uses VS Code terminal shell integration |
 
 ---
 
@@ -93,7 +94,7 @@ Open settings with `Ctrl+,` and search for `graphics-h-compiler`:
 WinBGI mode will ask for your permission before downloading anything. Once confirmed, the extension handles the full setup:
 
 - Downloads the **MinGW32 toolchain** (~220 MB)
-- Extracts it to ~990 MB on disk
+- Extracts to up to ~1 GB on disk
 - Copies the `graphics.h` library files automatically
 - Shows a step-by-step progress indicator throughout
 
@@ -101,17 +102,17 @@ Turbo C mode requires no setup at all on Windows.
 
 ### Ubuntu / Debian Linux
 
-When you first run WinBGI mode, the extension gives you a **Copy and Open Terminal** button. Click it, paste the command with `Ctrl+Shift+V`, and press Enter. The script installs:
+When you first run WinBGI mode, the extension offers **Open Terminal & Run**. It opens a terminal, starts the bundled installer, and keeps a progress notification visible while it verifies the compiler, Wine, and graphics files. Enter your sudo password in the terminal if prompted. The script installs:
 
 - `i686-w64-mingw32-g++` — the MinGW cross-compiler
 - `wine` — to execute the compiled Windows binary
-- `graphics.h` library files — installed to `/usr/local`
+- bundled `graphics.h` compatibility files — installed to `/usr/local`
 
-[View the full Ubuntu install script →](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Installers/ubuntu_install.sh)
+[View the full Ubuntu install script →](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/site/compiler-assets/Installers/ubuntu_install.sh)
 
 ### macOS
 
-Turbo C (DOSBox) mode works on macOS out of the box. WinBGI is not supported on macOS.
+Turbo C (DOSBox) mode is available on macOS, but it is **experimental and unverified** because it has not been tested on a physical macOS machine. WinBGI is not supported on macOS.
 
 ---
 
@@ -128,7 +129,7 @@ You can compile and run basic `graphics.h` programs directly in your browser —
 - [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler)
 - [GitHub Repository](https://github.com/AlbatrossC/graphics-h-compiler)
 - [Report an Issue](https://github.com/AlbatrossC/graphics-h-compiler/issues)
-- [Ubuntu Install Script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/compiler-assets/Installers/ubuntu_install.sh)
+- [Ubuntu Install Script](https://github.com/AlbatrossC/graphics-h-compiler/blob/main/site/compiler-assets/Installers/ubuntu_install.sh)
 
 ---
 

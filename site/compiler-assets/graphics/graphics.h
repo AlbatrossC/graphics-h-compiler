@@ -359,4 +359,3 @@ int COLOR(int r, int g, int b); // No longer a macro
 // ---------------------------------------------------------------------------
 
 #endif // WINBGI_H
-

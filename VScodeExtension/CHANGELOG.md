@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.2] - 2026-07-19
+
+### Added
+- Bundled the Ubuntu/Debian installer in `resources/installers/ubuntu_install.sh`, together with every graphics library asset it needs.
+- Added `modified-graphics.h`, the const-correct compatibility header installed as `graphics.h` for both Windows MinGW and Ubuntu/Linux.
+- Kept the original WinBGIm `graphics.h` as a separate raw header for reuse outside the installer workflow.
+- Added asset-sync and asset-validation scripts that confirm the required installer and graphics files exist, are non-empty, use the correct header variants, and package the Bash script with LF line endings.
+- Added compiler-diagnostics tests and an extension-host smoke test source file.
+- Added five-stage Windows installer feedback with overall percentages, checksum progress, archive file counts, graphics-file copy counts, and final verification counts.
+
+### Changed
+- Windows setup now installs `modified-graphics.h` as `graphics.h` in MinGW while preserving the raw header in extension resources.
+- Ubuntu setup now runs the bundled installer rather than downloading headers or libraries from GitHub. The installer copies its adjacent graphics assets and verifies the compatibility header before installing it system-wide.
+- Ubuntu setup now opens the installer terminal and continuously checks the actual toolchain state while the user completes any sudo prompt. A successful check returns directly to compilation.
+- Linux program launches now use the dedicated `~/.wine32_graphics` Wine prefix created by the installer and set `WINEDEBUG=-all` to reduce noise without hiding useful failures.
+- Windows download progress is now split into download (0-60%), checksum verification (60-70%), MinGW extraction (70-92%), graphics-file copy (92-98%), and installation verification (98-100%).
+- Native program state now follows VS Code terminal shell-execution events instead of treating an idle integrated terminal as an active graphics program.
+- Centralized Windows and Linux toolchain checks so compiler, Wine, headers, and `libbgi.a` are all required before native compilation starts.
+- Turbo C commands are available on macOS; macOS support is documented as experimental and unverified. WinBGI commands and shortcuts are hidden there.
+- C++ command handling now consistently supports `.cpp`, `.c++`, `.cc`, and `.cxx` files.
+- The primary shortcut and status-bar action now use the explicit WinBGI command; the original command ID remains as a hidden compatibility alias.
+- The package gate now runs asset synchronization, asset validation, type checking, linting, unit tests, and the production bundle before creating a VSIX.
+- ESLint now imports the parser and plugin packages that are actually declared by the project.
+
+### Fixed
+- Fixed Ubuntu installer scripts being packaged with CRLF endings, which caused Bash `set` and `$'\r'` errors when the extension was built on Windows.
+- Fixed partial Windows or Ubuntu/Linux installations being treated as ready when the compiler, Wine, headers, or library files were missing.
+- Fixed native-run status getting stuck on **Stop Graphics** after a terminal command had already finished.
+- Fixed cancelled compilations showing a second, misleading build-failed notification after the process closed.
+- Fixed duplicate **Cancel** actions in modal setup and reinstall dialogs.
+- Improved Problems-panel diagnostics: diagnostics now support warnings, notes, fatal errors, optional columns, included headers, ANSI-coloured compiler output, and linker failures.
+- Fixed Wine error reporting so meaningful runtime errors remain visible in the Output panel.
+
+---
+
 ## [2.0.1] - 2026
 
 ### Changed

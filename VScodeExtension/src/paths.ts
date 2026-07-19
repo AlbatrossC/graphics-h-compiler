@@ -2,11 +2,18 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
+import { spawnSync } from 'child_process';
 
 export enum OperatingSystem {
     Windows = 'windows',
     Linux = 'linux',
+    MacOS = 'macos',
     Unknown = 'unknown'
+}
+
+export interface ToolchainStatus {
+    installed: boolean;
+    missing: string[];
 }
 
 export class PathManager {
@@ -25,6 +32,8 @@ export class PathManager {
             return OperatingSystem.Windows;
         } else if (platform === 'linux') {
             return OperatingSystem.Linux;
+        } else if (platform === 'darwin') {
+            return OperatingSystem.MacOS;
         }
 
         return OperatingSystem.Unknown;
@@ -44,6 +53,14 @@ export class PathManager {
 
     isLinux(): boolean {
         return this.currentOS === OperatingSystem.Linux;
+    }
+
+    isMacOS(): boolean {
+        return this.currentOS === OperatingSystem.MacOS;
+    }
+
+    supportsNativeWinBGI(): boolean {
+        return this.isWindows() || this.isLinux();
     }
 
     getToolchainPath(): string {
@@ -74,22 +91,59 @@ export class PathManager {
         return 'i686-w64-mingw32-g++';
     }
 
-    isToolchainInstalled(): boolean {
-        if (this.isWindows()) {
-            return fs.existsSync(this.getGppPath());
-        } else if (this.isLinux()) {
-            const requiredFiles = [
-                '/usr/local/include/graphics_h/graphics.h',
-                '/usr/local/include/graphics_h/winbgim.h',
-                '/usr/local/lib/graphics_h/libbgi.a'
-            ];
-            return requiredFiles.every(file => fs.existsSync(file));
-        }
-        return false;
+    getWinePrefix(): string {
+        return path.join(os.homedir(), '.wine32_graphics');
     }
 
-    areAllDependenciesInstalled(): boolean {
-        return this.isToolchainInstalled();
+    getToolchainStatus(): ToolchainStatus {
+        const missing: string[] = [];
+
+        if (this.isWindows()) {
+            const requiredFiles = [
+                { path: this.getGppPath(), name: 'MinGW C++ compiler' },
+                { path: path.join(this.getGraphicsPath(), 'graphics.h'), name: 'graphics.h' },
+                { path: path.join(this.getGraphicsPath(), 'winbgim.h'), name: 'winbgim.h' },
+                { path: path.join(this.getLibraryPath(), 'libbgi.a'), name: 'libbgi.a' }
+            ];
+
+            for (const file of requiredFiles) {
+                if (!fs.existsSync(file.path)) {
+                    missing.push(file.name);
+                }
+            }
+        } else if (this.isLinux()) {
+            const requiredFiles = [
+                { path: path.join(this.getGraphicsPath(), 'graphics.h'), name: 'graphics.h' },
+                { path: path.join(this.getGraphicsPath(), 'winbgim.h'), name: 'winbgim.h' },
+                { path: path.join(this.getLibraryPath(), 'libbgi.a'), name: 'libbgi.a' }
+            ];
+
+            for (const file of requiredFiles) {
+                if (!fs.existsSync(file.path)) {
+                    missing.push(file.name);
+                }
+            }
+
+            if (!this.isCommandAvailable('i686-w64-mingw32-g++')) {
+                missing.push('MinGW compiler (i686-w64-mingw32-g++)');
+            }
+
+            if (!this.isCommandAvailable('wine')) {
+                missing.push('Wine');
+            }
+        } else {
+            missing.push('WinBGI native mode is not supported on this platform');
+        }
+
+        return { installed: missing.length === 0, missing };
+    }
+
+    private isCommandAvailable(command: string): boolean {
+        const result = spawnSync(command, ['--version'], {
+            stdio: 'ignore',
+            windowsHide: true
+        });
+        return result.status === 0;
     }
 
     getOutputPath(sourceFile: string): string {
@@ -104,6 +158,8 @@ export class PathManager {
                 return 'Windows';
             case OperatingSystem.Linux:
                 return 'Ubuntu/Linux';
+            case OperatingSystem.MacOS:
+                return 'macOS';
             default:
                 return 'Unknown';
         }
@@ -123,18 +179,6 @@ export class PathManager {
     }
 
     getMissingDependencies(): string[] {
-        const missing: string[] = [];
-
-        if (this.isWindows()) {
-            if (!this.isToolchainInstalled()) {
-                missing.push('MinGW32 Toolchain');
-            }
-        } else if (this.isLinux()) {
-            if (!this.isToolchainInstalled()) {
-                missing.push('Graphics.h toolchain (run installation script)');
-            }
-        }
-
-        return missing;
+        return this.getToolchainStatus().missing;
     }
 }

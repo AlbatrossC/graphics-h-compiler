@@ -245,7 +245,7 @@ void refreshbgi(int left, int top, int right, int bottom);
 void refreshallbgi( );    
 void setbkcolor( int color );
 void setcolor( int color );
-void setfillpattern( char *upattern, int color );
+void setfillpattern( const char *upattern, int color );
 void setfillstyle( int pattern, int color );
 void setlinestyle( int linestyle, unsigned upattern, int thickness );
 void setrefreshingbgi(bool value);
@@ -256,19 +256,19 @@ void setwritemode( int mode );
 void closegraph( int wid=ALL_WINDOWS );
 void detectgraph( int *graphdriver, int *graphmode );
 void getaspectratio( int *xasp, int *yasp );
-char *getdrivername( );
+const char *getdrivername( );
 int getgraphmode( );
 int getmaxmode( );
-char *getmodename( int mode_number );
+const char *getmodename( int mode_number );
 void getmoderange( int graphdriver, int *lomode, int *himode );
 void graphdefaults( );
-char *grapherrormsg( int errorcode );
+const char *grapherrormsg( int errorcode );
 int graphresult( );
-void initgraph( int *graphdriver, int *graphmode, char *pathtodriver );
+void initgraph( int *graphdriver, int *graphmode, const char *pathtodriver );
 int initwindow
     ( int width, int height, const char* title="Windows BGI", int left=0, int top=0, bool dbflag=false, bool closeflag=true );
-int installuserdriver( char *name, int *fp );    // Not available in WinBGI
-int installuserfont( char *name );               // Not available in WinBGI
+int installuserdriver( const char *name, int *fp );    // Not available in WinBGI
+int installuserfont( const char *name );               // Not available in WinBGI
 int registerbgidriver( void *driver );           // Not available in WinBGI
 int registerbgifont( void *font );               // Not available in WinBGI
 void restorecrtmode( );
@@ -314,13 +314,13 @@ void writeimagefile(
 
 // Text Functions (text.cpp)
 void gettextsettings(struct textsettingstype *texttypeinfo);
-void outtext(char *textstring);
-void outtextxy(int x, int y, char *textstring);
+void outtext(const char *textstring);
+void outtextxy(int x, int y, const char *textstring);
 void settextjustify(int horiz, int vert);
 void settextstyle(int font, int direction, int charsize);
 void setusercharsize(int multx, int divx, int multy, int divy);
-int textheight(char *textstring);
-int textwidth(char *textstring);
+int textheight(const char *textstring);
+int textwidth(const char *textstring);
 extern std::ostringstream bgiout;    
 void outstream(std::ostringstream& out=bgiout);
 void outstreamxy(int x, int y, std::ostringstream& out=bgiout);    

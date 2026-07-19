@@ -16,6 +16,7 @@ out/**
 .eslintrc.json
 eslint.config.mjs
 esbuild.js
+scripts/**
 
 resources/mingw32.zip
 resources/**/*.zip
@@ -23,6 +24,7 @@ resources/**/*.zip
 
 !dist/**
 !resources/graphics/**
+!resources/installers/**
 !resources/turboc/**
 
 # Docs

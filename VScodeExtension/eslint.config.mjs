@@ -1,14 +1,15 @@
-import typescriptEslint from "typescript-eslint";
+import typescriptEslintPlugin from "@typescript-eslint/eslint-plugin";
+import typescriptEslintParser from "@typescript-eslint/parser";
 
 export default [{
     files: ["**/*.ts"],
 }, {
     plugins: {
-        "@typescript-eslint": typescriptEslint.plugin,
+        "@typescript-eslint": typescriptEslintPlugin,
     },
 
     languageOptions: {
-        parser: typescriptEslint.parser,
+        parser: typescriptEslintParser,
         ecmaVersion: 2022,
         sourceType: "module",
     },

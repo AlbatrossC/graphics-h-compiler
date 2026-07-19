@@ -64,7 +64,7 @@ The VS Code extension brings `graphics.h` programming directly into your editor.
 | **Compiler** | `TCC.EXE` (Turbo C++ 3.0) | `g++` (MinGW-w64 GCC 11.5.0) |
 | **Runtime** | DOSBox WebAssembly in VS Code Webview | Native Win32 `.exe` |
 | **Graphics** | EGAVGA.BGI driver (16-colour, 640×480) | WinBGI (full-colour, resizable window) |
-| **Platforms** | Windows, Linux | Windows, Linux (via Wine) |
+| **Platforms** | Windows, Linux, macOS (experimental and unverified) | Windows, Linux (via Wine) |
 | **Output** | Canvas inside VS Code tab | Separate native window |
 | **Use case** | SPPU syllabus, Turbo C compatibility | Modern development, higher resolution |
 
@@ -97,8 +97,8 @@ cd graphics-h-compiler/VScodeExtension
 # Install dependencies
 npm install
 
-# Compile TypeScript
-npm run compile
+# Run the full package gate (asset sync, validation, type-check, lint, and tests)
+npm run package
 
 # Package extension
 npx vsce package
@@ -116,15 +116,22 @@ VScodeExtension/
 ├── src/
 │   ├── extension.ts          # Entry point, command registration
 │   ├── compiler.ts           # WinBGI compilation and execution engine
+│   ├── diagnostics.ts         # GCC/MinGW output parsing for the Problems panel
 │   ├── turbocrunner.ts       # Turbo C DOSBox webview runner
 │   ├── paths.ts              # OS detection, path resolution
 │   ├── windowsDownloader.ts  # Windows toolchain installer
-│   └── ubuntuDownloader.ts   # Linux setup coordinator
+│   ├── ubuntuDownloader.ts   # Linux setup coordinator
+│   └── test/
+│       ├── diagnostics.test.ts # Node-based diagnostics unit test
+│       └── extension.test.ts   # Extension-host smoke test source
 ├── resources/
 │   ├── graphics/             # Bundled WinBGI graphics files
-│   │   ├── graphics.h        # Modified BGI header (ISO C++ compliant)
+│   │   ├── graphics.h        # Raw upstream BGI header
+│   │   ├── modified-graphics.h # Const-correct header installed as graphics.h
 │   │   ├── winbgim.h         # Windows BGI implementation
 │   │   └── libbgi.a          # Static BGI library (i686)
+│   ├── installers/
+│   │   └── ubuntu_install.sh # Bundled Ubuntu/Debian installer (LF line endings)
 │   ├── turboc/               # Bundled Turbo C DOSBox runtime
 │   │   ├── tc-v1.zip          # Turbo C 3.0 filesystem image
 │   │   ├── js-dos.js          # js-dos emulator core
@@ -133,8 +140,13 @@ VScodeExtension/
 │   └── webview/
 │       └── index.html         # Webview template for Turbo C mode
 ├── assets/                   # Extension icons
+├── scripts/
+│   ├── sync-assets.js         # Copies canonical site assets into resources/
+│   └── validate-assets.js     # Checks packaged installer/header invariants
 ├── dist/                     # Compiled JavaScript output
+├── .vscode-test.mjs          # Optional VS Code extension-host test configuration
 ├── package.json              # Extension manifest
+├── package-lock.json          # Locked npm dependency graph
 ├── tsconfig.json             # TypeScript configuration
 ├── esbuild.js                # Build script
 ├── eslint.config.mjs         # ESLint configuration
@@ -160,7 +172,7 @@ VScodeExtension/
 **Download Details:**
 - **URL:** `https://github.com/AlbatrossC/graphics-h-compiler/releases/download/gcc-11.5.0-mingw32/mingw32.zip`
 - **Compressed Size:** ~221 MB
-- **Extracted Size:** ~950 MB
+- **Extracted Size:** up to ~1 GB
 - **SHA256:** `72a111d72772914b6db9fe506fe4f0bb8d21b721894e2690c89aee9521fb97cd`
 
 **Toolchain Specifications:**
@@ -170,6 +182,16 @@ VScodeExtension/
 - Thread Model: POSIX
 - Exception Model: DWARF-2
 - Linking: Static (produces standalone executables)
+
+**Setup Progress:**
+
+| Stage | Overall progress | Visible feedback |
+|---|---:|---|
+| Download | 0-60% | Downloaded and total MB, plus downloaded percent |
+| Checksum | 60-70% | SHA-256 verification percent |
+| Extract | 70-92% | Extracted `current/total` MinGW archive files |
+| Graphics files | 92-98% | Copied `current/3` bundled graphics files |
+| Verify | 98-100% | Verified `current/4` compiler and library files |
 
 **Installation Location:**
 ```
@@ -189,7 +211,8 @@ mingw32/
 #### Graphics Libraries
 
 **Bundled in `resources/graphics/`:**
-- `graphics.h` - Modified BGI API (ISO C++ compatible)
+- `graphics.h` - Raw upstream BGI API, retained for reuse outside the installer
+- `modified-graphics.h` - Const-correct compatibility header installed as `graphics.h`
 - `winbgim.h` - Windows BGI implementation header
 - `libbgi.a` - Static BGI library (i686 target)
 
@@ -197,7 +220,7 @@ mingw32/
 
 **Modifications Applied:**
 
-The bundled `graphics.h` has been patched for ISO C++ compliance to eliminate "string constant to char*" warnings:
+The bundled `modified-graphics.h` is patched for ISO C++ compliance to eliminate "string constant to char*" warnings. `graphics.h` remains the raw source header.
 
 ```cpp
 // Original (causes warnings)
@@ -215,20 +238,16 @@ Modified function signatures include `initgraph()`, `outtext()`, `outtextxy()`, 
 
 ### Linux (Ubuntu/Debian)
 
-**Manual Installation Required**
+**Bundled Installer**
 
-The extension does not auto-download on Linux. Users must run the installation script:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AlbatrossC/graphics.h-online-compiler/refs/heads/main/compiler-assets/Installers/ubuntu_install.sh | bash
-```
+The extension does not download headers or libraries from GitHub on Linux. It opens the bundled `resources/installers/ubuntu_install.sh` in a terminal and shows a progress notification until the compiler, Wine, and graphics files are verified. The user only needs to enter a sudo password when prompted.
 
 **What the Script Installs (6 steps):**
 
-1. System packages: `gcc-mingw-w64-i686`, `g++-mingw-w64-i686`, `wine32`, `wine`, `wget`, `ca-certificates`
+1. System packages: `gcc-mingw-w64-i686`, `g++-mingw-w64-i686`, `wine32`, `wine`, `ca-certificates`
 2. Creates directories: `/usr/local/include/graphics_h/` and `/usr/local/lib/graphics_h/`
-3. Downloads `graphics.h`, `winbgim.h`, `libbgi.a` from the GitHub repository
-4. Patches `graphics.h` for ISO C++ const-correctness via `sed`
+3. Copies `modified-graphics.h`, `winbgim.h`, and `libbgi.a` from the extension package
+4. Verifies the const-correct compatibility header
 5. Installs files system-wide to `/usr/local/`
 6. Creates a CLI wrapper command: `graphics.h myprogram.cpp` (compiles and runs via Wine)
 
@@ -246,7 +265,7 @@ graphics.h program.cpp myapp  # Compiles as myapp.exe and runs
 
 | Command ID | Description | Default Shortcut |
 |-----------|-------------|------------------|
-| `graphics-h-compiler.compileAndRun` | Compile and run (WinBGI) — legacy alias | `Ctrl+Alt+N` |
+| `graphics-h-compiler.compileAndRun` | Compile and run (WinBGI) — legacy alias | — |
 | `graphics-h-compiler.compileAndRunWinBGI` | Compile and run (WinBGI) | `Ctrl+Alt+N` |
 | `graphics-h-compiler.compileAndRunTurboC` | Compile and run (Turbo C DOSBox) | — |
 | `graphics-h-compiler.compileOnly` | Compile without running (WinBGI) | `Ctrl+Alt+B` |
@@ -258,7 +277,7 @@ graphics.h program.cpp myapp  # Compiles as myapp.exe and runs
 
 - Icon: `$(play)` when idle, `$(debug-stop)` when a program is running
 - Text: **"Run Graphics"** / **"Stop Graphics"**
-- Visibility: Only shown when a `.cpp` or `.c++` file is active
+- Visibility: Only shown for supported C++ source files in WinBGI-capable platforms
 
 ---
 
@@ -352,10 +371,10 @@ Static flags produce a self-contained `.exe` with no external DLL dependencies.
 
 | Platform | Terminal mode | Background mode |
 |---|---|---|
-| **Windows** | `cmd /c "{exePath}"` | `spawn(exePath)` |
-| **Linux** | `wine "{exePath}"` | `spawn('wine', [exePath])` |
+| **Windows** | Shell-integration execution of the `.exe` | `spawn(exePath)` |
+| **Linux** | `env WINEPREFIX=~/.wine32_graphics WINEDEBUG=-all wine {exePath}` | `spawn('wine', [exePath], { env })` |
 
-Wine stderr is filtered to suppress `fixme:` and `wine:` debug lines.
+Linux uses the dedicated Wine prefix created by the installer. `WINEDEBUG=-all` suppresses debug noise while preserving useful Wine errors in the Output panel.
 
 ---
 
@@ -368,7 +387,7 @@ Wine stderr is filtered to suppress `fixme:` and `wine:` debug lines.
 - Registers commands and keyboard shortcuts
 - Manages extension lifecycle (`activate` / `deactivate`)
 - Initialises OS-specific downloaders
-- Status bar updates (polling via `setInterval`, cleaned up in `deactivate()`)
+- Updates the native-run status bar from process and terminal-shell-execution events
 - Uses `vscode.window.withProgress({ cancellable: true })` for compile operations
 
 #### turbocrunner.ts — Turbo C DOSBox Runner
@@ -386,26 +405,34 @@ Wine stderr is filtered to suppress `fixme:` and `wine:` debug lines.
 - `buildCompileConfig()` returns platform-specific `{ command, args }`
 - `runCompilation()` is shared across platforms — OS differences in config only
 - Spawns and monitors compiler processes
-- Parses GCC errors into VS Code diagnostics
+- Cancels compilation without displaying a later false failure notification
+- Uses VS Code terminal shell integration to track terminal-run completion
+- Uses the dedicated Wine prefix and preserves meaningful Wine errors on Linux
 
 #### paths.ts — Path Management
 
 - OS detection and toolchain path resolution
-- Dependency checking
+- Centralized readiness checks for the compiler, Wine, headers, and static library
 - Output path generation
+
+#### diagnostics.ts — Compiler Diagnostics
+
+- Parses GCC/MinGW errors, warnings, notes, fatal errors, and linker failures
+- Removes ANSI colour codes before parsing
+- Associates diagnostics with the reported source/header file when available
 
 #### windowsDownloader.ts — Windows Installer
 
-- Downloads MinGW32 from GitHub with streaming progress
-- Verifies SHA256 checksum
-- Extracts ZIP with per-file progress reporting (every ~5%)
-- Copies bundled graphics files into MinGW directory tree
+- Downloads MinGW32 from GitHub with streaming MB progress
+- Verifies the SHA256 checksum while reporting verification progress
+- Extracts archive entries incrementally so VS Code can repaint file-count progress
+- Copies and verifies bundled graphics files with numbered stages
 
 #### ubuntuDownloader.ts — Linux Coordinator
 
-- Guides user through manual installation
-- Verifies installation status (file paths, `which` commands)
-- Provides installation script command
+- Starts the bundled installer without downloading graphics assets from GitHub
+- Verifies the compiler, Wine, headers, and library while the installer runs
+- Shows continuous setup status until the toolchain is ready or the user stops monitoring
 
 ---
 
@@ -413,16 +440,16 @@ Wine stderr is filtered to suppress `fixme:` and `wine:` debug lines.
 
 ### Compiler Error Parsing
 
-**GCC error regex:**
+**GCC-style diagnostic parsing:**
 ```typescript
-const errorRegex = /^(.+?):(\d+):(\d+):\s+(error|warning):\s+(.+)$/gm;
+/(.*?):(\d+)(?::(\d+))?:\s*(fatal error|error|warning|note):\s*(.+)/
 ```
 
-Errors appear as red squiggles in the editor and entries in the Problems panel (`Ctrl+Shift+M`). Clicking a problem jumps to the exact line.
+Errors appear as red squiggles in the correct source or header file and as entries in the Problems panel (`Ctrl+Shift+M`). Linker errors are attached to the active source file so they remain actionable.
 
 ### Process Management
 
-All spawned processes are tracked in `activeProcesses: Set<ChildProcess>`. On `dispose()`, any surviving processes are killed. Stopping a running program sends `Ctrl+C` first, then disposes the terminal after 500ms.
+All spawned processes are tracked in `activeProcesses: Set<ChildProcess>`. Terminal runs use VS Code shell integration when available, so the extension knows when the command ends and does not mistake an idle terminal for a running graphics program. On `dispose()`, surviving processes are killed and the extension terminal is closed.
 
 ---
 
@@ -464,7 +491,10 @@ code --install-extension graphics-h-compiler-*.vsix
 |------|---------|
 | Single build | `npm run compile` |
 | Watch mode | `npm run watch` |
-| Lint code | `npx eslint src/` |
+| Lint code | `npm run lint` |
+| Run diagnostics test | `npm test` |
+| Run optional extension-host test | `npm run test:integration` |
+| Validate bundled assets | `npm run validate-assets` |
 | Package `.vsix` | `npx vsce package` |
 | Install local `.vsix` | `code --install-extension graphics-h-compiler-*.vsix` |
 | Publish | `npx vsce publish` |
@@ -478,7 +508,7 @@ code --install-extension graphics-h-compiler-*.vsix
 ```bash
 cd VScodeExtension
 npm install
-npm run compile
+npm run package
 npx vsce package
 ```
 
