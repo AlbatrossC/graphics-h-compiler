@@ -947,8 +947,31 @@
 
 /* Sidebar Ad Slot (cloud promo, logged-out only) */
 .sidebar-ad-slot {
-    margin: 12px 0 0;
-    padding: 0 4px;
+    margin: 12px 12px 6px;
+    padding: 10px 8px;
+    background: rgba(var(--color-rgb-white), 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     overflow: hidden;
     text-align: center;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
 }
+
+.sidebar-ad-slot:hover {
+    border-color: var(--border-color-hover);
+    background: rgba(var(--color-rgb-white), 0.035);
+}
+
+.sidebar-ad-slot .ad-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    user-select: none;
+}
+

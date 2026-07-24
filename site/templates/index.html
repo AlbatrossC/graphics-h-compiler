@@ -17,7 +17,6 @@
     <meta name="google-site-verification" content="L-sZKjAraXrBLXZKwxwGelPOj335sF14HJXfngCoekU" />
 
     <!-- Warm only the origins used by the first wave of third-party scripts. -->
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
     <link rel="preconnect" href="https://fundingchoicesmessages.google.com" crossorigin>
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <link rel="dns-prefetch" href="//googleads.g.doubleclick.net">
@@ -514,43 +513,6 @@
 
     </main>
 
-    <script>
-        (function () {
-            let loaded = false;
-
-            function loadAds() {
-                if (loaded) return;
-                loaded = true;
-
-                const script = document.createElement('script');
-                script.async = true;
-                script.crossOrigin = 'anonymous';
-                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6317839573120005';
-                document.head.appendChild(script);
-            }
-
-            function scheduleAds() {
-                const startWhenIdle = () => {
-                    if ('requestIdleCallback' in window) {
-                        requestIdleCallback(loadAds, { timeout: 2000 });
-                    } else {
-                        setTimeout(loadAds, 0);
-                    }
-                };
-                setTimeout(startWhenIdle, 1500);
-            }
-
-            if (document.readyState === 'complete') {
-                scheduleAds();
-            } else {
-                window.addEventListener('load', scheduleAds, { once: true });
-            }
-
-            ['pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
-                window.addEventListener(eventName, loadAds, { once: true, passive: true });
-            });
-        })();
-    </script>
     <script src="/static/js/analytics.js" defer></script>
 
     <script>

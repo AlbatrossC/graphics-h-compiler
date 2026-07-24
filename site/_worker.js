@@ -10,9 +10,7 @@ const BYPASS_PATHS = new Set([
   '/favicon.ico',
   '/robots.txt',
   '/sitemap.xml',
-  '/ads.txt',
   '/sdk.js',
-  '/565e878f197c4724801806808502c6f9.txt',
 ]);
 
 function wantsHtml(request) {

@@ -16,3 +16,7 @@
 
 # ── Public SDK shortcut ─────────────────────────────────────────────
 /sdk.js                                      /static/js/sdk.js                         200
+
+# ── Monetag service worker (must be at root for SW scope + verification) ──────
+/sw.js                                       /static/sw.js                             200
+
