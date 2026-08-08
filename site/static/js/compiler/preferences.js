@@ -10,7 +10,7 @@
         }
         : {
             editor: {
-                fontSize: 16,
+                fontSize: window.innerWidth <= 768 ? 14 : 16,
                 wordWrap: true,
                 lineNumbers: true,
                 bracketMatching: true,

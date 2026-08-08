@@ -329,7 +329,7 @@ function createEmptyEditorTipExtension() {
     const tip = document.createElement('div');
     tip.className = 'cm-empty-tip';
     tip.setAttribute('aria-hidden', 'true');
-    tip.innerHTML = 'Tip: Type <span class="cm-empty-tip-highlight">boilerplate</span> to insert the graphics.h template';
+    tip.innerHTML = '💡 Type <span class="cm-empty-tip-highlight">boilerplate</span> to get started with graphics.h';
 
     return [
         placeholder(tip),

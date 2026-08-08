@@ -49,6 +49,13 @@ if (downloadTerminalBtn) {
 
 var currentTerminalZoom = 1.0;
 
+function updateTerminalZoomDisplay() {
+    const display = document.getElementById('terminal-zoom-display');
+    if (display) {
+        display.textContent = Math.round(currentTerminalZoom * 100) + '%';
+    }
+}
+
 function updateTerminalZoom(change) {
     const iframe = document.getElementById('dos-iframe');
 
@@ -64,6 +71,8 @@ function updateTerminalZoom(change) {
     iframe.style.transform = `scale(${currentTerminalZoom})`;
     iframe.style.transformOrigin = 'center center';
     iframe.style.transition = 'transform 0.2s ease';
+
+    updateTerminalZoomDisplay();
 }
 
 function resetTerminalZoom() {
@@ -73,6 +82,7 @@ function resetTerminalZoom() {
         iframe.style.transform = 'scale(1)';
         iframe.style.transformOrigin = 'center center';
     }
+    updateTerminalZoomDisplay();
 }
 
 window.updateTerminalZoom = updateTerminalZoom;

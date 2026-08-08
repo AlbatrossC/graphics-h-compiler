@@ -156,7 +156,9 @@ var isTerminalFullscreen = false;
     function toggleEditorFullscreen(forceState) {
         isEditorFullscreen = typeof forceState === 'boolean' ? forceState : !isEditorFullscreen;
 
-        const svgIcon = document.querySelector('#fullscreen-editor-btn svg');
+        const fsBtn = document.getElementById('fullscreen-editor-btn');
+        const svgIcon = fsBtn ? fsBtn.querySelector('svg') : null;
+        const fsBtnLabel = fsBtn ? fsBtn.querySelector('span') : null;
 
         localEditorWrapper?.classList.toggle('fullscreen', isEditorFullscreen);
         localTerminalWrapper?.classList.toggle('hidden', isEditorFullscreen);
@@ -166,6 +168,10 @@ var isTerminalFullscreen = false;
             svgIcon.innerHTML = isEditorFullscreen
                 ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
                 : '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+        }
+
+        if (fsBtnLabel) {
+            fsBtnLabel.textContent = isEditorFullscreen ? 'Exit FullScreen' : 'Fullscreen';
         }
 
         setTimeout(() => {
@@ -180,7 +186,9 @@ var isTerminalFullscreen = false;
 
         const fsBtn = document.getElementById('fullscreen-terminal-btn');
         const svgIcon = fsBtn ? fsBtn.querySelector('svg') : null;
+        const fsBtnLabel = fsBtn ? fsBtn.querySelector('span') : null;
         const terminalZoomControls = document.getElementById('terminal-zoom-controls');
+        const runAgainBtn = document.getElementById('run-again-terminal-btn');
 
         localTerminalWrapper?.classList.toggle('fullscreen', isTerminalFullscreen);
         localEditorWrapper?.classList.toggle('hidden', isTerminalFullscreen);
@@ -190,6 +198,16 @@ var isTerminalFullscreen = false;
             svgIcon.innerHTML = isTerminalFullscreen
                 ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
                 : '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+        }
+
+        // Toggle fullscreen button label
+        if (fsBtnLabel) {
+            fsBtnLabel.textContent = isTerminalFullscreen ? 'Exit FullScreen' : 'Fullscreen';
+        }
+
+        // Show/hide fullscreen-only controls
+        if (runAgainBtn) {
+            runAgainBtn.classList.toggle('hidden', !isTerminalFullscreen);
         }
 
         if (isTerminalFullscreen) {
