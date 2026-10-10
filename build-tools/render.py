@@ -307,12 +307,19 @@ def render_maintenance_site() -> None:
     if failures:
         raise RenderError('Maintenance render failed:\n' + '\n'.join(f'  - {failure}' for failure in failures))
 
-    js_src = STATIC_DIR / 'js' / 'analytics.js'
-    if js_src.exists():
-        js_dest = DIST_DIR / 'static' / 'js'
-        js_dest.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(js_src, js_dest / 'analytics.js')
-        print('  [ok] static/js/analytics.js')
+    maintenance_assets = (
+        'js/analytics.js',
+        'css/fonts.css',
+        'fonts/IBMPlexSans-Regular.woff2',
+        'fonts/SpaceMono-Regular.woff2',
+        'images/brand/graphics-h-turtle.webp',
+    )
+    for asset in maintenance_assets:
+        source = STATIC_DIR / asset
+        destination = DIST_DIR / 'static' / asset
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+        print(f'  [ok] static/{asset}')
 
     write_page('/* / 200\n', '_redirects')
     print('  [ok] _redirects')
