@@ -2,12 +2,12 @@
 
 <br>
 
-<img src="./images/graphics-h-header-transparent.png" width="520" alt="graphics.h Compiler" />
+<img src="./images/graphics-h-header-transparent.png" width="640" alt="graphics.h Compiler" />
 
-<br><br>
+<br>
 
 <p><strong>Write, compile, and run Turbo C++ <code>graphics.h</code> programs — in your browser or VS Code</strong></p>
-<p><sub>Zero setup &nbsp;·&nbsp; No DOSBox &nbsp;·&nbsp; No installers &nbsp;·&nbsp; Works offline</sub></p>
+<p><sub>No manual DOSBox setup &nbsp;&middot;&nbsp; Browser or VS Code &nbsp;&middot;&nbsp; Offline options</sub></p>
 
 <br>
 
@@ -27,13 +27,11 @@
 
 ## 📖 What is this?
 
-**`graphics.h`** is Borland's DOS-era graphics library, bundled with Turbo C++ since 1992. Three decades on, it remains a required part of the CS curriculum for hundreds of thousands of engineering students — particularly across India.
+**`graphics.h`** is Borland's DOS-era graphics library, familiar to many students through Turbo C++. Running those programs on a modern computer often requires extra setup.
 
 The problem is getting it to run on a modern machine. The typical path: hunt down an old installer, configure DOSBox, debug why nothing renders. You spend more time fighting the environment than writing code.
 
-**This project fixes that.** It runs the real `TCC.EXE` (Turbo C++ 3.0) inside DOSBox compiled to WebAssembly — entirely in the browser, entirely client-side. Write code, hit Run, see graphics. Zero setup.
-
-<br>
+**This project fixes that.** It runs the real `TCC.EXE` (Turbo C++ 3.0) inside DOSBox compiled to WebAssembly — with compilation and execution handled locally in your browser. Write code, hit Run, see graphics. Zero setup.
 
 ---
 
@@ -47,19 +45,19 @@ The problem is getting it to run on a modern machine. The typical path: hunt dow
 
 <div align="center">
 
-**✍️ Write Code → Click Run → See Output**
+<p><strong>✍️ Write Code → Click Run → See Output</strong></p>
 
-<img src="./images/online-demo-1.png" width="85%" alt="Editor with C++ code alongside rendered graphics output" />
+<p><img src="./images/online-demo-1.png" width="100%" alt="Editor with C++ code alongside rendered graphics output" /></p>
 
-<sub>CodeMirror 6 editor with C++ syntax highlighting, autocomplete, and inline docs for all 99 <code>graphics.h</code> functions.</sub>
+<p><sub>CodeMirror 6 editor with C++ syntax highlighting, autocomplete, and inline docs for all 99 <code>graphics.h</code> functions.</sub></p>
 
-<br><br>
+<br>
 
-**☁️ Save Your Work to the Cloud**
+<p><strong>☁️ Save Your Work to the Cloud</strong></p>
 
-<img src="./images/online-demo-2.png" width="85%" alt="Cloud file storage interface with folder organisation" />
+<p><img src="./images/online-demo-2.png" width="100%" alt="Cloud file storage interface with folder organisation" /></p>
 
-<sub>Sign in with Google to organise programs into folders, synced across all your devices.</sub>
+<p><sub>Sign in with Google to organise programs into folders, synced across all your devices.</sub></p>
 
 </div>
 
@@ -87,11 +85,9 @@ The problem is getting it to run on a modern machine. The typical path: hunt dow
 > **Need something portable?** The [standalone unified build](../site/compiler-assets/unified/graphic.h-compiler-unified.html) is a single self-contained HTML file — download it once, run it anywhere, forever offline.
 > [Read the technical breakdown →](../site/compiler-assets/unified/graphic.h-compiler-unified.md)
 
-<br>
-
 ---
 
-## <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" width="22" /> VS Code Extension
+## <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" width="22" height="22" alt="" /> VS Code Extension
 
 > Two compilation backends. One keyboard shortcut. Compile and run `graphics.h` programs without leaving your editor.
 
@@ -99,19 +95,19 @@ The problem is getting it to run on a modern machine. The typical path: hunt dow
 
 <div align="center">
 
-**⚙️ Mode 1 · Turbo C++ (DOSBox Webview)**
+<p><strong>⚙️ Mode 1 · Turbo C++ (DOSBox Webview)</strong></p>
 
-<img src="./images/vscode_turboc_demo.png" width="85%" alt="VS Code with integrated DOSBox webview showing graphics output" />
+<p><img src="./images/vscode_turboc_demo.png" width="100%" alt="VS Code with integrated DOSBox webview showing graphics output" /></p>
 
-<sub>Compiles using real Turbo C++ 3.0 in an integrated webview panel. Pixel-perfect DOS graphics — works on Windows, macOS, and Linux.</sub>
+<p><sub>Compiles using real Turbo C++ 3.0 in an integrated webview panel. Pixel-perfect DOS graphics — works on Windows, macOS, and Linux.</sub></p>
 
-<br><br>
+<br>
 
-**⚡ Mode 2 · WinBGI (Native Windows)**
+<p><strong>⚡ Mode 2 · WinBGI (Native Windows)</strong></p>
 
-<img src="./images/vscode_windows_demo.png" width="85%" alt="VS Code with a native Win32 graphics window" />
+<p><img src="./images/vscode_windows_demo.png" width="100%" alt="VS Code with a native Win32 graphics window" /></p>
 
-<sub>Compiles via MinGW-w64 (GCC 11.5.0) to a native executable with a real Win32 graphics window. Toolchain auto-installs on first use.</sub>
+<p><sub>Compiles via MinGW-w64 (GCC 11.5.0) to a native executable with a real Win32 graphics window. Toolchain auto-installs on first use.</sub></p>
 
 </div>
 
@@ -121,11 +117,11 @@ The problem is getting it to run on a modern machine. The typical path: hunt dow
 
 | | ⚙️ Turbo C++ Mode | ⚡ WinBGI Mode |
 |:---|:---:|:---:|
-| **Platform** | Windows · macOS · Linux | Windows only |
+| **Platform** | Windows · macOS · Linux | Windows; Linux via Wine |
 | **Output** | Integrated webview | Native Win32 window |
 | **Compiler** | TCC.EXE (Turbo C++ 3.0) | GCC 11.5.0 via MinGW |
-| **Compatibility** | 100% TCC faithful | Most programs |
-| **Setup** | None | Auto-installs toolchain |
+| **Compatibility** | Original Turbo C++ behavior | WinBGI-compatible programs |
+| **Setup** | No separate DOSBox installation | Auto-installs toolchain; Wine required on Linux |
 | **Best for** | Cross-platform · exact TCC output | Windows · native rendering |
 
 <br>
@@ -159,15 +155,13 @@ code --install-extension AlbatrossC.graphics-h-compiler
 # or: Ctrl+Shift+X  →  search "graphics.h compiler"  →  Install
 ```
 
-<br>
-
 ---
 
 ## 💻 Quick Example
 
 Paste this into the [online compiler](https://graphicsh.online/compiler) and hit **Run**:
 
-```c
+```cpp
 #include <graphics.h>
 #include <conio.h>
 
@@ -193,9 +187,7 @@ int main() {
 }
 ```
 
-> That's `TCC.EXE` from 1992, compiled to WebAssembly, rendering graphics in your browser.
-
-<br>
+> The original `TCC.EXE` runs inside DOSBox compiled to WebAssembly, rendering graphics in your browser.
 
 ---
 
@@ -210,6 +202,7 @@ cd graphics-h-compiler
 
 # 2. Install dependencies & build
 npm install
+python -m pip install -r requirements.txt
 npm run build
 # Calls build-tools/build.py → bundles everything into dist/
 
@@ -217,8 +210,6 @@ npm run build
 cd dist && npx serve .
 # → http://localhost:3000/compiler
 ```
-
-<br>
 
 ---
 
@@ -231,9 +222,7 @@ cd dist && npx serve .
 | **Bundler** | [esbuild](https://esbuild.github.io/) |
 | **Build** | Python build script + npm |
 | **VS Code extension** | TypeScript, Webview API, MinGW-w64 (GCC 11.5.0) |
-| **Hosting** | [Cloudflare Workers](https://workers.cloudflare.com/) |
-
-<br>
+| **Hosting** | Cloudflare Pages for the site; Cloudflare Workers for APIs |
 
 ---
 
@@ -245,8 +234,6 @@ cd dist && npx serve .
 | **VS Code Extension** | [Docs →](vscode-extension/vscode-compiler.md) | Extension architecture, Turbo C / WinBGI modes, packaging |
 
 Contributions welcome — [open an issue](https://github.com/AlbatrossC/graphics-h-compiler/issues) or send a PR.
-
-<br>
 
 ---
 

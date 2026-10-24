@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="210" height="52">
-  <rect width="210" height="52" rx="9" fill="#4ade80"/>
-  <!-- Terminal prompt icon: same visual weight as VS Code icon (~15px = 1× label) -->
-  <text x="17" y="26" dominant-baseline="central" font-family="'Courier New',Courier,monospace" font-weight="700" font-size="15" fill="#0a0a0a">&gt;_</text>
-  <!-- Separator: 15px gap on each side of icon area -->
-  <rect x="50" y="11" width="1" height="30" fill="#0a0a0a" fill-opacity="0.2" rx="0.5"/>
-  <!-- Label centered in remaining space (x=50 to x=210 → center at 130) -->
-  <text x="130" y="26" dominant-baseline="central" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-weight="700" font-size="12.5" fill="#0a0a0a" letter-spacing="0.8">ONLINE COMPILER</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="210" height="52" viewBox="0 0 210 52">
+  <rect x="0.5" y="0.5" width="209" height="51" rx="10" fill="#4ade80" stroke="#0a0a0a" stroke-opacity="0.08"/>
+  <!-- Shared 56px icon compartment with a compact, font-independent prompt. -->
+  <g fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 20.5 25 26 19 31.5"/>
+    <path d="M28 31.5h9"/>
+  </g>
+  <rect x="55.5" y="14" width="1" height="24" fill="#0a0a0a" fill-opacity="0.16" rx="0.5"/>
+  <text x="133" y="26" dominant-baseline="central" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-weight="700" font-size="12" fill="#0a0a0a" letter-spacing="0.5">ONLINE COMPILER</text>
 </svg>

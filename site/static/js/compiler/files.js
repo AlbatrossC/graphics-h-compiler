@@ -13,6 +13,22 @@ let isSaving = false;
 let googleIdentityReady = false;
 let googleIdentityInitPromise = null;
 
+// Outcome events only; save outcomes are capped at once per page to avoid autosave noise.
+const clarityOutcomes = new Set();
+function trackClarityEvent(name, once = false) {
+    if (once && clarityOutcomes.has(name)) return;
+    try {
+        if (typeof window.clarity !== 'function') return;
+        window.clarity('event', name);
+        if (once) clarityOutcomes.add(name);
+    } catch { /* Analytics must never interrupt the compiler. */ }
+}
+function trackConfirmedSignIn() {
+    try {
+        if (typeof window.clarity === 'function') window.clarity('set', 'signed_in', 'true');
+    } catch { /* Analytics must never interrupt authentication. */ }
+}
+
 const SAVE_STATE = { lastSavedHash: null, pendingHash: null, lastSaveTime: 0 };
 const DIRTY_FLAG = { isDirty: false };
 
@@ -390,9 +406,10 @@ async function loadAuthConfig() {
 async function checkSession() {
     try {
         const { response, payload } = await fetchJson('/api/auth/session', { method: 'GET' });
-        const user = response.ok ? normalizeSessionUser(payload) : null;
+        const user = response.ok && payload?.authenticated === true ? normalizeSessionUser(payload) : null;
         if (!user) { safeUpdateLoginUI(false); setAuthStatus('Unlimited projects · Access anywhere'); return false; }
         safeUpdateLoginUI(true, userForUi(user));
+        trackConfirmedSignIn();
         setAuthStatus(`Signed in as ${user.email}`);
         return true;
     } catch (error) {
@@ -804,14 +821,25 @@ function showSaveGuestDraftModal(snapshot) {
 
 async function handleGoogleCredentialResponse(credentialResponse) {
     const idToken = credentialResponse?.credential;
-    if (!idToken) throw new Error('Google did not return an ID token');
+    let payload;
+    try {
+        if (!idToken) throw new Error('Google did not return an ID token');
 
-    const { response, payload } = await fetchJson('/api/auth/google', {
-        method: 'POST',
-        body: JSON.stringify({ id_token: idToken }),
-    });
+        const result = await fetchJson('/api/auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ id_token: idToken }),
+        });
 
-    if (!response.ok) throw new Error(payload?.error || 'Sign in failed');
+        payload = result.payload;
+        if (!result.response.ok || payload?.authenticated !== true) {
+            throw new Error(payload?.error || 'Sign in failed');
+        }
+    } catch (error) {
+        trackClarityEvent('login_failed');
+        throw error;
+    }
+    trackConfirmedSignIn();
+    trackClarityEvent('login_success');
 
     const user = normalizeSessionUser(payload) || {
         email: payload?.email || '',
@@ -1029,6 +1057,8 @@ async function signOut() {
 
         if (!logoutResponse.ok) {
             Logger.warn(`[Auth] Logout returned HTTP ${logoutResponse.status}`);
+        } else {
+            trackClarityEvent('logout');
         }
     } catch (error) {
         Logger.warn(`[Auth] Logout request failed: ${error.message}`);
@@ -1196,10 +1226,13 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
         }
         isSaving = true;
         SAVE_STATE.pendingHash = hash;
+        let cloudSaveConfirmed = false;
         try {
             const { response, payload } = await fetchJson('/api/file/save', { method: 'POST', body: JSON.stringify({ folder_id: info.folderId, file_name: info.filename, content: code }) });
             if (response.status === 401) { safeUpdateLoginUI(false); setAuthStatus('Session expired. Please sign in again.'); throw new Error('Session expired'); }
             if (!response.ok) throw new Error(payload?.error || 'Failed to save file');
+            cloudSaveConfirmed = true;
+            trackClarityEvent('cloud_save_success', true);
             CLOUD_STATE.files.set(info.key, { id: payload?.file_id || info.key, filename: info.filename, folder_id: info.folderId, folder_key: info.folder, folder_name: getFolderName(info.folderId), content: code, file_size: payload?.file_size ?? computeBytes(code), content_hash: payload?.content_hash || hash });
             const confirmedHash = payload?.content_hash || hash;
             // Update IndexedDB cache after successful cloud save (non-blocking, logged-in only)
@@ -1221,6 +1254,9 @@ async function forceSaveActiveFile(trigger = 'manual', options = {}) {
             renderFileExplorer();
             if (!silent) Logger.success(`[Save] Saved (${trigger})`);
             return { success: true, changed: payload?.changed !== false };
+        } catch (error) {
+            if (!cloudSaveConfirmed) trackClarityEvent('cloud_save_failed', true);
+            throw error;
         } finally { isSaving = false; SAVE_STATE.pendingHash = null; }
     } finally {
         if (!skipProgress) hideProgress();
@@ -1285,6 +1321,7 @@ async function createNewFile(filename) {
             }
             throw new Error(savePayload?.error || 'Failed to save starter code');
         }
+        trackClarityEvent('project_created');
         const key = folderKey(targetFolderId);
         CLOUD_STATE.files.set(fileKey(key, cleanName), {
             id: savePayload?.file_id || fileKey(key, cleanName),
