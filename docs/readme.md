@@ -11,13 +11,9 @@
 
 <br>
 
-<a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler">
-  <img src="./images/btn_vscode.svg" width="230" height="52" alt="Get VS Code Extension" />
-</a>
+<a href="https://marketplace.visualstudio.com/items?itemName=AlbatrossC.graphics-h-compiler"><img src="./images/btn_vscode.svg" width="230" height="52" alt="Get VS Code Extension" /></a>
 &nbsp;&nbsp;
-<a href="https://graphicsh.online/compiler">
-  <img src="./images/btn_compiler.svg" width="210" height="52" alt="Open Online Compiler" />
-</a>
+<a href="https://graphicsh.online/compiler"><img src="./images/btn_compiler.svg" width="210" height="52" alt="Open Online Compiler" /></a>
 
 <br><br>
 
