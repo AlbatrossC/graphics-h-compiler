@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="210" height="52" viewBox="0 0 210 52">
-  <rect x="0.5" y="0.5" width="209" height="51" rx="10" fill="#4ade80" stroke="#0a0a0a" stroke-opacity="0.08"/>
-  <!-- Shared 56px icon compartment with a compact, font-independent prompt. -->
-  <g fill="none" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M19 20.5 25 26 19 31.5"/>
-    <path d="M28 31.5h9"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="64" viewBox="0 0 240 64" role="img" aria-labelledby="title desc">
+  <title id="title">Open compiler</title>
+  <desc id="desc">Run in your browser</desc>
+  <rect x="0.5" y="0.5" width="239" height="63" rx="12" fill="#4ade80" stroke="#10251b" stroke-opacity="0.12"/>
+  <rect x="12" y="12" width="40" height="40" rx="9" fill="#10251b" fill-opacity="0.08"/>
+  <path d="m23 25 6 6-6 6m11 0h8" fill="none" stroke="#10251b" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g font-family="'Segoe UI',Arial,sans-serif" fill="#10251b">
+    <text x="66" y="28" font-size="14" font-weight="700">Open compiler</text>
+    <text x="66" y="46" font-size="11" opacity="0.85">Run in your browser</text>
   </g>
-  <rect x="55.5" y="14" width="1" height="24" fill="#0a0a0a" fill-opacity="0.16" rx="0.5"/>
-  <text x="133" y="26" dominant-baseline="central" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-weight="700" font-size="12" fill="#0a0a0a" letter-spacing="0.5">ONLINE COMPILER</text>
+  <path d="m218 28 4 4-4 4" fill="none" stroke="#10251b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
